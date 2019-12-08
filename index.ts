@@ -1,5 +1,5 @@
 import { of, interval, Observable, combineLatest } from 'rxjs'; 
-import { scan, map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap } from 'rxjs/operators';
 
 export function text(text: Observable<string>): Observable<Text> {
   return text.pipe(
@@ -55,7 +55,7 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
   }
 
   let insertBefore: Node;
-  let updated: INodeUpdate[] = [];
+  const updated: INodeUpdate[] = [];
   for (let i = newChildren.length - 1; i >= 0; i--) {
     const node = newChildren[i];
     if (unchangedNodes.has(node)) {
@@ -71,31 +71,25 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
   return { updated, removed };
 }
 
-export type Children = Observable<Node> | Observable<Node>[];
+export type Children = Observable<Node>[] | Observable<Observable<Node>[]>; // TODO: Observable<Node>.
 
-// TODO: Allow Observable<Observable<Node>[]>.
 // TODO: Attributes.
-// TODO: Children differ.
 export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
-  const childrenArray = Array.isArray(children) ? children : [children];
-  const children$ = combineLatest(...childrenArray).pipe(
+  const childrenObservable = Array.isArray(children) ? of(children) : children;
+  const childrenArray = childrenObservable.pipe(
+    map(array => array.filter(el => el)),
+    switchMap(array => combineLatest<Node[]>(...array)),
+    map(nodes => nodes.filter(node => node)),
     debounceTime(0),
   );
 
-  return children$.pipe(
+  return childrenArray.pipe(
     scan((el, children) => {
-      // children.forEach(child => {
-      //   el.appendChild(child);
-      // });
       const diff = childDiffer(Array.from(el.childNodes.values()), children);
       diff.removed.forEach(node => el.removeChild(node));
-      diff.updated.forEach(update => {
-        if (update.insertBefore) {
-          el.insertBefore(update.node, update.insertBefore);
-        } else {
-          el.appendChild(update.node);
-        }
-      })
+      el.append(...diff.updated.filter(update => !update.insertBefore).map(update => update.node));
+      diff.updated
+        .filter(update => update.insertBefore).forEach(update => el.insertBefore(update.node, update.insertBefore));
       return el;
     }, document.createElement(tagName)),
     distinctUntilChanged(),
@@ -108,8 +102,20 @@ export function div(children: Children) {
 
 const counter = (multi: number) => interval(1000).pipe(map(i => `count: ${multi * i}`));
 
+const conditionalCounter = (counter: Observable<number>): Observable<Node> => {
+  const input = counter.pipe(shareReplay(1));
+  const element = div([text(input.pipe(map(i => i.toString())))]);
+  return input.pipe(
+    map(i => i % 4 === 0),
+    distinctUntilChanged(),
+    switchMap(show => show ? element : of(undefined)),
+    tap(val => console.log(val)),
+  );
+};
+
 div([
-  div(text(counter(1))),
-  div(text(counter(2))),
-  div(text(counter(3))),
+  div([text(counter(1))]),
+  div([text(counter(2))]),
+  div([text(counter(3))]),
+  conditionalCounter(interval(1000))
 ]).subscribe(el => document.body.appendChild(el));
