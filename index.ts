@@ -28,30 +28,31 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
   const remainingOldOrder = oldChildren.filter(node => newSet.has(node));
   const remainingNewOrder = newChildren.filter(node => oldSet.has(node));
 
-  // Easy Method:
   const orderUnchanged = remainingNewOrder.every((node, i) => remainingOldOrder[i] === node);
-  const _unchangedNodes = orderUnchanged ? new Set() : new Set(remainingNewOrder);
 
-  // Fancy method:
-  const oldNodeAndNext = new Map(
-    remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]]),
-  );
-  const newElementesAndIndex = new Map(
-    remainingNewOrder.map((node, i) => [node, i]),
-  );
+  let unchangedNodes: Set<Node>;
+  if (orderUnchanged) {
+    unchangedNodes = new Set(remainingNewOrder);
+  } else {
+    const oldNodeAndNext = new Map(
+      remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]]),
+    );
+    const newElementesAndIndex = new Map(
+      remainingNewOrder.map((node, i) => [node, i]),
+    );
 
-  const reordered = new Set(
-    remainingNewOrder.filter((node, i) => {
-      const oldNext = oldNodeAndNext.get(node);
-      const newIndexOfNext = newElementesAndIndex.get(oldNext) || Infinity;
-      return newIndexOfNext < i;
-    })
-  );
+    const reordered = new Set(
+      remainingNewOrder.filter((node, i) => {
+        const oldNext = oldNodeAndNext.get(node);
+        const newIndexOfNext = newElementesAndIndex.get(oldNext) || Infinity;
+        return newIndexOfNext < i;
+      })
+    );
 
-  const unchangedNodes = new Set(
-    newChildren.filter(node => oldSet.has(node) && !reordered.has(node)),
-  );
-  // End.
+    unchangedNodes = new Set(
+      newChildren.filter(node => oldSet.has(node) && !reordered.has(node)),
+    );
+  }
 
   let insertBefore: Node;
   let updated: INodeUpdate[] = [];
@@ -63,6 +64,7 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
       updated.push({ node, insertBefore });
     }
   }
+  updated.reverse();
 
   const removed = oldChildren.filter(child => !newSet.has(child));
 
@@ -82,9 +84,18 @@ export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, child
 
   return children$.pipe(
     scan((el, children) => {
-      children.forEach(child => {
-        el.appendChild(child);
-      });
+      // children.forEach(child => {
+      //   el.appendChild(child);
+      // });
+      const diff = childDiffer(Array.from(el.childNodes.values()), children);
+      diff.removed.forEach(node => el.removeChild(node));
+      diff.updated.forEach(update => {
+        if (update.insertBefore) {
+          el.insertBefore(update.node, update.insertBefore);
+        } else {
+          el.appendChild(update.node);
+        }
+      })
       return el;
     }, document.createElement(tagName)),
     distinctUntilChanged(),
