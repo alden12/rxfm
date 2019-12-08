@@ -1,6 +1,7 @@
-import { of, interval, Observable, combineLatest } from 'rxjs'; 
-import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap } from 'rxjs/operators';
+import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
+import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter } from 'rxjs/operators';
 
+// TODO: Allow string input.
 export function text(text: Observable<string>): Observable<Text> {
   return text.pipe(
     scan((textNode, content) => {
@@ -71,7 +72,7 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
   return { updated, removed };
 }
 
-export type Children = Observable<Node>[] | Observable<Observable<Node>[]>; // TODO: Observable<Node>.
+export type Children = Observable<Node>[] | Observable<Observable<Node>[]>; // TODO: Observable<Node>, auto convert text.
 
 // TODO: Attributes.
 export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
@@ -100,22 +101,39 @@ export function div(children: Children) {
   return element('div', children);
 }
 
+export function event(element: Observable<Node>, eventName: string): Observable<Event> {
+  return element.pipe(
+    filter(el => !!el),
+    switchMap(el => fromEvent(el, eventName)),
+  );
+}
+
 const counter = (multi: number) => interval(1000).pipe(map(i => `count: ${multi * i}`));
+
+const conditional = (element: Observable<Node>, condition: Observable<boolean>) => condition.pipe(
+  distinctUntilChanged(),
+  switchMap(show => show ? element : of(undefined)),
+  distinctUntilChanged(),
+);
 
 const conditionalCounter = (counter: Observable<number>): Observable<Node> => {
   const input = counter.pipe(shareReplay(1));
   const element = div([text(input.pipe(map(i => i.toString())))]);
-  return input.pipe(
-    map(i => i % 4 === 0),
-    distinctUntilChanged(),
-    switchMap(show => show ? element : of(undefined)),
-    tap(val => console.log(val)),
+  return conditional(
+    element,
+    input.pipe(
+      map(i => i % 4 !== 0),
+    ),
   );
 };
+
+const condCounter = conditionalCounter(interval(1000)).pipe(share());
+
+event(condCounter, 'click').subscribe(ev => console.log(ev));
 
 div([
   div([text(counter(1))]),
   div([text(counter(2))]),
   div([text(counter(3))]),
-  conditionalCounter(interval(1000))
+  condCounter,
 ]).subscribe(el => document.body.appendChild(el));
