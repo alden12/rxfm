@@ -2,8 +2,9 @@ import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs';
 import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
 
 // TODO: Allow string input.
-export function text(text: Observable<string>): Observable<Text> {
-  return text.pipe(
+export function text(text: Observable<string> | string): Observable<Text> {
+  const textObservable = typeof text === 'string' ? of(text) : text;
+  return textObservable.pipe(
     scan((textNode, content) => {
       textNode.nodeValue = content;
       return textNode;
@@ -119,7 +120,10 @@ export function event(element: Observable<Node>, eventName: string): Observable<
   );
 }
 
-const counter = (multi: number) => interval(1000).pipe(map(i => `count: ${multi * i}`));
+const counter = (multi: number) => interval(1000).pipe(
+  map(i => `count: ${multi * i}`),
+  share(),
+);
 
 const conditional = (element: Observable<Node>, condition: Observable<boolean>) => condition.pipe(
   distinctUntilChanged(),
@@ -145,7 +149,7 @@ event(condCounter, 'click').subscribe(ev => console.log(ev));
 const app = () => {
   const content = (el: Node) => fromEvent(el, 'click').pipe(
     startWith(undefined),
-    scan(elements => [...elements, div([text(counter(1))])], [div([text(counter(1))])]),
+    scan(elements => [...elements, div([text('counter(1)')])], []),
     tap(val => console.log(val)),
   );
 
