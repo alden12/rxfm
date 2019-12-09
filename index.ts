@@ -1,5 +1,5 @@
 import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
-import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter } from 'rxjs/operators';
+import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
 
 // TODO: Allow string input.
 export function text(text: Observable<string>): Observable<Text> {
@@ -72,12 +72,23 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
   return { updated, removed };
 }
 
-export type Children = Observable<Node>[] | Observable<Observable<Node>[]>; // TODO: Observable<Node>, auto convert text.
+export type Children<T extends Node = Node> =
+  // Observable<T>
+  | Observable<T>[]
+  | Observable<Observable<T>[]>
+  | ((T) => Observable<T>[])
+  | ((T) => Observable<Observable<T>[]>)
+  // | ((T) => { children: Observable<T>[] })
+  // | ((T) => { children: Observable<Observable<T>[]> })
+  ; // TODO: Observable<Node>, auto convert text.
 
 // TODO: Attributes.
 export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
-  const childrenObservable = Array.isArray(children) ? of(children) : children;
-  const childrenArray = childrenObservable.pipe(
+
+  const el = document.createElement(tagName);
+  const childrenObservable = typeof children === 'function' ? children(el) : children;
+  const childrenArrayObservable = Array.isArray(childrenObservable) ? of(childrenObservable) : childrenObservable;
+  const childrenArray = childrenArrayObservable.pipe(
     map(array => array.filter(el => el)),
     switchMap(array => combineLatest<Node[]>(...array)),
     map(nodes => nodes.filter(node => node)),
@@ -85,14 +96,14 @@ export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, child
   );
 
   return childrenArray.pipe(
-    scan((el, children) => {
+    map(children => {
       const diff = childDiffer(Array.from(el.childNodes.values()), children);
       diff.removed.forEach(node => el.removeChild(node));
       el.append(...diff.updated.filter(update => !update.insertBefore).map(update => update.node));
       diff.updated
         .filter(update => update.insertBefore).forEach(update => el.insertBefore(update.node, update.insertBefore));
       return el;
-    }, document.createElement(tagName)),
+    }),
     distinctUntilChanged(),
   );
 }
@@ -131,9 +142,14 @@ const condCounter = conditionalCounter(interval(1000)).pipe(share());
 
 event(condCounter, 'click').subscribe(ev => console.log(ev));
 
-div([
-  div([text(counter(1))]),
-  div([text(counter(2))]),
-  div([text(counter(3))]),
-  condCounter,
-]).subscribe(el => document.body.appendChild(el));
+const app = () => {
+  const content = (el: Node) => fromEvent(el, 'click').pipe(
+    startWith(undefined),
+    scan(elements => [...elements, div([text(counter(1))])], [div([text(counter(1))])]),
+    tap(val => console.log(val)),
+  );
+
+  return div(content);
+};
+
+app().subscribe(el => document.body.appendChild(el));
