@@ -74,14 +74,14 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
 }
 
 export type Children<T extends Node = Node> =
-  // Observable<T>
+  // string
+  // | Observable<string>
+  // | Observable<T>
   | Observable<T>[]
   | Observable<Observable<T>[]>
   | ((T) => Observable<T>[])
   | ((T) => Observable<Observable<T>[]>)
-  // | ((T) => { children: Observable<T>[] })
-  // | ((T) => { children: Observable<Observable<T>[]> })
-  ; // TODO: Observable<Node>, auto convert text.
+  ;
 
 // TODO: Attributes.
 export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
