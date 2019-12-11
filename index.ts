@@ -176,4 +176,4 @@ const app = () => {
 
 // app().subscribe(el => document.body.appendChild(el));
 
-myApp().node.subscribe(el => document.body.appendChild(el));
+myApp().subscribe(el => document.body.appendChild(el.node));
