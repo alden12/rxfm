@@ -83,6 +83,23 @@ export type Children<T extends Node = Node> =
   | ((T) => Observable<Observable<T>[]>)
   ;
 
+export interface IAction<T, P> {
+  type: T;
+  payload: P;
+}
+
+export type Actions<T> = { [K in keyof T]: IAction<K, T[K]> };
+
+export type Action<T> = Observable<Actions<T>[keyof T]>;
+
+export type Outputs<T> = { [K in keyof T]: Observable<T[K]> };
+
+export interface IElement<T extends Node, O = {}, A = {}> {
+  node: Observable<T>;
+  outputs?: Outputs<O>;
+  actions?: Action<A>;
+}
+
 // TODO: Attributes.
 export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
 
