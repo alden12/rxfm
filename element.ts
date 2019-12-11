@@ -1,18 +1,6 @@
 import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
 import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
 
-// TODO: Allow string input.
-export function text(text: Observable<string> | string): Observable<Text> {
-  const textObservable = typeof text === 'string' ? of(text) : text;
-  return textObservable.pipe(
-    scan((textNode, content) => {
-      textNode.nodeValue = content;
-      return textNode;
-    }, document.createTextNode('')),
-    distinctUntilChanged(),
-  );
-}
-
 export interface INodeUpdate {
   node: Node;
   insertBefore?: Node;
@@ -90,31 +78,35 @@ export interface IElement<T extends Node, O = {}, A = {}> {
   actions?: Action<A>;
 }
 
+// TODO: Allow string input.
+export function text(text: Observable<string> | string): IElement<Text> {
+  const textObservable = typeof text === 'string' ? of(text) : text;
+  const textNode = document.createTextNode('');
+  const node =  textObservable.pipe(
+    map(content => {
+      textNode.nodeValue = content;
+      return textNode;
+    }),
+    distinctUntilChanged(),
+  );
+  return { node };
+}
+
 export type Children<T extends Node, A> =
   // string
   // | Observable<string>
-  // | Observable<A>
+  // | Observable<T>
   | IElement<Node, any, A>[]
   | Observable<IElement<Node, any, A>[]>
   | ((el: T) => IElement<Node, any, A>[])
   | ((el: T) => Observable<IElement<Node, any, A>[]>)
   ;
 
-// export interface IElementOutput<T> {
-//   outputs: Outputs<T>;
-// }
-
-// export interface IElementActions<T> {
-//   actions?: Action<T>;
-// }
-
 // TODO: Attributes.
-
 export function element<K extends keyof HTMLElementTagNameMap, O, A>(
   tagName: K,
   children: Children<HTMLElementTagNameMap[K], Partial<A>>,
 ): IElement<HTMLElementTagNameMap[K], O, A> {
-// export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
 
   const el = document.createElement(tagName);
   // const childNodes = children.map(el => el.node);
@@ -142,3 +134,19 @@ export function element<K extends keyof HTMLElementTagNameMap, O, A>(
 
   return { node };
 }
+
+export function div<A = {}>(children: Children<HTMLDivElement, Partial<A>>) {
+  return element('div', children);
+}
+
+export const app = () => {
+  const content = (el: Node) => fromEvent(el, 'click').pipe(
+    startWith(undefined),
+    scan(elements => [...elements, div([text('counter(1)')])], []),
+    tap(val => console.log(val)),
+  );
+
+  return div(content);
+};
+
+// app().node.subscribe(el => document.body.appendChild(el));

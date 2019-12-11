@@ -1,5 +1,6 @@
 import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
 import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
+import { app as myApp } from './element';
 
 // TODO: Allow string input.
 export function text(text: Observable<string> | string): Observable<Text> {
@@ -173,4 +174,6 @@ const app = () => {
   return div(content);
 };
 
-app().subscribe(el => document.body.appendChild(el));
+// app().subscribe(el => document.body.appendChild(el));
+
+myApp().node.subscribe(el => document.body.appendChild(el));
