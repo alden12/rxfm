@@ -81,7 +81,7 @@ export interface IElementArguments<T extends Node, O = {}, A = {}> {
 export interface IElement<T extends Node = Node, O = {}, A = {}> {
   node: T;
   outputs?: Outputs<O>;
-  actions?: Action<A>;
+  actions?: Action<A>; // TODO: Make actions part of outputs?
 }
 
 // TODO: Allow string input.
