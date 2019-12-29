@@ -109,9 +109,13 @@ export type Children<T extends Node, A> =
   ;
 
 // TODO: Attributes.
+export function element<K extends keyof HTMLElementTagNameMap, A>(
+  tagName: K,
+  children: Children<Node, Partial<A>>,
+): Observable<IElement<HTMLElementTagNameMap[K], {}, A>>
 export function element<K extends keyof HTMLElementTagNameMap, O, A>(
   tagName: K,
-  children: Children<HTMLElementTagNameMap[K], Partial<A>>,
+  children: Children<Node, Partial<A>>,
 ): Observable<IElement<HTMLElementTagNameMap[K], O, A>> {
 
   const el = document.createElement(tagName);
@@ -132,15 +136,16 @@ export function element<K extends keyof HTMLElementTagNameMap, O, A>(
       el.append(...diff.updated.filter(update => !update.insertBefore).map(update => update.node));
       diff.updated
         .filter(update => update.insertBefore).forEach(update => el.insertBefore(update.node, update.insertBefore));
-      return el;
+
+      return { node: el };
     }),
     distinctUntilChanged(),
-    map(node => ({ node })),
+    // map(node => ({ node })),
   );
 }
 
-export function div<A = {}>(children: Children<HTMLDivElement, Partial<A>>) {
-  return element('div', children);
+export function div<A = {}>(children: Children<Node, Partial<A>>) {
+  return element<'div', A>('div', children);
 }
 
 export const app = () => {
@@ -152,5 +157,3 @@ export const app = () => {
 
   return div(content);
 };
-
-// app().node.subscribe(el => document.body.appendChild(el));
