@@ -61,31 +61,8 @@ export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDif
   return { updated, removed };
 }
 
-export interface IAction<T, P> {
-  type: T;
-  payload: P;
-}
-
-export type Actions<T> = { [K in keyof T]: IAction<K, T[K]> };
-
-export type Action<T> = Observable<Actions<T>[keyof T]>;
-
-export type Outputs<T> = { [K in keyof T]: Observable<T[K]> };
-
-export interface IElementArguments<T extends Node, O = {}, A = {}> {
-  node: T;
-  outputs: O;
-  actions: A;
-}
-
-export interface IElement<T extends Node = Node, O = {}, A = {}> {
-  node: T;
-  outputs?: Outputs<O>;
-  actions?: Action<A>; // TODO: Make actions part of outputs?
-}
-
 // TODO: Allow string input.
-export function text(text: Observable<string> | string): Observable<IElement<Text>> {
+export function text(text: Observable<string> | string): Observable<Text> {
   const textObservable = typeof text === 'string' ? of(text) : text;
   const textNode = document.createTextNode('');
   return textObservable.pipe(
@@ -94,58 +71,52 @@ export function text(text: Observable<string> | string): Observable<IElement<Tex
       return textNode;
     }),
     distinctUntilChanged(),
-    map(node => ({ node })),
   );
 }
 
-export type Children<T extends Node, A> =
+export type Children<T extends Node> =
   // string
   // | Observable<string>
   // | Observable<T>
-  | Observable<IElement<Node, any, A>>[]
-  | Observable<Observable<IElement<Node, any, A>>[]>
-  | ((el: T) => Observable<IElement<Node, any, A>>[])
-  | ((el: T) => Observable<Observable<IElement<Node, any, A>>[]>)
+  | Observable<Node>[]
+  | Observable<Observable<Node>[]>
+  | ((el: T) => Observable<Node>[])
+  | ((el: T) => Observable<Observable<Node>[]>)
   ;
 
 // TODO: Attributes.
-export function element<K extends keyof HTMLElementTagNameMap, A>(
+export function element<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-  children: Children<Node, Partial<A>>,
-): Observable<IElement<HTMLElementTagNameMap[K], {}, A>>
-export function element<K extends keyof HTMLElementTagNameMap, O, A>(
-  tagName: K,
-  children: Children<Node, Partial<A>>,
-): Observable<IElement<HTMLElementTagNameMap[K], O, A>> {
+  children: Children<Node>,
+): Observable<HTMLElementTagNameMap[K]> {
 
   const el = document.createElement(tagName);
   const childrenObservable = typeof children === 'function' ? children(el) : children;
   const childrenArrayObservable = Array.isArray(childrenObservable) ? of(childrenObservable) : childrenObservable;
   const childrenArray = childrenArrayObservable.pipe(
     map(nodes => nodes.filter(el => el)),
-    switchMap(nodes => combineLatest<IElement[]>(...nodes)),
+    switchMap(nodes => combineLatest<Node[]>(...nodes)),
     map(nodes => nodes.filter(node => node)),
     debounceTime(0),
   );
 
   return childrenArray.pipe(
     map(children => {
-      const childNodes = children.map(child => child.node);
-      const diff = childDiffer(Array.from(el.childNodes.values()), childNodes);
+      // const childNodes = children.map(child => child.node);
+      const diff = childDiffer(Array.from(el.childNodes.values()), children);
       diff.removed.forEach(node => el.removeChild(node));
       el.append(...diff.updated.filter(update => !update.insertBefore).map(update => update.node));
       diff.updated
         .filter(update => update.insertBefore).forEach(update => el.insertBefore(update.node, update.insertBefore));
 
-      return { node: el };
+      return el;
     }),
     distinctUntilChanged(),
-    // map(node => ({ node })),
   );
 }
 
-export function div<A = {}>(children: Children<Node, Partial<A>>) {
-  return element<'div', A>('div', children);
+export function div(children: Children<Node>) {
+  return element('div', children);
 }
 
 export const app = () => {
