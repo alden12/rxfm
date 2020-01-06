@@ -131,11 +131,107 @@ export type Children<T extends Node> =
   | ((el: T) => Observable<Node>[])
   | ((el: T) => Observable<Observable<Node>[]>);
 
-// export type Child<T extends Node> =
-//   string |
-//   Observable<Node | string> |
-//   ((el: T) => Observable<Node | string>[])
-//   ;
+export type NodeTypes = Node | string | (Node | string)[];
+
+export type ChildElement<T extends Node> =
+  | NodeTypes
+  | Observable<NodeTypes>
+  | ((el: T) => Observable<NodeTypes>);
+
+// Do attributes as a proceeding pipe?
+// Do both as pipes?
+export function node<K extends keyof HTMLElementTagNameMap>(
+  tagName: K
+): Observable<HTMLElementTagNameMap[K]> {
+  return of(document.createElement(tagName));
+}
+
+export function coerceChildElements<T extends HTMLElement>(
+  children: ChildElement<T>[],
+  el: T,
+){ // : Observable<Observable<Node>[]> {
+  const coercedChildElements = children.map(child => coerceChildElement(child, el));
+  
+}
+
+export function coerceChildElement<T extends HTMLElement>(
+  child: ChildElement<T>,
+  el: T,
+): Observable<Node[]> {
+  const nodesOrObservable = typeof child === 'function' ? child(el) : child;
+  const nodes$ = nodesOrObservable instanceof Observable ? nodesOrObservable : of(nodesOrObservable);
+  return nodes$.pipe(
+    map(nodes => Array.isArray(nodes) ? nodes : [nodes]),
+    map((nodes) => nodes.map(node => typeof node === 'string' ? document.createTextNode(node) : node)),
+  );
+}
+
+export function updateElementChildren<T extends HTMLElement>(
+  el: T,
+  children: Node[]
+): T {
+  const diff = childDiffer(Array.from(el.childNodes.values()), children);
+
+  diff.removed.forEach(node => el.removeChild(node));
+  el.append(
+    ...diff.updated
+      .filter(update => !update.insertBefore)
+      .map(update => update.node)
+  );
+  diff.updated
+    .filter(update => update.insertBefore)
+    .forEach(update => el.insertBefore(update.node, update.insertBefore));
+
+  return el;
+}
+
+export function children<T extends HTMLElement>(
+  ...children: ChildElement<T>[]
+): (node: Observable<T>) => Observable<T> {
+  return (node: Observable<T>): Observable<T> => {
+    const res = node.pipe(
+      map(el => children.map(child => coerceChildElement(child, el))),
+      switchMap((nodeArrays$): Observable<Node[][]> => combineLatest(...nodeArrays$)),
+      map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => [...flat, ...nodeArr], [])),
+      map(nodes => updateElementChildren(el, nodes)),
+    );
+  };
+    // node.pipe(
+    //   switchMap(el => getElementArrayObservable(children, el).pipe(
+    //     switchMap((nodes$): Observable<Node[]> => combineLatest(...nodes$)),
+    //   )),
+    //   debounceTime(0),
+    //   map(children_ => updateElementChildren(node, children_)),
+      // switchMap(el => combineLatest(
+      //     ...mapChildElementsToNodeArrayObservable(children, el),
+      //   ).pipe(
+      //     debounceTime(0),
+      //     map(children_  => updateElementChildren(el, children_))
+      //   ),
+        // return childrenArray$.pipe(
+        //   map(children_ => {
+        //     const diff = childDiffer(
+        //       Array.from(el.childNodes.values()),
+        //       children_
+        //     );
+        //     diff.removed.forEach(node => el.removeChild(node));
+        //     el.append(
+        //       ...diff.updated
+        //         .filter(update => !update.insertBefore)
+        //         .map(update => update.node)
+        //     );
+        //     diff.updated
+        //       .filter(update => update.insertBefore)
+        //       .forEach(update =>
+        //         el.insertBefore(update.node, update.insertBefore)
+        //       );
+
+        //     return el;
+        //   })
+        // );
+    //   ),
+    // );
+}
 
 // TODO: Attributes.
 export function element<K extends keyof HTMLElementTagNameMap>(
@@ -198,7 +294,8 @@ export function element<K extends keyof HTMLElementTagNameMap>(
     })
   );
 
-  const attributesObservable = attributes instanceof Observable ? attributes : of(attributes);
+  const attributesObservable =
+    attributes instanceof Observable ? attributes : of(attributes);
 
   let previousAttributes: Attributes = {};
   const processAttributes = attributesObservable.pipe(
@@ -207,17 +304,14 @@ export function element<K extends keyof HTMLElementTagNameMap>(
       previousAttributes = attributes_;
       Object.keys(diff.updated).forEach(key => {
         el.setAttribute(key, diff.updated[key]);
-      })
+      });
       diff.removed.forEach(attr => el.removeAttribute(attr));
 
       return el;
-    }),
+    })
   );
 
-  return merge(
-    processChildren,
-    processAttributes,
-  ).pipe(distinctUntilChanged());
+  return merge(processChildren, processAttributes).pipe(distinctUntilChanged());
 }
 
 export function div(children: Children<HTMLDivElement>) {
@@ -232,5 +326,5 @@ export const app = () => {
       tap(val => console.log(val))
     );
 
-  return div(element('div', { style: 'color: red' }, text('hello')));
+  return div(element("div", { style: "color: red" }, text("hello")));
 };
