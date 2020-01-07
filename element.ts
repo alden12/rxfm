@@ -179,23 +179,34 @@ export function updateElementChildren<T extends HTMLElement>(
 export function children<T extends HTMLElement>(
   ...children: ChildElement<T>[]
 ): (node: Observable<T>) => Observable<T> {
-  return (node: Observable<T>): Observable<T> => {
-    return node.pipe(
-      switchMap(el => {
-          const nodeArrays$ = children.map(child => coerceChildElement(child, el));
-          const unflattenedNodes$: Observable<Node[][]> = combineLatest(...nodeArrays$).pipe(
-            debounceTime(0),
-          );
-          const nodes$ = unflattenedNodes$.pipe(
-            map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => [...flat, ...nodeArr], [])),
-          );
-          return nodes$.pipe(
-            map(nodes => updateElementChildren(el, nodes)),
-          );
-      }),
-      distinctUntilChanged(),
-    );
-  };
+  return (node: Observable<T>): Observable<T> => node.pipe(
+    switchMap(el => {
+        const nodeArrays$ = children.map(child => coerceChildElement(child, el));
+        const unflattenedNodes$: Observable<Node[][]> = combineLatest(...nodeArrays$).pipe(
+          debounceTime(0),
+        );
+        const nodes$ = unflattenedNodes$.pipe(
+          map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => [...flat, ...nodeArr], [])),
+        );
+        return nodes$.pipe(
+          map(nodes => updateElementChildren(el, nodes)),
+        );
+    }),
+    distinctUntilChanged(),
+  );
+}
+
+export function updateElementAttributes<T extends HTMLElement>(
+  el: T,
+  oldAttributes: Attributes,
+  newAttributes: Attributes,
+): T {
+  const diff = attributeDiffer(oldAttributes, newAttributes);
+  Object.keys(diff.updated).forEach(key => {
+    el.setAttribute(key, diff.updated[key]);
+  });
+  diff.removed.forEach(attr => el.removeAttribute(attr));
+  return el;
 }
 
 export function attributes<T extends HTMLElement>(
@@ -207,16 +218,13 @@ export function attributes<T extends HTMLElement>(
       let previousAttributes: Attributes = {};
       return attributesObservable.pipe(
         map(attributes_ => {
-          const diff = attributeDiffer(previousAttributes, attributes_);
+          updateElementAttributes(el, previousAttributes, attributes_);
           previousAttributes = attributes_;
-          Object.keys(diff.updated).forEach(key => {
-            el.setAttribute(key, diff.updated[key]);
-          });
-          diff.removed.forEach(attr => el.removeAttribute(attr));
           return el;
         })
       );
     }),
+    distinctUntilChanged(),
   );
 }
 
