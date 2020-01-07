@@ -132,11 +132,7 @@ export type Children<T extends Node> =
   | ((el: T) => Observable<Observable<Node>[]>);
 
 export type NodeTypes = Node | string | (Node | string)[];
-
-export type ChildElement<T extends Node> =
-  | NodeTypes
-  | Observable<NodeTypes>
-  | ((el: T) => Observable<NodeTypes>);
+export type ChildElement = | NodeTypes | Observable<NodeTypes>;
 
 export function node<K extends keyof HTMLElementTagNameMap>(
   tagName: K
@@ -145,11 +141,11 @@ export function node<K extends keyof HTMLElementTagNameMap>(
 }
 
 export function coerceChildElement<T extends HTMLElement>(
-  child: ChildElement<T>,
+  child: ChildElement | ((el: T) => ChildElement),
   el: T,
 ): Observable<Node[]> {
-  const nodesOrObservable = typeof child === 'function' ? child(el) : child;
-  const nodes$ = nodesOrObservable instanceof Observable ? nodesOrObservable : of(nodesOrObservable);
+  const childElement = typeof child === 'function' ? child(el) : child;
+  const nodes$ = childElement instanceof Observable ? childElement : of(childElement);
   return nodes$.pipe(
     map(nodes => Array.isArray(nodes) ? nodes : [nodes]),
     // Passing in a string observable should not have to recreate text node each change.
