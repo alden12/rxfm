@@ -138,20 +138,10 @@ export type ChildElement<T extends Node> =
   | Observable<NodeTypes>
   | ((el: T) => Observable<NodeTypes>);
 
-// Do attributes as a proceeding pipe?
-// Do both as pipes?
 export function node<K extends keyof HTMLElementTagNameMap>(
   tagName: K
 ): Observable<HTMLElementTagNameMap[K]> {
   return of(document.createElement(tagName));
-}
-
-export function coerceChildElements<T extends HTMLElement>(
-  children: ChildElement<T>[],
-  el: T,
-){ // : Observable<Observable<Node>[]> {
-  const coercedChildElements = children.map(child => coerceChildElement(child, el));
-  
 }
 
 export function coerceChildElement<T extends HTMLElement>(
@@ -162,6 +152,7 @@ export function coerceChildElement<T extends HTMLElement>(
   const nodes$ = nodesOrObservable instanceof Observable ? nodesOrObservable : of(nodesOrObservable);
   return nodes$.pipe(
     map(nodes => Array.isArray(nodes) ? nodes : [nodes]),
+    // Passing in a string observable should not have to recreate text node each change.
     map((nodes) => nodes.map(node => typeof node === 'string' ? document.createTextNode(node) : node)),
   );
 }
@@ -189,48 +180,44 @@ export function children<T extends HTMLElement>(
   ...children: ChildElement<T>[]
 ): (node: Observable<T>) => Observable<T> {
   return (node: Observable<T>): Observable<T> => {
-    const res = node.pipe(
-      map(el => children.map(child => coerceChildElement(child, el))),
-      switchMap((nodeArrays$): Observable<Node[][]> => combineLatest(...nodeArrays$)),
-      map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => [...flat, ...nodeArr], [])),
-      map(nodes => updateElementChildren(el, nodes)),
+    return node.pipe(
+      switchMap(el => {
+          const nodeArrays$ = children.map(child => coerceChildElement(child, el));
+          const unflattenedNodes$: Observable<Node[][]> = combineLatest(...nodeArrays$).pipe(
+            debounceTime(0),
+          );
+          const nodes$ = unflattenedNodes$.pipe(
+            map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => [...flat, ...nodeArr], [])),
+          );
+          return nodes$.pipe(
+            map(nodes => updateElementChildren(el, nodes)),
+          );
+      }),
+      distinctUntilChanged(),
     );
   };
-    // node.pipe(
-    //   switchMap(el => getElementArrayObservable(children, el).pipe(
-    //     switchMap((nodes$): Observable<Node[]> => combineLatest(...nodes$)),
-    //   )),
-    //   debounceTime(0),
-    //   map(children_ => updateElementChildren(node, children_)),
-      // switchMap(el => combineLatest(
-      //     ...mapChildElementsToNodeArrayObservable(children, el),
-      //   ).pipe(
-      //     debounceTime(0),
-      //     map(children_  => updateElementChildren(el, children_))
-      //   ),
-        // return childrenArray$.pipe(
-        //   map(children_ => {
-        //     const diff = childDiffer(
-        //       Array.from(el.childNodes.values()),
-        //       children_
-        //     );
-        //     diff.removed.forEach(node => el.removeChild(node));
-        //     el.append(
-        //       ...diff.updated
-        //         .filter(update => !update.insertBefore)
-        //         .map(update => update.node)
-        //     );
-        //     diff.updated
-        //       .filter(update => update.insertBefore)
-        //       .forEach(update =>
-        //         el.insertBefore(update.node, update.insertBefore)
-        //       );
+}
 
-        //     return el;
-        //   })
-        // );
-    //   ),
-    // );
+export function attributes<T extends HTMLElement>(
+  attributes: Attributes | Observable<Attributes>,
+): (node: Observable<T>) => Observable<T> {
+  return (node: Observable<T>): Observable<T> => node.pipe(
+    switchMap(el => {
+      const attributesObservable = attributes instanceof Observable ? attributes : of(attributes);
+      let previousAttributes: Attributes = {};
+      return attributesObservable.pipe(
+        map(attributes_ => {
+          const diff = attributeDiffer(previousAttributes, attributes_);
+          previousAttributes = attributes_;
+          Object.keys(diff.updated).forEach(key => {
+            el.setAttribute(key, diff.updated[key]);
+          });
+          diff.removed.forEach(attr => el.removeAttribute(attr));
+          return el;
+        })
+      );
+    }),
+  );
 }
 
 // TODO: Attributes.
@@ -319,12 +306,23 @@ export function div(children: Children<HTMLDivElement>) {
 }
 
 export const app = () => {
-  const content = (el: Node) =>
-    fromEvent(el, "click").pipe(
-      startWith(undefined),
-      scan(elements => [...elements, div([text("counter(1)")])], []),
-      tap(val => console.log(val))
-    );
+  // const content = (el: Node) =>
+  //   fromEvent(el, "click").pipe(
+  //     startWith(undefined),
+  //     scan(elements => [...elements, div([text("counter(1)")])], []),
+  //     tap(val => console.log(val))
+  //   );
 
-  return div(element("div", { style: "color: red" }, text("hello")));
+  // return div(element("div", { style: "color: red" }, text("hello")));
+  return node('div').pipe(
+    attributes({ style: 'color: red' }),
+    children(
+      'hello world',
+      // node('div').pipe(children(
+      //   interval(10000).pipe(
+      //     map(i => i.toString()),
+      //   )
+      // )),
+    ),
+  );
 };
