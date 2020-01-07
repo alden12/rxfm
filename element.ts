@@ -210,7 +210,7 @@ export function updateElementAttributes<T extends HTMLElement>(
 }
 
 export function attributes<T extends HTMLElement>(
-  attributes: Attributes | Observable<Attributes>,
+  attributes: Attributes | Observable<Attributes>, // Allow observable attribute keys?
 ): (node: Observable<T>) => Observable<T> {
   return (node: Observable<T>): Observable<T> => node.pipe(
     switchMap(el => {
@@ -218,7 +218,7 @@ export function attributes<T extends HTMLElement>(
       let previousAttributes: Attributes = {};
       return attributesObservable.pipe(
         map(attributes_ => {
-          updateElementAttributes(el, previousAttributes, attributes_);
+          updateElementAttributes(el, previousAttributes, attributes_); // Get attributes from element rather than saving old?
           previousAttributes = attributes_;
           return el;
         })
