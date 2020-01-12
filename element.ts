@@ -3,21 +3,15 @@ import {
   interval,
   Observable,
   combineLatest,
-  fromEvent,
-  merge
 } from "rxjs";
 import {
-  scan,
   map,
   distinctUntilChanged,
   debounceTime,
   switchMap,
-  shareReplay,
-  tap,
-  share,
-  filter,
-  startWith
 } from "rxjs/operators";
+
+import './element.css';
 
 export interface INodeUpdate {
   node: Node;
@@ -237,9 +231,47 @@ export function attributes<T extends HTMLElement>(
   );
 }
 
+export function attribute<T extends HTMLElement, A>(
+  attribute: string,
+  value: A | Observable<A>,
+  valueFunction: (val: A) => string,
+): (node: Observable<T>) => Observable<T> {
+  const value$ = value instanceof Observable ? value : of(value);
+  const attributes$ = value$.pipe(
+    map(val => ({ [attribute]: valueFunction(val) }))
+  );
+  return attributes(attributes$);
+}
+
+export type Style = { [name: string]: string | number };
+
+export function style<T extends HTMLElement>(
+  style: Style | Observable<Style>,
+): (node: Observable<T>) => Observable<T> {
+  return attribute(
+    'style',
+    style,
+    (val: Style) => Object.keys(style).reduce((string, key) => `${string}${key}: ${style[key]}; `, ''),
+  );
+}
+
+export function classes<T extends HTMLElement>(
+  classes: string | string[] | Observable<string | string[]>
+): (node: Observable<T>) => Observable<T> {
+  return attribute(
+    'class',
+    classes,
+    (val: string | string[]) => (Array.isArray(val) ? val : [val]).join(' '),
+  );
+}
+
 export const app = () => {
-  return element('div').pipe(
-    attributes({ style: 'color: red' }),
+  return div().pipe(
+    style({
+      color: 'blue',
+      'background-color': 'lightGrey',
+    }),
+    classes(['element', 'large']),
     children(
       'hello world',
       div().pipe(
