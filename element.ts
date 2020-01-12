@@ -122,7 +122,7 @@ export function text(text: Observable<string> | string): Observable<Text> {
   );
 }
 
-export type ChildElement = Node | string | (Node | string)[] | Observable<Node | Node[]>;
+export type ChildElement = Node | string | (Node | string)[] | Observable<Node | string | Node[]>;
 
 export function element<K extends keyof HTMLElementTagNameMap>(
   tagName: K
@@ -140,9 +140,17 @@ export function coerceChildElement<T extends HTMLElement>(
 ): Observable<Node[]> {
   const childElement = typeof child === 'function' ? child(el) : child;
   if (childElement instanceof Observable) {
+    let textNode: Text;
     return childElement.pipe(
-      map(nodeOrNodeArray => Array.isArray(nodeOrNodeArray) ? nodeOrNodeArray : [nodeOrNodeArray]),
-      // Allow string observable type by implementing text pipe here also?
+      map(nodeOrStringOrNodeArray => {
+        if (typeof nodeOrStringOrNodeArray === 'string') {
+          textNode = textNode || document.createTextNode('');
+          textNode.nodeValue = nodeOrStringOrNodeArray;
+          return [textNode];
+        }
+        return Array.isArray(nodeOrStringOrNodeArray) ? nodeOrStringOrNodeArray : [nodeOrStringOrNodeArray]
+      }),
+      distinctUntilChanged(),
     )
   } else {
     const nodeOrStringArray = Array.isArray(childElement) ? childElement : [childElement];
@@ -211,7 +219,7 @@ export function updateElementAttributes<T extends HTMLElement>(
 }
 
 export function attributes<T extends HTMLElement>(
-  attributes: Attributes | Observable<Attributes>, // Allow observable attribute keys?
+  attributes: Attributes | Observable<Attributes>,
 ): (node: Observable<T>) => Observable<T> {
   return (node: Observable<T>): Observable<T> => node.pipe(
     switchMap(el => {
@@ -236,10 +244,8 @@ export const app = () => {
       'hello world',
       div().pipe(
         children(
-          text(
-            interval(1000).pipe(
-              map(i => i.toString()),
-            )
+          interval(1000).pipe(
+            map(i => i.toString()),
           )
         )
       ),
