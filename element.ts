@@ -7,6 +7,7 @@ import {
   shareReplay,
   filter,
   tap,
+  startWith,
 } from "rxjs/operators";
 
 import "./element.css";
@@ -102,6 +103,7 @@ export function attributeDiffer(
   return { updated, removed };
 }
 
+// TODO: Allow number input.
 export function text(text: Observable<string> | string): Observable<Text> {
   const textObservable = typeof text === "string" ? of(text) : text;
   const textNode = document.createTextNode("");
@@ -300,7 +302,7 @@ export function generate<T, N extends Node>(
         previousIds = idSet;
         return new Map(updatedIds.map((id): [string, T] => [id, items[id]]));
       }),
-      shareReplay(1)
+      shareReplay(1),
     );
 
     let previousElements = new Map<string, Observable<N>>();
@@ -315,10 +317,10 @@ export function generate<T, N extends Node>(
             }
             const itemUpdates = updates.pipe(
               filter(update => update.has(id)),
-              map(update => update.get(id))
+              map(update => update.get(id)),
+              startWith(item),
             );
             return [id, creationFunction(itemUpdates).pipe(
-              tap(val => console.log(val)),
               shareReplay(1),
             )];
           })
@@ -328,7 +330,6 @@ export function generate<T, N extends Node>(
         return elMap;
       }),
       switchMap(elMap => combineLatest<N[]>(...Array.from(elMap.values()))),
-      tap(items => console.log(items)),
       debounceTime(0),
     );
   };
