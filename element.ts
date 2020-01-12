@@ -1,17 +1,15 @@
-import {
-  of,
-  interval,
-  Observable,
-  combineLatest,
-} from "rxjs";
+import { of, interval, Observable, combineLatest } from "rxjs";
 import {
   map,
   distinctUntilChanged,
   debounceTime,
   switchMap,
+  shareReplay,
+  filter,
+  tap,
 } from "rxjs/operators";
 
-import './element.css';
+import "./element.css";
 
 export interface INodeUpdate {
   node: Node;
@@ -116,7 +114,11 @@ export function text(text: Observable<string> | string): Observable<Text> {
   );
 }
 
-export type ChildElement = Node | string | (Node | string)[] | Observable<Node | string | Node[]>;
+export type ChildElement =
+  | Node
+  | string
+  | (Node | string)[]
+  | Observable<Node | string | Node[]>;
 
 export function element<K extends keyof HTMLElementTagNameMap>(
   tagName: K
@@ -125,31 +127,38 @@ export function element<K extends keyof HTMLElementTagNameMap>(
 }
 
 export function div() {
-  return element('div');
+  return element("div");
 }
 
 export function coerceChildElement<T extends HTMLElement>(
   child: ChildElement | ((el: T) => ChildElement),
-  el: T,
+  el: T
 ): Observable<Node[]> {
-  const childElement = typeof child === 'function' ? child(el) : child;
+  const childElement = typeof child === "function" ? child(el) : child;
   if (childElement instanceof Observable) {
     let textNode: Text;
     return childElement.pipe(
       map(nodeOrStringOrNodeArray => {
-        if (typeof nodeOrStringOrNodeArray === 'string') {
-          textNode = textNode || document.createTextNode('');
+        if (typeof nodeOrStringOrNodeArray === "string") {
+          textNode = textNode || document.createTextNode("");
           textNode.nodeValue = nodeOrStringOrNodeArray;
           return [textNode];
         }
-        return Array.isArray(nodeOrStringOrNodeArray) ? nodeOrStringOrNodeArray : [nodeOrStringOrNodeArray]
+        return Array.isArray(nodeOrStringOrNodeArray)
+          ? nodeOrStringOrNodeArray
+          : [nodeOrStringOrNodeArray];
       }),
-      distinctUntilChanged(),
-    )
+      distinctUntilChanged()
+    );
   } else {
-    const nodeOrStringArray = Array.isArray(childElement) ? childElement : [childElement];
-    const nodeArray = nodeOrStringArray.map(
-      nodeOrString => typeof nodeOrString === 'string' ? document.createTextNode(nodeOrString) : nodeOrString);
+    const nodeOrStringArray = Array.isArray(childElement)
+      ? childElement
+      : [childElement];
+    const nodeArray = nodeOrStringArray.map(nodeOrString =>
+      typeof nodeOrString === "string"
+        ? document.createTextNode(nodeOrString)
+        : nodeOrString
+    );
     return of(nodeArray);
   }
 }
@@ -177,14 +186,22 @@ export function updateElementChildren<T extends HTMLElement>(
 export function children<T extends HTMLElement>(
   ...children: (ChildElement | ((el: T) => ChildElement))[]
 ): (node: Observable<T>) => Observable<T> {
-  return (node: Observable<T>): Observable<T> => node.pipe(
-    switchMap(el => {
-        const nodeArrays$ = children.map(child => coerceChildElement(child, el));
-        const unflattenedNodes$: Observable<Node[][]> = combineLatest(...nodeArrays$).pipe(
-          debounceTime(0),
+  return (node: Observable<T>): Observable<T> =>
+    node.pipe(
+      switchMap(el => {
+        const nodeArrays$ = children.map(child =>
+          coerceChildElement(child, el)
         );
+        const unflattenedNodes$: Observable<Node[][]> = combineLatest(
+          ...nodeArrays$
+        ).pipe(debounceTime(0));
         const nodes$ = unflattenedNodes$.pipe(
-          map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => flat.concat(nodeArr), [])),
+          map(unflattened =>
+            unflattened.reduce<Node[]>(
+              (flat, nodeArr) => flat.concat(nodeArr),
+              []
+            )
+          )
         );
         let previousNodes: Node[] = [];
         return nodes$.pipe(
@@ -192,17 +209,17 @@ export function children<T extends HTMLElement>(
             updateElementChildren(el, previousNodes, nodes);
             previousNodes = nodes;
             return el;
-          }),
+          })
         );
-    }),
-    distinctUntilChanged(),
-  );
+      }),
+      distinctUntilChanged()
+    );
 }
 
 export function updateElementAttributes<T extends HTMLElement>(
   el: T,
   oldAttributes: Attributes,
-  newAttributes: Attributes,
+  newAttributes: Attributes
 ): T {
   const diff = attributeDiffer(oldAttributes, newAttributes);
   Object.keys(diff.updated).forEach(key => {
@@ -213,28 +230,30 @@ export function updateElementAttributes<T extends HTMLElement>(
 }
 
 export function attributes<T extends HTMLElement>(
-  attributes: Attributes | Observable<Attributes>,
+  attributes: Attributes | Observable<Attributes>
 ): (node: Observable<T>) => Observable<T> {
-  return (node: Observable<T>): Observable<T> => node.pipe(
-    switchMap(el => {
-      const attributesObservable = attributes instanceof Observable ? attributes : of(attributes);
-      let previousAttributes: Attributes = {};
-      return attributesObservable.pipe(
-        map(attributes_ => {
-          updateElementAttributes(el, previousAttributes, attributes_);
-          previousAttributes = attributes_;
-          return el;
-        })
-      );
-    }),
-    distinctUntilChanged(),
-  );
+  return (node: Observable<T>): Observable<T> =>
+    node.pipe(
+      switchMap(el => {
+        const attributesObservable =
+          attributes instanceof Observable ? attributes : of(attributes);
+        let previousAttributes: Attributes = {};
+        return attributesObservable.pipe(
+          map(attributes_ => {
+            updateElementAttributes(el, previousAttributes, attributes_);
+            previousAttributes = attributes_;
+            return el;
+          })
+        );
+      }),
+      distinctUntilChanged()
+    );
 }
 
 export function attribute<T extends HTMLElement, A>(
   attribute: string,
   value: A | Observable<A>,
-  valueFunction: (val: A) => string,
+  valueFunction: (val: A) => string
 ): (node: Observable<T>) => Observable<T> {
   const value$ = value instanceof Observable ? value : of(value);
   const attributes$ = value$.pipe(
@@ -246,41 +265,91 @@ export function attribute<T extends HTMLElement, A>(
 export type Style = { [name: string]: string | number };
 
 export function style<T extends HTMLElement>(
-  style: Style | Observable<Style>,
+  style: Style | Observable<Style>
 ): (node: Observable<T>) => Observable<T> {
-  return attribute(
-    'style',
-    style,
-    (val: Style) => Object.keys(style).reduce((string, key) => `${string}${key}: ${style[key]}; `, ''),
+  return attribute("style", style, (val: Style) =>
+    Object.keys(style).reduce(
+      (string, key) => `${string}${key}: ${style[key]}; `,
+      ""
+    )
   );
 }
 
 export function classes<T extends HTMLElement>(
   classes: string | string[] | Observable<string | string[]>
 ): (node: Observable<T>) => Observable<T> {
-  return attribute(
-    'class',
-    classes,
-    (val: string | string[]) => (Array.isArray(val) ? val : [val]).join(' '),
+  return attribute("class", classes, (val: string | string[]) =>
+    (Array.isArray(val) ? val : [val]).join(" ")
   );
+}
+
+export function generate<T, N extends Node>(
+  creationFunction: (item: Observable<T>) => Observable<N>,
+  idFunction: (item: T) => string
+): (items: Observable<T[]>) => Observable<N[]> {
+  return (items$: Observable<T[]>) => {
+
+    let previousIds = new Set<string>();
+    const updates = items$.pipe(
+      map(items => {
+        const itemIds = items.map(item => idFunction(item));
+        const idSet = new Set(...itemIds);
+        const updatedIds = Array.from(idSet.values()).filter(id =>
+          previousIds.has(id)
+        );
+        previousIds = idSet;
+        return new Map(updatedIds.map((id): [string, T] => [id, items[id]]));
+      }),
+      shareReplay(1)
+    );
+
+    let previousElements = new Map<string, Observable<N>>();
+    return items$.pipe(
+      map(items => {
+
+        const elMap = new Map(
+          items.map(item => {
+            const id = idFunction(item);
+            if (previousElements.has(id)) {
+              return [id, previousElements.get(id)];
+            }
+            const itemUpdates = updates.pipe(
+              filter(update => update.has(id)),
+              map(update => update.get(id))
+            );
+            return [id, creationFunction(itemUpdates).pipe(
+              tap(val => console.log(val)),
+              shareReplay(1),
+            )];
+          })
+        );
+
+        previousElements = elMap;
+        return elMap;
+      }),
+      switchMap(elMap => combineLatest<N[]>(...Array.from(elMap.values()))),
+      tap(items => console.log(items)),
+      debounceTime(0),
+    );
+  };
 }
 
 export const app = () => {
   return div().pipe(
     style({
-      color: 'blue',
-      'background-color': 'lightGrey',
+      color: "blue",
+      "background-color": "lightGrey"
     }),
-    classes(['element', 'large']),
+    classes(["element", "large"]),
     children(
-      'hello world',
-      div().pipe(
-        children(
-          interval(1000).pipe(
-            map(i => i.toString()),
-          )
+      "hello world",
+      div().pipe(children(interval(1000).pipe(map(i => i.toString())))),
+      of([1, 2, 3]).pipe(
+        generate(
+          item => text(item.pipe(map(i => i.toString()))),
+          item => item.toString(),
         )
-      ),
-    ),
+      )
+    )
   );
 };
