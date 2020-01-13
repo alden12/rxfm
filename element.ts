@@ -342,18 +342,10 @@ export function holdState<T, S>(
         ...previousState,
         ...stateFunction(previousState, value)
       })),
-      filter(newState => {
-        const equal = Object.keys(newState).every(
-          key => newState[key] === previousState[key]
-        );
-        if (!equal) {
-          previousState = newState;
-          return true;
-        }
-        return false;
-      }),
+      distinctUntilChanged((prev, curr) => Object.keys(curr).every(key => curr[key] === prev[key])),
+      tap(state => previousState = state),
       startWith(initialState),
-      shareReplay(1)
+      shareReplay(1),
     );
 }
 
