@@ -286,8 +286,8 @@ export function classes<T extends HTMLElement>(
 }
 
 export function generate<T, N extends Node>(
+  idFunction: (item: T) => string,
   creationFunction: (item: Observable<T>) => Observable<N>,
-  idFunction: (item: T) => string
 ): (items: Observable<T[]>) => Observable<N[]> {
   return (items$: Observable<T[]>) => {
     let previousIds = new Set<string>();
@@ -332,15 +332,15 @@ export function generate<T, N extends Node>(
 }
 
 export function holdState<T, S>(
-  stateFunction: (input: T, previousState: Partial<S>) => Partial<S>,
-  initialState: Partial<S> = {}
+  initialState: Partial<S> = {},
+  stateFunction: (previousState: Partial<S>, input: T) => Partial<S>,
 ): (input: Observable<T>) => Observable<Partial<S>> {
   let previousState = initialState;
   return (input: Observable<T>) =>
     input.pipe(
       map(value => ({
         ...previousState,
-        ...stateFunction(value, previousState)
+        ...stateFunction(previousState, value)
       })),
       filter(newState => {
         const equal = Object.keys(newState).every(
@@ -362,9 +362,8 @@ export const app = () => {
   const state = element.pipe(
     switchMap(el => fromEvent(el, "click")),
     holdState(
-      (ev, { color }) =>
-        color === "red" ? { color: "blue" } : { color: "red" },
-      { color: "red" }
+      { color: "red" },
+      ({ color }) => color === "red" ? { color: "blue" } : { color: "red" },
     ),
   );
 
@@ -383,8 +382,10 @@ export const app = () => {
       div().pipe(children(interval(1000).pipe(map(i => i.toString())))),
       of([1, 2, 3]).pipe(
         generate(
-          item => text(item.pipe(map(i => i.toString()))),
-          item => item.toString()
+          item => `${item}`,
+          item => div().pipe(
+            children(item.pipe(map(i => `${i}`))),
+          ),
         )
       )
     )
