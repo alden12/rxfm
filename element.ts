@@ -332,16 +332,16 @@ export function generate<T, N extends Node>(
 }
 
 export function holdState<T, S>(
+  stateFunction: (input: T, previousState: Partial<S>) => Partial<S>,
   initialState: Partial<S> = {},
-  stateFunction: (previousState: Partial<S>, input: T) => Partial<S>,
 ): (input: Observable<T>) => Observable<Partial<S>> {
   let previousState = initialState;
   return (input: Observable<T>) =>
     input.pipe(
       map(value => ({
         ...previousState,
-        ...stateFunction(previousState, value)
-      })),
+        ...stateFunction(value, previousState)
+      })), // TODO: Use scan.
       distinctUntilChanged((prev, curr) => Object.keys(curr).every(key => curr[key] === prev[key])),
       tap(state => previousState = state),
       startWith(initialState),
@@ -349,13 +349,15 @@ export function holdState<T, S>(
     );
 }
 
+// TODO: Create cheaty state with a subject?
+
 export const app = () => {
   const element = div();
   const state = element.pipe(
     switchMap(el => fromEvent(el, "click")),
     holdState(
+      (_, { color }) => color === "red" ? { color: "blue" } : { color: "red" },
       { color: "red" },
-      ({ color }) => color === "red" ? { color: "blue" } : { color: "red" },
     ),
   );
 
