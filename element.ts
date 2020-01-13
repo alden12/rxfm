@@ -1,4 +1,4 @@
-import { of, interval, Observable, combineLatest } from "rxjs";
+import { of, interval, Observable, combineLatest, fromEvent } from "rxjs";
 import {
   map,
   distinctUntilChanged,
@@ -259,7 +259,7 @@ export function attribute<T extends HTMLElement, A>(
 ): (node: Observable<T>) => Observable<T> {
   const value$ = value instanceof Observable ? value : of(value);
   const attributes$ = value$.pipe(
-    map(val => ({ [attribute]: valueFunction(val) }))
+    map(val => ({ [attribute]: valueFunction(val) })),
   );
   return attributes(attributes$);
 }
@@ -270,8 +270,8 @@ export function style<T extends HTMLElement>(
   style: Style | Observable<Style>
 ): (node: Observable<T>) => Observable<T> {
   return attribute("style", style, (val: Style) =>
-    Object.keys(style).reduce(
-      (string, key) => `${string}${key}: ${style[key]}; `,
+    Object.keys(val).reduce(
+      (string, key) => `${string}${key}: ${val[key]}; `,
       ""
     )
   );
@@ -290,7 +290,6 @@ export function generate<T, N extends Node>(
   idFunction: (item: T) => string
 ): (items: Observable<T[]>) => Observable<N[]> {
   return (items$: Observable<T[]>) => {
-
     let previousIds = new Set<string>();
     const updates = items$.pipe(
       map(items => {
@@ -302,13 +301,12 @@ export function generate<T, N extends Node>(
         previousIds = idSet;
         return new Map(updatedIds.map((id): [string, T] => [id, items[id]]));
       }),
-      shareReplay(1),
+      shareReplay(1)
     );
 
     let previousElements = new Map<string, Observable<N>>();
     return items$.pipe(
       map(items => {
-
         const elMap = new Map(
           items.map(item => {
             const id = idFunction(item);
@@ -318,11 +316,9 @@ export function generate<T, N extends Node>(
             const itemUpdates = updates.pipe(
               filter(update => update.has(id)),
               map(update => update.get(id)),
-              startWith(item),
+              startWith(item)
             );
-            return [id, creationFunction(itemUpdates).pipe(
-              shareReplay(1),
-            )];
+            return [id, creationFunction(itemUpdates).pipe(shareReplay(1))];
           })
         );
 
@@ -330,17 +326,57 @@ export function generate<T, N extends Node>(
         return elMap;
       }),
       switchMap(elMap => combineLatest<N[]>(...Array.from(elMap.values()))),
-      debounceTime(0),
+      debounceTime(0)
     );
   };
 }
 
+export function holdState<T, S>(
+  stateFunction: (input: T, previousState: Partial<S>) => Partial<S>,
+  initialState: Partial<S> = {}
+): (input: Observable<T>) => Observable<Partial<S>> {
+  let previousState = initialState;
+  return (input: Observable<T>) =>
+    input.pipe(
+      map(value => ({
+        ...previousState,
+        ...stateFunction(value, previousState)
+      })),
+      filter(newState => {
+        const equal = Object.keys(newState).every(
+          key => newState[key] === previousState[key]
+        );
+        if (!equal) {
+          previousState = newState;
+          return true;
+        }
+        return false;
+      }),
+      startWith(initialState),
+      shareReplay(1)
+    );
+}
+
 export const app = () => {
-  return div().pipe(
-    style({
-      color: "blue",
-      "background-color": "lightGrey"
-    }),
+  const element = div();
+  const state = element.pipe(
+    switchMap(el => fromEvent(el, "click")),
+    holdState(
+      (ev, { color }) =>
+        color === "red" ? { color: "blue" } : { color: "red" },
+      { color: "red" }
+    ),
+  );
+
+  return element.pipe(
+    style(
+      state.pipe(
+        map(({ color }) => ({
+          color,
+          "background-color": "lightGrey"
+        })),
+      )
+    ),
     classes(["element", "large"]),
     children(
       "hello world",
@@ -348,7 +384,7 @@ export const app = () => {
       of([1, 2, 3]).pipe(
         generate(
           item => text(item.pipe(map(i => i.toString()))),
-          item => item.toString(),
+          item => item.toString()
         )
       )
     )
