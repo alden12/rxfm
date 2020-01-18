@@ -275,7 +275,7 @@ export function classes<T extends HTMLElement>(
   );
 }
 
-export function style<T extends HTMLElement>(
+export function styles<T extends HTMLElement>(
   styles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>,
 ): (node: Observable<T>) => Observable<T> {
   return (node: Observable<T>) => node.pipe(
@@ -400,7 +400,7 @@ export const app = () => {
   const { state, getState, setState } = createState({ color: 'orange' });
 
   return div().pipe(
-    style(
+    styles(
       state.pipe(
         map(({ color }) => ({
           color,
