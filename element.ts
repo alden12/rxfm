@@ -350,28 +350,25 @@ export function holdState<T, S>(
     );
 }
 
-export class CheekyState<T> {
-  private stateSubject: BehaviorSubject<Partial<T>>;
+export interface ICheekyState<T> {
+  state: Observable<Partial<T>>;
+  getState: () => Partial<T>,
+  setState: (stateRequest: Partial<T>) => any,
+}
 
-  constructor(initialState: Partial<T> = {}) {
-    this.stateSubject = new BehaviorSubject<Partial<T>>(initialState);
-  }
-
-  public get state(): Observable<Partial<T>> {
-    return this.stateSubject.asObservable();
-  };
-  public get currentState(): Partial<T> {
-    return this.stateSubject.value;
-  };
-
-  public setState(stateRequest: Partial<T>) {
-    if (Object.keys(stateRequest).some(key => stateRequest[key] !== this.currentState[key])) {
-      this.stateSubject.next({
-        ...this.currentState,
+export function cheekyState<T>(initialState: Partial<T>): ICheekyState<T> {
+  const stateSubject = new BehaviorSubject<Partial<T>>(initialState);
+  const state = stateSubject.asObservable();
+  const getState = () => stateSubject.value;
+  const setState = (stateRequest: Partial<T>) => {
+    if (Object.keys(stateRequest).some(key => stateRequest[key] !== stateSubject.value[key])) {
+      stateSubject.next({
+        ...stateSubject.value,
         ...stateRequest,
       });
     }
-  }
+  };
+  return { state, getState, setState };
 }
 
 export function cheekySideEffect<T, S>(
@@ -389,11 +386,11 @@ export function cheekySideEffect<T, S>(
 }
 
 export const app = () => {
-  const state = new CheekyState({ color: 'orange' });
+  const { state, getState, setState } = cheekyState({ color: 'orange' });
 
   return div().pipe(
     style(
-      state.state.pipe(
+      state.pipe(
         map(({ color }) => ({
           color,
           "background-color": "lightGrey"
@@ -411,7 +408,7 @@ export const app = () => {
             children(item.pipe(map(i => `${i}`))),
             cheekySideEffect(
               el => fromEvent(el, 'click'),
-              () => state.setState({ color: state.currentState.color === 'orange' ? 'blue' : 'orange' }),
+              () => setState({ color: getState().color === 'orange' ? 'blue' : 'orange' }),
             )
           ),
         )
