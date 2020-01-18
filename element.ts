@@ -267,6 +267,14 @@ export function attribute<T extends HTMLElement, A>(
   return attributes(attributes$);
 }
 
+export function classes<T extends HTMLElement>(
+  classes: string | string[] | Observable<string | string[]>
+): (node: Observable<T>) => Observable<T> {
+  return attribute("class", classes, (val: string | string[]) =>
+    (Array.isArray(val) ? val : [val]).join(" ")
+  );
+}
+
 export function style<T extends HTMLElement>(
   styles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>,
 ): (node: Observable<T>) => Observable<T> {
@@ -282,17 +290,10 @@ export function style<T extends HTMLElement>(
           previousStyles = { ...previousStyles, ...style };
           return el;
         }),
+        startWith(el),
       );
     }),
     distinctUntilChanged(),
-  );
-}
-
-export function classes<T extends HTMLElement>(
-  classes: string | string[] | Observable<string | string[]>
-): (node: Observable<T>) => Observable<T> {
-  return attribute("class", classes, (val: string | string[]) =>
-    (Array.isArray(val) ? val : [val]).join(" ")
   );
 }
 
@@ -366,7 +367,7 @@ export interface ICheekyState<T> {
   setState: (stateRequest: Partial<T>) => any,
 }
 
-export function cheekyState<T>(initialState: Partial<T>): ICheekyState<T> {
+export function createState<T>(initialState: Partial<T>): ICheekyState<T> {
   const stateSubject = new BehaviorSubject<Partial<T>>(initialState);
   const state = stateSubject.asObservable();
   const getState = () => stateSubject.value;
@@ -381,7 +382,7 @@ export function cheekyState<T>(initialState: Partial<T>): ICheekyState<T> {
   return { state, getState, setState };
 }
 
-export function cheekySideEffect<T, S>(
+export function sideEffect<T, S>(
   trigger: (input: T) => Observable<S>,
   sideEffect: (value: S) => any,
 ): (input: Observable<T>) => Observable<T> {
@@ -396,7 +397,7 @@ export function cheekySideEffect<T, S>(
 }
 
 export const app = () => {
-  const { state, getState, setState } = cheekyState({ color: 'orange' });
+  const { state, getState, setState } = createState({ color: 'orange' });
 
   return div().pipe(
     style(
@@ -416,7 +417,7 @@ export const app = () => {
           item => `${item}`,
           item => div().pipe(
             children(item.pipe(map(i => `${i}`))),
-            cheekySideEffect(
+            sideEffect(
               el => fromEvent(el, 'click'),
               () => setState({ color: getState().color === 'orange' ? 'blue' : 'orange' }),
             )
