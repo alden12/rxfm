@@ -212,7 +212,8 @@ export function children<T extends HTMLElement>(
             updateElementChildren(el, previousNodes, nodes);
             previousNodes = nodes;
             return el;
-          })
+          }),
+          startWith(el),
         );
       }),
       distinctUntilChanged()
@@ -246,7 +247,8 @@ export function attributes<T extends HTMLElement>(
             updateElementAttributes(el, previousAttributes, attributes_);
             previousAttributes = attributes_;
             return el;
-          })
+          }),
+          startWith(el),
         );
       }),
       distinctUntilChanged()
@@ -265,16 +267,24 @@ export function attribute<T extends HTMLElement, A>(
   return attributes(attributes$);
 }
 
-export type Style = { [name: string]: string | number };
-
 export function style<T extends HTMLElement>(
-  style: Style | Observable<Style>
+  styles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>,
 ): (node: Observable<T>) => Observable<T> {
-  return attribute("style", style, (val: Style) =>
-    Object.keys(val).reduce(
-      (string, key) => `${string}${key}: ${val[key]}; `,
-      ""
-    )
+  return (node: Observable<T>) => node.pipe(
+    switchMap(el => {
+      const stylesObservable = styles instanceof Observable ? styles : of(styles);
+      let previousStyles: Partial<CSSStyleDeclaration> = {};
+      return stylesObservable.pipe(
+        map(style => {
+          Object.keys(style)
+            .filter(key => style[key] !== previousStyles[key])
+            .forEach(key => el.style[key] = style[key] || null);
+          previousStyles = { ...previousStyles, ...style };
+          return el;
+        }),
+      );
+    }),
+    distinctUntilChanged(),
   );
 }
 
@@ -393,7 +403,7 @@ export const app = () => {
       state.pipe(
         map(({ color }) => ({
           color,
-          "background-color": "lightGrey"
+          backgroundColor: 'lightGrey',
         })),
       )
     ),
