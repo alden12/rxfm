@@ -1,4 +1,4 @@
-import { of, interval, Observable, combineLatest, fromEvent } from "rxjs";
+import { of, interval, Observable, combineLatest, fromEvent, BehaviorSubject } from "rxjs";
 import {
   map,
   distinctUntilChanged,
@@ -8,6 +8,7 @@ import {
   filter,
   tap,
   startWith,
+  mapTo,
 } from "rxjs/operators";
 
 import "./element.css";
@@ -349,21 +350,50 @@ export function holdState<T, S>(
     );
 }
 
-// TODO: Create cheaty state with a subject?
+export class CheekyState<T> {
+  private stateSubject: BehaviorSubject<Partial<T>>;
+
+  constructor(initialState: Partial<T> = {}) {
+    this.stateSubject = new BehaviorSubject<Partial<T>>(initialState);
+  }
+
+  public get state(): Observable<Partial<T>> {
+    return this.stateSubject.asObservable();
+  };
+  public get currentState(): Partial<T> {
+    return this.stateSubject.value;
+  };
+
+  public setState(stateRequest: Partial<T>) {
+    if (Object.keys(stateRequest).some(key => stateRequest[key] !== this.currentState[key])) {
+      this.stateSubject.next({
+        ...this.currentState,
+        ...stateRequest,
+      });
+    }
+  }
+}
+
+export function cheekySideEffect<T, S>(
+  trigger: (input: T) => Observable<S>,
+  sideEffect: (value: S) => any,
+): (input: Observable<T>) => Observable<T> {
+  return (input: Observable<T>) => input.pipe(
+    switchMap(ip => trigger(ip).pipe(
+      tap(sideEffect),
+      startWith(ip),
+      mapTo(ip),
+    )),
+    distinctUntilChanged(),
+  );
+}
 
 export const app = () => {
-  const element = div();
-  const state = element.pipe(
-    switchMap(el => fromEvent(el, "click")),
-    holdState(
-      (_, { color }) => color === "red" ? { color: "blue" } : { color: "red" },
-      { color: "red" },
-    ),
-  );
+  const state = new CheekyState({ color: 'orange' });
 
-  return element.pipe(
+  return div().pipe(
     style(
-      state.pipe(
+      state.state.pipe(
         map(({ color }) => ({
           color,
           "background-color": "lightGrey"
@@ -379,6 +409,10 @@ export const app = () => {
           item => `${item}`,
           item => div().pipe(
             children(item.pipe(map(i => `${i}`))),
+            cheekySideEffect(
+              el => fromEvent(el, 'click'),
+              () => state.setState({ color: state.currentState.color === 'orange' ? 'blue' : 'orange' }),
+            )
           ),
         )
       )
