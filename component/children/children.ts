@@ -6,28 +6,20 @@ export type ChildComponent<E = undefined> = string | number | Observable<string 
 
 export function coerceChildComponent<E = undefined>(childComponent: ChildComponent): Observable<IComponent<any, E>[]> {
   if (childComponent instanceof Observable) {
-    let textNode: Text;
+    let node: Text;
     return childComponent.pipe(
       map(child => {
         if (typeof child === "string" || typeof child === 'number') {
-          textNode = textNode || document.createTextNode('');
-          textNode.nodeValue = typeof child === 'number' ? child.toString() : child;
-          return [textNode];
+          node = node || document.createTextNode('');
+          node.nodeValue = typeof child === 'number' ? child.toString() : child;
+          return [{ node }];
         }
         return Array.isArray(child) ? child : [child];
       }),
     );
   } else {
-    const node = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
+    const content = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
+    const node = document.createTextNode(content);
     return of([{ node }]);
-    // const nodeOrStringArray = Array.isArray(childElement)
-    //   ? childElement
-    //   : [childElement];
-    // const nodeArray = nodeOrStringArray.map(nodeOrString =>
-    //   typeof nodeOrString === "string"
-    //     ? document.createTextNode(nodeOrString)
-    //     : nodeOrString
-    // );
-    // return of(nodeArray);
   }
 }
