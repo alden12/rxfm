@@ -1,4 +1,11 @@
-import { of, interval, Observable, combineLatest, fromEvent, BehaviorSubject } from "rxjs";
+import {
+  of,
+  interval,
+  Observable,
+  combineLatest,
+  fromEvent,
+  BehaviorSubject
+} from "rxjs";
 import {
   map,
   distinctUntilChanged,
@@ -8,7 +15,7 @@ import {
   filter,
   tap,
   startWith,
-  mapTo,
+  mapTo
 } from "rxjs/operators";
 
 import "./element.css";
@@ -213,7 +220,7 @@ export function children<T extends HTMLElement>(
             previousNodes = nodes;
             return el;
           }),
-          startWith(el),
+          startWith(el)
         );
       }),
       distinctUntilChanged()
@@ -248,7 +255,7 @@ export function attributes<T extends HTMLElement>(
             previousAttributes = attributes_;
             return el;
           }),
-          startWith(el),
+          startWith(el)
         );
       }),
       distinctUntilChanged()
@@ -262,7 +269,7 @@ export function attribute<T extends HTMLElement, A>(
 ): (node: Observable<T>) => Observable<T> {
   const value$ = value instanceof Observable ? value : of(value);
   const attributes$ = value$.pipe(
-    map(val => ({ [attribute]: valueFunction(val) })),
+    map(val => ({ [attribute]: valueFunction(val) }))
   );
   return attributes(attributes$);
 }
@@ -276,30 +283,34 @@ export function classes<T extends HTMLElement>(
 }
 
 export function styles<T extends HTMLElement>(
-  styles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>,
+  styles:
+    | Partial<CSSStyleDeclaration>
+    | Observable<Partial<CSSStyleDeclaration>>
 ): (node: Observable<T>) => Observable<T> {
-  return (node: Observable<T>) => node.pipe(
-    switchMap(el => {
-      const stylesObservable = styles instanceof Observable ? styles : of(styles);
-      let previousStyles: Partial<CSSStyleDeclaration> = {};
-      return stylesObservable.pipe(
-        map(style => {
-          Object.keys(style)
-            .filter(key => style[key] !== previousStyles[key])
-            .forEach(key => el.style[key] = style[key] || null);
-          previousStyles = { ...previousStyles, ...style };
-          return el;
-        }),
-        startWith(el),
-      );
-    }),
-    distinctUntilChanged(),
-  );
+  return (node: Observable<T>) =>
+    node.pipe(
+      switchMap(el => {
+        const stylesObservable =
+          styles instanceof Observable ? styles : of(styles);
+        let previousStyles: Partial<CSSStyleDeclaration> = {};
+        return stylesObservable.pipe(
+          map(style => {
+            Object.keys(style)
+              .filter(key => style[key] !== previousStyles[key])
+              .forEach(key => (el.style[key] = style[key] || null));
+            previousStyles = { ...previousStyles, ...style };
+            return el;
+          }),
+          startWith(el)
+        );
+      }),
+      distinctUntilChanged()
+    );
 }
 
 export function generate<T, N extends Node>(
   idFunction: (item: T) => string,
-  creationFunction: (item: Observable<T>) => Observable<N>,
+  creationFunction: (item: Observable<T>) => Observable<N>
 ): (items: Observable<T[]>) => Observable<N[]> {
   return (items$: Observable<T[]>) => {
     let previousIds = new Set<string>();
@@ -345,7 +356,7 @@ export function generate<T, N extends Node>(
 
 export function holdState<T, S>(
   stateFunction: (input: T, previousState: Partial<S>) => Partial<S>,
-  initialState: Partial<S> = {},
+  initialState: Partial<S> = {}
 ): (input: Observable<T>) => Observable<Partial<S>> {
   let previousState = initialState;
   return (input: Observable<T>) =>
@@ -354,17 +365,19 @@ export function holdState<T, S>(
         ...previousState,
         ...stateFunction(value, previousState)
       })), // TODO: Use scan.
-      distinctUntilChanged((prev, curr) => Object.keys(curr).every(key => curr[key] === prev[key])),
-      tap(state => previousState = state),
+      distinctUntilChanged((prev, curr) =>
+        Object.keys(curr).every(key => curr[key] === prev[key])
+      ),
+      tap(state => (previousState = state)),
       startWith(initialState),
-      shareReplay(1),
+      shareReplay(1)
     );
 }
 
 export interface ICheekyState<T> {
   state: Observable<Partial<T>>;
-  getState: () => Partial<T>,
-  setState: (stateRequest: Partial<T>) => any,
+  getState: () => Partial<T>;
+  setState: (stateRequest: Partial<T>) => any;
 }
 
 export function createState<T>(initialState: Partial<T>): ICheekyState<T> {
@@ -372,10 +385,14 @@ export function createState<T>(initialState: Partial<T>): ICheekyState<T> {
   const state = stateSubject.asObservable();
   const getState = () => stateSubject.value;
   const setState = (stateRequest: Partial<T>) => {
-    if (Object.keys(stateRequest).some(key => stateRequest[key] !== stateSubject.value[key])) {
+    if (
+      Object.keys(stateRequest).some(
+        key => stateRequest[key] !== stateSubject.value[key]
+      )
+    ) {
       stateSubject.next({
         ...stateSubject.value,
-        ...stateRequest,
+        ...stateRequest
       });
     }
   };
@@ -384,28 +401,31 @@ export function createState<T>(initialState: Partial<T>): ICheekyState<T> {
 
 export function sideEffect<T, S>(
   trigger: (input: T) => Observable<S>,
-  sideEffect: (value: S) => any,
+  sideEffect: (value: S) => any
 ): (input: Observable<T>) => Observable<T> {
-  return (input: Observable<T>) => input.pipe(
-    switchMap(ip => trigger(ip).pipe(
-      tap(sideEffect),
-      startWith(ip),
-      mapTo(ip),
-    )),
-    distinctUntilChanged(),
-  );
+  return (input: Observable<T>) =>
+    input.pipe(
+      switchMap(ip =>
+        trigger(ip).pipe(
+          tap(sideEffect),
+          startWith(ip),
+          mapTo(ip)
+        )
+      ),
+      distinctUntilChanged()
+    );
 }
 
 export const app = () => {
-  const { state, getState, setState } = createState({ color: 'orange' });
+  const { state, getState, setState } = createState({ color: "orange" });
 
   return div().pipe(
     styles(
       state.pipe(
         map(({ color }) => ({
           color,
-          backgroundColor: 'lightGrey',
-        })),
+          backgroundColor: "lightGrey"
+        }))
       )
     ),
     classes(["element", "large"]),
@@ -415,13 +435,17 @@ export const app = () => {
       of([1, 2, 3]).pipe(
         generate(
           item => `${item}`,
-          item => div().pipe(
-            children(item.pipe(map(i => `${i}`))),
-            sideEffect(
-              el => fromEvent(el, 'click'),
-              () => setState({ color: getState().color === 'orange' ? 'blue' : 'orange' }),
+          item =>
+            div().pipe(
+              children(item.pipe(map(i => `${i}`))),
+              sideEffect(
+                el => fromEvent(el, "click"),
+                () =>
+                  setState({
+                    color: getState().color === "orange" ? "blue" : "orange"
+                  })
+              )
             )
-          ),
         )
       )
     )
