@@ -2,9 +2,11 @@ import { Observable, of } from 'rxjs';
 import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = undefined> {
-  node: Node;
-  event?: Observable<E>;
+  node: T;
+  events?: Observable<E>;
 }
+
+export type Component<T extends Node, E = undefined> = Observable<IComponent<T, E>>;
 
 export function text<E = undefined>(text: string | number | Observable<string | number>): Observable<IComponent<Text, E>> {
   const textObservable = text instanceof Observable ? text : of(text);
@@ -21,7 +23,7 @@ export function text<E = undefined>(text: string | number | Observable<string | 
 
 export function component<K extends keyof HTMLElementTagNameMap, E = undefined>(
   tagName: K
-): Observable<IComponent<HTMLElementTagNameMap[K], E>> {
+): Component<HTMLElementTagNameMap[K], E> {
   return of({ node: document.createElement(tagName) });
 }
 
