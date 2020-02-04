@@ -19,7 +19,7 @@ export function coerceChildComponent<E = undefined>(childComponent: ChildCompone
     );
   } else {
     const node = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
-    return of([child]);
+    return of([{ node }]);
     // const nodeOrStringArray = Array.isArray(childElement)
     //   ? childElement
     //   : [childElement];

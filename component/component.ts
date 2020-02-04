@@ -3,7 +3,7 @@ import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = undefined> {
   node: Node;
-  event?: E;
+  event?: Observable<E>;
 }
 
 export function text<E = undefined>(text: string | number | Observable<string | number>): Observable<IComponent<Text, E>> {
