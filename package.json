@@ -2,7 +2,13 @@
   "name": "typescript-5i4anz",
   "version": "0.0.0",
   "private": true,
+  "scripts": {
+  },
   "dependencies": {
     "rxjs": "^6.5.2"
+  },
+  "devDependencies": {
+    "tslint": "^6.0.0",
+    "typescript": "^3.7.5"
   }
 }

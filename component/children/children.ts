@@ -1,4 +1,4 @@
-import { Observable, of, combineLatest } from 'rxjs';
+import { Observable, of, combineLatest, merge } from 'rxjs';
 import { map, switchMap, debounceTime } from 'rxjs/operators';
 import { IComponent, Component } from '../component';
 import { childDiffer } from './child-differ';
@@ -53,23 +53,45 @@ export function children<T extends HTMLElement, E = undefined>(
   return (component: Component<T, E>): Component<T, E> =>
     component.pipe(
       switchMap(({ node, events }) => {
-        const componentArrays$ = children.map(child => coerceChildComponent(child));
-        const unflattenedComponents$: Observable<Component<any, E>[][]> = combineLatest(
-          ...componentArrays$
-        ).pipe(debounceTime(0));
-        const components$ = unflattenedComponents$.pipe(
-          map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => flat.concat(nodeArr), [])),
+        const children$ = combineLatest<IComponent<any, E>[][]>(
+          ...children.map(coerceChildComponent)
+        ).pipe(
+          debounceTime(0),
+          map(unflattened => unflattened.reduce<IComponent<any, E>[]>((flat, comps) => flat.concat(comps), [])),
         );
-        let previousNodes: Node[] = [];
-        return components$.pipe(
-          map(nodes => {
-            updateElementChildren(el, previousNodes, nodes);
+
+        let previousNodes = [];
+        return children$.pipe(
+          map(components => {
+            const nodes = components.map(comp => comp.node);
+            updateElementChildren(node, previousNodes, nodes);
             previousNodes = nodes;
-            return el;
+            const mergedEvents = merge<E>(
+              ...(events ? [events] : []),
+              ...components.map(comp => comp.events).filter(ev => ev !== undefined),
+            );
+            return { node, events: mergedEvents };
           }),
-          startWith(el)
         );
       }),
-      distinctUntilChanged()
     );
+      //   const componentArrays$ = children.map(child => coerceChildComponent(child));
+      //   const unflattenedComponents$: Observable<Component<any, E>[][]> = combineLatest(
+      //     ...componentArrays$
+      //   ).pipe(debounceTime(0));
+      //   const components$ = unflattenedComponents$.pipe(
+      //     map(unflattened => unflattened.reduce<Node[]>((flat, nodeArr) => flat.concat(nodeArr), [])),
+      //   );
+      //   let previousNodes: Node[] = [];
+      //   return components$.pipe(
+      //     map(nodes => {
+      //       updateElementChildren(el, previousNodes, nodes);
+      //       previousNodes = nodes;
+      //       return el;
+      //     }),
+      //     startWith(el)
+      //   );
+      // }),
+      // distinctUntilChanged()
+    // );
 }
