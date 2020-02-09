@@ -1,7 +1,7 @@
 // import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
 // import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
 // import { app as myApp } from './element';
-import { div } from './component/component';
+import { div } from './component';
 
 const app = div();
 
