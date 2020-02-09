@@ -5,10 +5,10 @@ import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { div, children } from './component';
 
-const app = div().pipe(
+const app = div(
   children(
     'hello',
-    div().pipe(
+    div(
       map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
       children('world!'),
     ),

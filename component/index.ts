@@ -3,17 +3,17 @@ import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
 export * from './children';
 
-// export interface IComponent<T extends Node, E = undefined> {
-//   node: T;
-//   event?: E;
-// }
-
 export interface IComponent<T extends Node, E = undefined> {
   node: T;
   events?: Observable<E>;
 }
 
 export type Component<T extends Node, E = undefined> = Observable<IComponent<T, E>>;
+
+export type ComponentOperator<T extends Node, E = undefined> =
+  (component: Component<T, E>) => Component<T, E>;
+
+export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
 export function text<E = undefined>(text: string | number | Observable<string | number>): Observable<IComponent<Text, E>> {
   const textObservable = text instanceof Observable ? text : of(text);
@@ -29,11 +29,17 @@ export function text<E = undefined>(text: string | number | Observable<string | 
 }
 
 export function component<K extends keyof HTMLElementTagNameMap, E = undefined>(
-  tagName: K
+  tagName: K,
+  ...operators: ComponentOperator<HTMLElementTagNameMap[K], E>[]
 ): Component<HTMLElementTagNameMap[K], E> {
-  return of({ node: document.createElement(tagName) });
+  return operators.reduce(
+    (component, operator) => component.pipe(operator),
+    of({ node: document.createElement(tagName) }),
+  );
 }
 
-export function div<E = undefined>() {
-  return component<'div', E>('div');
+export function div<E = undefined>(
+  ...operators: ComponentOperator<HTMLDivElement, E>[]
+) {
+  return component<'div', E>('div', ...operators);
 }
