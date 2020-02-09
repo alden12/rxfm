@@ -1,12 +1,23 @@
 // import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
 // import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
 // import { app as myApp } from './element';
-import { div } from './component';
+import { of, fromEvent } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { div, children } from './component';
 
-const app = div();
+const app = div().pipe(
+  children(
+    'hello',
+    div().pipe(
+      map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
+      children('world!'),
+    ),
+  ),
+);
 
 app.subscribe(({ node, events }) => {
   document.body.appendChild(node);
+  events.subscribe(console.log)
 });
 
 // // TODO: Allow string input.
