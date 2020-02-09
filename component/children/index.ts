@@ -1,5 +1,5 @@
 import { Observable, of, combineLatest, merge, from } from 'rxjs';
-import { map, switchMap, debounceTime, shareReplay, pairwise, startWith } from 'rxjs/operators';
+import { map, switchMap, debounceTime, shareReplay, pairwise, startWith, mergeAll, distinctUntilChanged, mapTo, switchAll } from 'rxjs/operators';
 import { IComponent, Component } from '..';
 import { childDiffer } from './child-differ';
 
@@ -47,71 +47,81 @@ export function updateElementChildren<T extends HTMLElement>(
   return el;
 }
 
-export function children<T extends HTMLElement, E = undefined>(
-  ...children: ChildComponent<E>[]
-): (component: Component<T, E>) => Component<T, E> {
-  return (component: Component<T, E>): Component<T, E> => {
-    const sharedComponent = component.pipe(shareReplay({ bufferSize: 1, refCount: true }));
-    const incomingEvents = sharedComponent.pipe(map(({ event }) => event));
-    const incomingNode = sharedComponent.pipe(map(({ node }) => node));
-
-    const children$ = combineLatest<IComponent<any, E>[][]>(
-      ...children.map(coerceChildComponent)
-    ).pipe(
-      debounceTime(0),
-      map(unflattened => unflattened.reduce<IComponent<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
-      shareReplay({ bufferSize: 1, refCount: true }),
-    );
-
-    const eventSet = new Set<E>();
-    const childEvents = children$.pipe(
-      map(components => components.map(({ event }) => event).filter(event => event !== undefined)),
-      startWith([] as E[]),
-      pairwise(),
-      map(([prevEvents, events]) => {
-        return from(events.filter(ev => prevEvents.indexOf(ev) === -1))
-        // eventSet.clear();
-        // events.forEach(ev => eventSet.add(ev));
-      }),
-    );
-
-    let previousNodes = [];
-    const node = children$.pipe(
-      map(components => {
-        const nodes = components.map(comp => comp.node);
-        // updateElementChildren(node, previousNodes, nodes);
-        // previousNodes = nodes;
-      }),
-    );
-  }
-}
-
 // export function children<T extends HTMLElement, E = undefined>(
 //   ...children: ChildComponent<E>[]
 // ): (component: Component<T, E>) => Component<T, E> {
-//   return (component: Component<T, E>): Component<T, E> =>
-//     component.pipe(
-//       switchMap(({ node, events }) => {
-//         const children$ = combineLatest<IComponent<any, E>[][]>(
-//           ...children.map(coerceChildComponent)
-//         ).pipe(
-//           debounceTime(0),
-//           map(unflattened => unflattened.reduce<IComponent<any, E>[]>((flat, comps) => flat.concat(comps), [])),
-//         );
+//   return (component: Component<T, E>): Component<T, E> => {
+//     const sharedComponent = component.pipe(shareReplay({ bufferSize: 1, refCount: true }));
+//     const incomingEvents = sharedComponent.pipe(map(({ event }) => event));
+//     const incomingNode = sharedComponent.pipe(map(({ node }) => node));
 
-//         let previousNodes = [];
-//         return children$.pipe(
-//           map(components => {
-//             const nodes = components.map(comp => comp.node);
-//             updateElementChildren(node, previousNodes, nodes);
-//             previousNodes = nodes;
-//             const mergedEvents = merge<E>(
-//               ...(events ? [events] : []),
-//               ...components.map(comp => comp.events).filter(ev => ev !== undefined),
-//             );
-//             return { node, events: mergedEvents };
-//           }),
-//         );
+//     const children$ = combineLatest<IComponent<any, E>[][]>(
+//       ...children.map(coerceChildComponent)
+//     ).pipe(
+//       debounceTime(0),
+//       map(unflattened => unflattened.reduce<IComponent<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
+//       shareReplay({ bufferSize: 1, refCount: true }),
+//     );
+
+//     const eventSet = new Set<E>();
+//     const childEvents = children$.pipe(
+//       map(components => components.map(({ event }) => event).filter(event => event !== undefined)),
+//       startWith([] as E[]),
+//       pairwise(),
+//       map(([prevEvents, events]) => {
+//         return from(events.filter(ev => prevEvents.indexOf(ev) === -1))
+//         // eventSet.clear();
+//         // events.forEach(ev => eventSet.add(ev));
 //       }),
 //     );
+
+//     let previousNodes = [];
+//     const node = children$.pipe(
+//       map(components => {
+//         const nodes = components.map(comp => comp.node);
+//         // updateElementChildren(node, previousNodes, nodes);
+//         // previousNodes = nodes;
+//       }),
+//     );
+//   }
 // }
+
+export function children<T extends HTMLElement, E = undefined>(
+  ...children: ChildComponent<E>[]
+): (component: Component<T, E>) => Component<T, E> {
+  return (component: Component<T, E>): Component<T, E> =>
+    component.pipe(
+      switchMap(({ node, events }) => {
+
+        const children$ = combineLatest<IComponent<any, E>[][]>(
+          ...children.map(coerceChildComponent)
+        ).pipe(
+          debounceTime(0),
+          map(unflattened => unflattened.reduce<IComponent<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
+          shareReplay({ bufferSize: 1, refCount: true }),
+        );
+
+        const events$ = children$.pipe(
+          map(components =>
+            merge<E>(
+              ...(events ? [events] : []),
+              ...components.map(comp => comp.events).filter(ev => ev !== undefined),
+            )
+          ),
+          switchAll(),
+        );
+
+        let previousNodes = [];
+        return children$.pipe(
+          map(components => {
+            const nodes = components.map(comp => comp.node);
+            updateElementChildren(node, previousNodes, nodes);
+            previousNodes = nodes;
+            return node;
+          }),
+          distinctUntilChanged(),
+          mapTo({ node, events: events$ }),
+        );
+      }),
+    );
+}

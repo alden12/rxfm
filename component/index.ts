@@ -1,15 +1,15 @@
 import { Observable, of } from 'rxjs';
 import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
-export interface IComponent<T extends Node, E = undefined> {
-  node: T;
-  event?: E;
-}
-
 // export interface IComponent<T extends Node, E = undefined> {
 //   node: T;
-//   events?: Observable<E>;
+//   event?: E;
 // }
+
+export interface IComponent<T extends Node, E = undefined> {
+  node: T;
+  events?: Observable<E>;
+}
 
 export type Component<T extends Node, E = undefined> = Observable<IComponent<T, E>>;
 
