@@ -1,6 +1,6 @@
 import { Observable, of, combineLatest, merge, from } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, pairwise, startWith, mergeAll, distinctUntilChanged, mapTo, switchAll } from 'rxjs/operators';
-import { IComponent, Component, SHARE_REPLAY_CONFIG } from '../';
+import { IComponent, Component, ComponentOperator, SHARE_REPLAY_CONFIG } from '../';
 import { childDiffer } from './child-differ';
 
 export type ChildComponent<E = undefined> = string | number | Observable<string | number | IComponent<any, E> | IComponent<any, E>[]>;
@@ -49,7 +49,7 @@ export function updateElementChildren<T extends HTMLElement>(
 
 export function children<T extends HTMLElement, E = undefined>(
   ...children: ChildComponent<E>[]
-): (component: Component<T, E>) => Component<T, E> {
+): ComponentOperator<T, E> {
   return (component: Component<T, E>): Component<T, E> =>
     component.pipe(
       switchMap(({ node, events }) => {
