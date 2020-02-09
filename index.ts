@@ -11,7 +11,7 @@ const app = div(
     div(
       // map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
       event('click'),
-      event(node => fromEvent(node, 'contextmenu')),
+      event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
       children('world!'),
     ),
   ),
