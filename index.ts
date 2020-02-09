@@ -1,179 +1,186 @@
-import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
-import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
-import { app as myApp } from './element';
+// import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
+// import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
+// import { app as myApp } from './element';
+import { div } from './component/component';
 
-// TODO: Allow string input.
-export function text(text: Observable<string> | string): Observable<Text> {
-  const textObservable = typeof text === 'string' ? of(text) : text;
-  return textObservable.pipe(
-    scan((textNode, content) => {
-      textNode.nodeValue = content;
-      return textNode;
-    }, document.createTextNode('')),
-    distinctUntilChanged(),
-  );
-}
+const app = div();
 
-export interface INodeUpdate {
-  node: Node;
-  insertBefore?: Node;
-}
+app.subscribe(({ node, events }) => {
+  document.body.appendChild(node);
+});
 
-export interface IChildDiff {
-  updated: INodeUpdate[];
-  removed: Node[];
-}
+// // TODO: Allow string input.
+// export function text(text: Observable<string> | string): Observable<Text> {
+//   const textObservable = typeof text === 'string' ? of(text) : text;
+//   return textObservable.pipe(
+//     scan((textNode, content) => {
+//       textNode.nodeValue = content;
+//       return textNode;
+//     }, document.createTextNode('')),
+//     distinctUntilChanged(),
+//   );
+// }
 
-export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDiff {
-  const oldSet = new Set(oldChildren);
-  const newSet = new Set(newChildren);
+// export interface INodeUpdate {
+//   node: Node;
+//   insertBefore?: Node;
+// }
 
-  const remainingOldOrder = oldChildren.filter(node => newSet.has(node));
-  const remainingNewOrder = newChildren.filter(node => oldSet.has(node));
+// export interface IChildDiff {
+//   updated: INodeUpdate[];
+//   removed: Node[];
+// }
 
-  const orderUnchanged = remainingNewOrder.every((node, i) => remainingOldOrder[i] === node);
+// export function childDiffer(oldChildren: Node[], newChildren: Node[]): IChildDiff {
+//   const oldSet = new Set(oldChildren);
+//   const newSet = new Set(newChildren);
 
-  let unchangedNodes: Set<Node>;
-  if (orderUnchanged) {
-    unchangedNodes = new Set(remainingNewOrder);
-  } else {
-    const oldNodeAndNext = new Map(
-      remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]]),
-    );
-    const newElementesAndIndex = new Map(
-      remainingNewOrder.map((node, i) => [node, i]),
-    );
+//   const remainingOldOrder = oldChildren.filter(node => newSet.has(node));
+//   const remainingNewOrder = newChildren.filter(node => oldSet.has(node));
 
-    const reordered = new Set(
-      remainingNewOrder.filter((node, i) => {
-        const oldNext = oldNodeAndNext.get(node);
-        const newIndexOfNext = newElementesAndIndex.get(oldNext) || Infinity;
-        return newIndexOfNext < i;
-      })
-    );
+//   const orderUnchanged = remainingNewOrder.every((node, i) => remainingOldOrder[i] === node);
 
-    unchangedNodes = new Set(
-      newChildren.filter(node => oldSet.has(node) && !reordered.has(node)),
-    );
-  }
+//   let unchangedNodes: Set<Node>;
+//   if (orderUnchanged) {
+//     unchangedNodes = new Set(remainingNewOrder);
+//   } else {
+//     const oldNodeAndNext = new Map(
+//       remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]]),
+//     );
+//     const newElementesAndIndex = new Map(
+//       remainingNewOrder.map((node, i) => [node, i]),
+//     );
 
-  let insertBefore: Node;
-  const updated: INodeUpdate[] = [];
-  for (let i = newChildren.length - 1; i >= 0; i--) {
-    const node = newChildren[i];
-    if (unchangedNodes.has(node)) {
-      insertBefore = node;
-    } else {
-      updated.push({ node, insertBefore });
-    }
-  }
-  updated.reverse();
+//     const reordered = new Set(
+//       remainingNewOrder.filter((node, i) => {
+//         const oldNext = oldNodeAndNext.get(node);
+//         const newIndexOfNext = newElementesAndIndex.get(oldNext) || Infinity;
+//         return newIndexOfNext < i;
+//       })
+//     );
 
-  const removed = oldChildren.filter(child => !newSet.has(child));
+//     unchangedNodes = new Set(
+//       newChildren.filter(node => oldSet.has(node) && !reordered.has(node)),
+//     );
+//   }
 
-  return { updated, removed };
-}
+//   let insertBefore: Node;
+//   const updated: INodeUpdate[] = [];
+//   for (let i = newChildren.length - 1; i >= 0; i--) {
+//     const node = newChildren[i];
+//     if (unchangedNodes.has(node)) {
+//       insertBefore = node;
+//     } else {
+//       updated.push({ node, insertBefore });
+//     }
+//   }
+//   updated.reverse();
 
-export type Children<T extends Node = Node> =
-  // string
-  // | Observable<string>
-  // | Observable<T>
-  | Observable<T>[]
-  | Observable<Observable<T>[]>
-  | ((T) => Observable<T>[])
-  | ((T) => Observable<Observable<T>[]>)
-  ;
+//   const removed = oldChildren.filter(child => !newSet.has(child));
 
-export interface IAction<T, P> {
-  type: T;
-  payload: P;
-}
+//   return { updated, removed };
+// }
 
-export type Actions<T> = { [K in keyof T]: IAction<K, T[K]> };
+// export type Children<T extends Node = Node> =
+//   // string
+//   // | Observable<string>
+//   // | Observable<T>
+//   | Observable<T>[]
+//   | Observable<Observable<T>[]>
+//   | ((T) => Observable<T>[])
+//   | ((T) => Observable<Observable<T>[]>)
+//   ;
 
-export type Action<T> = Observable<Actions<T>[keyof T]>;
+// export interface IAction<T, P> {
+//   type: T;
+//   payload: P;
+// }
 
-export type Outputs<T> = { [K in keyof T]: Observable<T[K]> };
+// export type Actions<T> = { [K in keyof T]: IAction<K, T[K]> };
 
-export interface IElement<T extends Node, O = {}, A = {}> {
-  node: Observable<T>;
-  outputs?: Outputs<O>;
-  actions?: Action<A>;
-}
+// export type Action<T> = Observable<Actions<T>[keyof T]>;
 
-// TODO: Attributes.
-export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
+// export type Outputs<T> = { [K in keyof T]: Observable<T[K]> };
 
-  const el = document.createElement(tagName);
-  const childrenObservable = typeof children === 'function' ? children(el) : children;
-  const childrenArrayObservable = Array.isArray(childrenObservable) ? of(childrenObservable) : childrenObservable;
-  const childrenArray = childrenArrayObservable.pipe(
-    map(array => array.filter(el => el)),
-    switchMap(array => combineLatest<Node[]>(...array)),
-    map(nodes => nodes.filter(node => node)),
-    debounceTime(0),
-  );
+// export interface IElement<T extends Node, O = {}, A = {}> {
+//   node: Observable<T>;
+//   outputs?: Outputs<O>;
+//   actions?: Action<A>;
+// }
 
-  return childrenArray.pipe(
-    map(children => {
-      const diff = childDiffer(Array.from(el.childNodes.values()), children);
-      diff.removed.forEach(node => el.removeChild(node));
-      el.append(...diff.updated.filter(update => !update.insertBefore).map(update => update.node));
-      diff.updated
-        .filter(update => update.insertBefore).forEach(update => el.insertBefore(update.node, update.insertBefore));
-      return el;
-    }),
-    distinctUntilChanged(),
-  );
-}
+// // TODO: Attributes.
+// export function element<K extends keyof HTMLElementTagNameMap>(tagName: K, children: Children): Observable<HTMLElementTagNameMap[K]> {
 
-export function div(children: Children) {
-  return element('div', children);
-}
+//   const el = document.createElement(tagName);
+//   const childrenObservable = typeof children === 'function' ? children(el) : children;
+//   const childrenArrayObservable = Array.isArray(childrenObservable) ? of(childrenObservable) : childrenObservable;
+//   const childrenArray = childrenArrayObservable.pipe(
+//     map(array => array.filter(el => el)),
+//     switchMap(array => combineLatest<Node[]>(...array)),
+//     map(nodes => nodes.filter(node => node)),
+//     debounceTime(0),
+//   );
 
-export function event(element: Observable<Node>, eventName: string): Observable<Event> {
-  return element.pipe(
-    filter(el => !!el),
-    switchMap(el => fromEvent(el, eventName)),
-  );
-}
+//   return childrenArray.pipe(
+//     map(children => {
+//       const diff = childDiffer(Array.from(el.childNodes.values()), children);
+//       diff.removed.forEach(node => el.removeChild(node));
+//       el.append(...diff.updated.filter(update => !update.insertBefore).map(update => update.node));
+//       diff.updated
+//         .filter(update => update.insertBefore).forEach(update => el.insertBefore(update.node, update.insertBefore));
+//       return el;
+//     }),
+//     distinctUntilChanged(),
+//   );
+// }
 
-const counter = (multi: number) => interval(1000).pipe(
-  map(i => `count: ${multi * i}`),
-  share(),
-);
+// export function div(children: Children) {
+//   return element('div', children);
+// }
 
-const conditional = (element: Observable<Node>, condition: Observable<boolean>) => condition.pipe(
-  distinctUntilChanged(),
-  switchMap(show => show ? element : of(undefined)),
-  distinctUntilChanged(),
-);
+// export function event(element: Observable<Node>, eventName: string): Observable<Event> {
+//   return element.pipe(
+//     filter(el => !!el),
+//     switchMap(el => fromEvent(el, eventName)),
+//   );
+// }
 
-const conditionalCounter = (counter: Observable<number>): Observable<Node> => {
-  const input = counter.pipe(shareReplay(1));
-  const element = div([text(input.pipe(map(i => i.toString())))]);
-  return conditional(
-    element,
-    input.pipe(
-      map(i => i % 4 !== 0),
-    ),
-  );
-};
+// const counter = (multi: number) => interval(1000).pipe(
+//   map(i => `count: ${multi * i}`),
+//   share(),
+// );
 
-const condCounter = conditionalCounter(interval(1000)).pipe(share());
+// const conditional = (element: Observable<Node>, condition: Observable<boolean>) => condition.pipe(
+//   distinctUntilChanged(),
+//   switchMap(show => show ? element : of(undefined)),
+//   distinctUntilChanged(),
+// );
 
-event(condCounter, 'click').subscribe(ev => console.log(ev));
+// const conditionalCounter = (counter: Observable<number>): Observable<Node> => {
+//   const input = counter.pipe(shareReplay(1));
+//   const element = div([text(input.pipe(map(i => i.toString())))]);
+//   return conditional(
+//     element,
+//     input.pipe(
+//       map(i => i % 4 !== 0),
+//     ),
+//   );
+// };
 
-const app = () => {
-  const content = (el: Node) => fromEvent(el, 'click').pipe(
-    startWith(undefined),
-    scan(elements => [...elements, div([text('counter(1)')])], []),
-    tap(val => console.log(val)),
-  );
+// const condCounter = conditionalCounter(interval(1000)).pipe(share());
 
-  return div(content);
-};
+// event(condCounter, 'click').subscribe(ev => console.log(ev));
+
+// const app = () => {
+//   const content = (el: Node) => fromEvent(el, 'click').pipe(
+//     startWith(undefined),
+//     scan(elements => [...elements, div([text('counter(1)')])], []),
+//     tap(val => console.log(val)),
+//   );
+
+//   return div(content);
+// };
 
 // app().subscribe(el => document.body.appendChild(el));
 
-myApp().subscribe(el => document.body.appendChild(el));
+// myApp().subscribe(el => document.body.appendChild(el));
