@@ -3,13 +3,15 @@
 // import { app as myApp } from './element';
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children } from './component';
+import { div, children, event } from './component';
 
 const app = div(
   children(
     'hello',
     div(
-      map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
+      // map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
+      event('click'),
+      event(node => fromEvent(node, 'contextmenu')),
       children('world!'),
     ),
   ),

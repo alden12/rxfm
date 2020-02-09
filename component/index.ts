@@ -2,6 +2,7 @@ import { Observable, of } from 'rxjs';
 import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
 export * from './children';
+export * from './events';
 
 export interface IComponent<T extends Node, E = undefined> {
   node: T;
