@@ -10,9 +10,9 @@ const app = div(
     'hello',
     div<string | number >(
       // map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
-      event('click'),
+      // event('click'),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
-      event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
+      // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
       children('world!'),
     ),
   ),
