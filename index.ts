@@ -11,7 +11,8 @@ const app = div().pipe(
     div().pipe(
       // map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
       event('click'),
-      event('click', ev => ev.bubbles),
+      event('click', map(ev => ev.bubbles)),
+      event(of({ test: 1 })),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
       children('world!'),

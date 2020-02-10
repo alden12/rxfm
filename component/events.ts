@@ -33,7 +33,7 @@ export function event<T extends Node, E, O>(
 function getEvents<T extends Node, O>(
   node: T,
   event: string | Observable<O> | ((node: T) => Observable<O>),
-  mappingFunction: (event: Observable<Event>) => Observable<O>,
+  mappingFunction?: (event: Observable<Event>) => Observable<O>,
 ): Observable<O | Event> {
   if (typeof event === 'string') {
     return mappingFunction ? fromEvent(node, event).pipe(mappingFunction) : fromEvent(node, event);
