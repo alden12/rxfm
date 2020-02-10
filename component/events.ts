@@ -7,7 +7,7 @@ export function event<T extends Node, E>(
 ): ComponentOperator<T, E>
 export function event<T extends Node, E>(
   eventType: string,
-): ComponentOperator<T, E & Event>
+): ComponentOperator<T, E | Event>
 export function event<T extends Node, E>(
   eventType: string,
   mappingFunction: (event: Event) => E,

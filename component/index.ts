@@ -11,8 +11,8 @@ export interface IComponent<T extends Node, E = undefined> {
 
 export type Component<T extends Node, E = undefined> = Observable<IComponent<T, E>>;
 
-export type ComponentOperator<T extends Node, E = undefined> =
-  (component: Component<T, E>) => Component<T, E>;
+export type ComponentOperator<T extends Node, IE = undefined, OE = IE> =
+  (component: Component<T, IE>) => Component<T, OE>;
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
