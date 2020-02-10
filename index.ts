@@ -5,14 +5,15 @@ import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { div, children, event } from './component';
 
-const app = div(
+const app = div().pipe(
   children(
     'hello',
     div().pipe(
       // map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
-      // event('click'),
+      event('click'),
+      event('click', ev => ev.bubbles),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
-      // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
+      event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
       children('world!'),
     ),
   ),

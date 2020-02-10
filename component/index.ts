@@ -31,16 +31,10 @@ export function text<E = undefined>(text: string | number | Observable<string | 
 
 export function component<K extends keyof HTMLElementTagNameMap, E = undefined>(
   tagName: K,
-  ...operators: ComponentOperator<HTMLElementTagNameMap[K], E>[]
 ): Component<HTMLElementTagNameMap[K], E> {
-  return operators.reduce(
-    (component, operator) => component.pipe(operator),
-    of({ node: document.createElement(tagName) }),
-  );
+  return of({ node: document.createElement(tagName) });
 }
 
-export function div<E = undefined>(
-  ...operators: ComponentOperator<HTMLDivElement, E>[]
-) {
-  return component<'div', E>('div', ...operators);
+export function div<E = undefined>() {
+  return component<'div', E>('div');
 }
