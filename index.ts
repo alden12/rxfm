@@ -1,8 +1,8 @@
 // import { of, interval, Observable, combineLatest, fromEvent } from 'rxjs'; 
 // import { scan, map, distinctUntilChanged, debounceTime, switchMap, shareReplay, tap, share, filter, startWith } from 'rxjs/operators';
 // import { app as myApp } from './element';
-import { of, fromEvent } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { of, fromEvent, Observable } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
 import { div, children, event } from './component';
 
 const app = div().pipe(
@@ -15,9 +15,16 @@ const app = div().pipe(
       event(of({ test: 1 })),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
+      map(({ node, events }) => ({
+        node,
+        events: events.pipe(
+          filter(ev => typeof ev !== 'string'),
+        ) as Observable<Exclude<string | boolean | Event | { test: number }, string>>
+      })),
       children('world!'),
     ),
   ),
+  event('click', map(ev => [ev.target])),
 );
 
 app.subscribe(({ node, events }) => {
