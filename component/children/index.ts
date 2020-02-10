@@ -1,5 +1,5 @@
 import { Observable, of, combineLatest, merge, from } from 'rxjs';
-import { map, switchMap, debounceTime, shareReplay, pairwise, startWith, mergeAll, distinctUntilChanged, mapTo, switchAll } from 'rxjs/operators';
+import { map, switchMap, debounceTime, shareReplay, pairwise, startWith, mergeAll, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
 import { IComponent, Component, ComponentOperator, SHARE_REPLAY_CONFIG } from '../';
 import { childDiffer } from './child-differ';
 
@@ -70,7 +70,7 @@ export function children<T extends HTMLElement, E = undefined>(
             )
           ),
           switchAll(),
-          shareReplay(SHARE_REPLAY_CONFIG),
+          share(),
         );
 
         let previousNodes = [];
