@@ -2,20 +2,20 @@ import { ComponentOperator, Component } from './';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export function event<T extends Node, IE, OE extends IE = IE>(
-  event: ((node: T) => Observable<OE>),
-): ComponentOperator<T, IE, OE>
-// export function event<T extends Node, E>(
-//   eventType: string,
-// ): ComponentOperator<T, E | Event>
-// export function event<T extends Node, E>(
-//   eventType: string,
-//   mappingFunction: (event: Event) => E,
-// ): ComponentOperator<T, E>
+export function event<T extends Node, E, O>(
+  event: ((node: T) => Observable<O>),
+): ComponentOperator<T, E, E | O>
 export function event<T extends Node, E>(
-  event: ((node: T) => Observable<E>) | string,
-  mappingFunction?: (event: Event) => E,
-): ComponentOperator<T, E> {
+  eventType: string,
+): ComponentOperator<T, E, E | Event>
+export function event<T extends Node, E, O>(
+  eventType: string,
+  mappingFunction: (event: Event) => O,
+): ComponentOperator<T, E, E | O>
+export function event<T extends Node, E, O>(
+  event: ((node: T) => Observable<O>) | string,
+  mappingFunction?: (event: Event) => O,
+): ComponentOperator<T, E, E | O> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => ({
       node,

@@ -8,7 +8,7 @@ import { div, children, event } from './component';
 const app = div(
   children(
     'hello',
-    div<string | number >(
+    div().pipe(
       // map(({ node }) => ({ node, events: fromEvent(node, 'click') })),
       // event('click'),
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
