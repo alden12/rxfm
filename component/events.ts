@@ -1,6 +1,6 @@
-import { ComponentOperator, Component } from './';
+import { ComponentOperator, Component, IComponent } from './';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
-import { map, share, partition } from 'rxjs/operators';
+import { map, share, filter, switchMap } from 'rxjs/operators';
 
 export function event<T extends Node, E, O>(
   eventFunction: ((node: T) => Observable<O>),
@@ -52,14 +52,53 @@ function getEvents<T extends Node, O>(
   return event;
 }
 
-export function extract<T extends Node, Ex, E extends Ex>(
-  idFunction: (event: E) => boolean,
-): (component: Component<T, E>) => [Component<T, Exclude<E, Ex>>, Observable<Ex>] {
+export interface IMatchEventComponent<T extends Node, E, S> extends IComponent<T, E> {
+  matchingEvents: Observable<S>;
+}
+
+export type MathcingEventComponent<T extends Node, E, S> = Observable<IMatchEventComponent<T, E, S>>;
+
+export function match<T extends Node, Ex, E extends Ex>(
+  matchingFunction: (event: E) => Ex | null,
+): (component: Component<T, E>) => MathcingEventComponent<T, Exclude<E, Ex>, Ex> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => {
-      const [matching, remaining] = events.pipe(
-        partition(idFunction),
-      );
+
+      const matchingEvents = events.pipe(
+        filter(ev => matchingFunction(ev) !== null),
+      ) as Observable<Ex>;
+
+      const remainingEvents = events.pipe(
+        filter(ev => matchingFunction(ev) === null),
+      ) as Observable<Exclude<E, Ex>>;
+
+      return {
+        node,
+        events: remainingEvents,
+        matchingEvents,
+      }
     }),
   );
 }
+
+// export function extract<T extends Node, Ex, E extends Ex>(
+//   component: Component<T, E>,
+//   matchingFunction: (event: E) => boolean,
+// ): [Component<T, Exclude<E, Ex>>, Observable<Ex>] {
+
+//   const filteredComponent = component.pipe(
+//     map(({ node, events }) => ({
+//       node,
+//       events: events.pipe(
+//         filter(ev => !matchingFunction(ev))
+//       ) as Observable<Exclude<E, Ex>>,
+//     }))
+//   );
+
+//   const matching = component.pipe(
+//     switchMap(({ events }) => events),
+//     filter(matchingFunction),
+//   ) as Observable<Ex>;
+
+//   return [filteredComponent, matching];
+// }
