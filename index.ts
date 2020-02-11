@@ -3,7 +3,7 @@
 // import { app as myApp } from './element';
 import { of, fromEvent, Observable } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
-import { div, children, event, match } from './component';
+import { div, children, event, match, NOMATCH } from './component';
 
 const app = div().pipe(
   children(
@@ -27,8 +27,10 @@ const app = div().pipe(
   event('click', map(ev => [ev.target])),
 );
 
+let a: number = null;
+
 app.pipe(
-  match(ev => typeof ev === 'string' ? ev : null),
+  match(ev => typeof ev === 'string' ? ev : NOMATCH),
 ).subscribe(({ node, events, matchingEvents }) => {
   document.body.appendChild(node);
   events.subscribe(console.log);
