@@ -44,8 +44,8 @@ function getEvents<T extends Node, O>(
 ): Observable<O | Event> {
   if (typeof event === 'string') {
     return mappingFunction ? fromEvent(node, event).pipe(mappingFunction) : fromEvent(node, event);
-  } else if (event instanceof Observable) {
-    return event;
+  } else if (typeof event === 'function') {
+    return event(node);
   }
-  return event(node);
+  return event;
 }
