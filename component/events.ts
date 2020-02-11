@@ -52,18 +52,18 @@ function getEvents<T extends Node, O>(
   return event;
 }
 
-export interface IMatchEventComponent<T extends Node, E, S> extends IComponent<T, E> {
-  matchingEvents: Observable<S>;
+export interface IMatchEventComponent<T extends Node, E, M> extends IComponent<T, E> {
+  matchingEvents: Observable<M>;
 }
 
-export type MathcingEventComponent<T extends Node, E, S> = Observable<IMatchEventComponent<T, E, S>>;
+export type MathcingEventComponent<T extends Node, E, M> = Observable<IMatchEventComponent<T, E, M>>;
 
 export type NoMatch = 'NOMATCH'
 export const NOMATCH: NoMatch = 'NOMATCH';
 
-export function match<T extends Node, Ex, E extends Ex>(
-  matchingFunction: (event: E) => Ex | NoMatch,
-): (component: Component<T, E>) => MathcingEventComponent<T, Exclude<E, Ex>, Ex> {
+export function match<T extends Node, M, E extends M>(
+  matchingFunction: (event: E) => M | NoMatch,
+): (component: Component<T, E>) => MathcingEventComponent<T, Exclude<E, M>, M> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => {
 
@@ -74,7 +74,7 @@ export function match<T extends Node, Ex, E extends Ex>(
 
       const remainingEvents = events.pipe(
         filter(ev => matchingFunction(ev) === NOMATCH),
-      ) as Observable<Exclude<E, Ex>>;
+      ) as Observable<Exclude<E, M>>;
 
       return {
         node,
