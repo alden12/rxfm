@@ -15,7 +15,7 @@ export function event<T extends Node, E>(
   eventType: string,
 ): ComponentOperator<T, E, E | Event>
 export function event<T extends Node, E, O, K extends keyof HTMLElementEventMap>(
-  eventType: string,
+  eventType: K,
   mappingFunction: (event: Observable<HTMLElementEventMap[K]>) => Observable<O>,
 ): ComponentOperator<T, E, E | O>
 export function event<T extends Node, E, O>(
