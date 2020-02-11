@@ -1,6 +1,6 @@
 import { ComponentOperator, Component } from './';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
-import { map, share } from 'rxjs/operators';
+import { map, share, partition } from 'rxjs/operators';
 
 export function event<T extends Node, E, O>(
   eventFunction: ((node: T) => Observable<O>),
@@ -50,4 +50,16 @@ function getEvents<T extends Node, O>(
     return event(node);
   }
   return event;
+}
+
+export function extract<T extends Node, Ex, E extends Ex>(
+  idFunction: (event: E) => boolean,
+): (component: Component<T, E>) => [Component<T, Exclude<E, Ex>>, Observable<Ex>] {
+  return (component: Component<T, E>) => component.pipe(
+    map(({ node, events }) => {
+      const [matching, remaining] = events.pipe(
+        partition(idFunction),
+      );
+    }),
+  );
 }
