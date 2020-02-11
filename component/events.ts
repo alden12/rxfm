@@ -84,25 +84,3 @@ export function match<T extends Node, M, E extends M>(
     }),
   );
 }
-
-// export function extract<T extends Node, Ex, E extends Ex>(
-//   component: Component<T, E>,
-//   matchingFunction: (event: E) => boolean,
-// ): [Component<T, Exclude<E, Ex>>, Observable<Ex>] {
-
-//   const filteredComponent = component.pipe(
-//     map(({ node, events }) => ({
-//       node,
-//       events: events.pipe(
-//         filter(ev => !matchingFunction(ev))
-//       ) as Observable<Exclude<E, Ex>>,
-//     }))
-//   );
-
-//   const matching = component.pipe(
-//     switchMap(({ events }) => events),
-//     filter(matchingFunction),
-//   ) as Observable<Ex>;
-
-//   return [filteredComponent, matching];
-// }
