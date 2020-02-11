@@ -1,6 +1,6 @@
 import { ComponentOperator, Component } from './';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, share } from 'rxjs/operators';
 
 export function event<T extends Node, E, O>(
   eventFunction: ((node: T) => Observable<O>),
@@ -32,6 +32,8 @@ export function event<T extends Node, E, O>(
       events: merge<E>(
         events || EMPTY,
         getEvents(node, event, mappingFunction),
+      ).pipe(
+        share()
       ),
     })),
   );
