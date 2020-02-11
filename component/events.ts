@@ -58,7 +58,9 @@ export interface IMatchEventComponent<T extends Node, E, M> extends IComponent<T
 
 export type MathcingEventComponent<T extends Node, E, M> = Observable<IMatchEventComponent<T, E, M>>;
 
-export class NoMatch {}
+export class NoMatch {
+  private _indicatatesTypeDoesNotMatchPredicate;
+}
 export const NOMATCH = new NoMatch();
 
 export function match<T extends Node, M, E extends M>(
