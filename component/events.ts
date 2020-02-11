@@ -8,9 +8,16 @@ export function event<T extends Node, E, O>(
 export function event<T extends Node, E, O>(
   event: Observable<O>,
 ): ComponentOperator<T, E, E | O>
+export function event<T extends Node, E, K extends keyof HTMLElementEventMap>(
+  eventType: K,
+): ComponentOperator<T, E, E | HTMLElementEventMap[K]>
 export function event<T extends Node, E>(
   eventType: string,
 ): ComponentOperator<T, E, E | Event>
+export function event<T extends Node, E, O, K extends keyof HTMLElementEventMap>(
+  eventType: string,
+  mappingFunction: (event: Observable<HTMLElementEventMap[K]>) => Observable<O>,
+): ComponentOperator<T, E, E | O>
 export function event<T extends Node, E, O>(
   eventType: string,
   mappingFunction: (event: Observable<Event>) => Observable<O>,
