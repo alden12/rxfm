@@ -65,8 +65,9 @@ export function match<T extends Node, Ex, E extends Ex>(
     map(({ node, events }) => {
 
       const matchingEvents = events.pipe(
-        filter(ev => matchingFunction(ev) !== null),
-      ) as Observable<Ex>;
+        map(matchingFunction),
+        filter(ev => ev !== null),
+      );
 
       const remainingEvents = events.pipe(
         filter(ev => matchingFunction(ev) === null),
