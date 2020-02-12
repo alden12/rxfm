@@ -69,13 +69,19 @@ export function match<T extends Node, M, E extends M>(
     map(({ node, events }) => {
 
       const matchingEvents = events.pipe(
-        map(ev => matchingFunction(ev)['match']),
-        filter(ev => ev !== undefined),
+        map(ev => {
+          const result = matchingFunction(ev);
+          return 'match' in result ? result.match : undefined;
+        }),
+        filter(match => match !== undefined),
       );
 
       const remainingEvents = events.pipe(
-        map(ev => matchingFunction(ev)['noMatch']),
-        filter(ev => ev !== undefined),
+        map(ev => {
+          const result = matchingFunction(ev);
+          return 'noMatch' in result ? result.noMatch : undefined;
+        }),
+        filter(noMatch => noMatch !== undefined),
       );
 
       return {
