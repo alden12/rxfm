@@ -1,6 +1,19 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children, event, match } from './component';
+import { div, children, event, match, stateManager, StateAction } from './rxfm';
+
+const stated = stateManager(
+  { color: 'blue' },
+  (state, currentState) => {
+    state.subscribe(st => console.log('did it work?', st))
+    return div().pipe(
+      children(
+        'hello world!',
+      ),
+      event('click', map(() => new StateAction({ color: currentState().color === 'blue' ? 'orange' : 'blue' }))),
+    )
+  }
+);
 
 const app = div().pipe(
   children(
@@ -13,6 +26,7 @@ const app = div().pipe(
       event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
       children('world!'),
     ),
+    stated,
   ),
   event('click', map(ev => [ev.target])),
 );
