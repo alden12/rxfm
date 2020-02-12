@@ -18,6 +18,7 @@ export function stateLoop<T extends Node, M, E extends M, S>(
     )
     const component = creationFunction(state, () => currentState).pipe(
         match(matchingFunction),
+        shareReplay({ bufferSize: 1, refCount: true }),
     );
     const matchedEvents = component.pipe(
         switchMap(({ matchingEvents }) => matchingEvents),
