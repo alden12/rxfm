@@ -30,7 +30,7 @@ const app = div().pipe(
 let a: number = null;
 
 app.pipe(
-  match(ev => typeof ev === 'string' ? ev : NOMATCH),
+  match(ev => typeof ev === 'string' ? { match: ev } : { noMatch: ev }),
 ).subscribe(({ node, events, matchingEvents }) => {
   document.body.appendChild(node);
   events.subscribe(console.log);

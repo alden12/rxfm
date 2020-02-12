@@ -58,24 +58,25 @@ export interface IMatchEventComponent<T extends Node, E, M> extends IComponent<T
 
 export type MathcingEventComponent<T extends Node, E, M> = Observable<IMatchEventComponent<T, E, M>>;
 
-export class NoMatch {
-  private _indicatatesTypeDoesNotMatchPredicate;
-}
-export const NOMATCH = new NoMatch();
+export interface IMatch<T> { match: T }
+export interface INoMatch<T> { noMatch: T }
+export type Match<M, T extends M> = IMatch<M> | INoMatch<Exclude<T, M>>
 
 export function match<T extends Node, M, E extends M>(
-  matchingFunction: (event: E) => M | NoMatch,
+  matchingFunction: (event: E) => Match<M, E>,
 ): (component: Component<T, E>) => MathcingEventComponent<T, Exclude<E, M>, M> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => {
 
       const matchingEvents = events.pipe(
-        filter(ev => !(matchingFunction(ev) instanceof NoMatch)),
-      ) as Observable<M>;
+        map(ev => matchingFunction(ev)['match']),
+        filter(ev => ev !== undefined),
+      );
 
       const remainingEvents = events.pipe(
-        filter(ev => matchingFunction(ev) instanceof NoMatch),
-      ) as Observable<Exclude<E, M>>;
+        map(ev => matchingFunction(ev)['noMatch']),
+        filter(ev => ev !== undefined),
+      );
 
       return {
         node,
