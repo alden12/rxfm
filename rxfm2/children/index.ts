@@ -57,7 +57,42 @@ export function updateElementChildren<T extends HTMLElement>(
 export function children<T extends Node, E = undefined>(
   ...children: ChildComponent<E>[]
 ): ComponentOperator<T, E> {
-  return (component: Component<T, E>): Component<T, E> => {}
+  return (component: Component<T, E>): Component<T, E> => {
+
+    const { node, events } = component;
+
+    const children$ = combineLatest<Component<Node, E>[][]>(
+      ...children.map(coerceChildComponent)
+    ).pipe(
+      debounceTime(0),
+      map(unflattened => unflattened.reduce<Component<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
+      shareReplay(SHARE_REPLAY_CONFIG),
+    );
+
+    const events$ = children$.pipe(
+      map(components =>
+        merge<E>(
+          ...(events ? [events] : []),
+          ...components.map(comp => comp.events),
+        )
+      ),
+      switchAll(),
+      share(),
+    );
+
+    let previousNodes = [];
+    return children$.pipe(
+      map(components => {
+        const nodes = components.map(comp => comp.node);
+        updateElementChildren(node, previousNodes, nodes);
+        previousNodes = nodes;
+        return node;
+      }),
+      distinctUntilChanged(),
+      mapTo(new Component(node, events$)),
+      shareReplay(SHARE_REPLAY_CONFIG),
+    );
+  }
     // component.pipe(
     //   switchMap(({ node, events }) => {
 
