@@ -7,7 +7,7 @@ export type ChildComponent<E = undefined> = string | number | Observable<string 
 
 export function coerceChildComponent<E = undefined>(
   childComponent: ChildComponent<E>,
-): Observable<IComponent<any, E>[]> {
+): Observable<IComponent<Node, E>[]> {
   if (childComponent instanceof Observable) {
     let node: Text;
     return childComponent.pipe(
@@ -54,7 +54,7 @@ export function children<T extends HTMLElement, E = undefined>(
     component.pipe(
       switchMap(({ node, events }) => {
 
-        const children$ = combineLatest<IComponent<any, E>[][]>(
+        const children$ = combineLatest<IComponent<Node, E>[][]>(
           ...children.map(coerceChildComponent)
         ).pipe(
           debounceTime(0),
