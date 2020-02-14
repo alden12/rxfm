@@ -20,15 +20,17 @@ export function coerceChildComponent<E = undefined>(
         if (typeof child === "string" || typeof child === 'number') {
           node = node || document.createTextNode('');
           node.nodeValue = typeof child === 'number' ? child.toString() : child;
-          return [{ node }];
+          return [new Component(node)];
         }
         return Array.isArray(child) ? child : [child];
       }),
     );
+  } else if (childComponent instanceof Component) {
+    return of([childComponent]);
   } else {
     const content = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
     const node = document.createTextNode(content);
-    return of([{ node }]);
+    return of([new Component(node)]);
   }
 }
 
@@ -52,44 +54,44 @@ export function updateElementChildren<T extends HTMLElement>(
   return el;
 }
 
-export function children<T extends HTMLElement, E = undefined>(
+export function children<T extends Node, E = undefined>(
   ...children: ChildComponent<E>[]
 ): ComponentOperator<T, E> {
-  return (component: Component<T, E>): Component<T, E> =>
-    component.pipe(
-      switchMap(({ node, events }) => {
+  return (component: Component<T, E>): Component<T, E> => {}
+    // component.pipe(
+    //   switchMap(({ node, events }) => {
 
-        const children$ = combineLatest<Component<Node, E>[][]>(
-          ...children.map(coerceChildComponent)
-        ).pipe(
-          debounceTime(0),
-          map(unflattened => unflattened.reduce<Component<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
-          shareReplay(SHARE_REPLAY_CONFIG),
-        );
+    //     const children$ = combineLatest<Component<Node, E>[][]>(
+    //       ...children.map(coerceChildComponent)
+    //     ).pipe(
+    //       debounceTime(0),
+    //       map(unflattened => unflattened.reduce<Component<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
+    //       shareReplay(SHARE_REPLAY_CONFIG),
+    //     );
 
-        const events$ = children$.pipe(
-          map(components =>
-            merge<E>(
-              ...(events ? [events] : []),
-              ...components.map(comp => comp.events).filter(ev => ev !== undefined),
-            )
-          ),
-          switchAll(),
-          share(),
-        );
+    //     const events$ = children$.pipe(
+    //       map(components =>
+    //         merge<E>(
+    //           ...(events ? [events] : []),
+    //           ...components.map(comp => comp.events).filter(ev => ev !== undefined),
+    //         )
+    //       ),
+    //       switchAll(),
+    //       share(),
+    //     );
 
-        let previousNodes = [];
-        return children$.pipe(
-          map(components => {
-            const nodes = components.map(comp => comp.node);
-            updateElementChildren(node, previousNodes, nodes);
-            previousNodes = nodes;
-            return node;
-          }),
-          distinctUntilChanged(),
-          mapTo({ node, events: events$ }),
-          shareReplay(SHARE_REPLAY_CONFIG),
-        );
-      }),
-    );
+    //     let previousNodes = [];
+    //     return children$.pipe(
+    //       map(components => {
+    //         const nodes = components.map(comp => comp.node);
+    //         updateElementChildren(node, previousNodes, nodes);
+    //         previousNodes = nodes;
+    //         return node;
+    //       }),
+    //       distinctUntilChanged(),
+    //       mapTo(new Component(node, events$)),
+    //       shareReplay(SHARE_REPLAY_CONFIG),
+    //     );
+    //   }),
+    // );
 }
