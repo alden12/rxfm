@@ -25,3 +25,13 @@ export class Component<T extends Node, E = undefined> {
     return operators.reduce((res, op) => op(res), this);
   }
 }
+
+export function component<K extends keyof HTMLElementTagNameMap, E = undefined>(
+    tagName: K,
+): Component<HTMLElementTagNameMap[K], E> {
+    return new Component<HTMLElementTagNameMap[K], E>(document.createElement(tagName));
+}
+
+export function div() {
+  return component('div');
+}
