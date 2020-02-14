@@ -38,3 +38,54 @@ app.pipe(
   events.subscribe(console.log);
   matchingEvents.subscribe(ev => console.log('match:', ev));
 });
+
+// function pipe<TS extends any[], R>(...)
+
+// div()
+//   (children('test'))
+//   (classes('a', 'b'))
+//   (event('click', map(ev => ev.clientX)))
+// ();
+
+// div()(
+//   children('test'),
+//   classes('a', 'b'),
+//   event('click', map(ev => ev.clientX)),
+// );
+
+// div().pipe(
+//   children('test'),
+//   classes('a', 'b'),
+//   event('click', map(ev => ev.clientX)),
+// );
+
+// pipe(
+//   div,
+//   children('test'),
+//   classes('a', 'b'),
+//   event('click', map(ev => ev.clientX)),
+// );
+
+// div(
+//   children('test'),
+//   classes('a', 'b'),
+//   event('click', map(ev => ev.clientX)),
+// );
+
+// new Div(
+//   children('test'),
+//   classes('a', 'b'),
+//   event('click', map(ev => ev.clientX)),
+// );
+
+// component(div)(
+//   children('test'),
+//   classes('a', 'b'),
+//   event('click', map(ev => ev.clientX)),
+// );
+
+// div
+//   .children('test')
+//   .classes('a', 'b')
+//   .event('click', map(ev => ev.clientX))
+// ;
