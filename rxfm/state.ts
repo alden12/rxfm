@@ -39,7 +39,7 @@ export class StateAction<T> {
 export function stateManager<T extends Node, S, E extends StateAction<S>>(
     initialState: Partial<S> = {},
     creationFunction: (state: Observable<Partial<S>>, currentState: () => Readonly<Partial<S>>) => Component<T, E>,
-) {
+): Component<T, Exclude<E, StateAction<S>>> {
     return stateLoop<T, StateAction<S>, E, Partial<S>>(
         initialState,
         creationFunction,
