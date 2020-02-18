@@ -22,13 +22,13 @@ const app = div().pipe(
       event('click'),
       event('click', map(({ bubbles }) => ({ bubbles }))),
       // event(of({ test: 1 })),
-      // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.type))),
+      event(node => fromEvent(node, 'contextmenu').pipe(map(({ type }) => ({ type })))),
       // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
       children('world!'),
     ),
     // stated,
   ),
-  // event('click', map(ev => [ev.target])),
+  event('click', map(({ target }) => ({ target }))),
 );
 
 app.pipe(

@@ -2,36 +2,36 @@ import { ComponentOperator, Component, IComponent } from './component';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
 import { map, share, filter } from 'rxjs/operators';
 
-export function event<T extends Node, E, O>(
-  eventFunction: ((node: T) => Observable<O>),
-): ComponentOperator<T, Partial<E>, Partial<E & O>>
+export function event<T extends Node, E, O, K extends string>(
+  eventFunction: ((node: T) => Observable<Record<K, O>>),
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, O>>>
 
-export function event<T extends Node, E, O>(
-  event: Observable<O>,
-): ComponentOperator<T, Partial<E>, Partial<E & O>>
+export function event<T extends Node, E, O, K extends string>(
+  event: Observable<Record<K, O>>,
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, O>>>
 
 export function event<T extends Node, E, K extends keyof HTMLElementEventMap>(
   eventType: K,
-): ComponentOperator<T, Partial<E>, Partial<E & Pick<HTMLElementEventMap, K>>>
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, HTMLElementEventMap[K]>>>
 
 export function event<T extends Node, E, K extends string>(
   eventType: K,
 ): ComponentOperator<T, Partial<E>, Partial<E & Record<K, Event>>>
 
-export function event<T extends Node, E, O, K extends keyof HTMLElementEventMap>(
-  eventType: K,
-  mappingFunction: (event: Observable<HTMLElementEventMap[K]>) => Observable<O>,
-): ComponentOperator<T, Partial<E>, Partial<E & O>>
+export function event<T extends Node, E, O, KT extends keyof HTMLElementEventMap, K extends string>(
+  eventType: KT,
+  mappingFunction: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, O>>,
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, O>>>
 
-export function event<T extends Node, E, O>(
+export function event<T extends Node, E, O, K extends string>(
   eventType: string,
-  mappingFunction: (event: Observable<Event>) => Observable<O>,
-): ComponentOperator<T, Partial<E>, Partial<E & O>>
+  mappingFunction: (event: Observable<Event>) => Observable<Record<K, O>>,
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, O>>>
 
-export function event<T extends Node, E, O>(
-  event: ((node: T) => Observable<O>) | Observable<O> | string,
-  mappingFunction?: (event: Observable<Event>) => Observable<O>,
-): ComponentOperator<T, Partial<E>, Partial<E & O>> {
+export function event<T extends Node, E, O, K extends string>(
+  event: ((node: T) => Observable<Record<K, O>>) | Observable<Record<K, O>> | string,
+  mappingFunction?: (event: Observable<Event>) => Observable<Record<K, O>>,
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, O>>> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => ({
       node,
