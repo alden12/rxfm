@@ -12,11 +12,11 @@ export function event<T extends Node, E, O>(
 
 export function event<T extends Node, E, K extends keyof HTMLElementEventMap>(
   eventType: K,
-): ComponentOperator<T, Partial<E>, Partial<E & {[eventType]: HTMLElementEventMap[K]}>>
+): ComponentOperator<T, Partial<E>, Partial<E & Pick<HTMLElementEventMap, K>>>
 
 export function event<T extends Node, E, K extends string>(
   eventType: K,
-): ComponentOperator<T, Partial<E>, Partial<E & {[eventType]: Event}>>
+): ComponentOperator<T, Partial<E>, Partial<E & Record<K, Event>>>
 
 export function event<T extends Node, E, O, K extends keyof HTMLElementEventMap>(
   eventType: K,
