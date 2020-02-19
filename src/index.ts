@@ -18,7 +18,7 @@ import { div, children, event } from './rxfm';
 const app = div().pipe(
   children(
     'hello, ',
-    'wow live dev!',
+    // 'wow live dev!',
     div().pipe(
       event('click'),
       event('click', map(({ bubbles }) => ({ bubbles }))),

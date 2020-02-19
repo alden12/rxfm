@@ -3,7 +3,7 @@ import { map, switchMap, debounceTime, shareReplay, pairwise, startWith, mergeAl
 import { IComponent, Component, ComponentOperator, SHARE_REPLAY_CONFIG } from '../';
 import { childDiffer } from './child-differ';
 
-export type ChildComponent<E = undefined> = string | number | Observable<string | number | IComponent<any, E> | IComponent<any, E>[]>;
+export type ChildComponent<E = undefined> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
 
 export function coerceChildComponent<E = undefined>(
   childComponent: ChildComponent<E>,
@@ -48,7 +48,7 @@ export function updateElementChildren<T extends HTMLElement>(
 }
 
 export function children<T extends HTMLElement, E = undefined>(
-  ...children: ChildComponent<E>[]
+  ...children: ChildComponent<E>[] // Is this valid?
 ): ComponentOperator<T, E> {
   return (component: Component<T, E>): Component<T, E> =>
     component.pipe(
