@@ -1,6 +1,6 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children, event, match, stateManager, StateAction } from './rxfm';
+import { div, children, event } from './rxfm';
 
 // const stated = stateManager(
 //   { color: 'blue' },
@@ -17,7 +17,8 @@ import { div, children, event, match, stateManager, StateAction } from './rxfm';
 
 const app = div().pipe(
   children(
-    'hello',
+    'hello, ',
+    'wow live dev!',
     div().pipe(
       event('click'),
       event('click', map(({ bubbles }) => ({ bubbles }))),
