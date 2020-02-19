@@ -62,42 +62,40 @@ function getEvents<T extends Node, O>(
   return event;
 }
 
-export interface IMatchEventComponent<T extends Node, E, M> extends IComponent<T, E> {
-  matchingEvents: Observable<M>;
+export interface IExtractedEventComponent<T extends Node, E, EX> extends IComponent<T, E> {
+  extractedEvents: Observable<EX>;
 }
+export type ExtractedEventComponent<T extends Node, E, EX> = Observable<IExtractedEventComponent<T, E, EX>>;
+export type ExtractedEventComponentOperator<T extends Node, E, K extends keyof E> =
+  (component: Component<T, E>) => ExtractedEventComponent<T, Omit<E, K>, Pick<E, K>>
 
-export type MathcingEventComponent<T extends Node, E, M> = Observable<IMatchEventComponent<T, E, M>>;
-
-export interface IMatch<T> { match: T }
-export interface INoMatch<T> { noMatch: T }
-export type Match<M, T extends M> = IMatch<M> | INoMatch<Exclude<T, M>>
-
-export function match<T extends Node, M, E extends M>(
-  matchingFunction: (event: E) => Match<M, E>,
-): (component: Component<T, E>) => MathcingEventComponent<T, Exclude<E, M>, M> {
+export function extractEvent<T extends Node, E, K extends keyof E>(
+  type: K,
+): ExtractedEventComponentOperator<T, E, K> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => {
 
-      const matchingEvents = events.pipe(
-        map(ev => {
-          const result = matchingFunction(ev);
-          return 'match' in result ? result.match : undefined;
-        }),
-        filter(match => match !== undefined),
+      const extractedEvents = events.pipe(
+        filter(ev => type in ev),
+        map(ev => ({ [type]: ev[type] }) as Pick<E, K>),
       );
 
       const remainingEvents = events.pipe(
+        filter(ev => !(type in ev && Object.keys(ev).length === 1)),
         map(ev => {
-          const result = matchingFunction(ev);
-          return 'noMatch' in result ? result.noMatch : undefined;
-        }),
-        filter(noMatch => noMatch !== undefined),
+          if (type in ev) {
+            const cloned = { ...ev };
+            delete { ...ev }[type];
+            return cloned as Omit<E, K>
+          }
+          return ev as Omit<E, K>;
+        })
       );
 
       return {
         node,
         events: remainingEvents,
-        matchingEvents,
+        extractedEvents,
       }
     }),
   );
