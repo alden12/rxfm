@@ -47,6 +47,7 @@ export function updateElementChildren<T extends HTMLElement>(
   return el;
 }
 
+// TODO: Children must take overloads to maintain type chain
 export function children<T extends HTMLElement, E = undefined>(
   ...children: ChildComponent<E>[] // Is this valid?
 ): ComponentOperator<T, E> {

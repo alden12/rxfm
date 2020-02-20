@@ -1,6 +1,6 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children, event } from './rxfm';
+import { div, children, event, extractEvent } from './rxfm';
 
 // const stated = stateManager(
 //   { color: 'blue' },
@@ -14,6 +14,15 @@ import { div, children, event } from './rxfm';
 //     )
 //   }
 // );
+
+type A = Record<'a', string>;
+type B = Record<'b', number>;
+type C = Record<'c', boolean>;
+
+type ABC = A & B & C;
+// type ABC = Partial<A & B & C>;
+// let a: Pick<ABC, 'a'>;
+// let a: ABC['a'];
 
 const app = div().pipe(
   children(
@@ -34,10 +43,11 @@ const app = div().pipe(
 
 app.pipe(
   // match(ev => typeof ev === 'string' ? { match: ev } : { noMatch: ev }),
-).subscribe(({ node, events }) => {
+  extractEvent('click'),
+).subscribe(({ node, events, extractedEvents }) => {
   document.body.appendChild(node);
   events.subscribe(console.log);
-  // matchingEvents.subscribe(ev => console.log('match:', ev));
+  extractedEvents.subscribe(ev => console.log('match:', ev));
 });
 
 // function pipe<TS extends any[], R>(...)

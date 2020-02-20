@@ -66,8 +66,9 @@ export interface IExtractedEventComponent<T extends Node, E, EX> extends ICompon
   extractedEvents: Observable<EX>;
 }
 export type ExtractedEventComponent<T extends Node, E, EX> = Observable<IExtractedEventComponent<T, E, EX>>;
+
 export type ExtractedEventComponentOperator<T extends Node, E, K extends keyof E> =
-  (component: Component<T, E>) => ExtractedEventComponent<T, Omit<E, K>, Pick<E, K>>
+  (component: Component<T, E>) => ExtractedEventComponent<T, { [EK in Exclude<keyof E, K>]?: E[EK] }, E[K]>
 
 export function extractEvent<T extends Node, E, K extends keyof E>(
   type: K,
@@ -77,7 +78,7 @@ export function extractEvent<T extends Node, E, K extends keyof E>(
 
       const extractedEvents = events.pipe(
         filter(ev => type in ev),
-        map(ev => ({ [type]: ev[type] }) as Pick<E, K>),
+        map(ev => ev[type]),
       );
 
       const remainingEvents = events.pipe(
@@ -86,11 +87,11 @@ export function extractEvent<T extends Node, E, K extends keyof E>(
           if (type in ev) {
             const cloned = { ...ev };
             delete { ...ev }[type];
-            return cloned as Omit<E, K>
+            return cloned
           }
-          return ev as Omit<E, K>;
+          return ev;
         })
-      );
+      ) as Observable<{ [EK in Exclude<keyof E, K>]?: E[EK] }>;
 
       return {
         node,
