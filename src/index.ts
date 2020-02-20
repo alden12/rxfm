@@ -15,14 +15,19 @@ import { div, children, event, extractEvent } from './rxfm';
 //   }
 // );
 
-type A = Record<'a', string>;
-type B = Record<'b', number>;
-type C = Record<'c', boolean>;
+// interface A {
+//   a: number;
+// }
+// interface B {
+//   b: string;
+// }
+// type AB = { [K in keyof (A & B)]: K extends keyof A ? A[K] : K extends keyof B ? B[K] : never }
 
-type ABC = A & B & C;
-// type ABC = Partial<A & B & C>;
-// let a: Pick<ABC, 'a'>;
-// let a: ABC['a'];
+// type Merge<T, KE extends string, V> = {
+//   [K in keyof (T & Record<KE, V>)]: K extends keyof T ? T[K] : K extends KE ? V : never;
+// }
+// let a: Merge<A, 'b', string>;
+// a.b
 
 const app = div().pipe(
   children(
@@ -33,12 +38,15 @@ const app = div().pipe(
       event('click', map(({ bubbles }) => ({ bubbles }))),
       // event(of({ test: 1 })),
       event(node => fromEvent(node, 'contextmenu').pipe(map(({ type }) => ({ type })))),
+      event(of({ hello: 'world' })),
+      event(of({ hello: 1 })),
+      // map(comp => ),
       // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
-      children('world!'),
+      // children('world!'),
     ),
     // stated,
   ),
-  event('click', map(({ target }) => ({ target }))),
+  // event('click', map(({ target }) => ({ target }))),
 );
 
 app.pipe(

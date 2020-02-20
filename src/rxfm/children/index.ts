@@ -1,11 +1,11 @@
-import { Observable, of, combineLatest, merge, from } from 'rxjs';
-import { map, switchMap, debounceTime, shareReplay, pairwise, startWith, mergeAll, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
+import { Observable, of, combineLatest, merge } from 'rxjs';
+import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
 import { IComponent, Component, ComponentOperator, SHARE_REPLAY_CONFIG } from '../';
 import { childDiffer } from './child-differ';
 
-export type ChildComponent<E = undefined> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
+export type ChildComponent<E> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
 
-export function coerceChildComponent<E = undefined>(
+export function coerceChildComponent<E>(
   childComponent: ChildComponent<E>,
 ): Observable<IComponent<Node, E>[]> {
   if (childComponent instanceof Observable) {
@@ -47,8 +47,22 @@ export function updateElementChildren<T extends HTMLElement>(
   return el;
 }
 
+export function children_<T extends Node, E>(): ComponentOperator<T, E>
+export function children_<T extends Node, E, A>(childA: ChildComponent<A>): ComponentOperator<T, E, E & A>
+export function children_<T extends Node, E, A, B>(childA: ChildComponent<A>, childB: ChildComponent<B>): ComponentOperator<T, E, E & A & B>
+export function children_<T extends Node, E, A, B, C>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>): ComponentOperator<T, E, E & A & B & C>
+export function children_<T extends Node, E, O>(
+  ...children: ChildComponent<any>[]
+): ComponentOperator<T, E, O> {
+  return (component: Component<T, E>) => undefined;
+}
+
+function test<T extends any[]>(
+  ...children: ChildComponent<T>[]
+) {}
+
 // TODO: Children must take overloads to maintain type chain
-export function children<T extends HTMLElement, E = undefined>(
+export function children<T extends HTMLElement, E>(
   ...children: ChildComponent<E>[] // Is this valid?
 ): ComponentOperator<T, E> {
   return (component: Component<T, E>): Component<T, E> =>
