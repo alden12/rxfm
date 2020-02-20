@@ -42,11 +42,11 @@ const app = div().pipe(
       event(of({ hello: 1 })),
       // map(comp => ),
       // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
-      // children('world!'),
+      children('world!'),
     ),
     // stated,
   ),
-  // event('click', map(({ target }) => ({ target }))),
+  event('click', map(({ target }) => ({ target }))),
 );
 
 app.pipe(

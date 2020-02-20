@@ -19,7 +19,7 @@ export type ComponentEventOperator<T extends Node, E, K extends string, O> = (co
                 : KE extends K ? O : never
     }>;
 
-export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
+export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true }; // TODO: Move to utils
 
 export function text<E = {}>(text: string | number | Observable<string | number>): Observable<IComponent<Text, E>> {
     const textObservable = text instanceof Observable ? text : of(text);
