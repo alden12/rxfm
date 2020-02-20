@@ -47,10 +47,17 @@ export function updateElementChildren<T extends HTMLElement>(
   return el;
 }
 
-export function children<T extends HTMLElement, E>(): ComponentOperator<T, E>
-export function children<T extends HTMLElement, E, A = {}>(childA: ChildComponent<A>): ComponentOperator<T, E, E & A>
-export function children<T extends HTMLElement, E, A = {}, B = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>): ComponentOperator<T, E, E & A & B>
-export function children<T extends HTMLElement, E, A = {}, B = {}, C = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>): ComponentOperator<T, E, E & A & B & C>
+export function children<T extends HTMLElement, EV>(): ComponentOperator<T, EV>
+export function children<T extends HTMLElement, EV, A = {}>(childA: ChildComponent<A>): ComponentOperator<T, EV, EV & A>
+export function children<T extends HTMLElement, EV, A = {}, B = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>): ComponentOperator<T, EV, EV & A & B>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>): ComponentOperator<T, EV, EV & A & B & C>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>): ComponentOperator<T, EV, EV & A & B & C & D>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>): ComponentOperator<T, EV, EV & A & B & C & D & E>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>): ComponentOperator<T, EV, EV & A & B & C & D & E & F>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H>
+export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}, I = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>, childI: ChildComponent<I>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H & I>
+
 export function children<T extends HTMLElement, E>(
   ...children: ChildComponent<any>[]
 ): ComponentOperator<T, E, any> {
@@ -91,46 +98,3 @@ export function children<T extends HTMLElement, E>(
     }),
   );
 }
-
-// // TODO: Children must take overloads to maintain type chain
-// export function children<T extends HTMLElement, E>(
-//   ...children: ChildComponent<E>[] // Is this valid?
-// ): ComponentOperator<T, E> {
-//   return (component: Component<T, E>): Component<T, E> =>
-//     component.pipe(
-//       switchMap(({ node, events }) => {
-
-//         const children$ = combineLatest<IComponent<Node, E>[][]>(
-//           ...children.map(coerceChildComponent)
-//         ).pipe(
-//           debounceTime(0),
-//           map(unflattened => unflattened.reduce<IComponent<Node, E>[]>((flat, comps) => flat.concat(comps), [])),
-//           shareReplay(SHARE_REPLAY_CONFIG),
-//         );
-
-//         const events$ = children$.pipe(
-//           map(components =>
-//             merge<E>(
-//               ...(events ? [events] : []),
-//               ...components.map(comp => comp.events).filter(ev => ev !== undefined),
-//             )
-//           ),
-//           switchAll(),
-//           share(),
-//         );
-
-//         let previousNodes = [];
-//         return children$.pipe(
-//           map(components => {
-//             const nodes = components.map(comp => comp.node);
-//             updateElementChildren(node, previousNodes, nodes);
-//             previousNodes = nodes;
-//             return node;
-//           }),
-//           distinctUntilChanged(),
-//           mapTo({ node, events: events$ }),
-//           shareReplay(SHARE_REPLAY_CONFIG),
-//         );
-//       }),
-//     );
-// }
