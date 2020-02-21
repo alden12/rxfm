@@ -1,6 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { Component, ComponentOperator } from '../component';
-import { switchMap, map, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { switchMap, map, startWith } from 'rxjs/operators';
 import { distinctUntilKeysChanged } from '../utils';
 
 export function styles<T extends HTMLElement, E>(

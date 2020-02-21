@@ -1,9 +1,9 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children, event, extractEvent, stateManager, stateAction, generate, select } from './rxfm';
+import { div, children, event, extractEvent, stateful, stateAction, generate, select } from './rxfm';
 import { styles } from './rxfm/attributes/styles';
 
-const stated = stateManager(
+const stated = stateful(
   {
     color: 'blue',
     items: [0, 1],

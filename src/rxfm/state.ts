@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Component } from './component';
-import { shareReplay, tap, switchMap, mapTo, distinctUntilChanged, startWith, map } from 'rxjs/operators';
-import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
+import { shareReplay, tap, switchMap, mapTo, startWith, map } from 'rxjs/operators';
+import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged, action } from './utils';
 import { extractEvent } from './events';
 
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
@@ -29,17 +29,11 @@ export interface IStateAction<T> {
   state?: Partial<T>;
 }
 
-export function stateAction<T, A>(
-  mappingFunction: (event: T) => A
-): (event: Observable<T>) => Observable<Record<'state', A>> {
-  return (event: Observable<T>) => event.pipe(
-    map(ev => ({
-      state: mappingFunction(ev),
-    })),
-  );
+export function stateAction<T, A>(mappingFunction: (event: T) => A) {
+  return action('state', mappingFunction);
 }
 
-export function stateManager<T extends Node, S, E extends IStateAction<S>>(
+export function stateful<T extends Node, S, E extends IStateAction<S>>(
   initialState: Partial<S> = {},
   creationFunction: (state: Observable<Partial<S>>, currentState: () => Readonly<Partial<S>>) => Component<T, E>,
 ): Component<T, { [EK in Exclude<keyof E, 'state'>]?: E[EK] }> {

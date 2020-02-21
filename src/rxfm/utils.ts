@@ -26,3 +26,14 @@ export function distinctUntilKeysChanged<T>(): (source: Observable<T>) => Observ
     distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
   )
 }
+
+export function action<T, K extends string, A>(
+  type: K,
+  mappingFunction: (event: T) => A
+): (event: Observable<T>) => Observable<Record<K, A>> {
+  return (event: Observable<T>) => event.pipe(
+    map(ev => ({
+      [type]: mappingFunction(ev),
+    } as Record<K, A>)),
+  );
+}
