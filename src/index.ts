@@ -1,11 +1,12 @@
 import { of, fromEvent } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { div, children, event, extractEvent } from './rxfm';
 import { stateManager } from './rxfm/state';
 
 const stated = stateManager(
   { color: 'blue' },
   (state, currentState) => {
+    // state.subscribe(console.log);
     return div().pipe(
       children(
         'hello world!',

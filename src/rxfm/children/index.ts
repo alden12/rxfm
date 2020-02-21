@@ -6,7 +6,7 @@ import { SHARE_REPLAY_CONFIG } from '../utils';
 
 export type ChildComponent<E> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
 
-export function coerceChildComponent<E>(
+function coerceChildComponent<E>(
   childComponent: ChildComponent<E>,
 ): Observable<IComponent<Node, E>[]> {
   if (childComponent instanceof Observable) {
@@ -28,7 +28,7 @@ export function coerceChildComponent<E>(
   }
 }
 
-export function updateElementChildren<T extends HTMLElement>(
+function updateElementChildren<T extends HTMLElement>(
   el: T,
   previousChildren: Node[],
   newChildren: Node[]

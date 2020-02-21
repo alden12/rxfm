@@ -1,6 +1,6 @@
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { Component } from './component';
-import { switchAll, shareReplay, tap, map, switchMap } from 'rxjs/operators';
+import { shareReplay, tap, switchMap, mapTo, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG } from './utils';
 import { extractEvent } from './events';
 
@@ -11,26 +11,17 @@ export function stateLoop<T extends Node, E, K extends keyof E, S>(
   stateFunction: (event: E[K], currentState: Readonly<S>) => S,
 ): Component<T, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
 
-  const stateSubject = new BehaviorSubject<Observable<S>>(of(initialState));
-  let currentState: S = initialState;
-  const state = stateSubject.pipe(
-    switchAll(),
-    tap(st => currentState = st),
-    shareReplay(SHARE_REPLAY_CONFIG),
-  )
+  const stateSubject = new BehaviorSubject<S>(initialState);
 
-  const component = creationFunction(state, () => currentState).pipe(
+  return creationFunction(stateSubject.asObservable(), () => stateSubject.value).pipe(
     extractEvent(eventType),
+    switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
+      tap(ev => stateSubject.next(stateFunction(ev, stateSubject.value))),
+      startWith({ node, events }),
+      mapTo({ node, events }),
+    )),
+    distinctUntilChanged((a, b) => a.node === b.node && a.events === b.events),
     shareReplay(SHARE_REPLAY_CONFIG),
-  );
-  const stateUpdates = component.pipe(
-    switchMap(({ extractedEvents }) => extractedEvents),
-    map(event => stateFunction(event, currentState)),
-  );
-
-  stateSubject.next(stateUpdates);
-  return component.pipe(
-    map(({ node, events }) => ({ node, events })),
   );
 }
 
