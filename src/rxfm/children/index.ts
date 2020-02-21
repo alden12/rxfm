@@ -1,6 +1,6 @@
 import { Observable, of, combineLatest, merge } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
-import { IComponent, Component, ComponentOperator } from '../';
+import { IComponent, Component, ComponentOperator } from '../component';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
 

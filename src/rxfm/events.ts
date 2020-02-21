@@ -75,12 +75,12 @@ export interface IExtractedEventComponent<T extends Node, E, EX> extends ICompon
 }
 export type ExtractedEventComponent<T extends Node, E, EX> = Observable<IExtractedEventComponent<T, E, EX>>;
 
-export type ExtractedEventComponentOperator<T extends Node, E, K extends keyof E> =
+export type ExtractedEvent<T extends Node, E, K extends keyof E> =
   (component: Component<T, E>) => ExtractedEventComponent<T, { [EK in Exclude<keyof E, K>]?: E[EK] }, E[K]>
 
 export function extractEvent<T extends Node, E, K extends keyof E>(
   type: K,
-): ExtractedEventComponentOperator<T, E, K> {
+): ExtractedEvent<T, E, K> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => {
 
