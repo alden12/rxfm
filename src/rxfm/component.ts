@@ -1,9 +1,9 @@
-import { Observable, of } from 'rxjs';
+import { Observable, of, EMPTY } from 'rxjs';
 import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = {}> {
   node: T;
-  events?: Observable<E>;
+  events: Observable<E>;
 }
 
 export type Component<T extends Node, E = {}> = Observable<IComponent<T, E>>;
@@ -17,7 +17,7 @@ export function text<E = {}>(text: string | number | Observable<string | number>
     map(content => typeof content === 'string' ? content : content.toString()),
     map(content => {
       node.nodeValue = content;
-      return { node };
+      return { node, events: EMPTY };
     }),
     distinctUntilKeyChanged('node'),
   );
@@ -26,7 +26,7 @@ export function text<E = {}>(text: string | number | Observable<string | number>
 export function component<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): Component<HTMLElementTagNameMap[K], {}> {
-  return of({ node: document.createElement(tagName) });
+  return of({ node: document.createElement(tagName), events: EMPTY });
 }
 
 export function div() {

@@ -1,6 +1,7 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { div, children, event, extractEvent, stateManager, stateAction, generate, select } from './rxfm';
+import { styles } from './rxfm/attributes/styles';
 
 const stated = stateManager(
   {
@@ -9,6 +10,7 @@ const stated = stateManager(
   },
   (state, currentState) => {
     return div().pipe(
+      styles(state.pipe(map(({ color }) => ({ color })))),
       children(
         'hello world!',
         state.pipe(select('color')),

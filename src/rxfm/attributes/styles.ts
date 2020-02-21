@@ -1,26 +1,27 @@
+import { Observable, of } from 'rxjs';
+import { Component, ComponentOperator } from '../component';
+import { switchMap, map, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { distinctUntilKeysChanged } from '../utils';
 
-// export function styles<T extends HTMLElement>(
-//   styles:
-//     | Partial<CSSStyleDeclaration>
-//     | Observable<Partial<CSSStyleDeclaration>>
-// ): (node: Observable<T>) => Observable<T> {
-//   return (node: Observable<T>) =>
-//     node.pipe(
-//       switchMap(el => {
-//         const stylesObservable =
-//           styles instanceof Observable ? styles : of(styles);
-//         let previousStyles: Partial<CSSStyleDeclaration> = {};
-//         return stylesObservable.pipe(
-//           map(style => {
-//             Object.keys(style)
-//               .filter(key => style[key] !== previousStyles[key])
-//               .forEach(key => (el.style[key] = style[key] || null));
-//             previousStyles = { ...previousStyles, ...style };
-//             return el;
-//           }),
-//           startWith(el)
-//         );
-//       }),
-//       distinctUntilChanged()
-//     );
-// }
+export function styles<T extends HTMLElement, E>(
+  styles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>
+): ComponentOperator<T, E> {
+  return (component: Component<T, E>) =>
+    component.pipe(
+      switchMap(({ node, events }) => {
+        const stylesObservable = styles instanceof Observable ? styles : of(styles);
+        let previousStyles: Partial<CSSStyleDeclaration> = {};
+        return stylesObservable.pipe(
+          map(style => {
+            Object.keys(style)
+              .filter(key => style[key] !== previousStyles[key])
+              .forEach(key => (node.style[key] = style[key] || null));
+            previousStyles = { ...previousStyles, ...style };
+            return { node, events };
+          }),
+          startWith({ node, events })
+        );
+      }),
+      distinctUntilKeysChanged(),
+    );
+}

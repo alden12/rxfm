@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Component } from './component';
 import { shareReplay, tap, switchMap, mapTo, distinctUntilChanged, startWith, map } from 'rxjs/operators';
-import { SHARE_REPLAY_CONFIG } from './utils';
+import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 import { extractEvent } from './events';
 
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
@@ -20,7 +20,7 @@ export function stateLoop<T extends Node, S, E, K extends keyof E>(
       startWith({ node, events }),
       mapTo({ node, events }),
     )),
-    distinctUntilChanged((a, b) => a.node === b.node && a.events === b.events),
+    distinctUntilKeysChanged(),
     shareReplay(SHARE_REPLAY_CONFIG),
   );
 }

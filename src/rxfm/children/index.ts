@@ -1,4 +1,4 @@
-import { Observable, of, combineLatest, merge } from 'rxjs';
+import { Observable, of, combineLatest, merge, EMPTY } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
 import { IComponent, Component, ComponentOperator } from '../component';
 import { childDiffer } from './child-differ';
@@ -16,7 +16,7 @@ function coerceChildComponent<E>(
         if (typeof child === "string" || typeof child === 'number') {
           node = node || document.createTextNode('');
           node.nodeValue = typeof child === 'number' ? child.toString() : child;
-          return [{ node }];
+          return [{ node, events: EMPTY }];
         }
         return Array.isArray(child) ? child : [child];
       }),
@@ -24,7 +24,7 @@ function coerceChildComponent<E>(
   } else {
     const content = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
     const node = document.createTextNode(content);
-    return of([{ node }]);
+    return of([{ node, events: EMPTY }]);
   }
 }
 
