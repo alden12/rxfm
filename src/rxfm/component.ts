@@ -8,8 +8,7 @@ export interface IComponent<T extends Node, E = {}> {
 
 export type Component<T extends Node, E = {}> = Observable<IComponent<T, E>>;
 
-export type ComponentOperator<T extends Node, E, O = E> =
-  (component: Component<T, E>) => Component<T, O>;
+export type ComponentOperator<T extends Node, E, O = E> = (component: Component<T, E>) => Component<T, O>;
 
 export function text<E = {}>(text: string | number | Observable<string | number>): Observable<IComponent<Text, E>> {
   const textObservable = text instanceof Observable ? text : of(text);
@@ -24,12 +23,12 @@ export function text<E = {}>(text: string | number | Observable<string | number>
   );
 }
 
-export function component<K extends keyof HTMLElementTagNameMap, E = {}>(
+export function component<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): Component<HTMLElementTagNameMap[K], E> {
+): Component<HTMLElementTagNameMap[K], {}> {
   return of({ node: document.createElement(tagName) });
 }
 
-export function div<E = {}>() {
-  return component<'div', E>('div');
+export function div() {
+  return component('div');
 }
