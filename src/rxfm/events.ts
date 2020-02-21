@@ -1,4 +1,4 @@
-import { Component, IComponent } from './component';
+import { Component, IComponent } from './components';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
 import { map, share, filter } from 'rxjs/operators';
 

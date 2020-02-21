@@ -1,4 +1,4 @@
-import { Attributes } from './index';
+import { Attributes } from './attributes';
 
 export interface IAttributeDiff {
   updated: Attributes;

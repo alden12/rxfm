@@ -1,9 +1,20 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children, event, extractEvent, stateful, stateAction, generate, select } from './rxfm';
-import { styles } from './rxfm/attributes/styles';
-import { attributes } from './rxfm/attributes';
-import { classes } from './rxfm/attributes/classes';
+import {
+  children,
+  event,
+  extractEvent,
+  stateful,
+  stateAction,
+  generate,
+  select,
+  styles,
+  attributes,
+  classes,
+} from './rxfm';
+import {
+  div, span,
+} from './rxfm/components';
 
 import './index.css';
 
@@ -45,6 +56,7 @@ const stated = stateful(
 const app = div().pipe(
   children(
     'hello, ',
+    span().pipe(children('span!')),
     div().pipe(
       event('click'),
       event('click', map(({ bubbles }) => ({ bubbles }))),

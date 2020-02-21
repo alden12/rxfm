@@ -28,7 +28,3 @@ export function component<K extends keyof HTMLElementTagNameMap>(
 ): Component<HTMLElementTagNameMap[K], {}> {
   return of({ node: document.createElement(tagName), events: EMPTY });
 }
-
-export function div() {
-  return component('div');
-}

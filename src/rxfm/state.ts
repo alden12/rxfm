@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject } from 'rxjs';
-import { Component } from './component';
+import { Component } from './components';
 import { shareReplay, tap, switchMap, mapTo, startWith, map } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged, action } from './utils';
 import { extractEvent } from './events';

@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { Component, ComponentOperator } from '../component';
+import { Component, ComponentOperator } from '../components';
 import { switchMap, map, startWith } from 'rxjs/operators';
 import { distinctUntilKeysChanged } from '../utils';
 

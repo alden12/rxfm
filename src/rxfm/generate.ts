@@ -1,7 +1,7 @@
 import { Observable, combineLatest } from 'rxjs';
 import { map, shareReplay, filter, startWith, switchMap, debounceTime } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG } from './utils';
-import { Component, IComponent } from './component';
+import { Component, IComponent } from './components';
 
 export function generate<T, N extends Node, E = {}>(
   idFunction: (item: T) => string,
