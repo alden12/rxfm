@@ -1,9 +1,10 @@
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Component } from './components';
-import { shareReplay, tap, switchMap, mapTo, startWith, map } from 'rxjs/operators';
+import { shareReplay, tap, switchMap, mapTo, startWith } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged, action } from './utils';
 import { extractEvent } from './events';
 
+// TODO: Invesitigate using withLatestFrom instead of currentState function. Does state need to be subscribed?
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
   initialState: S,
   creationFunction: (state: Observable<S>, currentState: () => Readonly<S>) => Component<T, E>,
@@ -44,3 +45,5 @@ export function stateful<T extends Node, S, E extends IStateAction<S>>(
     (event, currentState) => ({ ...currentState, ...event }),
   );
 }
+
+// TODO: Create store

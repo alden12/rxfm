@@ -1,5 +1,7 @@
 import { component } from './component'
 
+// TODO: SVG elements
+
 export const a = () => component('a');
 export const abbr = () => component('abbr');
 export const address = () => component('address');

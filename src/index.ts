@@ -1,5 +1,5 @@
 import { of, fromEvent } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, withLatestFrom } from 'rxjs/operators';
 import {
   children,
   event,
@@ -38,7 +38,10 @@ const stated = stateful(
             item => div().pipe(
               children('item: ', item),
               event('click',
-                stateAction(() => ({ items: [...currentState().items, currentState().items.length] }))
+                ev => ev.pipe(
+                  withLatestFrom(state),
+                  stateAction(([_, currState]) => ({ items: [...currState.items, currState.items.length] }))
+                )
               ),
             ),
           ),
