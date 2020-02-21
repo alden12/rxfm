@@ -1,7 +1,8 @@
 import { Observable, of, combineLatest, merge } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
-import { IComponent, Component, ComponentOperator, SHARE_REPLAY_CONFIG } from '../';
+import { IComponent, Component, ComponentOperator } from '../';
 import { childDiffer } from './child-differ';
+import { SHARE_REPLAY_CONFIG } from '../utils';
 
 export type ChildComponent<E> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
 

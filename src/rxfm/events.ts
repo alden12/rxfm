@@ -1,37 +1,45 @@
-import { ComponentOperator, Component, IComponent, ComponentEventOperator } from './component';
+import { Component, IComponent } from './component';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
 import { map, share, filter } from 'rxjs/operators';
 
-export function event<T extends Node, E, K extends string, O>(
-  eventFunction: ((node: T) => Observable<Record<K, O>>),
-): ComponentEventOperator<T, E, K, O>
+export type InjectEvent<T extends Node, E, K extends string, V> = (component: Component<T, E>) =>
+  Component<T, {
+    [KE in keyof (E & Record<K, V>)]?:
+      KE extends keyof E
+        ? KE extends K ? E[KE] | V : E[KE]
+        : KE extends K ? V : never
+  }>;
 
-export function event<T extends Node, E, K extends string, O>(
-  event: Observable<Record<K, O>>,
-): ComponentEventOperator<T, E, K, O>
+export function event<T extends Node, E, K extends string, V>(
+  eventFunction: ((node: T) => Observable<Record<K, V>>),
+): InjectEvent<T, E, K, V>
+
+export function event<T extends Node, E, K extends string, V>(
+  event: Observable<Record<K, V>>,
+): InjectEvent<T, E, K, V>
 
 export function event<T extends Node, E, K extends keyof HTMLElementEventMap>(
   eventType: K,
-): ComponentEventOperator<T, E, K, HTMLElementEventMap[K]>
+): InjectEvent<T, E, K, HTMLElementEventMap[K]>
 
 export function event<T extends Node, E, K extends string>(
   eventType: K,
-): ComponentEventOperator<T, E, K, Event>
+): InjectEvent<T, E, K, Event>
 
-export function event<T extends Node, E, O, KT extends keyof HTMLElementEventMap, K extends string>(
+export function event<T extends Node, E, KT extends keyof HTMLElementEventMap, K extends string, V>(
   eventType: KT,
-  mappingFunction: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, O>>,
-): ComponentEventOperator<T, E, K, O>
+  mappingFunction: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, V>>,
+): InjectEvent<T, E, K, V>
 
-export function event<T extends Node, E, K extends string, O>(
+export function event<T extends Node, E, K extends string, V>(
   eventType: string,
-  mappingFunction: (event: Observable<Event>) => Observable<Record<K, O>>,
-): ComponentEventOperator<T, E, K, O>
+  mappingFunction: (event: Observable<Event>) => Observable<Record<K, V>>,
+): InjectEvent<T, E, K, V>
 
-export function event<T extends Node, E, K extends string, O>(
-  event: ((node: T) => Observable<Record<K, O>>) | Observable<Record<K, O>> | string,
-  mappingFunction?: (event: Observable<Event>) => Observable<Record<K, O>>,
-): ComponentEventOperator<T, E, K, O> {
+export function event<T extends Node, E, K extends string, V>(
+  event: ((node: T) => Observable<Record<K, V>>) | Observable<Record<K, V>> | string,
+  mappingFunction?: (event: Observable<Event>) => Observable<Record<K, V>>,
+): InjectEvent<T, E, K, V> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => ({
       node,
@@ -45,11 +53,11 @@ export function event<T extends Node, E, K extends string, O>(
   );
 }
 
-function getEvents<T extends Node, O>(
+function getEvents<T extends Node, V>(
   node: T,
-  event: string | Observable<O> | ((node: T) => Observable<O>),
-  mappingFunction?: (event: Observable<Event>) => Observable<O>,
-): Observable<O | { [type: string]: Event }> {
+  event: string | Observable<V> | ((node: T) => Observable<V>),
+  mappingFunction?: (event: Observable<Event>) => Observable<V>,
+): Observable<V | { [type: string]: Event }> {
   if (typeof event === 'string') {
     return mappingFunction
       ? fromEvent(node, event).pipe(mappingFunction)
