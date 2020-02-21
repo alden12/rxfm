@@ -1,15 +1,30 @@
 import { of, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { div, children, event, extractEvent, stateManager, stateAction } from './rxfm';
+import { div, children, event, extractEvent, stateManager, stateAction, generate } from './rxfm';
 
 const stated = stateManager(
-  { color: 'blue' },
+  {
+    color: 'blue',
+    items: [0, 1],
+  },
   (state, currentState) => {
     return div().pipe(
       children(
         'hello world!',
         state.pipe(
           map(({ color }) => color),
+        ),
+        state.pipe(
+          map(({ items }) => items),
+          generate(
+            item => item.toString(),
+            item => div().pipe(
+              children('item: ', item),
+              event('click',
+                stateAction(() => ({ items: [...currentState().items, currentState().items.length] }))
+              ),
+            ),
+          ),
         )
       ),
       event(
