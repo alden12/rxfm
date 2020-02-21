@@ -1,4 +1,4 @@
-import { Observable, OperatorFunction } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map, distinctUntilChanged, pluck } from 'rxjs/operators';
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
@@ -32,8 +32,6 @@ export function action<T, K extends string, A>(
   mappingFunction: (event: T) => A
 ): (event: Observable<T>) => Observable<Record<K, A>> {
   return (event: Observable<T>) => event.pipe(
-    map(ev => ({
-      [type]: mappingFunction(ev),
-    } as Record<K, A>)),
+    map(ev => ({ [type]: mappingFunction(ev) } as Record<K, A>)),
   );
 }

@@ -1,23 +1,25 @@
-// export interface IAttributeDiff {
-//   updated: Attributes;
-//   removed: string[];
-// }
+import { Attributes } from './index';
 
-// export function attributeDiffer(
-//   oldAttributes: Attributes,
-//   newAttributes: Attributes
-// ): IAttributeDiff {
-//   const updated = Object.keys(newAttributes).reduce(
-//     (updates, key) => {
-//       if (oldAttributes[key] !== newAttributes[key]) {
-//         updates[key] = newAttributes[key];
-//       }
-//       return updates;
-//     },
-//     {} as Attributes
-//   );
+export interface IAttributeDiff {
+  updated: Attributes;
+  removed: string[];
+}
 
-//   const removed = Object.keys(oldAttributes).filter(key => !newAttributes[key]);
+export function attributeDiffer(
+  oldAttributes: Attributes,
+  newAttributes: Attributes
+): IAttributeDiff {
+  const updated = Object.keys(newAttributes).reduce(
+    (updates, key) => {
+      if (oldAttributes[key] !== newAttributes[key]) {
+        updates[key] = newAttributes[key];
+      }
+      return updates;
+    },
+    {} as Attributes
+  );
 
-//   return { updated, removed };
-// }
+  const removed = Object.keys(oldAttributes).filter(key => !newAttributes[key]);
+
+  return { updated, removed };
+}
