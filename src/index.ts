@@ -1,110 +1,82 @@
 import { of, fromEvent } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { div, children, event, extractEvent } from './rxfm';
+import { map, withLatestFrom } from 'rxjs/operators';
+import {
+  children,
+  event,
+  extractEvent,
+  stateful,
+  stateAction,
+  generate,
+  select,
+  styles,
+  attributes,
+  classes,
+} from './rxfm';
+import {
+  div, span,
+} from './rxfm/components';
 
-// const stated = stateManager(
-//   { color: 'blue' },
-//   (state, currentState) => {
-//     state.subscribe(st => console.log('did it work?', st))
-//     return div().pipe(
-//       children(
-//         'hello world!',
-//       ),
-//       event('click', map(() => new StateAction({ color: currentState().color === 'blue' ? 'orange' : 'blue' }))),
-//     )
-//   }
-// );
+import './index.css';
 
-// interface A {
-//   a: number;
-// }
-// interface B {
-//   b: string;
-// }
-// type AB = { [K in keyof (A & B)]: K extends keyof A ? A[K] : K extends keyof B ? B[K] : never }
-
-// type Merge<T, KE extends string, V> = {
-//   [K in keyof (T & Record<KE, V>)]: K extends keyof T ? T[K] : K extends KE ? V : never;
-// }
-// let a: Merge<A, 'b', string>;
-// a.b
+const stated = stateful(
+  {
+    color: 'blue',
+    items: [0, 1],
+  },
+  (state, currentState) => {
+    return div().pipe(
+      styles(state.pipe(map(({ color }) => ({ color })))),
+      attributes({ style: 'font-weight: bold' }),
+      classes(['italic', 'grey-background']),
+      children(
+        'hello world!',
+        state.pipe(select('color')),
+        state.pipe(
+          select('items'),
+          generate(
+            item => item.toString(),
+            item => div().pipe(
+              children('item: ', item),
+              event('click',
+                ev => ev.pipe(
+                  withLatestFrom(state),
+                  stateAction(([_, currState]) => ({ items: [...currState.items, currState.items.length] }))
+                )
+              ),
+            ),
+          ),
+        )
+      ),
+      event('click',
+        stateAction(() => ({
+          color: currentState().color === 'blue' ? 'orange' : 'blue',
+        })),
+      ),
+    )
+  }
+);
 
 const app = div().pipe(
   children(
     'hello, ',
-    // 'wow live dev!',
+    span().pipe(children('span!')),
     div().pipe(
       event('click'),
       event('click', map(({ bubbles }) => ({ bubbles }))),
-      // event(of({ test: 1 })),
       event(node => fromEvent(node, 'contextmenu').pipe(map(({ type }) => ({ type })))),
       event(of({ hello: 'world' })),
       event(of({ hello: 1 })),
-      // map(comp => ),
-      // event(node => fromEvent(node, 'contextmenu').pipe(map(ev => ev.timeStamp))),
       children('world!'),
     ),
-    // stated,
+    stated,
   ),
   event('click', map(({ target }) => ({ target }))),
 );
 
 app.pipe(
-  // match(ev => typeof ev === 'string' ? { match: ev } : { noMatch: ev }),
   extractEvent('click'),
 ).subscribe(({ node, events, extractedEvents }) => {
   document.body.appendChild(node);
   events.subscribe(console.log);
   extractedEvents.subscribe(ev => console.log('match:', ev));
 });
-
-// function pipe<TS extends any[], R>(...)
-
-// div()
-//   (children('test'))
-//   (classes('a', 'b'))
-//   (event('click', map(ev => ev.clientX)))
-// ();
-
-// div()(
-//   children('test'),
-//   classes('a', 'b'),
-//   event('click', map(ev => ev.clientX)),
-// );
-
-// div().pipe(
-//   children('test'),
-//   classes('a', 'b'),
-//   event('click', map(ev => ev.clientX)),
-// );
-
-// pipe(
-//   div,
-//   children('test'),
-//   classes('a', 'b'),
-//   event('click', map(ev => ev.clientX)),
-// );
-
-// div(
-//   children('test'),
-//   classes('a', 'b'),
-//   event('click', map(ev => ev.clientX)),
-// );
-
-// new Div(
-//   children('test'),
-//   classes('a', 'b'),
-//   event('click', map(ev => ev.clientX)),
-// );
-
-// component(div)(
-//   children('test'),
-//   classes('a', 'b'),
-//   event('click', map(ev => ev.clientX)),
-// );
-
-// div
-//   .children('test')
-//   .classes('a', 'b')
-//   .event('click', map(ev => ev.clientX))
-// ;

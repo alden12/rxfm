@@ -1,11 +1,12 @@
-import { Observable, of, combineLatest, merge } from 'rxjs';
+import { Observable, of, combineLatest, merge, EMPTY } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
-import { IComponent, Component, ComponentOperator, SHARE_REPLAY_CONFIG } from '../';
+import { IComponent, Component, ComponentOperator } from '../components';
 import { childDiffer } from './child-differ';
+import { SHARE_REPLAY_CONFIG } from '../utils';
 
 export type ChildComponent<E> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
 
-export function coerceChildComponent<E>(
+function coerceChildComponent<E>(
   childComponent: ChildComponent<E>,
 ): Observable<IComponent<Node, E>[]> {
   if (childComponent instanceof Observable) {
@@ -15,7 +16,7 @@ export function coerceChildComponent<E>(
         if (typeof child === "string" || typeof child === 'number') {
           node = node || document.createTextNode('');
           node.nodeValue = typeof child === 'number' ? child.toString() : child;
-          return [{ node }];
+          return [{ node, events: EMPTY }];
         }
         return Array.isArray(child) ? child : [child];
       }),
@@ -23,11 +24,11 @@ export function coerceChildComponent<E>(
   } else {
     const content = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
     const node = document.createTextNode(content);
-    return of([{ node }]);
+    return of([{ node, events: EMPTY }]);
   }
 }
 
-export function updateElementChildren<T extends HTMLElement>(
+function updateElementChildren<T extends HTMLElement>(
   el: T,
   previousChildren: Node[],
   newChildren: Node[]

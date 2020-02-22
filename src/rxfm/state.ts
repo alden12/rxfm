@@ -1,49 +1,49 @@
-// import { Observable, BehaviorSubject, of } from 'rxjs';
-// import { Component } from '.';
-// import { switchAll, shareReplay, tap, map, switchMap } from 'rxjs/operators';
-// import { Match, match } from './events';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { Component } from './components';
+import { shareReplay, tap, switchMap, mapTo, startWith } from 'rxjs/operators';
+import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged, action } from './utils';
+import { extractEvent } from './events';
 
-// export function stateLoop<T extends Node, M, E extends M, S>(
-//     initialState: S,
-//     creationFunction: (state: Observable<S>, currentState: () => Readonly<S>) => Component<T, E>,
-//     matchingFunction: (event: E) => Match<M, E>,
-//     stateFunction: (event: M, currentState: Readonly<S>) => S,
-// ): Component<T, Exclude<E, M>> {
-//     const stateSubject = new BehaviorSubject<Observable<S>>(of(initialState));
-//     let currentState: S = initialState;
-//     const state = stateSubject.pipe(
-//         switchAll(),
-//         tap(st => currentState = st),
-//         shareReplay({ bufferSize: 1, refCount: true }),
-//     )
-//     const component = creationFunction(state, () => currentState).pipe(
-//         match(matchingFunction),
-//         shareReplay({ bufferSize: 1, refCount: true }),
-//     );
-//     const matchedEvents = component.pipe(
-//         switchMap(({ matchingEvents }) => matchingEvents),
-//         map(event => stateFunction(event, currentState)),
-//     );
-//     stateSubject.next(matchedEvents);
-//     return component.pipe(
-//         map(({ node, events }) => ({ node, events })),
-//     );
-// }
+// TODO: Invesitigate using withLatestFrom instead of currentState function. Does state need to be subscribed?
+export function stateLoop<T extends Node, S, E, K extends keyof E>(
+  initialState: S,
+  creationFunction: (state: Observable<S>, currentState: () => Readonly<S>) => Component<T, E>,
+  eventType: K,
+  stateFunction: (event: E[K], currentState: Readonly<S>) => S,
+): Component<T, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
 
-// export class StateAction<T> {
-//     constructor(
-//         public readonly state: Partial<T>,
-//     ) {}
-// }
+  const stateSubject = new BehaviorSubject<S>(initialState);
 
-// export function stateManager<T extends Node, S, E extends StateAction<S>>(
-//     initialState: Partial<S> = {},
-//     creationFunction: (state: Observable<Partial<S>>, currentState: () => Readonly<Partial<S>>) => Component<T, E>,
-// ): Component<T, Exclude<E, StateAction<S>>> {
-//     return stateLoop<T, StateAction<S>, E, Partial<S>>(
-//         initialState,
-//         creationFunction,
-//         event => event instanceof StateAction ? { match: event } : { noMatch: event },
-//         (event, currentState) => ({ ...currentState, ...event.state }),
-//     );
-// }
+  return creationFunction(stateSubject.asObservable(), () => stateSubject.value).pipe(
+    extractEvent(eventType),
+    switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
+      tap(ev => stateSubject.next(stateFunction(ev, stateSubject.value))),
+      startWith({ node, events }),
+      mapTo({ node, events }),
+    )),
+    distinctUntilKeysChanged(),
+    shareReplay(SHARE_REPLAY_CONFIG),
+  );
+}
+
+export interface IStateAction<T> {
+  state?: Partial<T>;
+}
+
+export function stateAction<T, A>(mappingFunction: (event: T) => A) {
+  return action('state', mappingFunction);
+}
+
+export function stateful<T extends Node, S, E extends IStateAction<S>>(
+  initialState: Partial<S> = {},
+  creationFunction: (state: Observable<Partial<S>>, currentState: () => Readonly<Partial<S>>) => Component<T, E>,
+): Component<T, { [EK in Exclude<keyof E, 'state'>]?: E[EK] }> {
+  return stateLoop(
+    initialState,
+    creationFunction,
+    'state',
+    (event, currentState) => ({ ...currentState, ...event }),
+  );
+}
+
+// TODO: Create store
