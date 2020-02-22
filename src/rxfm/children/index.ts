@@ -83,7 +83,7 @@ export function children<T extends HTMLElement, E>(
         share(),
       );
 
-      let previousNodes = [];
+      let previousNodes: Node[] = [];
       return children$.pipe(
         map(components => {
           const nodes = components.map(comp => comp.node);
