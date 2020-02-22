@@ -4,14 +4,16 @@ module.exports = {
   mode: "development",
 	devtool: "inline-source-map",
 	devServer: {
-		contentBase: path.join(__dirname, "src"),
+		contentBase: path.join(__dirname, "dist"),
 		port: 3000,
-		open: true,
 		compress: true
   },
-  entry: "./src/index.ts",
+  entry: {
+    app: './src/app/app.ts',
+    rxfm: './src/rxfm/index.ts',
+  },
   output: {
-    filename: "index.js",
+    filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'dist'),
   },
   resolve: {

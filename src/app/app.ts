@@ -11,12 +11,12 @@ import {
   styles,
   attributes,
   classes,
-} from './rxfm';
+} from '../rxfm';
 import {
   div, span,
-} from './rxfm/components';
+} from '../rxfm/components';
 
-import './index.css';
+import './app.css';
 
 const stated = stateful(
   {

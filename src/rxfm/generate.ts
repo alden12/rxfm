@@ -7,9 +7,10 @@ export function generate<T, N extends Node, E = {}>(
   idFunction: (item: T) => string,
   creationFunction: (item: Observable<T>) => Component<N, E>,
 ): (items: Observable<T[]>) => Observable<IComponent<N, E>[]> {
+
   return (items$: Observable<T[]>) => {
     let previousIds = new Map<string, T>();
-    const updates = items$.pipe(
+    const updates = items$.pipe( // Is this correct?
       map(items => {
         const itemIdMap = new Map(items.map(item => [idFunction(item), item]));
         const updatedIds = Array.from(itemIdMap.keys()).filter(id =>
