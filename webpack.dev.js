@@ -1,4 +1,6 @@
 const path = require('path');
+// import webpackRxjsExternals from 'webpack-rxjs-externals';
+const webpackRxjsExternals = require('webpack-rxjs-externals');
 
 module.exports = [
   {
@@ -42,6 +44,7 @@ module.exports = [
     output: {
       filename: 'rxfm.js',
       path: path.resolve(__dirname, 'dist'),
+      library: "rxfm",
     },
     resolve: {
       extensions: [".ts", ".js", ".json"]
@@ -54,6 +57,9 @@ module.exports = [
           exclude: '/node_modules/'
         },
       ]
-    }
+    },
+    externals: [
+      webpackRxjsExternals(),
+    ],
   }
 ];
