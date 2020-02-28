@@ -2,11 +2,17 @@ import { Component, IComponent } from './components';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
 import { map, share, filter } from 'rxjs/operators';
 
+export type Merge<T, U> = {
+  [K in (keyof T) & (keyof U)]?: K extends keyof T ? T[K] : U[K];
+}
+
 export type InjectEvent<T extends Node, E, K extends string, V> = (component: Component<T, E>) =>
   Component<T, {
     [KE in keyof (E & Record<K, V>)]?:
       KE extends keyof E
-        ? KE extends K ? E[KE] | V : E[KE]
+        ? KE extends K
+          ? E[KE] extends object ? V extends object ? Partial<E[KE] & V> : E[KE] | V : E[KE] | V
+          : E[KE]
         : KE extends K ? V : never
   }>;
 
