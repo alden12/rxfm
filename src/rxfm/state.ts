@@ -4,7 +4,6 @@ import { shareReplay, tap, switchMap, mapTo, startWith } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged, action } from './utils';
 import { extractEvent } from './events';
 
-// TODO: Invesitigate using withLatestFrom instead of currentState function. Does state need to be subscribed?
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
   initialState: S,
   creationFunction: (state: Observable<S>) => Component<T, E>,
