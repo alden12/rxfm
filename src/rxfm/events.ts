@@ -15,11 +15,7 @@ export type InjectEvent<T extends Node, E, K extends string, V> = (component: Co
   }>;
 
 export function event<T extends Node, E, K extends string, V>(
-  eventFunction: ((node: T) => Observable<Record<K, V>>),
-): InjectEvent<T, E, K, V>
-
-export function event<T extends Node, E, K extends string, V>(
-  event: Observable<Record<K, V>>,
+  eventFunction: Observable<Record<K, V>> | ((node: T) => Observable<Record<K, V>>),
 ): InjectEvent<T, E, K, V>
 
 export function event<T extends Node, E, K extends keyof HTMLElementEventMap>(
@@ -41,7 +37,7 @@ export function event<T extends Node, E, K extends string, V>(
 ): InjectEvent<T, E, K, V>
 
 export function event<T extends Node, E, K extends string, V>(
-  event: ((node: T) => Observable<Record<K, V>>) | Observable<Record<K, V>> | string,
+  eventTypeOrObservable: ((node: T) => Observable<Record<K, V>>) | Observable<Record<K, V>> | string,
   mappingFunction?: (event: Observable<Event>) => Observable<Record<K, V>>,
 ): InjectEvent<T, E, K, V> {
   return (component: Component<T, E>) => component.pipe(
@@ -49,7 +45,7 @@ export function event<T extends Node, E, K extends string, V>(
       node,
       events: merge<E>(
         events || EMPTY,
-        getEvents(node, event, mappingFunction),
+        getEvents(node, eventTypeOrObservable, mappingFunction),
       ).pipe(
         share()
       ),
@@ -59,19 +55,19 @@ export function event<T extends Node, E, K extends string, V>(
 
 function getEvents<T extends Node, V>(
   node: T,
-  event: string | Observable<V> | ((node: T) => Observable<V>),
+  ev: string | Observable<V> | ((node: T) => Observable<V>),
   mappingFunction?: (event: Observable<Event>) => Observable<V>,
 ): Observable<V | { [type: string]: Event }> {
-  if (typeof event === 'string') {
+  if (typeof ev === 'string') {
     return mappingFunction
-      ? fromEvent(node, event).pipe(mappingFunction)
-      : fromEvent(node, event).pipe(
-        map(ev => ({ [event]: ev })),
+      ? fromEvent(node, ev).pipe(mappingFunction)
+      : fromEvent(node, ev).pipe(
+        map(evt => ({ [ev]: evt })),
       );
-  } else if (typeof event === 'function') {
-    return event(node);
+  } else if (typeof ev === 'function') {
+    return ev(node);
   }
-  return event;
+  return ev;
 }
 
 export interface IExtractedEventComponent<T extends Node, E, EX> extends IComponent<T, E> {

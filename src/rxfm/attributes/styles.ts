@@ -4,12 +4,14 @@ import { switchMap, map, startWith } from 'rxjs/operators';
 import { distinctUntilKeysChanged } from '../utils';
 
 export function styles<T extends HTMLElement, E>(
-  styles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>
+  stylesOrObservableStyles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>
 ): ComponentOperator<T, E> {
   return (component: Component<T, E>) =>
     component.pipe(
       switchMap(({ node, events }) => {
-        const stylesObservable = styles instanceof Observable ? styles : of(styles);
+        const stylesObservable = stylesOrObservableStyles instanceof Observable
+          ? stylesOrObservableStyles
+          : of(stylesOrObservableStyles);
         let previousStyles: Partial<CSSStyleDeclaration> = {};
         return stylesObservable.pipe(
           map(style => {

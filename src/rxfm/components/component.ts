@@ -10,8 +10,10 @@ export type Component<T extends Node, E = {}> = Observable<IComponent<T, E>>;
 
 export type ComponentOperator<T extends Node, E, O = E> = (component: Component<T, E>) => Component<T, O>;
 
-export function text<E = {}>(text: string | number | Observable<string | number>): Observable<IComponent<Text, E>> {
-  const textObservable = text instanceof Observable ? text : of(text);
+export function text<E = {}>(
+  textOrTextObservable: string | number | Observable<string | number>
+): Observable<IComponent<Text, E>> {
+  const textObservable = textOrTextObservable instanceof Observable ? textOrTextObservable : of(textOrTextObservable);
   const node = document.createTextNode("");
   return textObservable.pipe(
     map(content => typeof content === 'string' ? content : content.toString()),

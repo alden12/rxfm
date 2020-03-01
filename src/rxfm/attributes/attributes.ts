@@ -20,12 +20,14 @@ export function updateElementAttributes<T extends HTMLElement>(
 }
 
 export function attributes<T extends HTMLElement, E>(
-  attributes: Attributes | Observable<Attributes>
+  attributesOrObservableAttrs: Attributes | Observable<Attributes>
 ): ComponentOperator<T, E> {
   return (component: Component<T, E>): Component<T, E> =>
     component.pipe(
       switchMap(({ node, events }) => {
-        const attributesObservable = attributes instanceof Observable ? attributes : of(attributes);
+        const attributesObservable = attributesOrObservableAttrs instanceof Observable
+          ? attributesOrObservableAttrs
+          : of(attributesOrObservableAttrs);
         let previousAttributes: Attributes = {};
         return attributesObservable.pipe(
           map(attrs => {
@@ -41,13 +43,13 @@ export function attributes<T extends HTMLElement, E>(
 }
 
 export function attribute<T extends HTMLElement, E, A>(
-  attribute: string,
+  attributeName: string,
   value: A | Observable<A>,
   valueFunction: (val: A) => string
 ): ComponentOperator<T, E> {
   const value$ = value instanceof Observable ? value : of(value);
   const attributes$ = value$.pipe(
-    map(val => ({ [attribute]: valueFunction(val) }))
+    map(val => ({ [attributeName]: valueFunction(val) }))
   );
   return attributes(attributes$);
 }

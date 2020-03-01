@@ -60,13 +60,13 @@ export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = 
 export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}, I = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>, childI: ChildComponent<I>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H & I>
 
 export function children<T extends HTMLElement, E>(
-  ...children: ChildComponent<any>[]
+  ...childComponents: ChildComponent<any>[]
 ): ComponentOperator<T, E, any> {
   return (component: Component<T, E>) => component.pipe(
     switchMap(({ node, events }) => {
 
       const children$ = combineLatest<IComponent<Node, any>[][]>(
-        ...children.map(coerceChildComponent)
+        ...childComponents.map(coerceChildComponent)
       ).pipe(
         debounceTime(0),
         map(unflattened => unflattened.reduce<IComponent<Node, any>[]>((flat, comps) => flat.concat(comps), [])),
