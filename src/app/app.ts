@@ -23,7 +23,8 @@ const stated = stateful(
     color: 'blue',
     items: [0, 1],
   },
-  (state, currentState) => {
+  state => {
+    // state.subscribe(console.log);
     return div().pipe(
       styles(state.pipe(map(({ color }) => ({ color })))),
       attributes({ style: 'font-weight: bold' }),
@@ -48,9 +49,12 @@ const stated = stateful(
         )
       ),
       event('click',
-        stateAction(() => ({
-          color: currentState().color === 'blue' ? 'orange' : 'blue',
-        })),
+        ev => ev.pipe(
+          withLatestFrom(state),
+          stateAction(([_, currentState]) => ({
+            color: currentState.color === 'blue' ? 'orange' : 'blue',
+          })),
+        ),
       ),
     )
   }
