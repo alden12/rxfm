@@ -11,7 +11,9 @@ export type InjectEvent<T extends Node, E, K extends string, V> = (component: Co
     [KE in keyof (E & Record<K, V>)]?:
       KE extends keyof E
         ? KE extends K
-          ? E[KE] extends object ? V extends object ? Partial<E[KE] & V> : E[KE] | V : E[KE] | V
+          ? E[KE] extends object ? V extends object
+            ? { [KEE in keyof (E[KE] & V)]?: (E[KE] & V)[KEE] }
+            : E[KE] | V : E[KE] | V
           : E[KE]
         : KE extends K ? V : never
   }>;
