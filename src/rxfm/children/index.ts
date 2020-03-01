@@ -4,7 +4,8 @@ import { IComponent, Component, ComponentOperator } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
 
-export type ChildComponent<E> = string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
+export type ChildComponent<E> =
+  string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
 
 function coerceChildComponent<E>(
   childComponent: ChildComponent<E>,
@@ -48,6 +49,7 @@ function updateElementChildren<T extends HTMLElement>(
   return el;
 }
 
+// tslint:disable: max-line-length
 export function children<T extends HTMLElement, EV>(): ComponentOperator<T, EV>
 export function children<T extends HTMLElement, EV, A = {}>(childA: ChildComponent<A>): ComponentOperator<T, EV, EV & A>
 export function children<T extends HTMLElement, EV, A = {}, B = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>): ComponentOperator<T, EV, EV & A & B>
@@ -58,6 +60,7 @@ export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = 
 export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G>
 export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H>
 export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}, I = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>, childI: ChildComponent<I>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H & I>
+// tslint:enable: max-line-length
 
 export function children<T extends HTMLElement, E>(
   ...childComponents: ChildComponent<any>[]
