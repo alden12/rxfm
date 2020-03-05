@@ -74,10 +74,14 @@ const app = div().pipe(
   event('click', map(({ target }) => ({ target }))),
 );
 
-app.pipe(
-  extractEvent('click'),
-).subscribe(({ node, events, extractedEvents }) => {
-  document.body.appendChild(node);
-  events.subscribe(console.log);
-  extractedEvents.subscribe(ev => console.log('match:', ev));
-});
+export function main() {
+  app.pipe(
+    extractEvent('click'),
+  ).subscribe(({ node, events, extractedEvents }) => {
+    document.body.appendChild(node);
+    events.subscribe(console.log);
+    extractedEvents.subscribe(ev => console.log('match:', ev));
+  });
+}
+
+main();
