@@ -1,28 +1,28 @@
 import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
-import { Component, ComponentOpertor } from './components';
+import { Component, ComponentOperator } from './components';
 import { shareReplay, tap, switchMap, mapTo, startWith, withLatestFrom, map } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged, action } from './utils';
 import { extractEvent } from './events';
 
-export type Action<S> = (state: S) => S;
+// export type Action<S> = (state: S) => S;
 
-export type Actions<K extends string, S> = Partial<Record<K, Action<S>>>;
+// export type Actions<K extends string, S> = Partial<Record<K, Action<S>>>;
 
-export function state<T extends Node, S, K extends string, E extends Actions<K, S>>(
-  eventType: K,
-  stateSubject: BehaviorSubject<S>,
-): ComponentOpertor<T, E, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
-  return (component: Component<T, E>) => component.pipe(
-    extractEvent(eventType),
-    switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
-      tap((action: Action<S>) => stateSubject.next(action(stateSubject.value))),
-      startWith({ node, events }),
-      mapTo({ node, events }),
-    )),
-    distinctUntilKeysChanged(),
-    shareReplay(SHARE_REPLAY_CONFIG),
-  );
-}
+// export function state<T extends Node, S, K extends string, E extends Actions<K, S>>(
+//   eventType: K,
+//   stateSubject: BehaviorSubject<S>,
+// ): ComponentOperator<T, E, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
+//   return (component: Component<T, E>) => component.pipe(
+//     extractEvent(eventType),
+//     switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
+//       tap((action: Action<S>) => stateSubject.next(action(stateSubject.value))),
+//       startWith({ node, events }),
+//       mapTo({ node, events }),
+//     )),
+//     distinctUntilKeysChanged(),
+//     shareReplay(SHARE_REPLAY_CONFIG),
+//   );
+// }
 
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
   initialState: S,
@@ -49,6 +49,7 @@ export interface IStateAction<T> {
   state?: Partial<T>;
 }
 
+// TODO: Depricate passing state in favor of in place with latest from?
 export function stateAction<T, A>(mappingFunction: (event: T) => A): OperatorFunction<T, Record<'state', A>>
 export function stateAction<T, A, S>(
   state: Observable<S>,
