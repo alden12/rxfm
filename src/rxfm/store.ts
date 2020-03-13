@@ -4,8 +4,7 @@ import { Component, ComponentOperator } from './components';
 import { extractEvent } from './events';
 import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from '.';
 
-// Return partial s? merge into overall store?
-export type Reducer<S> = (state: S) => S;
+export type Reducer<S> = (state: S) => Partial<S>;
 
 export interface IAction<S> {
   action?: Reducer<S>;
@@ -25,7 +24,7 @@ export function store<T extends Node, S, E extends IAction<S>>(
   return (component: Component<T, E>) => component.pipe(
     extractEvent('action'),
     switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
-      tap(reducer => stateSubject.next(reducer(stateSubject.value))),
+      tap(reducer => stateSubject.next({ ...stateSubject.value, ...reducer(stateSubject.value) })),
       startWith({ node, events }),
       mapTo({ node, events }),
     )),

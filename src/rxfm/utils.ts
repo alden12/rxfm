@@ -1,23 +1,25 @@
-import { Observable } from 'rxjs';
-import { map, distinctUntilChanged, pluck } from 'rxjs/operators';
+import { Observable, OperatorFunction } from 'rxjs';
+import { map, distinctUntilChanged, pluck, shareReplay } from 'rxjs/operators';
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
 export function watch<T, U>(
   wathchingFunction: (item: T) => U,
-): (input: Observable<T>) => Observable<U> {
+): OperatorFunction<T, U> {
   return (input: Observable<T>) => input.pipe(
     map(wathchingFunction),
     distinctUntilChanged(),
+    shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
 
 export function select<T, K extends keyof T>(
   key: K,
-): (input: Observable<T>) => Observable<T[K]> {
+): OperatorFunction<T, T[K]> {
   return (input: Observable<T>) => input.pipe(
     pluck(key),
     distinctUntilChanged(),
+    shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
 

@@ -19,6 +19,20 @@ import {
 import './app.css';
 import { store, dispatch } from '../rxfm/store';
 
+export interface IApp {
+  counter: number;
+  ready: boolean;
+}
+
+const storeSubject = new BehaviorSubject<IApp>({
+  counter: 1,
+  ready: false,
+});
+
+storeSubject.subscribe(console.log);
+
+const counter$ = storeSubject.pipe(select('counter'));
+
 const stated = stateful(
   {
     color: 'blue',
@@ -43,7 +57,8 @@ const stated = stateful(
               ),
             ),
           ),
-        )
+        ),
+        counter$,
       ),
       event('click',
         setState(state, ({ state: { color } }) => ({ color: color === 'blue' ? 'red' : 'blue'})),
@@ -59,6 +74,7 @@ const app = div().pipe(
     div().pipe(
       event('click'),
       event('click', dispatch(() => ({ counter }: IApp) => ({ counter: counter + 1 }))),
+      event('click', dispatch(() => ({ ready }: IApp) => ({ ready: !ready }))),
       event('click', map(({ bubbles }) => ({ bubbles }))),
       event(node => fromEvent(node, 'contextmenu').pipe(map(({ type }) => ({ type })))),
       event(of({ hello: 'world' })),
@@ -69,16 +85,6 @@ const app = div().pipe(
   ),
   event('click', map(({ target }) => ({ target }))),
 );
-
-export interface IApp {
-  counter: number,
-}
-
-const storeSubject = new BehaviorSubject<IApp>({
-  counter: 1,
-});
-
-storeSubject.subscribe(console.log);
 
 const appStore = app.pipe(
   store(storeSubject),
