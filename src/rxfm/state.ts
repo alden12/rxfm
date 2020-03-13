@@ -1,9 +1,10 @@
 import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
-import { Component, ComponentOperator } from './components';
+import { Component } from './components';
 import { shareReplay, tap, switchMap, mapTo, startWith, withLatestFrom, map } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 import { extractEvent } from './events';
 
+// Is this generic function needed?
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
   initialState: S,
   creationFunction: (state: Observable<S>) => Component<T, E>,

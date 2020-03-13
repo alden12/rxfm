@@ -18,15 +18,18 @@ function coerceChildComponent<E>(
           node = node || document.createTextNode('');
           node.nodeValue = typeof child === 'number' ? child.toString() : child;
           return [{ node, events: EMPTY }];
+        } else if (child !== undefined && child !== null) {
+          return Array.isArray(child) ? child : [child];
         }
-        return Array.isArray(child) ? child : [child];
+        return null
       }),
     );
-  } else {
+  } else if (typeof childComponent === 'string' || typeof childComponent === 'number') {
     const content = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
     const node = document.createTextNode(content);
     return of([{ node, events: EMPTY }]);
   }
+  return of(null);
 }
 
 function updateElementChildren<T extends HTMLElement>(
@@ -72,6 +75,7 @@ export function children<T extends HTMLElement, E>(
         ...childComponents.map(coerceChildComponent)
       ).pipe(
         debounceTime(0),
+        map(childrenOrNull => childrenOrNull.filter(child => child !== null)),
         map(unflattened => unflattened.reduce<IComponent<Node, any>[]>((flat, comps) => flat.concat(comps), [])),
         shareReplay(SHARE_REPLAY_CONFIG),
       );

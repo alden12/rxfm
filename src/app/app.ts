@@ -11,6 +11,7 @@ import {
   styles,
   attributes,
   classes,
+  gate,
 } from '../rxfm';
 import {
   div, span,
@@ -32,6 +33,7 @@ const storeSubject = new BehaviorSubject<IApp>({
 storeSubject.subscribe(console.log);
 
 const counter$ = storeSubject.pipe(select('counter'));
+const ready$ = storeSubject.pipe(select('ready'));
 
 const stated = stateful(
   {
@@ -46,17 +48,21 @@ const stated = stateful(
       children(
         'hello world!',
         state.pipe(select('color')),
-        state.pipe(
-          select('items'),
-          generate(
-            item => item.toString(),
-            item => div().pipe(
-              children('item: ', item),
-              event('click',
-                setState(state, ({ state: { items } }) => ({ items: [...items, items.length] }))
+        ready$.pipe(
+          gate(
+            state.pipe(
+              select('items'),
+              generate(
+                item => item.toString(),
+                item => div().pipe(
+                  children('item: ', item),
+                  event('click',
+                    setState(state, ({ state: { items } }) => ({ items: [...items, items.length] }))
+                  ),
+                ),
               ),
             ),
-          ),
+          )
         ),
         counter$,
       ),

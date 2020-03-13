@@ -1,5 +1,5 @@
-import { Observable, OperatorFunction } from 'rxjs';
-import { map, distinctUntilChanged, pluck, shareReplay } from 'rxjs/operators';
+import { Observable, OperatorFunction, of } from 'rxjs';
+import { map, distinctUntilChanged, pluck, shareReplay, switchMap } from 'rxjs/operators';
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
@@ -27,4 +27,11 @@ export function distinctUntilKeysChanged<T>(): (source: Observable<T>) => Observ
   return (source: Observable<T>) => source.pipe(
     distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
   )
+}
+
+export function gate<T>(source: Observable<T>): OperatorFunction<boolean, T | undefined> {
+  return (gate$: Observable<boolean>) => gate$.pipe(
+    distinctUntilChanged(),
+    switchMap(gatePosition => gatePosition ? source : of(undefined)),
+  );
 }
