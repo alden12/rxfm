@@ -2,16 +2,11 @@ import { Component, IComponent } from './components';
 import { merge, Observable, EMPTY, fromEvent } from 'rxjs';
 import { map, share, filter } from 'rxjs/operators';
 
-// TODO: Remove nested merge if possible
 export type InjectEvent<T extends Node, E, K extends string, V> = (component: Component<T, E>) =>
   Component<T, {
     [KE in keyof (E & Record<K, V>)]?:
       KE extends keyof E
-        ? KE extends K
-          ? E[KE] extends object ? V extends object
-            ? { [KEE in keyof (E[KE] & V)]?: (E[KE] & V)[KEE] }
-            : E[KE] | V : E[KE] | V
-          : E[KE]
+        ? KE extends K ? E[KE] | V : E[KE]
         : KE extends K ? V : never
   }>;
 
@@ -27,7 +22,6 @@ export function event<T extends Node, E, K extends string>(
   eventType: K,
 ): InjectEvent<T, E, K, Event>
 
-// TODO: Depricate mapping function if favor of mapEvent pipe?
 export function event<T extends Node, E, KT extends keyof HTMLElementEventMap, K extends string, V>(
   eventType: KT,
   mappingFunction: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, V>>,

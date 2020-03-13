@@ -1,11 +1,11 @@
 import { of, fromEvent } from 'rxjs';
-import { map, withLatestFrom } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import {
   children,
   event,
   extractEvent,
   stateful,
-  stateAction,
+  setState,
   generate,
   select,
   styles,
@@ -38,20 +38,14 @@ const stated = stateful(
             item => div().pipe(
               children('item: ', item),
               event('click',
-                stateAction(state,
-                  ({ currentState }) => ({ items: [...currentState.items, currentState.items.length] }),
-                )
+                setState(state, ({ state: { items } }) => ({ items: [...items, items.length] }))
               ),
             ),
           ),
         )
       ),
       event('click',
-        stateAction(state,
-          ({ currentState }) => ({
-            color: currentState.color === 'blue' ? 'red' : 'blue',
-          }),
-        ),
+        setState(state, ({ state: { color } }) => ({ color: color === 'blue' ? 'red' : 'blue'})),
       ),
     )
   }
