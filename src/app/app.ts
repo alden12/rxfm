@@ -1,4 +1,4 @@
-import { of, fromEvent } from 'rxjs';
+import { of, fromEvent, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   children,
@@ -17,6 +17,7 @@ import {
 } from '../rxfm/components';
 
 import './app.css';
+import { store, dispatch } from '../rxfm/store';
 
 const stated = stateful(
   {
@@ -57,6 +58,7 @@ const app = div().pipe(
     span().pipe(children('span!')),
     div().pipe(
       event('click'),
+      event('click', dispatch(() => ({ counter }: IApp) => ({ counter: counter + 1 }))),
       event('click', map(({ bubbles }) => ({ bubbles }))),
       event(node => fromEvent(node, 'contextmenu').pipe(map(({ type }) => ({ type })))),
       event(of({ hello: 'world' })),
@@ -68,8 +70,22 @@ const app = div().pipe(
   event('click', map(({ target }) => ({ target }))),
 );
 
+export interface IApp {
+  counter: number,
+}
+
+const storeSubject = new BehaviorSubject<IApp>({
+  counter: 1,
+});
+
+storeSubject.subscribe(console.log);
+
+const appStore = app.pipe(
+  store(storeSubject),
+)
+
 export function main() {
-  app.pipe(
+  appStore.pipe(
     extractEvent('click'),
   ).subscribe(({ node, events, extractedEvents }) => {
     document.body.appendChild(node);

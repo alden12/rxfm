@@ -30,8 +30,9 @@ export interface IStateAction<T> {
 }
 
 export function setState<T, A>(
-  mappingFunction: (event: A) => A,
+  mappingFunction: (event: T) => A,
 ): OperatorFunction<T, Record<'state', A>>
+
 export function setState<T, A, S>(
   state: Observable<S>,
   mappingFunction: ({ event: T, state: S }) => A,

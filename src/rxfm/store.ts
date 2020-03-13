@@ -1,22 +1,35 @@
+import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
+import { map, switchMap, tap, startWith, mapTo, shareReplay } from 'rxjs/operators';
+import { Component, ComponentOperator } from './components';
+import { extractEvent } from './events';
+import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from '.';
 
+// Return partial s? merge into overall store?
 export type Reducer<S> = (state: S) => S;
 
-export type Action<K extends string, S> = Record<K, Reducer<S>>;
+export interface IAction<S> {
+  action?: Reducer<S>;
+}
 
+export function dispatch<T, S>(
+  actionFunction: (event: T) => Reducer<S>,
+): OperatorFunction<T, Record<'action', Reducer<S>>> {
+  return (event: Observable<T>) => event.pipe(
+    map(ev => ({ action: actionFunction(ev) })),
+  );
+}
 
-
-// export function state<T extends Node, S, K extends string, E extends Actions<K, S>>(
-//   eventType: K,
-//   stateSubject: BehaviorSubject<S>,
-// ): ComponentOperator<T, E, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
-//   return (component: Component<T, E>) => component.pipe(
-//     extractEvent(eventType),
-//     switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
-//       tap((action: Action<S>) => stateSubject.next(action(stateSubject.value))),
-//       startWith({ node, events }),
-//       mapTo({ node, events }),
-//     )),
-//     distinctUntilKeysChanged(),
-//     shareReplay(SHARE_REPLAY_CONFIG),
-//   );
-// }
+export function store<T extends Node, S, E extends IAction<S>>(
+  stateSubject: BehaviorSubject<S>,
+): ComponentOperator<T, E, { [EK in Exclude<keyof E, 'action'>]?: E[EK] }> {
+  return (component: Component<T, E>) => component.pipe(
+    extractEvent('action'),
+    switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
+      tap(reducer => stateSubject.next(reducer(stateSubject.value))),
+      startWith({ node, events }),
+      mapTo({ node, events }),
+    )),
+    distinctUntilKeysChanged(),
+    shareReplay(SHARE_REPLAY_CONFIG),
+  );
+}

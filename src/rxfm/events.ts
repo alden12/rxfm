@@ -24,24 +24,24 @@ export function event<T extends Node, E, K extends string>(
 
 export function event<T extends Node, E, KT extends keyof HTMLElementEventMap, K extends string, V>(
   eventType: KT,
-  mappingFunction: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, V>>,
+  operator: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, V>>,
 ): InjectEvent<T, E, K, V>
 
 export function event<T extends Node, E, K extends string, V>(
   eventType: string,
-  mappingFunction: (event: Observable<Event>) => Observable<Record<K, V>>,
+  operator: (event: Observable<Event>) => Observable<Record<K, V>>,
 ): InjectEvent<T, E, K, V>
 
 export function event<T extends Node, E, K extends string, V>(
   eventTypeOrObservable: ((node: T) => Observable<Record<K, V>>) | Observable<Record<K, V>> | string,
-  mappingFunction?: (event: Observable<Event>) => Observable<Record<K, V>>,
+  operator?: (event: Observable<Event>) => Observable<Record<K, V>>,
 ): InjectEvent<T, E, K, V> {
   return (component: Component<T, E>) => component.pipe(
     map(({ node, events }) => ({
       node,
       events: merge<E>(
         events || EMPTY,
-        getEvents(node, eventTypeOrObservable, mappingFunction),
+        getEvents(node, eventTypeOrObservable, operator),
       ).pipe(
         share()
       ),
@@ -52,11 +52,11 @@ export function event<T extends Node, E, K extends string, V>(
 function getEvents<T extends Node, V>(
   node: T,
   ev: string | Observable<V> | ((node: T) => Observable<V>),
-  mappingFunction?: (event: Observable<Event>) => Observable<V>,
+  operator?: (event: Observable<Event>) => Observable<V>,
 ): Observable<V | { [type: string]: Event }> {
   if (typeof ev === 'string') {
-    return mappingFunction
-      ? fromEvent(node, ev).pipe(mappingFunction)
+    return operator
+      ? fromEvent(node, ev).pipe(operator)
       : fromEvent(node, ev).pipe(
         map(evt => ({ [ev]: evt })),
       );
