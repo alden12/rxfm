@@ -5,7 +5,7 @@ import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
 
 export type ChildComponent<E> =
-  string | number | Observable<string | number | IComponent<Node, E> | IComponent<Node, E>[]>;
+  string | number | boolean | Observable<string | number | boolean | IComponent<Node, E> | IComponent<Node, E>[]>;
 
 function coerceChildComponent<E>(
   childComponent: ChildComponent<E>,
@@ -14,9 +14,9 @@ function coerceChildComponent<E>(
     let node: Text;
     return childComponent.pipe(
       map(child => {
-        if (typeof child === "string" || typeof child === 'number') {
+        if (typeof child === "string" || typeof child === 'number' || typeof child === 'boolean') {
           node = node || document.createTextNode('');
-          node.nodeValue = typeof child === 'number' ? child.toString() : child;
+          node.nodeValue = typeof child !== 'string' ? child.toString() : child;
           return [{ node, events: EMPTY }];
         } else if (child !== undefined && child !== null) {
           return Array.isArray(child) ? child : [child];
@@ -24,8 +24,8 @@ function coerceChildComponent<E>(
         return null
       }),
     );
-  } else if (typeof childComponent === 'string' || typeof childComponent === 'number') {
-    const content = typeof childComponent === 'number' ? childComponent.toString() : childComponent;
+  } else if (typeof childComponent === 'string' || typeof childComponent === 'number' || typeof childComponent === 'boolean') {
+    const content = typeof childComponent !== 'string' ? childComponent.toString() : childComponent;
     const node = document.createTextNode(content);
     return of([{ node, events: EMPTY }]);
   }

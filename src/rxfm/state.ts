@@ -44,9 +44,8 @@ export function setState<T, A, S>(
   mappingFn?: (({ event: T, state: S }) => A),
 ): OperatorFunction<T, Record<'state', A>> {
   if (mappingFn !== undefined) {
-    const state$ = mappingFunctionOrState as Observable<S>;
     return (event$: Observable<T>) => event$.pipe(
-      withLatestFrom(state$),
+      withLatestFrom(mappingFunctionOrState as Observable<S>),
       map(([event, state]) => ({ state: mappingFn({ event, state }) }))
     );
   } else {

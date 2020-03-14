@@ -9,7 +9,6 @@ export function watch<T, U>(
   return (input: Observable<T>) => input.pipe(
     map(wathchingFunction),
     distinctUntilChanged(),
-    shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
 
@@ -19,7 +18,6 @@ export function select<T, K extends keyof T>(
   return (input: Observable<T>) => input.pipe(
     pluck(key),
     distinctUntilChanged(),
-    shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
 

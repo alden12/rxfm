@@ -1,5 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
-import { Action, select } from '../../rxfm';
+import { Action, select, SHARE_REPLAY_CONFIG } from '../../rxfm';
+import { shareReplay } from 'rxjs/operators';
 
 // Interfaces:
 export interface ITodo {
@@ -22,7 +23,11 @@ export const storeSubject = new BehaviorSubject<IApp>({
 // Selectors
 export const todos$ = storeSubject.pipe(
   select('todos'),
+  shareReplay(SHARE_REPLAY_CONFIG),
 );
 
 // Actions
 export const addTodoAction: Action<ITodo, IApp> = (todo: ITodo) => ({ todos }: IApp) => ({ todos: [...todos, todo] });
+
+export const completeTodoAction: Action<string, IApp> = (id: string) =>
+  ({ todos }: IApp) => ({ todos: todos.map(todo => todo.label === id ? { label: todo.label, done: true } : todo) });
