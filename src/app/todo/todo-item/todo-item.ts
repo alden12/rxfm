@@ -1,5 +1,5 @@
 import { div, input, button } from '../../../rxfm/components';
-import { children, select, event, dispatch, attribute, classes, styles } from '../../../rxfm';
+import { children, select, event, dispatch, classes, styles, attributes } from '../../../rxfm';
 import { Observable } from 'rxjs';
 import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
 
@@ -7,16 +7,19 @@ import './todo-item.css';
 import { map } from 'rxjs/operators';
 
 export const todoItem = (item: Observable<ITodo>) => div().pipe(
-  classes(item.pipe(
-    map(({ done }) => done ? ['todo-item', 'done'] : ['todo-item']), // TODO: convert to use spread to prevent duplicate
-  )),
+  classes(
+    'todo-item',
+    item.pipe(map(({ done }) => done ? 'done' : ''))
+  ),
   event('click',
     dispatch(item, ({ state: { label } }) => toggleTodoAction(label))
   ),
   children(
     input().pipe(
-      attribute('type', 'checkbox'),
-      attribute('checked', item.pipe(select('done'))),
+      attributes({
+        type: 'checkbox',
+        checked: item.pipe(select('done')),
+      }),
       styles({ cursor: 'pointer' }),
     ),
     item.pipe(select('label')),

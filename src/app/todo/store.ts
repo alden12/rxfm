@@ -27,12 +27,12 @@ export const todos$ = storeSubject.pipe(
 );
 
 // Actions
-export const addTodoAction: Action<ITodo, IApp> = (todo: ITodo) => ({ todos }: IApp) => ({ todos: [...todos, todo] });
+export const addTodoAction: Action<ITodo, IApp> = (todo: ITodo) => ({ todos }) => ({ todos: [...todos, todo] });
 
-export const toggleTodoAction: Action<string, IApp> = (id: string) => ({ todos }: IApp) => ({
+export const toggleTodoAction: Action<string, IApp> = (id: string) => ({ todos }) => ({
   todos: todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
 });
 
-export const deleteTodoAction: Action<string, IApp> = (id: string) => ({ todos }: IApp) => ({
+export const deleteTodoAction: Action<string, IApp> = (id: string) => ({ todos }) => ({
   todos: todos.filter(({ label }) => label !== id),
 });

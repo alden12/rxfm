@@ -1,33 +1,30 @@
-import { Observable } from 'rxjs';
-import { attribute } from './attributes';
-import { ComponentOperator } from '../components';
+import { Observable, of, combineLatest } from 'rxjs';
+import { ComponentOperator, Component } from '../components';
+import { attributes } from './attributes';
+import { map, debounceTime } from 'rxjs/operators';
 
 export type ClassType = string | Observable<string | string[]>;
 
-// export function classes<T extends HTMLElement, E> (
-//   ...classNames: ClassType[]
-// ): ComponentOperator<T, E> {
-//   return ;
-// }
-
-export function classes<T extends HTMLElement, E>(
-  classStringsOrObservables: string | string[] | Observable<string | string[]>
-): ComponentOperator<T, E> {
-  return attribute(
-      'class',
-      classStringsOrObservables,
-      (val: string | string[]) => (Array.isArray(val) ? val : [val]).join(" ")
-  );
+function classTypesToStringObservable(classTypes: ClassType[]): Observable<string> {
+  const classStrings = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
+    map(stringOrArray => Array.isArray(stringOrArray) ? stringOrArray : [stringOrArray]),
+  ) : of([classType]));
+  return combineLatest(classStrings).pipe(
+    map(stringArrayArray => {
+      const classSet = new Set<string>();
+      stringArrayArray.forEach(stringArray => stringArray.forEach(str => classSet.add(str)));
+      return Array.from(classSet.values()).filter(cla => cla).join(' ');
+    }),
+    debounceTime(0),
+  )
 }
 
-// export function attribute<T extends HTMLElement, E, A>(
-//   attributeName: string,
-//   value: A | AttributeType | Observable<A | AttributeType>,
-//   valueFunction?: (val: A) => AttributeType
-// ): ComponentOperator<T, E> {
-//   const value$ = value instanceof Observable ? value : of(value);
-//   const attributes$ = value$.pipe(
-//     map(val => ({ [attributeName]: valueFunction? valueFunction(val as A) : val as AttributeType}))
-//   );
-//   return attributes(attributes$);
-// }
+export function classes<T extends HTMLElement, E>(
+  ...classNames: ClassType[]
+): ComponentOperator<T, E> {
+  return (component: Component<T, E>) => component.pipe(
+    attributes({
+      class: classTypesToStringObservable(classNames),
+    }),
+  );
+}

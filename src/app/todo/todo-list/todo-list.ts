@@ -1,5 +1,5 @@
 import { div, button, input } from '../../../rxfm/components';
-import { children, generate, event, dispatch, stateful, setState, attribute, select } from '../../../rxfm';
+import { children, generate, event, dispatch, stateful, setState, select, attributes } from '../../../rxfm';
 import { todos$, addTodoAction } from '../store';
 import { todoItem } from '../todo-item/todo-item';
 import { Observable } from 'rxjs';
@@ -21,8 +21,10 @@ const todoListComponent = (state: Observable<ITodoListState>) => div().pipe(
       ),
     ),
     input().pipe(
-      attribute('type', 'text'),
-      attribute('value', state.pipe(select('label'))),
+      attributes({
+        type: 'text',
+        value: state.pipe(select('label')),
+      }),
       event('change',
         setState(({ srcElement }) => ({ label: (srcElement as HTMLInputElement).value }))
       ),

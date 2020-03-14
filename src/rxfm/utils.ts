@@ -21,8 +21,8 @@ export function select<T, K extends keyof T>(
   );
 }
 
-export function distinctUntilKeysChanged<T>(): (source: Observable<T>) => Observable<T> {
-  return (source: Observable<T>) => source.pipe(
+export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
+  return (source: Observable<T>) => source.pipe( // TODO: Also emit if prev and curr keys lengths have changed?
     distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
   )
 }
