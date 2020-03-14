@@ -6,12 +6,14 @@ import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from '.';
 
 export type Reducer<S> = (state: S) => Partial<S>;
 
+export type Action<T, S> = (payload: T) => Reducer<S>;
+
 export interface IAction<S> {
   action?: Reducer<S>;
 }
 
 export function dispatch<T, S>(
-  actionFunction: (event: T) => Reducer<S>,
+  actionFunction: Action<T, S>,
 ): OperatorFunction<T, Record<'action', Reducer<S>>> {
   return (event: Observable<T>) => event.pipe(
     map(ev => ({ action: actionFunction(ev) })),
