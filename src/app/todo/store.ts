@@ -29,5 +29,6 @@ export const todos$ = storeSubject.pipe(
 // Actions
 export const addTodoAction: Action<ITodo, IApp> = (todo: ITodo) => ({ todos }: IApp) => ({ todos: [...todos, todo] });
 
-export const completeTodoAction: Action<string, IApp> = (id: string) =>
-  ({ todos }: IApp) => ({ todos: todos.map(todo => todo.label === id ? { label: todo.label, done: true } : todo) });
+export const toggleTodoAction: Action<string, IApp> = (id: string) => ({ todos }: IApp) => ({
+    todos: todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
+  });

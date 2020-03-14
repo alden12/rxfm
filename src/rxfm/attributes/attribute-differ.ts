@@ -11,7 +11,7 @@ export function attributeDiffer(
 ): IAttributeDiff {
   const updated = Object.keys(newAttributes).reduce(
     (updates, key) => {
-      if (oldAttributes[key] !== newAttributes[key]) {
+      if (newAttributes[key] && oldAttributes[key] !== newAttributes[key]) {
         updates[key] = newAttributes[key];
       }
       return updates;

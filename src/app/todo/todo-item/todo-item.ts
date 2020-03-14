@@ -1,22 +1,17 @@
-import { div, button } from '../../../rxfm/components';
-import { children, select, event, dispatch } from '../../../rxfm';
+import { div, button, input } from '../../../rxfm/components';
+import { children, select, event, dispatch, attribute } from '../../../rxfm';
 import { Observable } from 'rxjs';
-import { ITodo, completeTodoAction } from '../store';
-import { withLatestFrom } from 'rxjs/operators';
+import { ITodo, toggleTodoAction } from '../store';
 
 export const todoItem = (item: Observable<ITodo>) => div().pipe(
   children(
-    item.pipe(select('label')),
-    ' ',
-    item.pipe(select('done')),
-    button().pipe(
-      children('Complete'),
+    input().pipe(
+      attribute('type', 'checkbox'),
+      attribute('checked', item.pipe(select('done'))),
       event('click',
-        ev => ev.pipe(
-          withLatestFrom(item),
-          dispatch(item, ({ state: { label } }) => completeTodoAction(label))
-        )
+        dispatch(item, ({ state: { label } }) => toggleTodoAction(label))
       ),
     ),
+    item.pipe(select('label')),
   ),
 );
