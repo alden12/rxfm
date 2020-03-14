@@ -4,7 +4,7 @@ import { attributeDiffer } from './attribute-differ';
 import { Component, ComponentOperator } from '../components';
 import { distinctUntilKeysChanged } from '../utils';
 
-export type AttributeType = string | number | boolean;
+export type AttributeType = string | number | boolean; // Add observable to attribute type definition?
 
 export type Attributes = { [attr: string]: AttributeType};
 
@@ -55,6 +55,7 @@ export function attributes<T extends HTMLElement, E>(
     );
 }
 
+// Would attribute funciton be needed if attribute types could be observable?
 export function attribute<T extends HTMLElement, E>(
   attributeName: string,
   value: AttributeType | Observable<AttributeType>,
@@ -63,7 +64,7 @@ export function attribute<T extends HTMLElement, E>(
 export function attribute<T extends HTMLElement, E, A>(
   attributeName: string,
   value: A | Observable<A>,
-  valueFunction: (val: A) => AttributeType
+  valueFunction: (val: A) => AttributeType // Is this still needed?
 ): ComponentOperator<T, E>
 
 export function attribute<T extends HTMLElement, E, A>(

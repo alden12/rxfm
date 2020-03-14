@@ -35,7 +35,7 @@ export function setState<T, A>(
 ): OperatorFunction<T, Record<'state', A>>
 
 export function setState<T, A, S>(
-  state: Observable<S>,
+  state: Observable<S>, // Depricate passing state here in favor of multiple operators in event?
   mappingFunction: ({ ev: T, state: S }) => A,
 ): OperatorFunction<T, Record<'state', A>>
 

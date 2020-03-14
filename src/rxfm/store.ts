@@ -13,11 +13,11 @@ export interface IAction<S> {
 }
 
 export function dispatch<T, S>(
-  actionFunction: Action<T, S>,
+  actionFunction: Action<T, S>, // Can this be made to also take a reducer funciton directly?
 ): OperatorFunction<T, Record<'action', Reducer<S>>>
 
 export function dispatch<T, S, L>(
-  latestFrom: Observable<L>,
+  latestFrom: Observable<L>, // Depricate latest from in favor of event with multiple operators?
   actionFunction: Action<{ ev: T, state: L }, S>,
 ): OperatorFunction<T, Record<'action', Reducer<S>>>
 

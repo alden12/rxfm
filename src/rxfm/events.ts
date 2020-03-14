@@ -22,6 +22,7 @@ export function event<T extends Node, E, K extends string>(
   eventType: K,
 ): InjectEvent<T, E, K, Event>
 
+// TODO: Add pipe function operators to event defineition? Merge html event map type and other types?
 export function event<T extends Node, E, KT extends keyof HTMLElementEventMap, K extends string, V>(
   eventType: KT,
   operator: (event: Observable<HTMLElementEventMap[KT]>) => Observable<Record<K, V>>,
