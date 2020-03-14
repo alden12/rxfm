@@ -43,7 +43,7 @@ export function event<T extends Node, E, K extends string, V>(
         events || EMPTY,
         getEvents(node, eventTypeOrObservable, operator),
       ).pipe(
-        share()
+        share() // Is this share needed?
       ),
     })),
   );

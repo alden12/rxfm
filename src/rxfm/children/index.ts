@@ -101,7 +101,7 @@ export function children<T extends HTMLElement, E>(
         }),
         distinctUntilChanged(),
         mapTo({ node, events: events$ }),
-        shareReplay(SHARE_REPLAY_CONFIG),
+        shareReplay(SHARE_REPLAY_CONFIG), // Is this share needed?
       );
     }),
   );
