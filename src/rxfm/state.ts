@@ -36,17 +36,17 @@ export function setState<T, A>(
 
 export function setState<T, A, S>(
   state: Observable<S>,
-  mappingFunction: ({ event: T, state: S }) => A,
+  mappingFunction: ({ ev: T, state: S }) => A,
 ): OperatorFunction<T, Record<'state', A>>
 
 export function setState<T, A, S>(
   mappingFunctionOrState?: ((event: T) => A) | Observable<S>,
-  mappingFn?: (({ event: T, state: S }) => A),
+  mappingFn?: (({ ev: T, state: S }) => A),
 ): OperatorFunction<T, Record<'state', A>> {
   if (mappingFn !== undefined) {
     return (event$: Observable<T>) => event$.pipe(
       withLatestFrom(mappingFunctionOrState as Observable<S>),
-      map(([event, state]) => ({ state: mappingFn({ event, state }) }))
+      map(([ev, state]) => ({ state: mappingFn({ ev, state }) }))
     );
   } else {
     return (event$: Observable<T>) => event$.pipe(

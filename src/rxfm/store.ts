@@ -18,17 +18,17 @@ export function dispatch<T, S>(
 
 export function dispatch<T, S, L>(
   latestFrom: Observable<L>,
-  actionFunction: Action<{ event: T, state: L }, S>,
+  actionFunction: Action<{ ev: T, state: L }, S>,
 ): OperatorFunction<T, Record<'action', Reducer<S>>>
 
 export function dispatch<T, S, L>(
   latestFromOrActionFunction: Observable<L> | Action<T, S>,
-  actionFunction?: Action<{ event: T, state: L }, S>,
+  actionFunction?: Action<{ ev: T, state: L }, S>,
 ): OperatorFunction<T, Record<'action', Reducer<S>>> {
   if (actionFunction !== undefined) {
     return (event: Observable<T>) => event.pipe(
       withLatestFrom(latestFromOrActionFunction as Observable<L>),
-      map(([ev, state]) => ({ action: actionFunction({ event: ev, state }) }))
+      map(([ev, state]) => ({ action: actionFunction({ ev, state }) }))
     );
   } else {
     return (event: Observable<T>) => event.pipe(

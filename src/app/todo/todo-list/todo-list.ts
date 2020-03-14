@@ -23,16 +23,15 @@ const todoListComponent = (state: Observable<ITodoListState>) => div().pipe(
     input().pipe(
       attribute('type', 'text'),
       attribute('value', state.pipe(select('label'))),
-      event('keypress',
+      event('change',
         setState(({ srcElement }) => ({ label: (srcElement as HTMLInputElement).value }))
       ),
     ),
     button().pipe(
-      children('Add Todo'),
       event('click',
         dispatch(state, ({ state: { label } }) => addTodoAction({ label, done: false }))
       ),
-      event('click', setState(() => ({ newLabel: '' })))
+      children('Add Todo'),
     ),
   ),
 );
