@@ -24,12 +24,11 @@ const todoListInitialState: ITodoListState = {
 
 const todoListStateless = (state: Observable<ITodoListState>) => div().pipe(
   children(
+
     todos$.pipe(
-      generate(
-        item => item.label,
-        item$ => todoItem(item$),
-      ),
+      generate(item => item.label, todoItem),
     ),
+
     input().pipe(
       attributes({
         type: 'text',
@@ -40,6 +39,7 @@ const todoListStateless = (state: Observable<ITodoListState>) => div().pipe(
         setState(({ target }) => ({ label: (target as HTMLInputElement).value }))
       ),
     ),
+
     button().pipe(
       event(
         'click',
@@ -48,6 +48,7 @@ const todoListStateless = (state: Observable<ITodoListState>) => div().pipe(
       ),
       children('Add Todo'),
     ),
+
   ),
 );
 

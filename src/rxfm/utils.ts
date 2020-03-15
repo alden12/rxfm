@@ -40,3 +40,9 @@ export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T
     map(([_, latest]) => latest),
   );
 }
+
+export function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | undefined> {
+  return (source: Observable<boolean>) => source.pipe(
+    map(src => src ? mapTo : undefined),
+  );
+}
