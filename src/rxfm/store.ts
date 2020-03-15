@@ -14,33 +14,11 @@ export interface IAction<S> {
 
 export function dispatch<T, S>(
   actionFunction: Action<T, S>, // Can this be made to also take a reducer funciton directly?
-): OperatorFunction<T, Record<'action', Reducer<S>>>
-
-export function dispatch<T, S, L>(
-  latestFrom: Observable<L>, // Depricate latest from in favor of event with multiple operators?
-  actionFunction: Action<{ ev: T, state: L }, S>,
-): OperatorFunction<T, Record<'action', Reducer<S>>>
-
-export function dispatch<T, S, L>(
-  latestFromOrActionFunction: Observable<L> | Action<T, S>,
-  actionFunction?: Action<{ ev: T, state: L }, S>,
 ): OperatorFunction<T, Record<'action', Reducer<S>>> {
-  if (actionFunction !== undefined) {
-    return (event: Observable<T>) => event.pipe(
-      withLatestFrom(latestFromOrActionFunction as Observable<L>),
-      map(([ev, state]) => ({ action: actionFunction({ ev, state }) }))
-    );
-  } else {
-    return (event: Observable<T>) => event.pipe(
-      map(ev => ({ action: (latestFromOrActionFunction as Action<T, S>)(ev) })),
-    );
-  }
+  return (event: Observable<T>) => event.pipe(
+    map(ev => ({ action: actionFunction(ev) })),
+  );
 }
-
-//   return (event: Observable<T>) => event.pipe(
-//     map(ev => ({ action: actionFunction(ev) })),
-//   );
-// }
 
 export function store<T extends Node, S, E extends IAction<S>>(
   stateSubject: BehaviorSubject<S>,
