@@ -33,12 +33,12 @@ export const todoItem = (item: Observable<ITodo>) => div().pipe(
 
     button().pipe(
       styles({ marginLeft: '10px' }),
-      children('Delete'),
       event(
         'click',
         withLatestFrom(item),
         dispatch(([ev, { label }]) => { ev.stopPropagation(); return deleteTodoAction(label); }),
-      )
+      ),
+      children('Delete'),
     ),
 
   ),

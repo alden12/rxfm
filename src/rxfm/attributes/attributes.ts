@@ -79,27 +79,3 @@ export function attributes<T extends HTMLElement, E>(
       distinctUntilKeysChanged()
     );
 }
-
-// Would attribute funciton be needed if attribute types could be observable?
-// export function attribute<T extends HTMLElement, E>(
-//   attributeName: string,
-//   value: AttributeType | Observable<AttributeType>,
-// ): ComponentOperator<T, E>
-
-// export function attribute<T extends HTMLElement, E, A>(
-//   attributeName: string,
-//   value: A | Observable<A>,
-//   valueFunction: (val: A) => AttributeType // Is this still needed?
-// ): ComponentOperator<T, E>
-
-// export function attribute<T extends HTMLElement, E, A>(
-//   attributeName: string,
-//   value: A | AttributeType | Observable<A | AttributeType>,
-//   valueFunction?: (val: A) => AttributeType
-// ): ComponentOperator<T, E> {
-//   const value$ = value instanceof Observable ? value : of(value);
-//   const attributes$ = value$.pipe(
-//     map(val => ({ [attributeName]: valueFunction? valueFunction(val as A) : val as AttributeType}))
-//   );
-//   return attributes(attributes$);
-// }
