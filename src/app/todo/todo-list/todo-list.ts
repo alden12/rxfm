@@ -26,7 +26,7 @@ const todoListStateless = (state: Observable<ITodoListState>) => div().pipe(
   children(
 
     todos$.pipe(
-      generate(item => item.label, todoItem),
+      generate(todoItem, item => item.label),
     ),
 
     input().pipe(

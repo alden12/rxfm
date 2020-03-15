@@ -4,8 +4,8 @@ import { SHARE_REPLAY_CONFIG } from './utils';
 import { Component, IComponent } from './components';
 
 export function generate<T, N extends Node, E = {}>(
-  idFunction: (item: T) => string,
   creationFunction: (item: Observable<T>) => Component<N, E>,
+  idFunction: (item: T) => string,
 ): OperatorFunction<T[], IComponent<N, E>[]> {
 
   return (items$: Observable<T[]>) => {
