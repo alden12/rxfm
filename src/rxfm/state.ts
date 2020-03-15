@@ -1,6 +1,6 @@
 import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
 import { Component } from './components';
-import { shareReplay, tap, switchMap, mapTo, startWith, withLatestFrom, map } from 'rxjs/operators';
+import { shareReplay, tap, switchMap, mapTo, startWith, map } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 import { extractEvent } from './events';
 

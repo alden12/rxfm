@@ -1,5 +1,5 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
-import { map, distinctUntilChanged, pluck, shareReplay, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom } from 'rxjs/operators';
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
