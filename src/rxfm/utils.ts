@@ -1,5 +1,5 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
-import { map, distinctUntilChanged, pluck, shareReplay, switchMap } from 'rxjs/operators';
+import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom } from 'rxjs/operators';
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
@@ -9,7 +9,6 @@ export function watch<T, U>(
   return (input: Observable<T>) => input.pipe(
     map(wathchingFunction),
     distinctUntilChanged(),
-    shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
 
@@ -19,12 +18,11 @@ export function select<T, K extends keyof T>(
   return (input: Observable<T>) => input.pipe(
     pluck(key),
     distinctUntilChanged(),
-    shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
 
-export function distinctUntilKeysChanged<T>(): (source: Observable<T>) => Observable<T> {
-  return (source: Observable<T>) => source.pipe(
+export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
+  return (source: Observable<T>) => source.pipe( // TODO: Also emit if prev and curr keys lengths have changed?
     distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
   )
 }
@@ -33,5 +31,18 @@ export function gate<T>(source: Observable<T>): OperatorFunction<boolean, T | un
   return (gate$: Observable<boolean>) => gate$.pipe(
     distinctUntilChanged(),
     switchMap(gatePosition => gatePosition ? source : of(undefined)),
+  );
+}
+
+export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T, U> {
+  return (source: Observable<T>) => source.pipe(
+    withLatestFrom(latestFrom),
+    map(([_, latest]) => latest),
+  );
+}
+
+export function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | undefined> {
+  return (source: Observable<boolean>) => source.pipe(
+    map(src => src ? mapTo : undefined),
   );
 }

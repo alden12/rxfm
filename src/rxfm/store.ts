@@ -1,17 +1,19 @@
 import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
-import { map, switchMap, tap, startWith, mapTo, shareReplay } from 'rxjs/operators';
+import { map, switchMap, tap, startWith, mapTo, shareReplay, withLatestFrom } from 'rxjs/operators';
 import { Component, ComponentOperator } from './components';
 import { extractEvent } from './events';
 import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from '.';
 
 export type Reducer<S> = (state: S) => Partial<S>;
 
+export type Action<T, S> = (payload: T) => Reducer<S>;
+
 export interface IAction<S> {
   action?: Reducer<S>;
 }
 
 export function dispatch<T, S>(
-  actionFunction: (event: T) => Reducer<S>,
+  actionFunction: Action<T, S>, // Can this be made to also take a reducer funciton directly?
 ): OperatorFunction<T, Record<'action', Reducer<S>>> {
   return (event: Observable<T>) => event.pipe(
     map(ev => ({ action: actionFunction(ev) })),

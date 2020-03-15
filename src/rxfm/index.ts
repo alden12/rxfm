@@ -1,4 +1,4 @@
-export * from './children';
+export * from './children/children';
 export * from './events';
 export * from './attributes';
 export * from './state';

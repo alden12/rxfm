@@ -1,6 +1,6 @@
 import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
 import { Component } from './components';
-import { shareReplay, tap, switchMap, mapTo, startWith, withLatestFrom, map } from 'rxjs/operators';
+import { shareReplay, tap, switchMap, mapTo, startWith, map } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 import { extractEvent } from './events';
 
@@ -32,28 +32,10 @@ export interface IStateAction<T> {
 
 export function setState<T, A>(
   mappingFunction: (event: T) => A,
-): OperatorFunction<T, Record<'state', A>>
-
-export function setState<T, A, S>(
-  state: Observable<S>,
-  mappingFunction: ({ event: T, state: S }) => A,
-): OperatorFunction<T, Record<'state', A>>
-
-export function setState<T, A, S>(
-  mappingFunctionOrState?: ((event: T) => A) | Observable<S>,
-  mappingFn?: (({ event: T, state: S }) => A),
 ): OperatorFunction<T, Record<'state', A>> {
-  if (mappingFn !== undefined) {
-    const state$ = mappingFunctionOrState as Observable<S>;
-    return (event$: Observable<T>) => event$.pipe(
-      withLatestFrom(state$),
-      map(([event, state]) => ({ state: mappingFn({ event, state }) }))
-    );
-  } else {
-    return (event$: Observable<T>) => event$.pipe(
-      map(event => ({ state: (mappingFunctionOrState as (event: T) => A)(event) })),
-    )
-  }
+  return (event$: Observable<T>) => event$.pipe(
+    map(event => ({ state: mappingFunction(event) })),
+  )
 }
 
 export function stateful<T extends Node, S, E extends IStateAction<S>>(

@@ -1,22 +1,22 @@
-import { Attributes } from './attributes';
+import { StringAttributes } from './attributes';
 
 export interface IAttributeDiff {
-  updated: Attributes;
+  updated: StringAttributes;
   removed: string[];
 }
 
 export function attributeDiffer(
-  oldAttributes: Attributes,
-  newAttributes: Attributes
+  oldAttributes: StringAttributes,
+  newAttributes: StringAttributes
 ): IAttributeDiff {
   const updated = Object.keys(newAttributes).reduce(
     (updates, key) => {
-      if (oldAttributes[key] !== newAttributes[key]) {
+      if (newAttributes[key] && oldAttributes[key] !== newAttributes[key]) {
         updates[key] = newAttributes[key];
       }
       return updates;
     },
-    {} as Attributes
+    {} as StringAttributes
   );
 
   const removed = Object.keys(oldAttributes).filter(key => !newAttributes[key]);
