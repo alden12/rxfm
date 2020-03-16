@@ -36,7 +36,7 @@ const todoListStateless = (state: Observable<ITodoListState>) => div().pipe(
       }),
       event(
         'change',
-        setState(({ target }) => ({ label: target.value })),
+        setState(({ target }) => ({ label: (target as HTMLInputElement).value })),
       ),
     ),
 
