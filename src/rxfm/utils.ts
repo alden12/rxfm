@@ -1,5 +1,5 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
-import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
 
 export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
@@ -44,5 +44,11 @@ export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T
 export function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | undefined> {
   return (source: Observable<boolean>) => source.pipe(
     map(src => src ? mapTo : undefined),
+  );
+}
+
+export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
+  return (source: Observable<T>) => source.pipe(
+    tap(ev => ev.stopPropagation()),
   );
 }
