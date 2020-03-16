@@ -4,11 +4,11 @@ import { IComponent, Component, ComponentOperator } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
 
-export type ChildComponent<E> =
-  string | number | boolean | Observable<string | number | boolean | IComponent<Node, E> | IComponent<Node, E>[]>;
+export type ChildComponent<T extends Node, E> =
+  string | number | boolean | Observable<string | number | boolean | IComponent<T, E> | IComponent<T, E>[]>;
 
 function coerceChildComponent<E>(
-  childComponent: ChildComponent<E>,
+  childComponent: ChildComponent<Node, E>,
 ): Observable<IComponent<Node, E>[]> {
   if (childComponent instanceof Observable) {
     let node: Text;
@@ -54,19 +54,19 @@ function updateElementChildren<T extends HTMLElement>(
 
 // tslint:disable: max-line-length
 export function children<T extends HTMLElement, EV>(): ComponentOperator<T, EV>
-export function children<T extends HTMLElement, EV, A = {}>(childA: ChildComponent<A>): ComponentOperator<T, EV, EV & A>
-export function children<T extends HTMLElement, EV, A = {}, B = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>): ComponentOperator<T, EV, EV & A & B>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>): ComponentOperator<T, EV, EV & A & B & C>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>): ComponentOperator<T, EV, EV & A & B & C & D>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>): ComponentOperator<T, EV, EV & A & B & C & D & E>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>): ComponentOperator<T, EV, EV & A & B & C & D & E & F>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H>
-export function children<T extends HTMLElement, EV, A = {}, B = {}, C = {}, D = {}, E = {}, F = {}, G = {}, H = {}, I = {}>(childA: ChildComponent<A>, childB: ChildComponent<B>, childC: ChildComponent<C>, childD: ChildComponent<D>, childE: ChildComponent<E>, childF: ChildComponent<F>, childG: ChildComponent<G>, childH: ChildComponent<H>, childI: ChildComponent<I>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H & I>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node>(childA: ChildComponent<TA, A>): ComponentOperator<T, EV, EV & A>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>): ComponentOperator<T, EV, EV & A & B>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>): ComponentOperator<T, EV, EV & A & B & C>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>): ComponentOperator<T, EV, EV & A & B & C & D>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>): ComponentOperator<T, EV, EV & A & B & C & D & E>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>): ComponentOperator<T, EV, EV & A & B & C & D & E & F>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node, G = {}, TG extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>, childG: ChildComponent<TG, G>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node, G = {}, TG extends Node = Node, H = {}, TH extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>, childG: ChildComponent<TG, G>, childH: ChildComponent<TH, H>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H>
+export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node, G = {}, TG extends Node = Node, H = {}, TH extends Node = Node, I = {}, TI extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>, childG: ChildComponent<TG, G>, childH: ChildComponent<TH, H>, childI: ChildComponent<TI, I>): ComponentOperator<T, EV, EV & A & B & C & D & E & F & G & H & I>
 // tslint:enable: max-line-length
 
 export function children<T extends HTMLElement, E>(
-  ...childComponents: ChildComponent<any>[]
+  ...childComponents: ChildComponent<Node, any>[]
 ): ComponentOperator<T, E, any> {
   return (component: Component<T, E>) => component.pipe(
     switchMap(({ node, events }) => {

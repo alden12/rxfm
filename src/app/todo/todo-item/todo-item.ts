@@ -1,8 +1,18 @@
 import { div, input, button } from '../../../rxfm/components';
-import { children, select, event, dispatch, classes, styles, attributes, mapToLatest, conditionalMapTo } from '../../../rxfm';
+import {
+  children,
+  select,
+  event,
+  dispatch,
+  classes,
+  styles,
+  attributes,
+  mapToLatest,
+  conditionalMapTo,
+  stopPropagation,
+} from '../../../rxfm';
 import { Observable } from 'rxjs';
 import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
-import { withLatestFrom } from 'rxjs/operators';
 
 import './todo-item.css';
 
@@ -35,8 +45,9 @@ export const todoItem = (item: Observable<ITodo>) => div().pipe(
       styles({ marginLeft: '10px' }),
       event(
         'click',
-        withLatestFrom(item),
-        dispatch(([ev, { label }]) => { ev.stopPropagation(); return deleteTodoAction(label); }),
+        stopPropagation(),
+        mapToLatest(item),
+        dispatch(({ label }) => deleteTodoAction(label)),
       ),
       children('Delete'),
     ),
