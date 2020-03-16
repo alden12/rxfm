@@ -10,7 +10,7 @@ export type InjectEvent<T extends Node, E, K extends string, V> = ComponentOpera
 }>;
 
 export type HTMLElementEvent<T extends Node, K extends string> =
-  (K extends keyof HTMLElementEventMap ? HTMLElementEventMap[K] : Event) & { target: T };
+  K extends keyof HTMLElementEventMap ? HTMLElementEventMap[K] & { target: T } : Event & { target: T };
 
 // tslint:disable: max-line-length
 export function event<T extends Node, E, K extends string, V>(event: Observable<Record<K, V>> | ((node: T) => Observable<Record<K, V>>)): InjectEvent<T, E, K, V>
