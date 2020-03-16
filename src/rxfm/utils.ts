@@ -82,6 +82,9 @@ export function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | und
   );
 }
 
+/**
+ * An observable operator taking an Event object, stopping propagation on the event, and passing it through.
+ */
 export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
   return (source: Observable<T>) => source.pipe(
     tap(ev => ev.stopPropagation()),
