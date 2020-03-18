@@ -9,8 +9,12 @@ export type InjectEvent<T extends Node, E, K extends string, V> = ComponentOpera
       : KE extends K ? V : never
 }>;
 
+export type TargetType<T, U extends Node> = {
+  [K in keyof (T & Record<'target', U>)]: (T & Record<'target', U>)[K];
+};
+
 export type HTMLElementEvent<T extends Node, K extends string> =
-  (K extends keyof HTMLElementEventMap ? HTMLElementEventMap[K] : Event) & { target: T };
+  K extends keyof HTMLElementEventMap ? TargetType<HTMLElementEventMap[K], T> : TargetType<Event, T>;
 
 // tslint:disable: max-line-length
 export function event<T extends Node, E, K extends string, V>(event: Observable<Record<K, V>> | ((node: T) => Observable<Record<K, V>>)): InjectEvent<T, E, K, V>
