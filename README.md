@@ -2,6 +2,8 @@
 
 Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
+RxJS allow for expressing data as a stream rather than a single value. This framework extends this to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
+
  ### Hello World:
  Display a simple hello world.
 ```
@@ -31,7 +33,6 @@ addToBody(app);
 ```
 
 ### Classes & Styling:
-Add classes or styles as strings or observables emitting strings.
 ```
 import './classy.css'
 
@@ -60,7 +61,6 @@ const clickMe = () => button().pipe(
 ```
 
 ### Attributes:
-Provide element attributes as strings or observables emitting strings.
 ```
 const textField = () => input().pipe(
   attributes({ type: 'text' }),
