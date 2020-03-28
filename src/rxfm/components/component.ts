@@ -1,5 +1,5 @@
 import { Observable, of, EMPTY } from 'rxjs';
-import { map, distinctUntilKeyChanged } from 'rxjs/operators';
+import { map, distinctUntilKeyChanged, startWith, pairwise } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = {}> {
   node: T;
@@ -29,4 +29,16 @@ export function component<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): Component<HTMLElementTagNameMap[K], {}> {
   return of({ node: document.createElement(tagName), events: EMPTY });
+}
+
+export function addToBody(component: Component<Node, any> | (() => Component<Node, any>)) {
+  let oldNode: Node;
+  (typeof component === 'function' ? component() : component).subscribe(({ node }) => {
+    if (oldNode) {
+      document.body.replaceChild(node, oldNode);
+    } else {
+      document.body.appendChild(node);
+    }
+    oldNode = node;
+  });
 }
