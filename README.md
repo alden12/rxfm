@@ -27,3 +27,18 @@ addToBody(app);
 
 // Displays: '1s elapsed!', '2s elapsed!', ...
 ```
+
+### Classes & Styling:
+```
+import './classy.css'
+
+const classy = () => div().pipe(
+  classes('classy-class'),
+  children('Classy text'),
+);
+
+const stylish = () => div().pipe(
+  styles({ color: red; font-style: italic }),
+  children('Stylish text'),
+);
+```
