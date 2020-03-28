@@ -8,10 +8,14 @@ const app = div().pipe(
 );
 
 addToBody(app);
+
+// Displays: 'Hello, World!'
 ```
 
 ```
 const counter = div().pipe(
-  children(interval(1000), 'seconds elapsed!'),
+  children(interval(1000), 's elapsed!'),
 );
+
+// Displays: '1s elapsed!', '2s elapsed!', ...
 ```
