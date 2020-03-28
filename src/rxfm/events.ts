@@ -35,7 +35,7 @@ export type HTMLElementEvent<T extends Node, K extends string> =
  * @param event The event or event type to inject into the stream. This may be either an HTML element event type string
  * (eg. 'click'), an observable, or a function taking the host node and returning an observable.
  * @param operators A spread array of observable operators to transform the event as desired before it is injected
- * into the component stream.
+ * into the component stream. The final operator must return a Record.
  */
 // tslint:disable: max-line-length
 export function event<T extends Node, E, K extends string, V>(event: Observable<Record<K, V>> | ((node: T) => Observable<Record<K, V>>)): InjectEvent<T, E, K, V>
