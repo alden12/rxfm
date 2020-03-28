@@ -1,11 +1,13 @@
-# RxFM
+# RxFM (RxJS Framwork)
 
-Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
+Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). RxFM is a beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
 RxJS allow for expressing data as a stream rather than a single value. This framework extends this to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
- ### Hello World:
- Display a simple hello world.
+Works best with [TypeScript](https://www.typescriptlang.org/).
+
+### Hello World:
+Display a simple hello world.
 ```
 const app = div().pipe(
   children('Hello, World!'),
@@ -16,8 +18,8 @@ addToBody(app);
 // Displays: 'Hello, World!'
 ```
 
- ### Components:
- A component is simply a funciton returning a component observable.
+### Components:
+A component is simply a funciton returning a component observable.
 ```
 const counterComponent = () => div().pipe(
   children(interval(1000), 's elapsed!'),

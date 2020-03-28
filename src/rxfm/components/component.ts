@@ -1,5 +1,5 @@
 import { Observable, of, EMPTY } from 'rxjs';
-import { map, distinctUntilKeyChanged, startWith, pairwise } from 'rxjs/operators';
+import { map, distinctUntilKeyChanged } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = {}> {
   node: T;

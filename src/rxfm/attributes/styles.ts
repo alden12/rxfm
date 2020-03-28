@@ -3,6 +3,7 @@ import { Component, ComponentOperator } from '../components';
 import { switchMap, map, startWith } from 'rxjs/operators';
 import { distinctUntilKeysChanged } from '../utils';
 
+// TODO: Add option to provide observable values inside object.
 export function styles<T extends HTMLElement, E>(
   stylesOrObservableStyles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>
 ): ComponentOperator<T, E> {
