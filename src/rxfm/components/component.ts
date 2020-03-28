@@ -1,5 +1,5 @@
 import { Observable, of, EMPTY } from 'rxjs';
-import { map, distinctUntilKeyChanged } from 'rxjs/operators';
+import { map, distinctUntilKeyChanged, distinctUntilChanged } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = {}> {
   node: T;
@@ -31,14 +31,31 @@ export function component<K extends keyof HTMLElementTagNameMap>(
   return of({ node: document.createElement(tagName), events: EMPTY });
 }
 
-export function addToBody(component: Component<Node, any> | (() => Component<Node, any>)) {
+export type Remove = () => void;
+
+export function addToView(
+  component: Component<Node, any> | (() => Component<Node, any>),
+  host: HTMLElement,
+): Remove {
   let oldNode: Node;
-  (typeof component === 'function' ? component() : component).subscribe(({ node }) => {
+  const subscription = (typeof component === 'function' ? component() : component).pipe(
+    map(({ node }) => node),
+    distinctUntilChanged(),
+  ).subscribe(node => {
     if (oldNode) {
-      document.body.replaceChild(node, oldNode);
+      host.replaceChild(node, oldNode);
     } else {
-      document.body.appendChild(node);
+      host.appendChild(node);
     }
     oldNode = node;
   });
+
+  return () => {
+    subscription.unsubscribe();
+    host.removeChild(oldNode);
+  }
+}
+
+export function addToBody(component: Component<Node, any> | (() => Component<Node, any>)): Remove {
+  return addToView(component, document.body);
 }

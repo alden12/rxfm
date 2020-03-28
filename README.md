@@ -1,8 +1,8 @@
-# RxFM (RxJS Framwork)
+# RxFM (RxJS Framework)
 
-Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). RxFM is a beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
+Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautiful, minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
-RxJS allow for expressing data as a stream rather than a single value. This framework extends this to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
+RxJS allow for expressing data as a stream rather than a single value. This framework extends this philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
@@ -19,7 +19,7 @@ addToBody(app);
 ```
 
 ### Components:
-A component is simply a funciton returning a component observable.
+A component is simply a function returning a component observable.
 ```
 const counterComponent = () => div().pipe(
   children(interval(1000), 's elapsed!'),
@@ -35,6 +35,7 @@ addToBody(app);
 ```
 
 ### Classes & Styling:
+Requires webpack [css-loader](https://webpack.js.org/loaders/css-loader/) and [style-loader](https://webpack.js.org/loaders/style-loader/) for css imports.
 ```
 import './classy.css'
 
@@ -72,13 +73,11 @@ const textField = () => input().pipe(
 ### State:
 Give local state to a component.
 ```
-interface IClickCounter {
+interface IClickCounterState {
   count: number;
 }
 
-const clickCounterInitialState: IClickCounter = { count: 0 };
-
-const clickCounterStateless = (state: Observable<IClickCounter>) => button().pipe(
+const clickCounterStateless = (state: Observable<IClickCounterState>) => button().pipe(
   children(select('count'), ' clicks so far!'),
   event(
     'click',
@@ -87,7 +86,7 @@ const clickCounterStateless = (state: Observable<IClickCounter>) => button().pip
   ),
 );
 
-const clickCounter = () => stateful(clickCounterInitialState, clickCounterStateless);
+const clickCounter = () => stateful({ count: 0 }, clickCounterStateless);
 
 // Displays (as a button): '0 clicks so far!', '1 clicks so far!', ...
 ```
