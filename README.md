@@ -49,11 +49,17 @@ const clickMe = () => button().pipe(
   children('Click Me!'),
   event(
    'click',
-   map(() => 'a click!'),
-   tap(console.log)),
+   tap(() => console.log('a click!')),
 );
 
 // Logs: 'a click!' on button clicks.
+```
+
+### Attributes:
+```
+const textField = () => input().pipe(
+  attributes({ type: 'text' }),
+);
 ```
 
 ### State:
@@ -75,5 +81,5 @@ const clickCounterStateless = (state: Observable<IClickCounter>) => button().pip
 
 const clickCounter = () => stateful(clickCounterInitialState, clickCounterStateless);
 
-// Displays: '0 clicks so far!', '1 clicks so far!', ...
+// Displays (as a button): '0 clicks so far!', '1 clicks so far!', ...
 ```
