@@ -1,6 +1,6 @@
 # RxFM
 
-Express your apps using nothing else but the awesome power of RxJs. A beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
+Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
  ### Hello World:
  Display a simple hello world.
