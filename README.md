@@ -1,8 +1,9 @@
 # RxFM
 
-Express your apps using nothing else but the awesome power of RxJs. A beautiful, minimalistic framework to natively code the internet in observables. The cleanest reactive framework out there.
+Express your apps using nothing else but the awesome power of RxJs. A beautiful, minimalistic framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
  ### Hello World:
+ Display a simple hello world.
 ```
 const app = div().pipe(
   children('Hello, World!'),
@@ -13,14 +14,15 @@ addToBody(app);
 // Displays: 'Hello, World!'
 ```
 
- ### Simple component:
+ ### Components:
+ A component is simply a funciton returning a component observable.
 ```
-const counter = () => div().pipe(
+const counterComponent = () => div().pipe(
   children(interval(1000), 's elapsed!'),
 );
 
 const app = div().pipe(
-  children(counter()),
+  children(counterComponent()),
 );
 
 addToBody(app);
@@ -29,6 +31,7 @@ addToBody(app);
 ```
 
 ### Classes & Styling:
+Add classes or styles as strings or observables emitting strings.
 ```
 import './classy.css'
 
@@ -44,6 +47,7 @@ const stylish = () => div().pipe(
 ```
 
 ### Events:
+Events can be injected into the stream at any point.
 ```
 const clickMe = () => button().pipe(
   children('Click Me!'),
@@ -56,6 +60,7 @@ const clickMe = () => button().pipe(
 ```
 
 ### Attributes:
+Provide element attributes as strings or observables emitting strings.
 ```
 const textField = () => input().pipe(
   attributes({ type: 'text' }),
@@ -63,6 +68,7 @@ const textField = () => input().pipe(
 ```
 
 ### State:
+Give local state to a component.
 ```
 interface IClickCounter {
   count: number;
