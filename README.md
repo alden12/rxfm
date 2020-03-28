@@ -38,7 +38,7 @@ const classy = () => div().pipe(
 );
 
 const stylish = () => div().pipe(
-  styles({ color: red; font-style: italic }),
+  styles({ color: red; fontStyle: italic }),
   children('Stylish text'),
 );
 ```
@@ -54,4 +54,26 @@ const clickMe = () => button().pipe(
 );
 
 // Logs: 'a click!' on button clicks.
+```
+
+### State:
+```
+interface IClickCounter {
+  count: number;
+}
+
+const clickCounterInitialState: IClickCounter = { count: 0 };
+
+const clickCounterStateless = (state: Observable<IClickCounter>) => button().pipe(
+  children(select('count'), ' clicks so far!'),
+  event(
+    'click',
+    mapToLatest(state),
+    setState(({ count }) => ({ count: count + 1 })),
+  ),
+);
+
+const clickCounter = () => stateful(clickCounterInitialState, clickCounterStateless);
+
+// Displays: '0 clicks so far!', '1 clicks so far!', ...
 ```
