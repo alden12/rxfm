@@ -13,7 +13,7 @@ export interface IAction<S> {
 }
 
 export function dispatch<T, S>(
-  actionFunction: Action<T, S>, // Can this be made to also take a reducer funciton directly?
+  actionFunction: Action<T, S>, // Can this be made to also take a reducer function directly?
 ): OperatorFunction<T, Record<'action', Reducer<S>>> {
   return (event: Observable<T>) => event.pipe(
     map(ev => ({ action: actionFunction(ev) })),
