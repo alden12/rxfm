@@ -1,6 +1,6 @@
 # RxFM (RxJS Framework)
 
-Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautiful, minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
+Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautifully minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
 RxJS allow for expressing data as streams rather than single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
@@ -8,7 +8,7 @@ Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ### Hello World:
 Display a simple hello world.
-```
+```typescript
 const app = div().pipe(
   children('Hello, World!'),
 );
@@ -20,7 +20,7 @@ addToBody(app);
 
 ### Components:
 A component is simply a function returning a component observable.
-```
+```typescript
 const counterComponent = () => div().pipe(
   children(interval(1000), 's elapsed!'),
 );
@@ -36,7 +36,7 @@ addToBody(app);
 
 ### Classes & Styling:
 Requires webpack [css-loader](https://webpack.js.org/loaders/css-loader/) and [style-loader](https://webpack.js.org/loaders/style-loader/) for css imports.
-```
+```typescript
 import './example.css'
 
 const classy = () => div().pipe(
@@ -52,7 +52,7 @@ const stylish = () => div().pipe(
 
 ### Events:
 Events can be injected into the stream at any point.
-```
+```typescript
 const clickMe = () => button().pipe(
   children('Click Me!'),
   event(
@@ -64,7 +64,7 @@ const clickMe = () => button().pipe(
 ```
 
 ### Attributes:
-```
+```typescript
 const textField = () => input().pipe(
   attributes({ type: 'text' }),
 );
@@ -72,7 +72,7 @@ const textField = () => input().pipe(
 
 ### State:
 Give local state to a component.
-```
+```typescript
 interface ICounterState {
   count: number;
 }
