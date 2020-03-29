@@ -1,5 +1,5 @@
 import { Observable, of, EMPTY } from 'rxjs';
-import { map, distinctUntilKeyChanged, distinctUntilChanged } from 'rxjs/operators';
+import { map, distinctUntilKeyChanged, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 
 export interface IComponent<T extends Node, E = {}> {
   node: T;
@@ -33,13 +33,17 @@ export function component<K extends keyof HTMLElementTagNameMap>(
 
 export type Remove = () => void;
 
-export function addToView(
-  component: Component<Node, any> | (() => Component<Node, any>),
+export function addToView<E = {}>(
+  component: Component<Node, E> | (() => Component<Node, E>),
   host: HTMLElement,
+  eventHandler?: (event: E) => void,
 ): Remove {
   let oldNode: Node;
   const subscription = (typeof component === 'function' ? component() : component).pipe(
-    map(({ node }) => node),
+    switchMap(({ node, events }) => events.pipe(
+      tap(event => typeof eventHandler === 'function' && eventHandler(event)),
+      map(() => node),
+    )),
     distinctUntilChanged(),
   ).subscribe(node => {
     if (oldNode) {
@@ -56,6 +60,9 @@ export function addToView(
   }
 }
 
-export function addToBody(component: Component<Node, any> | (() => Component<Node, any>)): Remove {
-  return addToView(component, document.body);
+export function addToBody<E = {}>(
+  component: Component<Node, E> | (() => Component<Node, E>),
+  eventHandler?: (event: E) => void,
+): Remove {
+  return addToView(component, document.body, eventHandler);
 }

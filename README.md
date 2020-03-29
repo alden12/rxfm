@@ -21,12 +21,13 @@ addToBody(app);
 ### Components:
 A component is simply a function returning a component observable.
 ```
-const counterComponent = () => div().pipe(
+// Counter Component:
+const counter = () => div().pipe(
   children(interval(1000), 's elapsed!'),
 );
 
 const app = div().pipe(
-  children(counterComponent()),
+  children(counter()),
 );
 
 addToBody(app);
@@ -55,12 +56,16 @@ Events can be injected into the stream at any point.
 ```
 const clickMe = () => button().pipe(
   children('Click Me!'),
-  event(
-   'click',
-   tap(() => console.log('a click!')),
+  event('click', mapTo({ testEvent: 'a click!' })),
 );
 
-// Logs: 'a click!' on button clicks.
+const app = div().pipe(
+  children(clickMe()),
+);
+
+addToBody(app, event => console.log(event));
+
+// Logs: "{ testEvent: 'a click!' }" on button clicks.
 ```
 
 ### Attributes:
