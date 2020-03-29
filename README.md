@@ -2,7 +2,7 @@
 
 Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautiful, minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
-RxJS allow for expressing data as a stream rather than a single value. This framework extends this philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
+RxJS allow for expressing data as streams rather than single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
@@ -37,10 +37,10 @@ addToBody(app);
 ### Classes & Styling:
 Requires webpack [css-loader](https://webpack.js.org/loaders/css-loader/) and [style-loader](https://webpack.js.org/loaders/style-loader/) for css imports.
 ```
-import './classy.css'
+import './example.css'
 
 const classy = () => div().pipe(
-  classes('classy-class'),
+  classes('example-class'),
   children('Classy text'),
 );
 
@@ -73,12 +73,12 @@ const textField = () => input().pipe(
 ### State:
 Give local state to a component.
 ```
-interface IClickCounterState {
+interface ICounterState {
   count: number;
 }
 
-const clickCounterStateless = (state: Observable<IClickCounterState>) => button().pipe(
-  children(select('count'), ' clicks so far!'),
+const counterStateless = (state: Observable<ICounterState>) => button().pipe(
+  children(state.pipe(select('count')), ' clicks so far!'),
   event(
     'click',
     mapToLatest(state),
@@ -86,7 +86,7 @@ const clickCounterStateless = (state: Observable<IClickCounterState>) => button(
   ),
 );
 
-const clickCounter = () => stateful({ count: 0 }, clickCounterStateless);
+const counter = () => stateful({ count: 0 }, counterStateless);
 
 // Displays (as a button): '0 clicks so far!', '1 clicks so far!', ...
 ```
