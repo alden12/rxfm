@@ -9,28 +9,28 @@ Works best with [TypeScript](https://www.typescriptlang.org/).
 ### Hello World:
 Display a simple hello world.
 ```typescript
-const app = div().pipe(
-  children('Hello, World!'),
+addToBody(
+  div().pipe(
+    children('Hello, World!'),
+  )
 );
-
-addToBody(app);
 
 // Displays: 'Hello, World!'
 ```
 
 ### Components:
-A component is simply a function returning a component observable.
+A component is simply an observable emitting an HTML element and events.
 ```typescript
 // Counter Component:
 const counter = () => div().pipe(
   children(interval(1000), 's elapsed!'),
 );
 
-const app = div().pipe(
+const app = () => div().pipe(
   children(counter()),
 );
 
-addToBody(app);
+addToBody(app());
 
 // Displays: '1s elapsed!', '2s elapsed!', ...
 ```
@@ -59,11 +59,11 @@ const clickMe = () => button().pipe(
   event('click', mapTo({ testEvent: 'a click!' })),
 );
 
-const app = div().pipe(
+const app = () => div().pipe(
   children(clickMe()),
 );
 
-addToBody(app, event => console.log(event));
+addToBody(app(), event => console.log(event));
 
 // Logs: "{ testEvent: 'a click!' }" on button clicks.
 ```
