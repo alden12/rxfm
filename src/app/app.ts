@@ -1,7 +1,8 @@
 import { app } from './todo';
+import { addToBody } from '../rxfm/components';
 
 export function main() {
-  app().subscribe(({ node }) => document.body.appendChild(node));
+  addToBody(app);
 }
 
 main();

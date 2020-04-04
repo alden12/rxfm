@@ -1,10 +1,23 @@
 import { StringAttributes } from './attributes';
 
+/**
+ * An interface to describe the difference between two states of an HTML elements attributes.
+ */
 export interface IAttributeDiff {
+  /**
+   * The updated (or added) attributes.
+   */
   updated: StringAttributes;
+  /**
+   * The removed attributes.
+   */
   removed: string[];
 }
 
+/**
+ * Find the difference between two states of an HTML elements attributes and return the updated (or added) and removed
+ * attributes.
+ */
 export function attributeDiffer(
   oldAttributes: StringAttributes,
   newAttributes: StringAttributes
