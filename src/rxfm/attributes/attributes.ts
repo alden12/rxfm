@@ -79,7 +79,7 @@ export function updateElementAttributes<T extends HTMLElement>(
 }
 
 /**
- * An observable operator to update the attributes on a component.
+ * An observable operator to update the attributes on an RxFM component.
  * @param attributesOrObservableAttrs A dictionary (or observable emitting a dictionary) of attribute names to
  * attribute values. Attribute values may be strings, numbers, or booleans, or observables emitting these types.
  */

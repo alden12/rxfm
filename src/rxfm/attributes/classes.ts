@@ -28,7 +28,7 @@ function classTypesToStringObservable(classTypes: ClassType[]): Observable<strin
 }
 
 /**
- * An observable operator to manage the CSS classes on an HTML element.
+ * An observable operator to manage the CSS classes on an RxFM component.
  * @param classNames A spread array of class names. These may either be of type string, string observable or string
  * array observable. If the class name value is falsy (false, undefined, null , 0) The class will be removed.
  */

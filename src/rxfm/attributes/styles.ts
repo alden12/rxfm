@@ -5,7 +5,7 @@ import { distinctUntilKeysChanged } from '../utils';
 
 // TODO: Add option to provide observable values inside object.
 /**
- * An observable operator to update the styles on an HTML element.
+ * An observable operator to update the styles on an RxFM component.
  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
  */
 export function styles<T extends HTMLElement, E>(

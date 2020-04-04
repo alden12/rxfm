@@ -3,6 +3,13 @@ import { map, shareReplay, filter, startWith, switchMap, debounceTime } from 'rx
 import { SHARE_REPLAY_CONFIG } from './utils';
 import { Component, IComponent } from './components';
 
+/**
+ * An observable operator to generate an array of RxFM components from an array of type T. The input is an observable
+ * emitting an array of type T and the output is an observable emitting an array of RxFM components.
+ * @param creationFunction A function taking an observable of type T and returning an RxFM component observable.
+ * @param idFunction A function taking a T object and returning a unique id for this object. This is required to prevent
+ * regeneration of components when the array is updated.
+ */
 export function generate<T, N extends Node, E = {}>(
   creationFunction: (item: Observable<T>) => Component<N, E>,
   idFunction: (item: T) => string | number,
@@ -32,7 +39,7 @@ export function generate<T, N extends Node, E = {}>(
               return [id, previousElements.get(id)];
             }
 
-            const itemUpdates = updates.pipe( // If not create an observable emtting updates to the relavent item.
+            const itemUpdates = updates.pipe( // If not create an observable emitting updates to the relevant item.
               filter(update => update.has(id)),
               map(update => update.get(id)),
               startWith(item)
@@ -47,7 +54,7 @@ export function generate<T, N extends Node, E = {}>(
       switchMap(elMap => {
         return elMap.size > 0
           ? combineLatest<IComponent<N, E>[]>(...Array.from(elMap.values())) // Combine all components.
-          : of([]); // If no componentes return empty array.
+          : of([]); // If no components, return empty array.
       }),
       debounceTime(0),
     );
