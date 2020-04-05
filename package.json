@@ -2,12 +2,12 @@
   "name": "rxfm",
   "version": "0.0.1",
   "private": true,
-  "main": "dist/rxfm.js",
-  "module": "src/rxfm/index.js",
+  "main": "dist/index.js",
+  "module": "src/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "webpack-dev-server --config webpack.dev.js",
-    "build": "tsc && webpack --config webpack.dev.js"
+    "build": "tsc && webpack --config webpack.prod.js"
   },
   "dependencies": {
     "rxjs": "6.5.2"

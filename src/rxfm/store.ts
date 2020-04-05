@@ -1,8 +1,8 @@
 import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
-import { map, switchMap, tap, startWith, mapTo, shareReplay, withLatestFrom } from 'rxjs/operators';
+import { map, switchMap, tap, startWith, mapTo, shareReplay } from 'rxjs/operators';
 import { Component, ComponentOperator } from './components';
 import { extractEvent } from './events';
-import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from '.';
+import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from './utils';
 
 /**
  * A function taking the current state of an information store (of type S) and returning a new state for the store.
