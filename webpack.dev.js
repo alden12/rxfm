@@ -45,6 +45,7 @@ module.exports = [
       filename: 'rxfm.js',
       path: path.resolve(__dirname, 'dist'),
       library: "rxfm",
+      libraryTarget: 'umd',
     },
     resolve: {
       extensions: [".ts", ".js", ".json"]

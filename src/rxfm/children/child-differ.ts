@@ -55,14 +55,14 @@ export function childDiffer(
     const oldNodeAndNext = new Map( // Create a map of each common node to its next common node in the old order.
       remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]])
     );
-    const newElementesAndIndex = new Map( // Create a map of each common node to its index in the new order.
+    const newElementsAndIndex = new Map( // Create a map of each common node to its index in the new order.
       remainingNewOrder.map((node, i) => [node, i])
     );
 
     const reordered = new Set( // Create a set of all common nodes which have changed order.
       remainingNewOrder.filter((node, i) => {
         const oldNext = oldNodeAndNext.get(node); // Get the node which used to follow this one in the old order.
-        const newIndexOfNext = newElementesAndIndex.get(oldNext) || Infinity; // Find the new index of that node.
+        const newIndexOfNext = newElementsAndIndex.get(oldNext) || Infinity; // Find the new index of that node.
         return newIndexOfNext < i; // Node is reordered if the old next element now comes before this element.
       })
     );
@@ -78,12 +78,12 @@ export function childDiffer(
   for (let i = newChildren.length - 1; i >= 0; i--) { // Loop through the new nodes in reverse order
     const node = newChildren[i];
     if (unchangedNodes.has(node)) { // If the current node already existed and has not changed order:
-      // Any future nodes should be inserted before this one so store as the current insert before refernce. This will
+      // Any future nodes should be inserted before this one so store as the current insert before reference. This will
       // start as undefined so if no unchanged nodes have yet been passed then nodes will be inserted at the end, this
       // value will be overwritten by any future unchanged nodes.
       insertBefore = node;
     } else { // If this is a new node or has changed order:
-      updated.push({ node, insertBefore }); // Add to the udpated array along with the node to insert before if present.
+      updated.push({ node, insertBefore }); // Add to the updated array along with the node to insert before if present.
     }
   }
   updated.reverse(); // Reverse the updated array to put it in the correct order of the new nodes.
