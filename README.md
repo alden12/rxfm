@@ -2,7 +2,7 @@
 
 Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautifully minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 
-RxJS allow for expressing data as streams rather than single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
+RxJS lets us express data as a stream rather than a single value. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
