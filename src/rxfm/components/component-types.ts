@@ -187,7 +187,7 @@ export const script = () => component('script');
 /** Create a component of type html 'section' element. */
 export const section = () => component('section');
 /** Create a component of type html 'select' element. */
-export const select = () => component('select');
+export const Select = () => component('select');
 /** Create a component of type html 'slot' element. */
 export const slot = () => component('slot');
 /** Create a component of type html 'small' element. */

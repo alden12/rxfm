@@ -1,5 +1,5 @@
 import { app } from './todo';
-import { addToBody } from '../rxfm/components';
+import { addToBody } from '../rxfm';
 
 export function main() {
   addToBody(app);

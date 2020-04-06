@@ -1,4 +1,3 @@
-import { div, button, input } from '../../../rxfm/components';
 import {
   children,
   generate,
@@ -9,6 +8,9 @@ import {
   select,
   attributes,
   mapToLatest,
+  div,
+  button,
+  input,
 } from '../../../rxfm';
 import { todos$, addTodoAction } from '../store';
 import { todoItem } from '../todo-item/todo-item';

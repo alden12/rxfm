@@ -1,5 +1,4 @@
-import { div } from '../../rxfm/components';
-import { children, store } from '../../rxfm';
+import { children, store, div } from '../../rxfm';
 
 import { todoList } from './todo-list/todo-list';
 import { storeSubject } from './store';
