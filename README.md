@@ -6,6 +6,8 @@ RxJS lets us express data as a stream rather than as single values. This framewo
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
+[RxFM on npm](https://www.npmjs.com/package/rxfm)
+
 ### Installation:
 ```sh
 npm install rxfm
