@@ -3,11 +3,8 @@ const webpackRxjsExternals = require('webpack-rxjs-externals');
 
 module.exports = [
   {
-    mode: "development",
-    devtool: "inline-source-map",
-    optimization: {
-      runtimeChunk: true
-    },
+    mode: "production",
+    devtool: "source-map",
     entry: "./src/index.ts",
     output: {
       filename: 'index.umd.js',
