@@ -1,15 +1,16 @@
 import { Observable, of, combineLatest, merge, EMPTY } from 'rxjs';
-import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share } from 'rxjs/operators';
+import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share, startWith } from 'rxjs/operators';
 import { IComponent, Component, ComponentOperator } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
 
 /**
- * The possible types which can be added as a child component throught the 'children' operator.
+ * The possible types which can be added as a child component through the 'children' operator.
  */
 export type ChildComponent<T extends Node, E> =
   string | number | boolean | Observable<string | number | boolean | IComponent<T, E> | IComponent<T, E>[]>;
 
+// TODO: Add distinct until changed to text children.
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
@@ -19,6 +20,7 @@ function coerceChildComponent<E>(
   if (childComponent instanceof Observable) { // If observable.
     let node: Text; // Create outer reference to text node if it is needed.
     return childComponent.pipe(
+      startWith(null),
       map(child => {
         if (typeof child === "string" || typeof child === 'number' || typeof child === 'boolean') {
           node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.

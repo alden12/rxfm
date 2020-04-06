@@ -9,21 +9,21 @@ export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
 
 /**
  * An observable operator to watch a given part of a source observable defined by the watchingFunction.
- * @param wathchingFunction A function mapping the source type (T) to the part of interest (U).
+ * @param watchingFunction A function mapping the source type (T) to the part of interest (U).
  * @returns An observable emitting the desired part of the source whenever it changes.
  */
 export function watch<T, U>(
-  wathchingFunction: (item: T) => U,
+  watchingFunction: (item: T) => U,
 ): OperatorFunction<T, U> {
   return (input: Observable<T>) => input.pipe(
-    map(wathchingFunction),
+    map(watchingFunction),
     distinctUntilChanged(),
   );
 }
 
 /**
  * An observable operator to select a given key from a source observable stream.
- * @param key A key (K) bolonging to the source type (T).
+ * @param key A key (K) belonging to the source type (T).
  * @returns An observable emitting the value of T[K] whenever it changes.
  */
 export function select<T, K extends keyof T>(

@@ -6,14 +6,23 @@ RxJS lets us express data as a stream rather than as single values. This framewo
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
+[RxFM on npm](https://www.npmjs.com/package/rxfm)
+
+### Installation:
+```sh
+npm install rxfm
+```
+
 ### Hello World:
 Display a simple hello world.
 ```typescript
-addToBody(
-  div().pipe(
-    children('Hello, World!'),
-  )
-);
+import { div, children, addToBody } from 'rxfm';
+
+const app = div().pipe(
+  children('Hello, World!'),
+)
+
+addToBody(app);
 
 // Displays: 'Hello, World!'
 ```

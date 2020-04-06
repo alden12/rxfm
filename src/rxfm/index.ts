@@ -5,3 +5,4 @@ export * from './state';
 export * from './generate';
 export * from './utils';
 export * from './store';
+export * from './components';

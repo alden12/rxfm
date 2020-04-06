@@ -4,10 +4,10 @@ import { map, share, filter } from 'rxjs/operators';
 
 /**
  * A type to inject an event into the component stream. Injected as a single key object { [key: K]: V }.
- * @typeparam T The host node type.
- * @typeparam E The incoming event type.
- * @typeparam K The string key of the outgoing event to inject.
- * @typeparam V The value type of the outgoing event to inject.
+ * @typeParam T The host node type.
+ * @typeParam E The incoming event type.
+ * @typeParam K The string key of the outgoing event to inject.
+ * @typeParam V The value type of the outgoing event to inject.
  */
 export type InjectEvent<T extends Node, E, K extends string, V> = ComponentOperator<T, E, {
   [KE in keyof (E & Record<K, V>)]?:
