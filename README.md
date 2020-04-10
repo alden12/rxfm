@@ -4,9 +4,10 @@ Express your apps using nothing else but the awesome power of [RxJS](https://git
 
 RxJS lets us express data as a stream rather than as single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
-Works best with [TypeScript](https://www.typescriptlang.org/).
+* Fork the [Starter App](https://github.com/alden12/rxfm-starter-app)
+* Check out [RxFM on npm](https://www.npmjs.com/package/rxfm)
 
-[RxFM on npm](https://www.npmjs.com/package/rxfm)
+Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ### Installation:
 ```sh
