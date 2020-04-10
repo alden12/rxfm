@@ -2,10 +2,16 @@
   "name": "rxfm",
   "version": "0.0.1",
   "author": "Alden Laslett",
+  "description": "A beautifully minimal framework to natively code the internet in observable streams.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alden12/rxfm.git"
+  },
+  "homepage": "https://https://github.com/alden12/rxfm",
   "main": "dist/index.umd.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "license": "MIT",
   "files": ["dist"],
   "scripts": {
     "build": "tsc && webpack --config webpack.prod.js"
