@@ -5,9 +5,9 @@ module.exports = [
   {
     mode: "production",
     devtool: "source-map",
-    entry: "./src/index.ts",
+    entry: "./src/lib/index.ts",
     output: {
-      filename: 'index.umd.js',
+      filename: 'index.js',
       path: path.resolve(__dirname, 'dist'),
       library: "rxfm",
       libraryTarget: 'umd',
@@ -20,7 +20,10 @@ module.exports = [
         {
           test: /\.ts$/,
           loader: "ts-loader",
-          exclude: '/node_modules/'
+          exclude: '/node_modules/',
+          options: {
+            configFile: "tsconfig.prod.json"
+          }
         },
       ]
     },
