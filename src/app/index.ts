@@ -1,7 +1,4 @@
-import { div, addToBody, children } from 'rxfm';
-
-export const app = () => div().pipe(
-  children('tets')
-);
+import { addToBody } from 'rxfm';
+import { app } from './todo';
 
 addToBody(app);
