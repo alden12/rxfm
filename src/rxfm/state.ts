@@ -5,6 +5,17 @@ import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 import { extractEvent } from './events';
 
 // Is this generic function needed?
+/**
+ * A wrapper function to give state to an RxFM component by looping state emissions from the component back into the
+ * component input.
+ * @param initialState The initial state for the component.
+ * @param creationFunction A function taking the initial state and returning an RxFM component observable.
+ * @param eventType The string type used to identify events to update the state.
+ * @param stateFunction A function taking an event and the current state and return the new state.
+ * @typeParam S The state type.
+ * @typeParam E The component events type.
+ * @typeParam E The string event type identifying a state update event.
+ */
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
   initialState: S,
   creationFunction: (state: Observable<S>) => Component<T, E>,
@@ -30,6 +41,14 @@ export interface IStateAction<T> {
   state?: Partial<T>;
 }
 
+/**
+ * An observable operator to update the state of an RxFM component wrapped by the 'stateful' function. This operator
+ * should be called within the 'event' operator to emit a state update request triggered by an event. This may be
+ * called by children or nested children of the wrapped component. The 'stateful' function will capture the 'state'
+ * events and prevent further propagation.
+ * @param mappingFunction A function to map an event of type T, to a partial state object. This should be of the same
+ * type as the state used in the 'stateful' function wrapping the component.
+ */
 export function setState<T, A>(
   mappingFunction: (event: T) => A,
 ): OperatorFunction<T, Record<'state', A>> {
@@ -38,6 +57,14 @@ export function setState<T, A>(
   )
 }
 
+/**
+ * A function to give local state (of type S) to an RxFM component. Use the 'setState' operator to update the state from
+ * within the wrapped component.
+ * @param initialState The initial state for the component.
+ * @param creationFunction A function taking an observable emitting the state (S) and returning an RxFM component
+ * observable.
+ * @returns An RxFM component observable.
+ */
 export function stateful<T extends Node, S, E extends IStateAction<S>>(
   initialState: Partial<S> = {},
   creationFunction: (state: Observable<Partial<S>>) => Component<T, E>,
