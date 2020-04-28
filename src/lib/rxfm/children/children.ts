@@ -68,7 +68,7 @@ function updateElementChildren<T extends HTMLElement>(
  * An observable operator to add children to a component.
  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
  * forms, the simplest of which are strings, numbers or booleans or observables emitting any of these. Other components
- * may also be passed (Observables emitting the IComponent inerface). Finally Observables emitting IComponent arrays
+ * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
  */
 // tslint:disable: max-line-length
