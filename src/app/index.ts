@@ -1,6 +1,7 @@
 import { addToBody, ChildComponent, ComponentOperator, HTMLElementEvent } from 'rxfm';
 import { app } from './todo';
 import { of, Observable, EMPTY, OperatorFunction } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 addToBody(app);
 
@@ -11,7 +12,13 @@ export interface IComponent<T extends Node, E = never> {
 
 export type Component<T extends Node, E = never> = Observable<IComponent<T, E>>;
 
-type ChildEvents<T extends ChildComponent<Node, any>[]> = T extends ChildComponent<Node, infer E>[] ? E : never;
+type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
+
+type ChildEvents<T extends ChildComponent<Node, any>[]> = ArrayType<{
+  [P in keyof T]: T[P] extends ChildComponent<Node, infer E> ? E : never;
+}>;
+
+// type ChildEvents<T extends ChildComponent<Node, any>[]> = T extends ChildComponent<Node, infer E>[] ? E : never;
 
 function children<T extends HTMLElement, E, C extends ChildComponent<Node, any>[]>(
   ...childComponents: C
@@ -48,18 +55,81 @@ export function event<T extends Node, E, ET extends string, EV>(
   return undefined;
 }
 
-class TestEvent {}
+class TestEvent<T> {}
 class AnotherTestEvent {}
 
+function tuple<T extends any[]>(...args: T): T {
+  return args;
+}
+
+// const tup = tuple(new TestEvent(), new AnotherTestEvent(), 1, '2', false);
+
+// type typType = ArrayType<typeof tup>;
+
+const childComps = tuple(
+  'test',
+  1,
+  div().pipe(event(of('test'))),
+  div().pipe(event(of(true))),
+  div().pipe(event(of(1))),
+  // div().pipe(event(of(new TestEvent()))),
+  // div().pipe(event(of(new AnotherTestEvent()))),
+  div().pipe(event(of([true]))),
+);
+
+type ChildComponentsType = ChildEvents<typeof childComps>;
+
 const test = div().pipe(
-  event('click'),
+  // event('click'),
   // event(of(new TestEvent())),
   children(
+    // div().pipe(
+    //   // children(
+    //   //   component('span').pipe(
+    //   //     event(of(true)),
+    //   //   )
+    //   // ),
+    //   event(of(new TestEvent())),
+    // ),
+    // div().pipe(
+    //   event(of(new AnotherTestEvent())),
+    // ),
     div().pipe(
-      event(of(new TestEvent())),
+      event(of(1)),
     ),
     div().pipe(
-      event(of(new TestEvent())),
+      event(of('test')),
     ),
   )
 )
+
+type TestType = typeof test;
+
+////
+
+// interface ComponentType<T extends Node, E> {};
+
+type X = [string, string[], TestEvent<number>, TestEvent<string>, AnotherTestEvent, boolean, { test: number }];
+
+type ElementType<T extends any[]> = T extends (infer U)[] ? U : never;
+
+type XElementType = ElementType<X>;
+
+type UnionToIntersection<U> =
+  // (U extends any ? U[] : never) extends ((infer I)[]) ? I : never
+  (U extends any ? (k: U)=>void : never) extends ((k: infer I)=>void) ? I : never
+type Param<T> = [T] extends [(arg: infer U) => void] ? U : never;
+
+type Test = Param<string | number>;
+
+type XUnionToIntersection = UnionToIntersection<XElementType>;
+
+type Union = HTMLElementEventMap | { x: string } | { y: number } | { y: boolean };
+
+type KeyOf<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? Record<K, T[K]> : never;
+
+type KeyOfUnion = KeyOf<Union, 'y'>;
+
+type RemoveUnionKey<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
+
+type RemoveKey = RemoveUnionKey<Union, 'y'>;
