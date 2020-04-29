@@ -27,18 +27,10 @@ function component<K extends keyof HTMLElementTagNameMap>(
 
 const div = () => component('div');
 
-export type InjectEvent<T extends Node, E, O> = ComponentOperator<T, E, E | O>
-// export type InjectEvent<T extends Node, E, K extends string, V> = ComponentOperator<T, E, {
-//   [KE in keyof (E & Record<K, V>)]?:
-//     KE extends keyof E
-//       ? KE extends K ? E[KE] | V : E[KE]
-//       : KE extends K ? V : never
-// }>;
-
 // tslint:disable: max-line-length
-export function event<T extends Node, E, EV>(event: Observable<EV> | ((node: T) => Observable<EV>)): InjectEvent<T, E, EV>
-export function event<T extends Node, E, ET extends string>(eventType: ET): InjectEvent<T, E, HTMLElementEvent<T, ET>>
-export function event<T extends Node, E, ET extends string, EV>(eventType: ET, op: OperatorFunction<HTMLElementEvent<T, ET>, EV>): InjectEvent<T, E, EV>
+export function event<T extends Node, E, EV>(event: Observable<EV> | ((node: T) => Observable<EV>)): ComponentOperator<T, E, E | EV>
+export function event<T extends Node, E, ET extends string>(eventType: ET): ComponentOperator<T, E, E | HTMLElementEvent<T, ET>>
+export function event<T extends Node, E, ET extends string, EV>(eventType: ET, op: OperatorFunction<HTMLElementEvent<T, ET>, EV>): ComponentOperator<T, E, E | EV>
 // export function event<T extends Node, E, ET extends string, K extends string, OP1, R>(eventType: ET, op1: OperatorFunction<HTMLElementEvent<T, ET>, OP1>, op: OperatorFunction<OP1, Record<K, R>>): InjectEvent<T, E, K, R>
 // export function event<T extends Node, E, ET extends string, K extends string, OP1, OP2, R>(eventType: ET, op1: OperatorFunction<HTMLElementEvent<T, ET>, OP1>, op2: OperatorFunction<OP1, OP2>, op: OperatorFunction<OP2, Record<K, R>>): InjectEvent<T, E, K, R>
 // export function event<T extends Node, E, ET extends string, K extends string, OP1, OP2, OP3, R>(eventType: ET, op1: OperatorFunction<HTMLElementEvent<T, ET>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op: OperatorFunction<OP3, Record<K, R>>): InjectEvent<T, E, K, R>
@@ -52,6 +44,22 @@ export function event<T extends Node, E, ET extends string, EV>(eventType: ET, o
 export function event<T extends Node, E, ET extends string, EV>(
   eventType: ET | Observable<EV> | ((node: T) => Observable<EV>),
   ...operators: OperatorFunction<any, any>[]
-): InjectEvent<T, E, EV> {
+): ComponentOperator<T, E, E | EV> {
   return undefined;
 }
+
+class TestEvent {}
+class AnotherTestEvent {}
+
+const test = div().pipe(
+  event('click'),
+  // event(of(new TestEvent())),
+  children(
+    div().pipe(
+      event(of(new TestEvent())),
+    ),
+    div().pipe(
+      event(of(new TestEvent())),
+    ),
+  )
+)
