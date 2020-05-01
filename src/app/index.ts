@@ -126,10 +126,31 @@ type XUnionToIntersection = UnionToIntersection<XElementType>;
 
 type Union = HTMLElementEventMap | { x: string } | { y: number } | { y: boolean };
 
+type Keys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
+
+type Values<T extends Record<any, any>, K extends Keys<T>> = T extends Record<K, infer V> ? V : never;
+
 type KeyOf<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? Record<K, T[K]> : never;
 
+type UnionKeys = Keys<Union>;
+
 type KeyOfUnion = KeyOf<Union, 'y'>;
+
+type UnionValue = Values<Union, 'y'>;
 
 type RemoveUnionKey<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
 
 type RemoveKey = RemoveUnionKey<Union, 'y'>;
+
+// tslint:disable: max-line-length
+type CustomEventTypes <T extends HTMLElement, E extends Record<any, any>> = T & {
+  addEventListener<K extends Keys<E>>(type: K, listener: (this: HTMLElement, ev: CustomEvent<Values<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener<K extends Keys<E>>(type: K, listener: (this: HTMLElement, ev: CustomEvent<Values<E, K>>) => any, options?: boolean | EventListenerOptions): void;
+};
+// tslint:enable: max-line-length
+
+type DivWithEvents = CustomEventTypes<HTMLDivElement, Union>
+
+// let x: DivWithEvents;
+
+// x.addEventListener()
