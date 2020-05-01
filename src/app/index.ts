@@ -1,4 +1,4 @@
-import { addToBody, ChildComponent, ComponentOperator, HTMLElementEvent } from 'rxfm';
+import { addToBody, ChildComponent, ComponentOperatorOld, HTMLElementEvent } from 'rxfm';
 import { app } from './todo';
 import { of, Observable, EMPTY, OperatorFunction } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -22,7 +22,7 @@ type ChildEvents<T extends ChildComponent<Node, any>[]> = ArrayType<{
 
 function children<T extends HTMLElement, E, C extends ChildComponent<Node, any>[]>(
   ...childComponents: C
-): ComponentOperator<T, E, E | ChildEvents<C>> {
+): ComponentOperatorOld<T, E, E | ChildEvents<C>> {
   return undefined;
 }
 
@@ -35,9 +35,9 @@ function component<K extends keyof HTMLElementTagNameMap>(
 const div = () => component('div');
 
 // tslint:disable: max-line-length
-export function event<T extends Node, E, EV>(event: Observable<EV> | ((node: T) => Observable<EV>)): ComponentOperator<T, E, E | EV>
-export function event<T extends Node, E, ET extends string>(eventType: ET): ComponentOperator<T, E, E | HTMLElementEvent<T, ET>>
-export function event<T extends Node, E, ET extends string, EV>(eventType: ET, op: OperatorFunction<HTMLElementEvent<T, ET>, EV>): ComponentOperator<T, E, E | EV>
+export function event<T extends Node, E, EV>(event: Observable<EV> | ((node: T) => Observable<EV>)): ComponentOperatorOld<T, E, E | EV>
+export function event<T extends Node, E, ET extends string>(eventType: ET): ComponentOperatorOld<T, E, E | HTMLElementEvent<T, ET>>
+export function event<T extends Node, E, ET extends string, EV>(eventType: ET, op: OperatorFunction<HTMLElementEvent<T, ET>, EV>): ComponentOperatorOld<T, E, E | EV>
 // export function event<T extends Node, E, ET extends string, K extends string, OP1, R>(eventType: ET, op1: OperatorFunction<HTMLElementEvent<T, ET>, OP1>, op: OperatorFunction<OP1, Record<K, R>>): InjectEvent<T, E, K, R>
 // export function event<T extends Node, E, ET extends string, K extends string, OP1, OP2, R>(eventType: ET, op1: OperatorFunction<HTMLElementEvent<T, ET>, OP1>, op2: OperatorFunction<OP1, OP2>, op: OperatorFunction<OP2, Record<K, R>>): InjectEvent<T, E, K, R>
 // export function event<T extends Node, E, ET extends string, K extends string, OP1, OP2, OP3, R>(eventType: ET, op1: OperatorFunction<HTMLElementEvent<T, ET>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op: OperatorFunction<OP3, Record<K, R>>): InjectEvent<T, E, K, R>
@@ -51,7 +51,7 @@ export function event<T extends Node, E, ET extends string, EV>(eventType: ET, o
 export function event<T extends Node, E, ET extends string, EV>(
   eventType: ET | Observable<EV> | ((node: T) => Observable<EV>),
   ...operators: OperatorFunction<any, any>[]
-): ComponentOperator<T, E, E | EV> {
+): ComponentOperatorOld<T, E, E | EV> {
   return undefined;
 }
 
@@ -124,7 +124,7 @@ type Test = Param<string | number>;
 
 type XUnionToIntersection = UnionToIntersection<XElementType>;
 
-type Union = HTMLElementEventMap | { x: string } | { y: number } | { y: boolean };
+type Union = { x: string } | { y: number } | { y: boolean };
 
 type Keys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
 

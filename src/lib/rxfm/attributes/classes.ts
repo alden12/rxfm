@@ -1,5 +1,5 @@
 import { Observable, of, combineLatest } from 'rxjs';
-import { ComponentOperator, Component } from '../components';
+import { ComponentOperatorOld, ComponentOld } from '../components';
 import { attributes } from './attributes';
 import { map, debounceTime } from 'rxjs/operators';
 
@@ -34,8 +34,8 @@ function classTypesToStringObservable(classTypes: ClassType[]): Observable<strin
  */
 export function classes<T extends HTMLElement, E>(
   ...classNames: ClassType[]
-): ComponentOperator<T, E> {
-  return (component: Component<T, E>) => component.pipe(
+): ComponentOperatorOld<T, E> {
+  return (component: ComponentOld<T, E>) => component.pipe(
     attributes({
       class: classTypesToStringObservable(classNames),
     }),

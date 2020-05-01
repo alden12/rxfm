@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { Component, ComponentOperator } from '../components';
+import { ComponentOld, ComponentOperatorOld } from '../components';
 import { switchMap, map, startWith } from 'rxjs/operators';
 import { distinctUntilKeysChanged } from '../utils';
 
@@ -10,8 +10,8 @@ import { distinctUntilKeysChanged } from '../utils';
  */
 export function styles<T extends HTMLElement, E>(
   stylesOrObservableStyles: Partial<CSSStyleDeclaration> | Observable<Partial<CSSStyleDeclaration>>
-): ComponentOperator<T, E> {
-  return (component: Component<T, E>) =>
+): ComponentOperatorOld<T, E> {
+  return (component: ComponentOld<T, E>) =>
     component.pipe(
       switchMap(({ node, events }) => {
         const stylesObservable = stylesOrObservableStyles instanceof Observable // Coerce to observable.

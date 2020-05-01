@@ -1,7 +1,7 @@
 import { Observable, combineLatest, OperatorFunction, of } from 'rxjs';
 import { map, shareReplay, filter, startWith, switchMap, debounceTime } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG } from './utils';
-import { Component, IComponent } from './components';
+import { ComponentOld, IComponent } from './components';
 
 /**
  * An observable operator to generate an array of RxFM components from an array of type T. The input is an observable
@@ -11,7 +11,7 @@ import { Component, IComponent } from './components';
  * regeneration of components when the array is updated.
  */
 export function generate<T, N extends Node, E = {}>(
-  creationFunction: (item: Observable<T>) => Component<N, E>,
+  creationFunction: (item: Observable<T>) => ComponentOld<N, E>,
   idFunction: (item: T) => string | number,
 ): OperatorFunction<T[], IComponent<N, E>[]> {
 
@@ -29,10 +29,10 @@ export function generate<T, N extends Node, E = {}>(
       shareReplay(SHARE_REPLAY_CONFIG)
     );
 
-    let previousElements = new Map<string | number, Component<N, E>>();
+    let previousElements = new Map<string | number, ComponentOld<N, E>>();
     return items$.pipe( // Create observable of components
       map(items => {
-        const elMap = new Map<string | number, Component<N, E>>( // Create a map of current components.
+        const elMap = new Map<string | number, ComponentOld<N, E>>( // Create a map of current components.
           items.map(item => {
             const id = idFunction(item);
             if (previousElements.has(id)) { // If component already exists, return component.

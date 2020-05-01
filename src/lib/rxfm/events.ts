@@ -1,4 +1,4 @@
-import { Component, IComponent, ComponentOperator } from './components';
+import { ComponentOld, IComponent, ComponentOperatorOld } from './components';
 import { merge, Observable, EMPTY, fromEvent, OperatorFunction } from 'rxjs';
 import { map, share, filter } from 'rxjs/operators';
 
@@ -9,7 +9,7 @@ import { map, share, filter } from 'rxjs/operators';
  * @typeParam K The string key of the outgoing event to inject.
  * @typeParam V The value type of the outgoing event to inject.
  */
-export type InjectEvent<T extends Node, E, K extends string, V> = ComponentOperator<T, E, {
+export type InjectEvent<T extends Node, E, K extends string, V> = ComponentOperatorOld<T, E, {
   [KE in keyof (E & Record<K, V>)]?:
     KE extends keyof E
       ? KE extends K ? E[KE] | V : E[KE]
@@ -55,7 +55,7 @@ export function event<T extends Node, E, ET extends string, K extends string, V>
   eventType: ET | Observable<Record<K, V>> | ((node: T) => Observable<Record<K, V>>),
   ...operators: OperatorFunction<any, any>[]
 ): InjectEvent<T, E, K, V> {
-  return (component: Component<T, E>) => component.pipe(
+  return (component: ComponentOld<T, E>) => component.pipe(
     map(({ node, events }) => ({
       node,
       events: merge<E>(
@@ -106,7 +106,7 @@ export type ExtractedEventComponent<T extends Node, E, EX> = Observable<IExtract
  * A type describing an component observable operator which extracts a single event from the incoming event stream.
  */
 export type ExtractedEvent<T extends Node, E, K extends keyof E> =
-  (component: Component<T, E>) => ExtractedEventComponent<T, { [EK in Exclude<keyof E, K>]?: E[EK] }, E[K]>
+  (component: ComponentOld<T, E>) => ExtractedEventComponent<T, { [EK in Exclude<keyof E, K>]?: E[EK] }, E[K]>
 
 /**
  * An observable operator to extract an event from the component event stream. Prevents the event from bubbling
@@ -117,7 +117,7 @@ export type ExtractedEvent<T extends Node, E, K extends keyof E> =
 export function extractEvent<T extends Node, E, K extends keyof E>(
   type: K,
 ): ExtractedEvent<T, E, K> {
-  return (component: Component<T, E>) => component.pipe(
+  return (component: ComponentOld<T, E>) => component.pipe(
     map(({ node, events }) => {
 
       const extractedEvents = events.pipe( // Create an observable emitting the extracted event.

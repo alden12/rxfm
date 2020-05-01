@@ -1,6 +1,6 @@
 import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
 import { map, switchMap, tap, startWith, mapTo, shareReplay } from 'rxjs/operators';
-import { Component, ComponentOperator } from './components';
+import { ComponentOld, ComponentOperatorOld } from './components';
 import { extractEvent } from './events';
 import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from './utils';
 
@@ -48,8 +48,8 @@ export function dispatch<T, S>(
  */
 export function store<T extends Node, S, E extends IAction<S>>(
   stateSubject: BehaviorSubject<S>,
-): ComponentOperator<T, E, { [EK in Exclude<keyof E, 'action'>]?: E[EK] }> {
-  return (component: Component<T, E>) => component.pipe(
+): ComponentOperatorOld<T, E, { [EK in Exclude<keyof E, 'action'>]?: E[EK] }> {
+  return (component: ComponentOld<T, E>) => component.pipe(
     extractEvent('action'), // Extract action events.
     // Execute the actions reducer and emit the new state.
     switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(

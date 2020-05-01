@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
-import { Component } from './components';
+import { ComponentOld } from './components';
 import { shareReplay, tap, switchMap, mapTo, startWith, map } from 'rxjs/operators';
 import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 import { extractEvent } from './events';
@@ -18,10 +18,10 @@ import { extractEvent } from './events';
  */
 export function stateLoop<T extends Node, S, E, K extends keyof E>(
   initialState: S,
-  creationFunction: (state: Observable<S>) => Component<T, E>,
+  creationFunction: (state: Observable<S>) => ComponentOld<T, E>,
   eventType: K,
   stateFunction: (event: E[K], currentState: Readonly<S>) => S,
-): Component<T, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
+): ComponentOld<T, { [EK in Exclude<keyof E, K>]?: E[EK] }> {
 
   const stateSubject = new BehaviorSubject<S>(initialState);
 
@@ -67,8 +67,8 @@ export function setState<T, A>(
  */
 export function stateful<T extends Node, S, E extends IStateAction<S>>(
   initialState: Partial<S> = {},
-  creationFunction: (state: Observable<Partial<S>>) => Component<T, E>,
-): Component<T, { [EK in Exclude<keyof E, 'state'>]?: E[EK] }> {
+  creationFunction: (state: Observable<Partial<S>>) => ComponentOld<T, E>,
+): ComponentOld<T, { [EK in Exclude<keyof E, 'state'>]?: E[EK] }> {
   return stateLoop(
     initialState,
     creationFunction,

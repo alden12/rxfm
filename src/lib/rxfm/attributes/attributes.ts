@@ -1,7 +1,7 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, switchMap, startWith, debounceTime } from 'rxjs/operators';
 import { attributeDiffer } from './attribute-differ';
-import { Component, ComponentOperator } from '../components';
+import { ComponentOld, ComponentOperatorOld } from '../components';
 import { distinctUntilKeysChanged } from '../utils';
 
 /**
@@ -85,8 +85,8 @@ export function updateElementAttributes<T extends HTMLElement>(
  */
 export function attributes<T extends HTMLElement, E>(
   attributesOrObservableAttrs: Attributes | Observable<Attributes>
-): ComponentOperator<T, E> {
-  return (component: Component<T, E>): Component<T, E> =>
+): ComponentOperatorOld<T, E> {
+  return (component: ComponentOld<T, E>): ComponentOld<T, E> =>
     component.pipe(
       switchMap(({ node, events }) => {
         const attributesObservable = attributesOrObservableAttrs instanceof Observable // Coerce to observable.
