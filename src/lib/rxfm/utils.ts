@@ -9,13 +9,6 @@ export type UnionGet<T extends Record<any, any>, K extends string> = T extends R
 
 export type UnionDelete<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
 
-// tslint:disable: max-line-length
-export type CustomEventTypes <T extends HTMLElement, E extends Record<any, any>> = T & {
-  addEventListener<K extends UnionKeys<E>>(type: K, listener: (this: HTMLElement, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
-  removeEventListener<K extends UnionKeys<E>>(type: K, listener: (this: HTMLElement, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
-};
-// tslint:enable: max-line-length
-
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.

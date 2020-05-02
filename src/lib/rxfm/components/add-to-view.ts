@@ -1,4 +1,4 @@
-import { Component } from './component';
+import { Component, ElementType } from './component';
 import { distinctUntilChanged } from 'rxjs/operators';
 
 /**
@@ -14,8 +14,8 @@ export type RemoveComponent = () => void;
  * @returns A function to remove the component from the view.
  */
 export function addToView<E = {}>(
-  component: Component<HTMLElement, E> | (() => Component<HTMLElement, E>),
-  host: HTMLElement,
+  component: Component<ElementType, E> | (() => Component<ElementType, E>),
+  host: ElementType,
 ): RemoveComponent {
   let oldNode: Node; // The node already in the view, if it exists.
   const subscription = (typeof component === 'function' ? component() : component).pipe(
@@ -42,7 +42,7 @@ export function addToView<E = {}>(
  * @returns A function to remove the component from the view.
  */
 export function addToBody<E = {}>(
-  component: Component<HTMLElement, E> | (() => Component<HTMLElement, E>),
+  component: Component<ElementType, E> | (() => Component<ElementType, E>),
 ): RemoveComponent {
   return addToView(component, document.body);
 }
