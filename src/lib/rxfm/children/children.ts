@@ -3,16 +3,16 @@ import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo,
 // import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
-import { ElementWithCustomEvents, ElementType, ComponentOperator, Component } from '../components';
+import { EventWrapper, ElementType, ComponentOperator, Component } from '../components';
 
 export type Null = null | undefined | false;
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
  */
-export type ChildComponent<T extends ElementType, E> =
+export type ChildComponent<T extends ElementType, E = never> =
   string | number | Null |
-  Observable<string | number | Null | ElementWithCustomEvents<T, E> | ElementWithCustomEvents<T, E>[]>;
+  Observable<string | number | Null | EventWrapper<T, E> | EventWrapper<T, E>[]>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
 
@@ -74,8 +74,10 @@ function updateElementChildren<T extends ElementType>(
 type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
 
 export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayType<{
-  [P in keyof T]: T[P] extends ChildComponent<ElementType, infer E> ? E : never;
+  [P in keyof T]: T[P] extends ChildComponent<ElementType, infer E> ? E extends unknown ? never : E : never;
 }>;
+
+type StringChildTest = ChildEvents<string[]>;
 
 export function children<T extends HTMLElement, E, C extends ChildComponent<ElementType, any>[]>(
   ...childComponents: C

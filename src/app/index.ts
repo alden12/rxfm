@@ -3,15 +3,23 @@
 // import { of, Observable, EMPTY, OperatorFunction } from 'rxjs';
 // import { map } from 'rxjs/operators';
 
-import { div, children, addToBody, event } from 'rxfm';
+import { div, children, addToBody, event, EmitEvent } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
+import { interval } from 'rxjs';
 
 const app = div().pipe(
   children('test'),
-  // event('click', tap(ev =>console.log(ev))),
+  event('click', map(ev => new EmitEvent('test', 1))),
 );
 
-addToBody(app);
+// app.subscribe(el => {
+//   document.body.appendChild(el);
+//   document.body.addEventListener('test', console.log);
+// });
+
+addToBody(app.pipe(
+  event('test', tap(console.log)),
+));
 
 // addToBody(app);
 
@@ -44,7 +52,7 @@ addToBody(app);
 
 // const div = () => component('div');
 
-// // tslint:disable: max-line-length
+// tslint:disable: max-line-length
 // export function event<T extends Node, E, EV>(event: Observable<EV> | ((node: T) => Observable<EV>)): ComponentOperatorOld<T, E, E | EV>
 // export function event<T extends Node, E, ET extends string>(eventType: ET): ComponentOperatorOld<T, E, E | HTMLElementEvent<T, ET>>
 // export function event<T extends Node, E, ET extends string, EV>(eventType: ET, op: OperatorFunction<HTMLElementEvent<T, ET>, EV>): ComponentOperatorOld<T, E, E | EV>
