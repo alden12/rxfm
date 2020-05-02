@@ -1,7 +1,7 @@
-import { ComponentOperator, ElementType } from './components';
-import { merge, Observable, EMPTY, fromEvent, OperatorFunction } from 'rxjs';
-import { map, share, filter } from 'rxjs/operators';
-import { UnionDelete, UnionKeys } from './utils';
+import { Component, ComponentOperator, ElementType } from './components';
+import { Observable, OperatorFunction, fromEvent, EMPTY } from 'rxjs';
+import { UnionDelete } from './utils';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 
 export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
 
@@ -28,19 +28,31 @@ export function event<T extends ElementType, E, ET extends string, K extends key
 export function event<T extends ElementType, E, ET extends string, K extends keyof ElementEventMap, OP1, OP2, OP3, OP4, OP5, R>(eventType: ET, op1: OperatorFunction<ElementEventMap[K], OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, ET, R>
 export function event<T extends ElementType, E, ET extends string, K extends keyof ElementEventMap, OP1, OP2, OP3, OP4, OP5, OP6, R>(eventType: ET, op1: OperatorFunction<ElementEventMap[K], OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, op6: OperatorFunction<OP5, OP6>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, ET, R>
 export function event<T extends ElementType, E, ET extends string, K extends keyof ElementEventMap, OP1, OP2, OP3, OP4, OP5, OP6, OP7, R>(eventType: ET, op1: OperatorFunction<ElementEventMap[K], OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, op6: OperatorFunction<OP5, OP6>, op7: OperatorFunction<OP6, OP7>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, ET, R>
-// tslint:enable: max-line-length
-
-// tslint:disable-next-line: max-line-length
 export function event<T extends HTMLElement, E, ET extends string = never, EV = never, A extends Record<string, any> = never>(
   eventType: ET | Observable<EV> | ((node: T) => Observable<EV>),
-  // eventType: ET,
   ...operators: OperatorFunction<any, any>[]
 ): ComponentOperator<T, E, UnionDelete<E, ET> | A> {
-  // Stop propagation if EmitEvent object.
-  return undefined;
-  // If EmitEvent is emitted, dispatch.
-  // Map to node.
+  return (component: Component<T, E>) => component.pipe(
+    switchMap(node => {
+      const eventObservable =
+        eventType instanceof Observable ? eventType :
+        typeof eventType === 'function' ? eventType(node) :
+        typeof eventType === 'string' ? operators.reduce(
+          (obs, opr) => obs.pipe(opr),
+          fromEvent(node, eventType).pipe(
+            tap(ev => ev instanceof EmitEvent && ev.stopPropagation()),
+          )
+        ) :
+        EMPTY;
+
+      return eventObservable.pipe(
+        tap(ev => ev instanceof EmitEvent && node.dispatchEvent(ev)),
+        mapTo(node),
+      );
+    }),
+  );
 }
+// tslint:enable: max-line-length
 
 // /**
 //  * A type to inject an event into the component stream. Injected as a single key object { [key: K]: V }.

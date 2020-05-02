@@ -5,13 +5,14 @@ import { UnionKeys, UnionValue } from '../utils';
 export type ElementType = HTMLElement | SVGElement;
 
 // tslint:disable: max-line-length
-export type CustomEventTypes <T extends ElementType, E extends Record<any, any>> = T & {
+export type ElementWithCustomEvents <T extends ElementType, E extends Record<any, any>> = T & {
   addEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
 };
 // tslint:enable: max-line-length
 
-export type Component<T extends ElementType, E extends Record<any, any> = never> = Observable<CustomEventTypes<T, E>>;
+export type Component<T extends ElementType, E extends Record<any, any> = never> =
+  Observable<ElementWithCustomEvents<T, E>>;
 
 export type ComponentOperator<T extends ElementType, E = never, O = E> = (component: Component<T, E>) => Component<T, O>
 
