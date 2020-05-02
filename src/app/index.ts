@@ -3,13 +3,66 @@
 // import { of, Observable, EMPTY, OperatorFunction } from 'rxjs';
 // import { map } from 'rxjs/operators';
 
-import { div, children, addToBody, event, EmitEvent } from 'rxfm';
+// tslint:disable-next-line: max-line-length
+import { div, children, addToBody, event, EmitEvent, ChildComponent, ElementType, ComponentOperator, EventWrapper } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
-import { interval } from 'rxjs';
+import { interval, Observable } from 'rxjs';
+
+// export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
+
+// // export type ChildEvent<T extends ChildComponent<ElementType, any>> =
+// //   T extends ChildComponent<infer _, infer E> ? E : false;
+
+// export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayType<{
+//   [P in keyof T]: T[P] extends ChildComponent<infer _, infer E> ? E : never;
+// }>;
+
+// export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
+
+// export type ComponentLike<T extends ElementType, E> = Observable<EventWrapper<T, E> | EventWrapper<T, E>[]>;
+
+// type ChildEvent<T extends ChildComponent<ElementType, any>> = T extends ComponentLike<infer _, infer E> ? E : never;
+
+// export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayType<{
+//   [P in keyof T]: T[P] extends ComponentLike<infer _, infer E> ? E : never;
+// }>;
+
+// const test = div().pipe(
+//   // children('another div'),
+//   event('click', map(ev => new EmitEvent('foo', 'bar')))
+// );
+// // type Test = ArrayType<[typeof test]>
+// type Test2 = ChildEvent<typeof test>;
+// type Test3 = ChildEvents<[typeof test]>
+
+// export function children2<E, C extends ChildComponent<ElementType, any>[]>(
+//   ...childComponents: C
+// ): ComponentOperator<HTMLDivElement, E, E | ChildEvents<C>> {
+//   return undefined;
+// }
+
+// const childrenTest = children2<never, [typeof test]>(test)
+
+// type Tuple = [number, string, boolean, unknown];
+
+// type NoUnknown<T> = {
+//   [P in keyof T]: T[P] extends unknown ? never : T[P];
+// }
+
+// type ArrType<T extends any[]> = T extends (infer A)[] ? A : never;
+
+// type Element = NoUnknown<Tuple>
 
 const app = div().pipe(
-  children('test'),
+  children(
+    'test',
+    div().pipe(
+      children('another div'),
+      event('click', map(ev => new EmitEvent('foo', 'bar')))
+    ),
+  ),
   event('click', map(ev => new EmitEvent('test', 1))),
+  event('foo', tap(console.log)),
 );
 
 // app.subscribe(el => {

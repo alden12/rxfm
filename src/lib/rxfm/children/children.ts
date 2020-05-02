@@ -5,14 +5,19 @@ import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
 import { EventWrapper, ElementType, ComponentOperator, Component } from '../components';
 
-export type Null = null | undefined | false;
+export type NullLike = null | undefined | false;
+export type StringLike = string | number;
+export type ComponentLike<T extends ElementType, E> = EventWrapper<T, E> | EventWrapper<T, E>[];
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
  */
-export type ChildComponent<T extends ElementType, E = never> =
-  string | number | Null |
-  Observable<string | number | Null | EventWrapper<T, E> | EventWrapper<T, E>[]>;
+// export type ChildComponent<T extends ElementType, E> =
+//   string | number | NullLike |
+//   Observable<string | number | NullLike | EventWrapper<T, E> | EventWrapper<T, E>[]>;
+
+export type ChildComponent<T extends ElementType, E> =
+  StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
 
@@ -29,7 +34,7 @@ function coerceChildComponent<E>(
     return childComponent.pipe(
       startWith(null),
       map(child => {
-        if (typeof child === "string" || typeof child === 'number') {
+        if (typeof child === 'string' || typeof child === 'number') {
           node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
           node.nodeValue = typeof child !== 'string' ? child.toString() : child; // Update text node value.
           return [node]; // Return component in an array.
@@ -71,15 +76,18 @@ function updateElementChildren<T extends ElementType>(
   return el;
 }
 
-type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
+export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
+
+// export type ChildEvent<T extends ChildComponent<ElementType, any>> =
+//   T extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 
 export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayType<{
-  [P in keyof T]: T[P] extends ChildComponent<ElementType, infer E> ? E extends unknown ? never : E : never;
+  [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 }>;
 
-type StringChildTest = ChildEvents<string[]>;
+// type StringChildTest = ChildEvents<string[]>;
 
-export function children<T extends HTMLElement, E, C extends ChildComponent<ElementType, any>[]>(
+export function children<T extends ElementType, E, C extends ChildComponent<ElementType, any>[]>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
   return (component: Component<T, E>) => component.pipe(
