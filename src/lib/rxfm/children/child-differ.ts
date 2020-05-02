@@ -62,7 +62,7 @@ export function childDiffer(
     const reordered = new Set( // Create a set of all common nodes which have changed order.
       remainingNewOrder.filter((node, i) => {
         const oldNext = oldNodeAndNext.get(node); // Get the node which used to follow this one in the old order.
-        const newIndexOfNext = newElementsAndIndex.get(oldNext) || Infinity; // Find the new index of that node.
+        const newIndexOfNext = (oldNext && newElementsAndIndex.get(oldNext)) || Infinity; // Find the new index of that node.
         return newIndexOfNext < i; // Node is reordered if the old next element now comes before this element.
       })
     );
@@ -73,7 +73,7 @@ export function childDiffer(
   }
 
   // Create an array of node updates (an update is a node and the node to insert it before if applicable).
-  let insertBefore: Node;
+  let insertBefore: Node | undefined;
   const updated: INodeUpdate[] = [];
   for (let i = newChildren.length - 1; i >= 0; i--) { // Loop through the new nodes in reverse order
     const node = newChildren[i];

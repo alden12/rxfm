@@ -2,7 +2,7 @@
   "extends": "tslint:recommended",
   "rules": {
     "max-line-length": {
-      "options": [120]
+      "options": [130]
     },
     "no-console": false,
     "max-classes-per-file": false
