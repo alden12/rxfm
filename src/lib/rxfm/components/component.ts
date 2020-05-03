@@ -1,17 +1,18 @@
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { UnionKeys, UnionValue } from '../utils';
+import { EventKeys, EventValue } from '../utils';
+// import { UnionKeys, UnionValue } from '../utils';
 
 export type ElementType = HTMLElement | SVGElement;
 
 // tslint:disable: max-line-length
-export type EventsFor <T extends ElementType, E extends Record<any, any>> = T & {
-  addEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
-  removeEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
+export type EventsFor <T extends ElementType, E extends [string, any]> = T & {
+  addEventListener<K extends EventKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<EventValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener<K extends EventKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<EventValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
 };
 // tslint:enable: max-line-length
 
-export type Component<T extends ElementType, E extends Record<any, any> = never> =
+export type Component<T extends ElementType, E extends [string, any] = never> =
   Observable<T | EventsFor<T, E>>;
   // Observable<T> | Observable<EventsFor<T, E>>;
   // E extends never ? Observable<T> : Observable<EventsFor<T, E>>;
@@ -21,7 +22,7 @@ export type Component<T extends ElementType, E extends Record<any, any> = never>
 //   T extends Component<infer CT, infer E> ? Observable<EventsFor<CT, E>> : never;
 
 // export type ComponentOperator<T extends ElementType, E = never, O = E> = (component: Component<T, E>) => Component<T, O>
-export type ComponentOperator<T extends ElementType, E = never, O = E> =
+export type ComponentOperator<T extends ElementType, E extends [string, any] = never, O extends [string, any] = E> =
   (component: Component<T, E>) => Observable<EventsFor<T, O>>;
 // export type ComponentOperator<T extends ElementType, E = never, O = E> =
 //   O extends never ? (component: Component<T, E>) => Observable<T> : (component: Component<T, E>) => Component<T, O>;
