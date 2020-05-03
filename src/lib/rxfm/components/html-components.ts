@@ -133,6 +133,7 @@ export const h6 = HTML.h6;
 export const hr = HTML.hr;
 export const img = HTML.img;
 export const p = HTML.p;
+// TODO: Add more default elements eg. table.
 
 // /** Create a component of type html 'a' element. */
 // export const a = () => componentOld('a');

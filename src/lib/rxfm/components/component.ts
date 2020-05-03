@@ -5,20 +5,36 @@ import { UnionKeys, UnionValue } from '../utils';
 export type ElementType = HTMLElement | SVGElement;
 
 // tslint:disable: max-line-length
-export type EventWrapper <T extends ElementType, E extends Record<any, any>> = T & {
+export type EventsFor <T extends ElementType, E extends Record<any, any>> = T & {
   addEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
 };
 // tslint:enable: max-line-length
 
 export type Component<T extends ElementType, E extends Record<any, any> = never> =
-  Observable<EventWrapper<T, E>>;
+  Observable<T | EventsFor<T, E>>;
+  // Observable<T> | Observable<EventsFor<T, E>>;
+  // E extends never ? Observable<T> : Observable<EventsFor<T, E>>;
+  // Observable<E extends never ? T : EventsFor<T, E>>;
 
-export type ComponentOperator<T extends ElementType, E = never, O = E> = (component: Component<T, E>) => Component<T, O>
+// export type ComponentType<T extends Component<ElementType, Record<any, any> | never>> =
+//   T extends Component<infer CT, infer E> ? Observable<EventsFor<CT, E>> : never;
+
+// export type ComponentOperator<T extends ElementType, E = never, O = E> = (component: Component<T, E>) => Component<T, O>
+export type ComponentOperator<T extends ElementType, E = never, O = E> =
+  (component: Component<T, E>) => Observable<EventsFor<T, O>>;
+// export type ComponentOperator<T extends ElementType, E = never, O = E> =
+//   O extends never ? (component: Component<T, E>) => Observable<T> : (component: Component<T, E>) => Component<T, O>;
+  // E extends never ?
+  //   O extends never ?
+  //     (component: Observable<T>) => Observable<T> :
+  //       (component: Observable<T>) => ComponentType<Component<T, O>> :
+  //         (component: ComponentType<Component<T, E>>) => ComponentType<Component<T, O>>
+;
 
 export function component<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): Component<HTMLElementTagNameMap[K]> {
+): Observable<HTMLElementTagNameMap[K]> {
   return of(tagName).pipe(
     map(name => document.createElement(name)),
   );
@@ -28,7 +44,7 @@ export const SVGNamespace = 'http://www.w3.org/2000/svg';
 
 export function SVGComponent<K extends keyof SVGElementTagNameMap>(
   tagName: K,
-): Component<SVGElementTagNameMap[K]> {
+): Observable<SVGElementTagNameMap[K]> {
   return of(tagName).pipe(
     map(name => document.createElementNS(SVGNamespace, name)),
   );

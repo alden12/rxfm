@@ -3,11 +3,11 @@ import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo,
 // import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
-import { EventWrapper, ElementType, ComponentOperator, Component } from '../components';
+import { EventsFor, ElementType, ComponentOperator, Component } from '../components';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
-export type ComponentLike<T extends ElementType, E> = EventWrapper<T, E> | EventWrapper<T, E>[];
+export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
@@ -34,7 +34,7 @@ function coerceChildComponent<E>(
     return childComponent.pipe(
       startWith(null),
       map(child => {
-        if (typeof child === 'string' || typeof child === 'number') {
+        if (typeof child === 'string' || typeof child === 'number') { // TODO: Do this whenever unrecognized type? Safer
           node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
           node.nodeValue = typeof child !== 'string' ? child.toString() : child; // Update text node value.
           return [node]; // Return component in an array.
@@ -45,7 +45,7 @@ function coerceChildComponent<E>(
       }),
     );
   } else if (typeof childComponent === 'string' || typeof childComponent === 'number') {
-     // If child is string-like, coerce to a string.
+    // If child is string-like, coerce to a string.
     const content = typeof childComponent !== 'string' ? childComponent.toString() : childComponent;
     const node = document.createTextNode(content); // Create text node with string value.
     return of([node]); // Return component in an array.
@@ -87,7 +87,7 @@ export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayTyp
 
 // type StringChildTest = ChildEvents<string[]>;
 
-export function children<T extends ElementType, E, C extends ChildComponent<ElementType, any>[]>(
+export function children<T extends ElementType, C extends ChildComponent<ElementType, any>[], E = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
   return (component: Component<T, E>) => component.pipe(

@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, EmitEvent, ChildComponent, ElementType, ComponentOperator, EventWrapper } from 'rxfm';
+import { div, children, addToBody, event, EmitEvent, ChildComponent, ElementType, ComponentOperator, EventsFor } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable } from 'rxjs';
 
@@ -62,7 +62,7 @@ const app = div().pipe(
     ),
   ),
   event('click', map(ev => new EmitEvent('test', 1))),
-  event('foo', tap(console.log)),
+  // event('foo', tap(console.log)),
 );
 
 // app.subscribe(el => {
