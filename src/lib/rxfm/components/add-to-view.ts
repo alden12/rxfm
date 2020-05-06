@@ -13,7 +13,7 @@ export type RemoveComponent = () => void;
  * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
-export function addToView<E extends [string, any] = never>(
+export function addToView<E = {}>(
   component: Component<ElementType, E> | (() => Component<ElementType, E>),
   host: ElementType,
 ): RemoveComponent {
@@ -41,7 +41,7 @@ export function addToView<E extends [string, any] = never>(
  * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
-export function addToBody<E extends [string, any] = never>(
+export function addToBody<E = {}>(
   component: Component<ElementType, E> | (() => Component<ElementType, E>),
 ): RemoveComponent {
   return addToView(component, document.body);

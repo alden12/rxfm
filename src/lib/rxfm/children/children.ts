@@ -7,7 +7,7 @@ import { EventsFor, ElementType, ComponentOperator, Component } from '../compone
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
-export type ComponentLike<T extends ElementType, E extends [string, any]> = EventsFor<T, E> | EventsFor<T, E>[];
+export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
@@ -16,7 +16,7 @@ export type ComponentLike<T extends ElementType, E extends [string, any]> = Even
 //   string | number | NullLike |
 //   Observable<string | number | NullLike | EventWrapper<T, E> | EventWrapper<T, E>[]>;
 
-export type ChildComponent<T extends ElementType, E extends [string, any]> =
+export type ChildComponent<T extends ElementType, E> =
   StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
@@ -26,7 +26,7 @@ export type CoercedChildComponent = (ElementType | Text)[];
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
-function coerceChildComponent<E extends [string, any]>(
+function coerceChildComponent<E>(
   childComponent: ChildComponent<ElementType, E>,
 ): Observable<CoercedChildComponent | null> {
   if (childComponent instanceof Observable) { // If observable.
@@ -76,7 +76,7 @@ function updateElementChildren<T extends ElementType>(
   return el;
 }
 
-export type ArrayType<T extends any[]> = T extends (infer A)[] ? A extends [string, any] ? A : never : never;
+export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
 
 // export type ChildEvent<T extends ChildComponent<ElementType, any>> =
 //   T extends Observable<ComponentLike<infer _, infer E>> ? E : never;
@@ -87,7 +87,7 @@ export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayTyp
 
 // type StringChildTest = ChildEvents<string[]>;
 
-export function children<T extends ElementType, C extends ChildComponent<ElementType, any>[], E extends [string, any] = never>(
+export function children<T extends ElementType, C extends ChildComponent<ElementType, any>[], E = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
   return (component: Component<T, E>) => component.pipe(
