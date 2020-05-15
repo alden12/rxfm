@@ -15,7 +15,7 @@ export type RemoveComponent = () => void;
  * @returns A function to remove the component from the view.
  */
 export function addToView(
-  component: ComponentObservable<ElementType>,
+  component: ComponentObservable<ElementType, any>,
   host: ElementType,
 ): RemoveComponent {
   let oldNode: Node; // The node already in the view, if it exists.
@@ -43,7 +43,7 @@ export function addToView(
  * @returns A function to remove the component from the view.
  */
 export function addToBody(
-  component: ComponentObservable<ElementType>,
+  component: ComponentObservable<ElementType, any>,
 ): RemoveComponent {
   return addToView(component, document.body);
 }

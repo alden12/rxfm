@@ -1,6 +1,6 @@
 import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
 import { map, tap, filter, startWith, mapTo, distinctUntilChanged } from 'rxjs/operators';
-import { UnionKeys, UnionValue, UnionDelete } from '../utils';
+import { EventKeys, EventValue, EventDelete } from '../utils';
 import { Events, EmitEvent, ElementEventMap } from '../events';
 
 export type ElementType = HTMLElement | SVGElement;
@@ -8,8 +8,8 @@ export type ElementType = HTMLElement | SVGElement;
 // Deprecated
 // tslint:disable: max-line-length
 export type EventsFor <T extends Element, E extends Record<any, any>> = T & {
-  addEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
-  removeEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
+  addEventListener<K extends EventKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<EventValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
+  removeEventListener<K extends EventKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<EventValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
 };
 // tslint:enable: max-line-length
 
@@ -32,7 +32,7 @@ export class Component<T extends ElementType, E extends Record<string, any> = ne
     return this;
   }
 
-  public capture<K extends UnionKeys<E>>(type: K): ICapture<T, UnionDelete<E, K>, CustomEvent<UnionValue<E, K>>>
+  public capture<K extends EventKeys<E>>(type: K): ICapture<T, EventDelete<E, K>, CustomEvent<EventValue<E, K>>>
   public capture<K extends keyof ElementEventMap>(type: K): ICapture<T, E, ElementEventMap[K]>
   public capture<K extends string>(type: K): ICapture<T, E, Event>
   public capture<K extends string>(type: K): ICapture<T, any, any> {

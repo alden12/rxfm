@@ -1,13 +1,13 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
 import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
 
-export type UnionKeys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
+export type EventKeys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
 
-export type UnionValue<T extends Record<any, any>, K extends UnionKeys<T>> = T extends Record<K, infer V> ? V : never;
+export type EventValue<T extends Record<any, any>, K extends EventKeys<T>> = T extends Record<K, infer V> ? V : never;
 
-export type UnionGet<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? Record<K, T[K]> : never;
+export type EventGet<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? Record<K, T[K]> : never;
 
-export type UnionDelete<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
+export type EventDelete<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
 
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there

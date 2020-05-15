@@ -1,6 +1,6 @@
-import { ComponentOld, ComponentOperatorOld, ElementType } from './components';
+import { ComponentOld, Component, ElementType, ComponentOperator, ComponentObservable, ICapture } from './components';
 import { Observable, OperatorFunction, fromEvent, EMPTY } from 'rxjs';
-import { UnionDelete, UnionKeys, UnionValue } from './utils';
+import { EventDelete, EventKeys, EventValue } from './utils';
 import { switchMap, tap, mapTo, startWith, distinctUntilChanged, map } from 'rxjs/operators';
 
 export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
@@ -12,7 +12,7 @@ export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
 // }
 
 export type Events<E extends Record<string, any>, K extends string> =
-  K extends UnionKeys<E> ? CustomEvent<UnionValue<E, K>> : K extends keyof ElementEventMap ? ElementEventMap[K] : Event;
+  K extends EventKeys<E> ? CustomEvent<EventValue<E, K>> : K extends keyof ElementEventMap ? ElementEventMap[K] : Event;
 
 export class EmitEvent<K extends string, V> {
   constructor(
@@ -32,15 +32,15 @@ const RXFM_INTERNAL_EVENT = '__rxfmInternal__';
 
 export type InjectEvent<T extends ElementType, E, ET extends string, EV> =
   EV extends EmitEvent<infer K, infer V> ?
-    ComponentOperatorOld<T, E, UnionDelete<E, ET> | Record<K, V>> :
-    ComponentOperatorOld<T, E, UnionDelete<E, ET>>
+    ComponentOperator<T, E, EventDelete<E, ET> | Record<K, V>> :
+    ComponentOperator<T, E, EventDelete<E, ET>>
 ;
 
 // type InjectTest = InjectEvent<HTMLDivElement, Record<'a', string>, 'a', EmitEvent<'b', number>>;
 
 // tslint:disable: max-line-length
-export function event<T extends ElementType, ET, E = never>(event: Observable<ET> | ((node: T) => Observable<ET>)): ET extends EmitEvent<infer K, infer V> ? ComponentOperatorOld<T, E | Record<K, V>> : ComponentOperatorOld<T, E>
-export function event<T extends ElementType, E = never>(eventType: string): ComponentOperatorOld<T, E>
+export function event<T extends ElementType, ET, E = never>(event: Observable<ET> | ((node: T) => Observable<ET>)): ET extends EmitEvent<infer K, infer V> ? ComponentOperator<T, E | Record<K, V>> : ComponentOperator<T, E>
+export function event<T extends ElementType, E = never>(eventType: string): ComponentOperator<T, E>
 export function event<T extends ElementType, K extends string, R, E = never>(eventType: K, op: OperatorFunction<Events<E, K>, R>): InjectEvent<T, E, K, R>
 export function event<T extends ElementType, K extends string, OP1, R, E = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, opN: OperatorFunction<OP1, R>): InjectEvent<T, E, K, R>
 export function event<T extends ElementType, K extends string, OP1, OP2, R, E = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
@@ -53,41 +53,60 @@ export function event<T extends HTMLElement, E = never, ET extends string = neve
   // tslint:enable: max-line-length
   eventType: ET | Observable<EV> | ((node: T) => Observable<EV>),
   ...operators: OperatorFunction<any, any>[]
-): ComponentOperatorOld<T, E, UnionDelete<E, ET> | A> {
-  return (component: ComponentOld<T, E>) => component.pipe(
-    switchMap(node => {
+): ComponentOperator<T, E, EventDelete<E, ET> | A> {
 
-      const eventObservable =
-        eventType instanceof Observable ? eventType :
-        typeof eventType === 'function' ? eventType(node) :
-        typeof eventType === 'string' ? operators.reduce(
-          (obs, opr) => obs.pipe(opr),
-          fromEvent(node, eventType).pipe(
-            map(ev => {
-              if (ev instanceof CustomEvent && ev.detail[RXFM_INTERNAL_EVENT] === true) {
-                ev.stopPropagation();
-                return ev.detail['value'];
-              }
-              return ev;
-            }),
-          )
-        ) :
-        EMPTY;
+  return (component$: ComponentObservable<T, E>) => component$.pipe(
+    switchMap(component => {
+      // const event = eventType instanceof Observable ? eventType :
+      //   typeof eventType === 'function' ? eventType(component.element) :
+      //   typeof eventType === 'string' ? operators.reduce(
+      //     (obs, opr) => obs.pipe(opr),
+      //   );
+      const capture: ICapture<T, any, any> = typeof eventType === 'string' ? component.capture(eventType) : {
+        component,
+        event: eventType instanceof Observable ? eventType :
+          typeof eventType === 'function' ? eventType(component.element) :
+          EMPTY,
+      };
 
-      return eventObservable.pipe(
-        tap(ev => ev instanceof EmitEvent && node.dispatchEvent(
-          new CustomEvent(ev.type, {
-            detail: { value: ev.value, [RXFM_INTERNAL_EVENT]: true },
-            bubbles: true,
-          }),
-        )),
-        startWith(node),
-        mapTo(node),
-      );
-
-    }),
-    distinctUntilChanged(),
+      return component.inject(capture, ev => operators.reduce((obs, opr) => obs.pipe(opr), ev));
+    })
   );
+
+  // const resOld = (component: ComponentOld<T, E>) => component.pipe(
+  //   switchMap(node => {
+
+  //     const eventObservable =
+  //       eventType instanceof Observable ? eventType :
+  //       typeof eventType === 'function' ? eventType(node) :
+  //       typeof eventType === 'string' ? operators.reduce(
+  //         (obs, opr) => obs.pipe(opr),
+  //         fromEvent(node, eventType).pipe(
+  //           map(ev => {
+  //             if (ev instanceof CustomEvent && ev.detail[RXFM_INTERNAL_EVENT] === true) {
+  //               ev.stopPropagation();
+  //               return ev.detail['value'];
+  //             }
+  //             return ev;
+  //           }),
+  //         )
+  //       ) :
+  //       EMPTY;
+
+  //     return eventObservable.pipe(
+  //       tap(ev => ev instanceof EmitEvent && node.dispatchEvent(
+  //         new CustomEvent(ev.type, {
+  //           detail: { value: ev.value, [RXFM_INTERNAL_EVENT]: true },
+  //           bubbles: true,
+  //         }),
+  //       )),
+  //       startWith(node),
+  //       mapTo(node),
+  //     );
+
+  //   }),
+  //   distinctUntilChanged(),
+  // );
 }
 
 // /**

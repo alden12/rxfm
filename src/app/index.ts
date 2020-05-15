@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, EmitEvent, ChildComponent, ElementType, ComponentOperatorOld, EventsFor, select, stateful, setState, SetState, UnionDelete } from 'rxfm';
+import { div, children, addToBody, event, ElementType, EventsFor, EventDelete, EmitEvent } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY } from 'rxjs';
 
@@ -58,58 +58,71 @@ import { interval, Observable, EMPTY } from 'rxjs';
 //   creationFunction: (state: Observable<Partial<S>>) => Observable<EventsFor<T, E>>,
 // ): Observable<EventsFor<T, UnionDelete<E, SetState>>> {
 
-class RecordComponent<T extends keyof HTMLElementTagNameMap, E extends Record<string, any>> {
-comp: T; evs: E };
+// class RecordComponent<T extends keyof HTMLElementTagNameMap, E extends Record<string, any>> {
+// comp: T; evs: E };
 
-export function stated_<S, E extends Record<SetState, Partial<S>>>(
-  initialState: S,
-  creationFunction: (state: Partial<S>) => RecordComponent<'div', E>,
-): Observable<E> {
-  return EMPTY;
-}
+// export function stated_<S, E extends Record<SetState, Partial<S>>>(
+//   initialState: S,
+//   creationFunction: (state: Partial<S>) => RecordComponent<'div', E>,
+// ): Observable<E> {
+//   return EMPTY;
+// }
 
-export function stated__<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
-  initialState: S,
-  creationFunction: (state: Partial<S>) => EventsFor<T, E>,
-): Observable<EventsFor<T, UnionDelete<E, SetState>>> {
-  return EMPTY;
-}
+// export function stated__<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
+//   initialState: S,
+//   creationFunction: (state: Partial<S>) => EventsFor<T, E>,
+// ): Observable<EventsFor<T, EventDelete<E, SetState>>> {
+//   return EMPTY;
+// }
 
-const test = stated__({ test: true }, state => document.createElement('div') as EventsFor<HTMLDivElement, { test: number }>);
+// const test = stated__({ test: true }, state => document.createElement('div') as EventsFor<HTMLDivElement, { test: number }>);
 
 // export interface PostExtension<T extends HTMLElement> extends T {
 //   events: Set<string>;
 // }
 
-interface IState { enabled: string }
+// interface IState { enabled: string }
 
-const statedStateless = (state: Observable<IState>) => div().pipe(
-  children(state.pipe(select('enabled'))),
-  event('click', setState(ev => ({ enabled: 1 })))
-);
+// const statedStateless = (state: Observable<IState>) => div().pipe(
+//   children(state.pipe(select('enabled'))),
+//   event('click', setState(ev => ({ enabled: 1 })))
+// );
 
-const stated = stateful({ enabled: 'a test string'}, statedStateless);
+// const stated = stateful({ enabled: 'a test string'}, statedStateless);
 
-const app = div().pipe(
-  children(
-    'test',
-    div().pipe(
-      children('another div'),
-      event('click', map(ev => new EmitEvent('foo', 'bar')))
-    ),
-  ),
-  event('click', map(ev => new EmitEvent('test', 1))),
-  // event('foo', tap(console.log)),
-);
+// const app = div().pipe(
+//   children(
+//     'test',
+//     div().pipe(
+//       children('another div'),
+//       event('click', map(ev => new EmitEvent('foo', 'bar')))
+//     ),
+//   ),
+//   event('click', map(ev => new EmitEvent('test', 1))),
+//   // event('foo', tap(console.log)),
+// );
 
 // app.subscribe(el => {
 //   document.body.appendChild(el);
 //   document.body.addEventListener('test', console.log);
 // });
 
-addToBody(app.pipe(
-  event('test', tap(console.log)),
-));
+// addToBody(app.pipe(
+//   event('test', tap(console.log)),
+// ));
+
+const test = div().pipe(
+  children('new component test'),
+  event('contextmenu', map(ev => { console.log(ev); return ev; })),
+  event('click', map(ev => new EmitEvent('test', ev.timeStamp))),
+);
+
+const app = div().pipe(
+  children(test),
+  event('test', map(ev => console.log(ev))),
+);
+
+addToBody(app);
 
 // addToBody(app);
 

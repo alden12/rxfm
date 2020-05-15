@@ -6,37 +6,39 @@
 
 import { ComponentOld, ElementType, EventsFor } from './components';
 import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
-import { UnionDelete } from './utils';
+import { EventDelete } from './utils';
 import { event, EmitEvent } from './events';
 import { tap, map } from 'rxjs/operators';
 
-export const SET_STATE = 'rxfmSetState' as const;
-export type SetState = typeof SET_STATE;
+// export const SET_STATE = 'rxfmSetState' as const;
+// export type SetState = typeof SET_STATE;
 
-export function stateful<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
-    initialState: S,
-    creationFunction: (state: Observable<Partial<S>>) => Observable<EventsFor<T, E>>,
-): Observable<EventsFor<T, UnionDelete<E, SetState>>> {
+// export function stateful<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
+//     initialState: S,
+//     creationFunction: (state: Observable<Partial<S>>) => Observable<EventsFor<T, E>>,
+// ): Observable<EventsFor<T, EventDelete<E, SetState>>> {
 
-  const stateSubject = new BehaviorSubject<Partial<S>>(initialState);
+//   const stateSubject = new BehaviorSubject<Partial<S>>(initialState);
 
-  const component = creationFunction(stateSubject.asObservable());
+//   const component = creationFunction(stateSubject.asObservable());
 
-  return component.pipe(
-    event(
-      SET_STATE,
-      tap(newState => stateSubject.next({ ...stateSubject.value, ...(newState as Partial<S>) })),
-    )
-  );
-}
+//   return component.pipe(
+//     event(
+//       SET_STATE,
+//       tap(newState => stateSubject.next({ ...stateSubject.value, ...(newState as Partial<S>) })),
+//     )
+//   );
+// }
 
-export function setState<T, S>(
-  mappingFunction: (event: T) => S,
-): OperatorFunction<T, EmitEvent<SetState, S>> {
-  return (event$: Observable<T>) => event$.pipe(
-    map(ev => new EmitEvent(SET_STATE, mappingFunction(ev))),
-  );
-}
+// export function setState<T, S>(
+//   mappingFunction: (event: T) => S,
+// ): OperatorFunction<T, EmitEvent<SetState, S>> {
+//   return (event$: Observable<T>) => event$.pipe(
+//     map(ev => new EmitEvent(SET_STATE, mappingFunction(ev))),
+//   );
+// }
+
+////
 
 // // Is this generic function needed?
 // /**
