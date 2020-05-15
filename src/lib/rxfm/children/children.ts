@@ -3,11 +3,12 @@ import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo,
 // import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
-import { EventsFor, ElementType, ComponentOperator, Component } from '../components';
+import { ElementType, Component, ComponentOperator, ComponentObservable } from '../components';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
-export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
+// export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
+export type ComponentLike<T extends ElementType, E> = Component<T, E> | Component<T, E>[];
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
@@ -39,7 +40,8 @@ function coerceChildComponent<E>(
           node.nodeValue = typeof child !== 'string' ? child.toString() : child; // Update text node value.
           return [node]; // Return component in an array.
         } else if (child !== undefined && child !== null && child !== false) {
-          return Array.isArray(child) ? child : [child]; // If child was already a component, coerce to array and return
+          // If child was already a component or component array, coerce to array of elements and return
+          return Array.isArray(child) ? child.map(({ element }) => element) : [child.element];
         }
         return null // Otherwise return null to indicate empty.
       }),
@@ -90,8 +92,8 @@ export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayTyp
 export function children<T extends ElementType, C extends ChildComponent<ElementType, any>[], E = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
-  return (component: Component<T, E>) => component.pipe(
-    switchMap(node => {
+  return (component$: ComponentObservable<T, E>) => component$.pipe(
+    switchMap(component => {
       let previousNodes: Node[] = [];
       return combineLatest<(CoercedChildComponent | null)[]>(
         ...childComponents.map(coerceChildComponent) // Coerce all child nodes to be most generic type and combine.
@@ -101,9 +103,9 @@ export function children<T extends ElementType, C extends ChildComponent<Element
         map(childrenOrNull => childrenOrNull.filter(child => child !== null) as CoercedChildComponent[]),
         map(notFlat => notFlat.reduce<CoercedChildComponent>((flat, comps) => flat.concat(comps), [])),
         map(nodes => {
-          updateElementChildren(node, previousNodes, nodes); // Update the component child nodes.
+          updateElementChildren(component.element, previousNodes, nodes); // Update the component child nodes.
           previousNodes = nodes; // Store nodes for reference.
-          return node;
+          return component;
         }),
         distinctUntilChanged(),
       );

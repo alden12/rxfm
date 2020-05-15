@@ -1,5 +1,6 @@
-import { Component, ElementType } from './component';
+import { ElementType, Component, ComponentObservable } from './component';
 import { distinctUntilChanged } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 /**
  * A function to remove a component from the view.
@@ -13,20 +14,20 @@ export type RemoveComponent = () => void;
  * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
-export function addToView<E = {}>(
-  component: Component<ElementType, E> | (() => Component<ElementType, E>),
+export function addToView(
+  component: ComponentObservable<ElementType>,
   host: ElementType,
 ): RemoveComponent {
   let oldNode: Node; // The node already in the view, if it exists.
-  const subscription = (typeof component === 'function' ? component() : component).pipe(
+  const subscription = component.pipe(
     distinctUntilChanged(),
-  ).subscribe(node => {
+  ).subscribe(({ element }) => {
     if (oldNode) { // Add node to host or replace existing node.
-      host.replaceChild(node, oldNode);
+      host.replaceChild(element, oldNode);
     } else {
-      host.appendChild(node);
+      host.appendChild(element);
     }
-    oldNode = node;
+    oldNode = element;
   });
 
   return () => { // Return a function to remove the node and clean up subscription.
@@ -41,8 +42,8 @@ export function addToView<E = {}>(
  * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
-export function addToBody<E = {}>(
-  component: Component<ElementType, E> | (() => Component<ElementType, E>),
+export function addToBody(
+  component: ComponentObservable<ElementType>,
 ): RemoveComponent {
   return addToView(component, document.body);
 }

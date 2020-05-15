@@ -4,9 +4,9 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, EmitEvent, ChildComponent, ElementType, ComponentOperator, EventsFor } from 'rxfm';
+import { div, children, addToBody, event, EmitEvent, ChildComponent, ElementType, ComponentOperatorOld, EventsFor, select, stateful, setState, SetState, UnionDelete } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
-import { interval, Observable } from 'rxjs';
+import { interval, Observable, EMPTY } from 'rxjs';
 
 // export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
 
@@ -52,6 +52,43 @@ import { interval, Observable } from 'rxjs';
 // type ArrType<T extends any[]> = T extends (infer A)[] ? A : never;
 
 // type Element = NoUnknown<Tuple>
+
+// export function stateful<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
+//   initialState: S,
+//   creationFunction: (state: Observable<Partial<S>>) => Observable<EventsFor<T, E>>,
+// ): Observable<EventsFor<T, UnionDelete<E, SetState>>> {
+
+class RecordComponent<T extends keyof HTMLElementTagNameMap, E extends Record<string, any>> {
+comp: T; evs: E };
+
+export function stated_<S, E extends Record<SetState, Partial<S>>>(
+  initialState: S,
+  creationFunction: (state: Partial<S>) => RecordComponent<'div', E>,
+): Observable<E> {
+  return EMPTY;
+}
+
+export function stated__<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
+  initialState: S,
+  creationFunction: (state: Partial<S>) => EventsFor<T, E>,
+): Observable<EventsFor<T, UnionDelete<E, SetState>>> {
+  return EMPTY;
+}
+
+const test = stated__({ test: true }, state => document.createElement('div') as EventsFor<HTMLDivElement, { test: number }>);
+
+// export interface PostExtension<T extends HTMLElement> extends T {
+//   events: Set<string>;
+// }
+
+interface IState { enabled: string }
+
+const statedStateless = (state: Observable<IState>) => div().pipe(
+  children(state.pipe(select('enabled'))),
+  event('click', setState(ev => ({ enabled: 1 })))
+);
+
+const stated = stateful({ enabled: 'a test string'}, statedStateless);
 
 const app = div().pipe(
   children(

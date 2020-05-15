@@ -1,17 +1,113 @@
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { UnionKeys, UnionValue } from '../utils';
+import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
+import { map, tap, filter, startWith, mapTo, distinctUntilChanged } from 'rxjs/operators';
+import { UnionKeys, UnionValue, UnionDelete } from '../utils';
+import { Events, EmitEvent, ElementEventMap } from '../events';
 
 export type ElementType = HTMLElement | SVGElement;
 
+// Deprecated
 // tslint:disable: max-line-length
-export type EventsFor <T extends ElementType, E extends Record<any, any>> = T & {
+export type EventsFor <T extends Element, E extends Record<any, any>> = T & {
   addEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends UnionKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<UnionValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
 };
 // tslint:enable: max-line-length
 
-export type Component<T extends ElementType, E extends Record<any, any> = never> =
+export interface ICapture<T extends ElementType, E extends Record<string, any>, EV> {
+  component: Component<T, E>;
+  event: Observable<EV>;
+}
+
+export type ComponentObservable<T extends ElementType, E extends Record<string, any> = never> = Observable<Component<T, E>>;
+
+// export type ComponentOrElementObservable<T extends ElementType, E extends Record<string, any> = never> =
+//   Observable<T | Component<T, E>>;
+
+export class Component<T extends ElementType, E extends Record<string, any> = never> {
+
+  constructor(public readonly element: T) {}
+
+  public dispatch<K extends string, V>(type: K, value: V): Component<T, E | Record<K, V>> {
+    this.element.dispatchEvent(new CustomEvent(type, { detail: value, bubbles: true }));
+    return this;
+  }
+
+  public capture<K extends UnionKeys<E>>(type: K): ICapture<T, UnionDelete<E, K>, CustomEvent<UnionValue<E, K>>>
+  public capture<K extends keyof ElementEventMap>(type: K): ICapture<T, E, ElementEventMap[K]>
+  public capture<K extends string>(type: K): ICapture<T, E, Event>
+  public capture<K extends string>(type: K): ICapture<T, any, any> {
+    return {
+      component: this,
+      event: fromEvent(this.element, type).pipe(
+        tap(ev => ev instanceof CustomEvent && ev.stopPropagation()),
+      ),
+    };
+  }
+
+  public inject<EC, EV, K extends string, V>(
+    capture: ICapture<T, EC, EV>,
+    operator: OperatorFunction<EV, EmitEvent<K, V>>,
+  ): ComponentObservable<T, EC | Record<K, V>>
+  public inject<EC, EV>(
+    capture: ICapture<T, EC, EV>,
+    operator: OperatorFunction<EV, any>,
+  ): ComponentObservable<T, EC>
+  public inject<EC, EV>(
+    { component, event }: ICapture<T, EC, EV>,
+    operator: OperatorFunction<EV, any>,
+  ): ComponentObservable<T, any> {
+    return event.pipe(
+      operator,
+      map(ev => ev instanceof EmitEvent ? component.dispatch(ev.type, ev.value) : component),
+      startWith(component),
+      distinctUntilChanged(),
+    );
+  }
+}
+
+export class HTMLComponent<K extends keyof HTMLElementTagNameMap, E extends Record<string, any> = never>
+  extends Component<HTMLElementTagNameMap[K], E> {
+
+  constructor(tagName: K) {
+    super(document.createElement(tagName));
+  }
+}
+
+export function htmlComponent<K extends keyof HTMLElementTagNameMap>(tagName: K): Observable<HTMLComponent<K>> {
+  return of(tagName).pipe(
+    map(name => new HTMLComponent(name)),
+  );
+}
+
+const SVGNamespace = 'http://www.w3.org/2000/svg';
+
+export class SVGComponent<K extends keyof SVGElementTagNameMap, E extends Record<string, any> = never>
+  extends Component<SVGElementTagNameMap[K], E> {
+
+  constructor(tagName: K) {
+    super(document.createElementNS(SVGNamespace, tagName));
+  }
+}
+
+export function svgComponent<K extends keyof SVGElementTagNameMap>(tagName: K): Observable<SVGComponent<K>> {
+  return of(tagName).pipe(
+    map(name => new SVGComponent(name)),
+  );
+}
+
+export type ComponentOperator<T extends ElementType, E extends Record<string, any> = never, O = E> =
+  (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;
+
+// export function coerceToComponent<T extends ElementType, E extends Record<string, any> = never>(
+// ): OperatorFunction<T | Component<T, E>, Component<T, E>> {
+//   return (component: Observable<T | Component<T, E>>) => component.pipe(
+//     map(_component => _component instanceof Component ? _component : new Component<T, E>(_component)),
+//   );
+// }
+
+////
+
+export type ComponentOld<T extends ElementType, E extends Record<any, any> = never> =
   Observable<T | EventsFor<T, E>>;
   // Observable<T> | Observable<EventsFor<T, E>>;
   // E extends never ? Observable<T> : Observable<EventsFor<T, E>>;
@@ -21,8 +117,8 @@ export type Component<T extends ElementType, E extends Record<any, any> = never>
 //   T extends Component<infer CT, infer E> ? Observable<EventsFor<CT, E>> : never;
 
 // export type ComponentOperator<T extends ElementType, E = never, O = E> = (component: Component<T, E>) => Component<T, O>
-export type ComponentOperator<T extends ElementType, E = never, O = E> =
-  (component: Component<T, E>) => Observable<EventsFor<T, O>>;
+export type ComponentOperatorOld<T extends ElementType, E = never, O = E> =
+  (component: ComponentOld<T, E>) => Observable<EventsFor<T, O>>;
 // export type ComponentOperator<T extends ElementType, E = never, O = E> =
 //   O extends never ? (component: Component<T, E>) => Observable<T> : (component: Component<T, E>) => Component<T, O>;
   // E extends never ?
@@ -32,7 +128,7 @@ export type ComponentOperator<T extends ElementType, E = never, O = E> =
   //         (component: ComponentType<Component<T, E>>) => ComponentType<Component<T, O>>
 ;
 
-export function component<K extends keyof HTMLElementTagNameMap>(
+export function componentOld<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): Observable<HTMLElementTagNameMap[K]> {
   return of(tagName).pipe(
@@ -40,9 +136,9 @@ export function component<K extends keyof HTMLElementTagNameMap>(
   );
 }
 
-export const SVGNamespace = 'http://www.w3.org/2000/svg';
+// export const SVGNamespace = 'http://www.w3.org/2000/svg';
 
-export function SVGComponent<K extends keyof SVGElementTagNameMap>(
+export function SVGComponentOld<K extends keyof SVGElementTagNameMap>(
   tagName: K,
 ): Observable<SVGElementTagNameMap[K]> {
   return of(tagName).pipe(
