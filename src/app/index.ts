@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, ElementType, EventsFor, EventDelete, EmitEvent } from 'rxfm';
+import { div, children, addToBody, event, ElementType, EventsFor, EventDelete, EmitEvent, select, setState, stateful } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY } from 'rxjs';
 
@@ -81,14 +81,14 @@ import { interval, Observable, EMPTY } from 'rxjs';
 //   events: Set<string>;
 // }
 
-// interface IState { enabled: string }
+interface IState { enabled: string }
 
-// const statedStateless = (state: Observable<IState>) => div().pipe(
-//   children(state.pipe(select('enabled'))),
-//   event('click', setState(ev => ({ enabled: 1 })))
-// );
+const statedStateless = (state: Observable<IState>) => div().pipe(
+  children(state.pipe(select('enabled'))),
+  event('click', setState(ev => ({ enabled: ev.timeStamp.toString() })))
+);
 
-// const stated = stateful({ enabled: 'a test string'}, statedStateless);
+const stated = stateful({ enabled: 'a test string'}, statedStateless);
 
 // const app = div().pipe(
 //   children(
@@ -118,7 +118,7 @@ const test = div().pipe(
 );
 
 const app = div().pipe(
-  children(test),
+  children(test, stated),
   event('test', map(ev => console.log(ev))),
 );
 
