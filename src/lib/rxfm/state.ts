@@ -5,10 +5,10 @@
 // import { extractEvent } from './events';
 
 import { ElementType, ComponentObservable } from './components';
-import { Observable, BehaviorSubject, OperatorFunction } from 'rxjs';
+import { Observable, BehaviorSubject, OperatorFunction, of } from 'rxjs';
 import { EventDelete } from './utils';
 import { event, EmitEvent } from './events';
-import { tap, map } from 'rxjs/operators';
+import { tap, map, switchMap } from 'rxjs/operators';
 
 export const SET_STATE = 'rxfmSetState' as const;
 export type SetState = typeof SET_STATE;
@@ -18,15 +18,18 @@ export function stateful<T extends ElementType, S, E extends Record<SetState, Pa
     creationFunction: (state: Observable<S>) => ComponentObservable<T, E>,
 ): ComponentObservable<T, EventDelete<E, SetState>> {
 
-  const stateSubject = new BehaviorSubject<S>(initialState);
-
-  const component = creationFunction(stateSubject.asObservable());
-
-  return component.pipe(
-    event(
-      SET_STATE,
-      tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Partial<S>>).detail })),
-    )
+  return of(creationFunction).pipe(
+    map(creationFn => {
+      const stateSubject = new BehaviorSubject<S>({ ...initialState });
+      const component = creationFn(stateSubject);
+      return [component, stateSubject] as const;
+    }),
+    switchMap(([component, stateSubject]) => component.pipe(
+      event(
+        SET_STATE,
+        tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Partial<S>>).detail })),
+      )
+    )),
   );
 }
 

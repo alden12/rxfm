@@ -115,7 +115,8 @@ const newChildren = div(
   'these are new children!',
   div('button').pipe(
     event('click', map(ev => new EmitEvent('test2', ev.screenX))),
-  )
+  ),
+  stated,
 );
 
 const test = div().pipe(
