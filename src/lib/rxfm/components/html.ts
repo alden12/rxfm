@@ -1,6 +1,3 @@
-import { Component } from './component';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { componentFactory } from './component-factory';
 
 function htmlElementCreator<K extends keyof HTMLElementTagNameMap>(tagName: K): () => HTMLElementTagNameMap[K] {

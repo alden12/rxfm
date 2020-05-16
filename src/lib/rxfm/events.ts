@@ -21,7 +21,16 @@ export class EmitEvent<K extends string, V> {
   ) {}
 }
 
-const RXFM_INTERNAL_EVENT = '__rxfmInternal__';
+export function emitEvent<T, K extends string, V>(
+  type: K,
+  mappingFunction: (event: T) => V,
+): OperatorFunction<T, EmitEvent<K, V>> {
+  return (event$: Observable<T>) => event$.pipe(
+    map(ev => new EmitEvent(type, mappingFunction(ev))),
+  );
+}
+
+// const RXFM_INTERNAL_EVENT = '__rxfmInternal__';
 
 // export function emitEvent<K extends string, V>(type: K, value: V): CustomEvent<IEmitEventDetail<V>> {
 //   return new CustomEvent(type, {
@@ -38,6 +47,8 @@ export type InjectEvent<T extends ElementType, E, ET extends string, EV> =
 
 // type InjectTest = InjectEvent<HTMLDivElement, Record<'a', string>, 'a', EmitEvent<'b', number>>;
 
+// TODO: Are operators needed? Or should it simple provide an optional function to map ev onto an event emission?
+// Overloads: event(type, outputType, mappingFunction) and events(type, operator).
 // tslint:disable: max-line-length
 export function event<T extends ElementType, ET, E = never>(event: Observable<ET> | ((node: T) => Observable<ET>)): ET extends EmitEvent<infer K, infer V> ? ComponentOperator<T, E | Record<K, V>> : ComponentOperator<T, E>
 export function event<T extends ElementType, E = never>(eventType: string): ComponentOperator<T, E>

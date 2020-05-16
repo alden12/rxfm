@@ -1,6 +1,3 @@
-import { Component } from './component';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { componentFactory } from './component-factory';
 
 const SVGNamespace = 'http://www.w3.org/2000/svg';

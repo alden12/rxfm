@@ -7,7 +7,7 @@
 import { ElementType, ComponentObservable } from './components';
 import { Observable, BehaviorSubject, OperatorFunction, of } from 'rxjs';
 import { EventDelete } from './utils';
-import { event, EmitEvent } from './events';
+import { event, EmitEvent, emitEvent } from './events';
 import { tap, map, switchMap } from 'rxjs/operators';
 
 export const SET_STATE = 'rxfmSetState' as const;
@@ -37,7 +37,7 @@ export function setState<T, S>(
   mappingFunction: (event: T) => S,
 ): OperatorFunction<T, EmitEvent<SetState, S>> {
   return (event$: Observable<T>) => event$.pipe(
-    map(ev => new EmitEvent(SET_STATE, mappingFunction(ev))),
+    emitEvent(SET_STATE, mappingFunction)
   );
 }
 

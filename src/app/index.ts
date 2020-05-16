@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, ElementType, EventsFor, EventDelete, EmitEvent, select, setState, stateful } from 'rxfm';
+import { div, children, addToBody, event, ElementType, EventsFor, EventDelete, EmitEvent, select, setState, stateful, emitEvent } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY } from 'rxjs';
 
@@ -111,18 +111,27 @@ const stated = stateful({ enabled: 'a test string'}, statedStateless);
 //   event('test', tap(console.log)),
 // ));
 
+const attributeTest = div({
+    click: ev => ev.pipe(map(() => new EmitEvent('foo', 'bar')))
+  },
+  'test',
+);
+
 const newChildren = div(
-  'these are new children!',
+  {
+    click: emitEvent('attribute', ev => { console.log('it worked!'); return 1 }),
+  },
   div('button').pipe(
     event('click', map(ev => new EmitEvent('test2', ev.screenX))),
   ),
+  'these are new children!',
   stated,
 );
 
 const test = div().pipe(
   children('new component test'),
   event('contextmenu', map(ev => { console.log(ev); return ev; })),
-  event('click', map(ev => new EmitEvent('test', ev.timeStamp))),
+  event('click', emitEvent('test', ev => ev.timeStamp)),
 );
 
 const app = div().pipe(
