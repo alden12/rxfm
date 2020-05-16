@@ -8,7 +8,7 @@ import { ElementType, Component, ComponentOperator, ComponentObservable } from '
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
 // export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
-export type ComponentLike<T extends ElementType, E> = Component<T, E> | Component<T, E>[];
+export type ComponentLike<T extends ElementType, E extends Record<string, any> = never> = Component<T, E> | Component<T, E>[];
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
@@ -78,18 +78,18 @@ function updateElementChildren<T extends ElementType>(
   return el;
 }
 
-export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
+export type ArrayType<T extends any[]> = T extends (infer A)[] ? A extends Record<string, any> ? A : never : never;
 
 // export type ChildEvent<T extends ChildComponent<ElementType, any>> =
 //   T extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 
-export type ChildEvents<T extends ChildComponent<ElementType, any>[]> = ArrayType<{
+export type ChildEvents<T extends ChildComponent<ElementType, Record<string, any>>[]> = ArrayType<{
   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 }>;
 
 // type StringChildTest = ChildEvents<string[]>;
 
-export function children<T extends ElementType, C extends ChildComponent<ElementType, any>[], E = never>(
+export function children<T extends ElementType, C extends ChildComponent<ElementType, Record<string, any>>[], E = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
   return (component$: ComponentObservable<T, E>) => component$.pipe(

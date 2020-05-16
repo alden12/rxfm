@@ -9,6 +9,8 @@ export type EventGet<T extends Record<any, any>, K extends string> = T extends R
 
 export type EventDelete<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
 
+export interface Dictionary<T> { [key: string]: T }
+
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.

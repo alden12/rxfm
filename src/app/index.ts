@@ -111,6 +111,13 @@ const stated = stateful({ enabled: 'a test string'}, statedStateless);
 //   event('test', tap(console.log)),
 // ));
 
+const newChildren = div(
+  'these are new children!',
+  div('button').pipe(
+    event('click', map(ev => new EmitEvent('test2', ev.screenX))),
+  )
+);
+
 const test = div().pipe(
   children('new component test'),
   event('contextmenu', map(ev => { console.log(ev); return ev; })),
@@ -118,8 +125,9 @@ const test = div().pipe(
 );
 
 const app = div().pipe(
-  children(test, stated),
+  children(test, stated, newChildren),
   event('test', map(ev => console.log(ev))),
+  event('test2', map(ev => console.log(ev))),
 );
 
 addToBody(app);

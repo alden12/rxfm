@@ -1,7 +1,7 @@
 import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
-import { map, tap, filter, startWith, mapTo, distinctUntilChanged } from 'rxjs/operators';
+import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { EventKeys, EventValue, EventDelete } from '../utils';
-import { Events, EmitEvent, ElementEventMap } from '../events';
+import { EmitEvent, ElementEventMap } from '../events';
 
 export type ElementType = HTMLElement | SVGElement;
 
@@ -65,36 +65,6 @@ export class Component<T extends ElementType, E extends Record<string, any> = ne
   }
 }
 
-export class HTMLComponent<K extends keyof HTMLElementTagNameMap, E extends Record<string, any> = never>
-  extends Component<HTMLElementTagNameMap[K], E> {
-
-  constructor(tagName: K) {
-    super(document.createElement(tagName));
-  }
-}
-
-export function htmlComponent<K extends keyof HTMLElementTagNameMap>(tagName: K): Observable<HTMLComponent<K>> {
-  return of(tagName).pipe(
-    map(name => new HTMLComponent(name)),
-  );
-}
-
-const SVGNamespace = 'http://www.w3.org/2000/svg';
-
-export class SVGComponent<K extends keyof SVGElementTagNameMap, E extends Record<string, any> = never>
-  extends Component<SVGElementTagNameMap[K], E> {
-
-  constructor(tagName: K) {
-    super(document.createElementNS(SVGNamespace, tagName));
-  }
-}
-
-export function svgComponent<K extends keyof SVGElementTagNameMap>(tagName: K): Observable<SVGComponent<K>> {
-  return of(tagName).pipe(
-    map(name => new SVGComponent(name)),
-  );
-}
-
 export type ComponentOperator<T extends ElementType, E extends Record<string, any> = never, O = E> =
   (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;
 
@@ -138,13 +108,13 @@ export function componentOld<K extends keyof HTMLElementTagNameMap>(
 
 // export const SVGNamespace = 'http://www.w3.org/2000/svg';
 
-export function SVGComponentOld<K extends keyof SVGElementTagNameMap>(
-  tagName: K,
-): Observable<SVGElementTagNameMap[K]> {
-  return of(tagName).pipe(
-    map(name => document.createElementNS(SVGNamespace, name)),
-  );
-}
+// export function SVGComponentOld<K extends keyof SVGElementTagNameMap>(
+//   tagName: K,
+// ): Observable<SVGElementTagNameMap[K]> {
+//   return of(tagName).pipe(
+//     map(name => document.createElementNS(SVGNamespace, name)),
+//   );
+// }
 
 ////
 

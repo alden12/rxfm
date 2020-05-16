@@ -1,4 +1,4 @@
 export * from './component';
-export * from './html-components';
-export * from './svg-components';
+export * from './html';
+export * from './svg';
 export * from './add-to-view';
