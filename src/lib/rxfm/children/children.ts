@@ -98,6 +98,7 @@ export function children<T extends ElementType, C extends ChildComponent<Element
       return combineLatest<(CoercedChildComponent | null)[]>(
         ...childComponents.map(coerceChildComponent) // Coerce all child nodes to be most generic type and combine.
       ).pipe(
+        startWith([]),
         debounceTime(0), // Prevent repeated emission for simultaneous changes.
         //  Remove empty children then flatten.
         map(childrenOrNull => childrenOrNull.filter(child => child !== null) as CoercedChildComponent[]),

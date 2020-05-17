@@ -4,36 +4,73 @@ import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Dictionary } from '../utils';
 import { ElementEventMap, EmitEvent, event } from '../events';
+import { setState } from '../state';
+import { GlobalAttributes, IAttributes } from '../attributes';
+// import { ElementAttributeMap, ElementAttributes, AttributeEvents, EventOperators } from '../attributes';
 
 export type EventOperators<E> = {
   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
 }
 
-export interface IAttributes extends EventOperators<any> {
-  class?: string | Observable<string>;
-  styles?: Dictionary<string> | Observable<Dictionary<string>>;
-  attributes?: Dictionary<string> | Observable<Dictionary<string>>;
-}
+// const a: EventOperators<any> = {
+//   click: setState(e => e),
+//   foo: 'bar',
+// };
+
+// export interface IAttributes extends EventOperators<any> {
+//   class?: string | Observable<string>;
+//   styles?: Dictionary<string> | Observable<Dictionary<string>>;
+//   attributes?: Dictionary<string> | Observable<Dictionary<string>>;
+// }
 
 export type AttributeEvents<T extends EventOperators<any>> = T extends EventOperators<infer E> ?
   E extends EmitEvent<infer ET, infer EV> ? Record<ET, EV> : never : never;
+
+// function inputAttributes <T extends IAttributes, E extends keyof ElementAttributes>(
+//   attributes: T & ElementAttributes[E],
+//   type: E
+// ): AttributeEvents<T> {
+//   return {};
+// }
+
+// const test = inputAttributes({ click: setState(e => e), disabled: 'true' }, 'input' as const)
+
+// export type ElementAttributes<T extends string> = T extends keyof ElementAttributeMap ?
+//   Partial<ElementAttributeMap[T]> : Partial<GlobalAttributes>;
+
+
+// interface Foo {
+//   bar?: string;
+//   baz?: boolean;
+// }
+
+// function foo<A extends EventOperators<any> & IAttributes>(
+//   attributes: A,
+//   ...args: any[]
+// ): ComponentObservable<any, AttributeEvents<A>> {
+//   return;
+// }
+
+// const test = foo({ click: setState(e => e), type: 'radio', foo: 1 }, 'test');
 
 export function componentFactory<T extends ElementType>(
   elementCreationFunction: () => T,
 ) {
 
   function createComponent(): ComponentObservable<T>
-  function createComponent<A extends IAttributes>(attributes: A): ComponentObservable<T, AttributeEvents<A>>
+  function createComponent<A extends EventOperators<any>>(
+    attributes: A & IAttributes,
+  ): ComponentObservable<T, AttributeEvents<A>>
   function createComponent<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
   ): ComponentObservable<T, ChildEvents<[C0]> | ChildEvents<C>>
-  function createComponent<A extends IAttributes, C extends ChildComponent<ElementType, any>[]>(
-    attributes: A,
+  function createComponent<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
+    attributes: A & IAttributes,
     ...childComponents: C
   ): ComponentObservable<T, ChildEvents<C> | AttributeEvents<A>>
   function createComponent(
-    attributes?: IAttributes | ChildComponent<ElementType, any>,
+    attributes?: EventOperators<any> & IAttributes | ChildComponent<ElementType, any>,
     ...childComponents: ChildComponent<ElementType, any>[]
   ): ComponentObservable<T, any> {
 

@@ -1,4 +1,4 @@
-import { componentFactory } from './component-factory';
+import { componentFactory } from './factory';
 
 const SVGNamespace = 'http://www.w3.org/2000/svg';
 

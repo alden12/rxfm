@@ -3,6 +3,59 @@
 // import { attributeDiffer } from './attribute-differ';
 // import { ComponentOld, ComponentOperatorOld } from '../components';
 // import { distinctUntilKeysChanged } from '../utils';
+import { OperatorFunction, Observable } from 'rxjs';
+import { EmitEvent } from '../events';
+import { Dictionary } from '../utils';
+import { ElementType } from '../components';
+
+// export type EventOperators<E> = {
+//   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
+// }
+
+// export type AttributeEvents<T extends EventOperators<any>> = T extends EventOperators<infer E> ?
+//   E extends EmitEvent<infer ET, infer EV> ? Record<ET, EV> : never : never;
+
+// export type EventOperators<E> = {
+//   [K in keyof ElementEventMap]: OperatorFunction<ElementEventMap[K], E>;
+// }
+
+export interface GlobalAttributes {
+  class?: string;
+  styles?: string;
+}
+
+export type TypeOrObservable<T> = T | Observable<T>;
+
+export interface IElementAttributes {
+  accept?: string;
+  alt?: string;
+  type?: string;
+}
+
+// export type KnownPartial<T> = {
+//   [K in keyof T]?:
+// };
+
+export interface IAttributes extends GlobalAttributes, IElementAttributes {}
+
+// export type Attributes = {
+//   // [key: string]: key extends keyof
+// };
+
+// export interface InputAttributes extends GlobalAttributes {
+//   accept: string;
+//   alt: string;
+//   type: string;
+// }
+
+// export interface ElementAttributeMap {
+//   input: InputAttributes;
+// }
+
+// export type ElementAttributes<T extends ElementType> = T extends keyof ElementAttributeMap ?
+//   ElementAttributeMap[T] : GlobalAttributes;
+
+////
 
 // /**
 //  * Allowed types for attribute values used in the 'attributes' operator.

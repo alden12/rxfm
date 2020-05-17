@@ -4,9 +4,9 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, ElementType, EventsFor, EventDelete, EmitEvent, select, setState, stateful, emitEvent } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
-import { interval, Observable, EMPTY } from 'rxjs';
+import { interval, Observable, EMPTY, of } from 'rxjs';
 
 // export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
 
@@ -83,9 +83,15 @@ import { interval, Observable, EMPTY } from 'rxjs';
 
 interface IState { enabled: string }
 
-const statedStateless = (state: Observable<IState>) => div().pipe(
+const statedStateless = (state: Observable<IState>) => div(
+  {
+    click: setState(ev => ({ enabled: ev.timeStamp.toString() }))
+  },
+  // state.pipe(select('enabled')),
+).pipe(
+  // children('thing'),
   children(state.pipe(select('enabled'))),
-  event('click', setState(ev => ({ enabled: ev.timeStamp.toString() })))
+  // event('click', setState(ev => ({ enabled: ev.timeStamp.toString() })))
 );
 
 const stated = stateful({ enabled: 'a test string'}, statedStateless);
@@ -111,10 +117,17 @@ const stated = stateful({ enabled: 'a test string'}, statedStateless);
 //   event('test', tap(console.log)),
 // ));
 
-const attributeTest = div({
-    click: ev => ev.pipe(map(() => new EmitEvent('foo', 'bar')))
+// tslint:disable-next-line: no-angle-bracket-type-assertion
+const attributeTest = div(
+  {
+    class: 'test',
+    contextmenu: setState(e => e),
+    type: 'textarea',
+    // foo: 1,
   },
   'test',
+  'test1',
+  'test2',
 );
 
 const newChildren = div(
