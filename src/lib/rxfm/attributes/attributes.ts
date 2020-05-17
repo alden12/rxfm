@@ -8,6 +8,7 @@ import { EmitEvent } from '../events';
 import { Dictionary } from '../utils';
 import { ElementType } from '../components';
 import { HTMLAttributes } from './html';
+import { SVGAttributes } from './svg';
 
 // export type EventOperators<E> = {
 //   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
@@ -22,7 +23,7 @@ import { HTMLAttributes } from './html';
 export type TypeOrObservable<T> = T | Observable<T>;
 
 export type IAttributes = {
-  [K in keyof HTMLAttributes]: TypeOrObservable<HTMLAttributes[K]>
+  [K in keyof (HTMLAttributes & SVGAttributes)]?: TypeOrObservable<(HTMLAttributes & SVGAttributes)[K]>;
 };
 
 // export type KnownPartial<T> = {
