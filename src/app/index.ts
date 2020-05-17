@@ -123,6 +123,7 @@ const attributeTest = div(
     class: 'test',
     contextmenu: setState(e => e),
     type: 'textarea',
+    id: of('hello'),
     // foo: 1,
   },
   'test',

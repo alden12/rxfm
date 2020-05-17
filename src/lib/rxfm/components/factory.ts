@@ -5,7 +5,7 @@ import { map, switchMap } from 'rxjs/operators';
 import { Dictionary } from '../utils';
 import { ElementEventMap, EmitEvent, event } from '../events';
 import { setState } from '../state';
-import { GlobalAttributes, IAttributes } from '../attributes';
+import { IAttributes } from '../attributes';
 // import { ElementAttributeMap, ElementAttributes, AttributeEvents, EventOperators } from '../attributes';
 
 export type EventOperators<E> = {

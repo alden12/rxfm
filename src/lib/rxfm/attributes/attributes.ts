@@ -7,6 +7,7 @@ import { OperatorFunction, Observable } from 'rxjs';
 import { EmitEvent } from '../events';
 import { Dictionary } from '../utils';
 import { ElementType } from '../components';
+import { HTMLAttributes } from './html';
 
 // export type EventOperators<E> = {
 //   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
@@ -18,25 +19,15 @@ import { ElementType } from '../components';
 // export type EventOperators<E> = {
 //   [K in keyof ElementEventMap]: OperatorFunction<ElementEventMap[K], E>;
 // }
-
-export interface GlobalAttributes {
-  class?: string;
-  styles?: string;
-}
-
 export type TypeOrObservable<T> = T | Observable<T>;
 
-export interface IElementAttributes {
-  accept?: string;
-  alt?: string;
-  type?: string;
-}
+export type IAttributes = {
+  [K in keyof HTMLAttributes]: TypeOrObservable<HTMLAttributes[K]>
+};
 
 // export type KnownPartial<T> = {
 //   [K in keyof T]?:
 // };
-
-export interface IAttributes extends GlobalAttributes, IElementAttributes {}
 
 // export type Attributes = {
 //   // [key: string]: key extends keyof
