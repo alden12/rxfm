@@ -8,7 +8,7 @@ import { ElementType, ComponentObservable } from './components';
 import { Observable, BehaviorSubject, OperatorFunction, of } from 'rxjs';
 import { EventDelete } from './utils';
 import { event, EmitEvent, emitEvent } from './events';
-import { tap, map, switchMap } from 'rxjs/operators';
+import { tap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 
 export const SET_STATE = 'rxfmSetState' as const;
 export type SetState = typeof SET_STATE;
@@ -35,9 +35,25 @@ export function stateful<T extends ElementType, S, E extends Record<SetState, Pa
 
 export function setState<T, S>(
   mappingFunction: (event: T) => S,
-): OperatorFunction<T, EmitEvent<SetState, S>> {
+): OperatorFunction<T, EmitEvent<SetState, S>>
+export function setState<T, S, ST>(
+  state: Observable<ST>,
+  mappingFunction: (currentState: ST, event: T) => S,
+): OperatorFunction<T, EmitEvent<SetState, S>>
+export function setState<T, S, ST>(
+  stateOrMappingFn: Observable<ST> | ((event: T) => S),
+  mappingFn?: (state: ST, event: T) => S,
+): OperatorFunction<T, EmitEvent<SetState, Partial<S>>> {
+
+  if (mappingFn) {
+    return (event$: Observable<T>) => event$.pipe(
+      withLatestFrom(stateOrMappingFn as Observable<ST>),
+      emitEvent(SET_STATE, ([ev, latestFrom]) => mappingFn(latestFrom, ev))
+    );
+  }
+
   return (event$: Observable<T>) => event$.pipe(
-    emitEvent(SET_STATE, mappingFunction)
+    emitEvent(SET_STATE, stateOrMappingFn as (event: T) => S)
   );
 }
 

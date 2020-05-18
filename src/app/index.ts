@@ -81,20 +81,23 @@ import { interval, Observable, EMPTY, of } from 'rxjs';
 //   events: Set<string>;
 // }
 
-interface IState { enabled: string }
+interface IState { enabled: boolean, foo: string }
 
 const statedStateless = (state: Observable<IState>) => div(
   {
-    click: setState(ev => ({ enabled: ev.timeStamp.toString() }))
+    click: setState(state, ({ enabled }) => ({ enabled: !enabled }))
   },
-  // state.pipe(select('enabled')),
-).pipe(
-  // children('thing'),
-  children(state.pipe(select('enabled'))),
-  // event('click', setState(ev => ({ enabled: ev.timeStamp.toString() })))
-);
+  state.pipe(map(({ enabled }) => enabled ? 'yay' : 'nope')),
+  state.pipe(select('foo')),
+)
 
-const stated = stateful({ enabled: 'a test string'}, statedStateless);
+// .pipe(
+//   // children('thing'),
+//   // children(state.pipe(map(({ enabled }) => enabled ? 'yay' : 'nope'))),
+//   // event('click', setState(ev => ({ enabled: ev.timeStamp.toString() })))
+// );
+
+const stated = stateful({ enabled: false, foo: 'test' }, statedStateless);
 
 // const app = div().pipe(
 //   children(
@@ -118,7 +121,7 @@ const stated = stateful({ enabled: 'a test string'}, statedStateless);
 // ));
 
 // tslint:disable-next-line: no-angle-bracket-type-assertion
-const attributeTest = div(
+const attributeTest = input(
   {
     class: 'test',
     contextmenu: setState(e => e),
