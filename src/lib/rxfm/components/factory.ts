@@ -53,9 +53,22 @@ export type AttributeEvents<T extends EventOperators<any>> = T extends EventOper
 
 // const test = foo({ click: setState(e => e), type: 'radio', foo: 1 }, 'test');
 
+export type CreateComponent<T extends ElementType> = {
+  (): ComponentObservable<T, never>;
+  <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, AttributeEvents<A>>;
+  <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
+    childComponent: C0,
+    ...childComponents: C
+  ): ComponentObservable<T, ChildEvents<[C0]> | ChildEvents<C>>;
+  <A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
+    attributes: A & IAttributes,
+    ...childComponents: C
+  ): ComponentObservable<T, ChildEvents<C> | AttributeEvents<A>>;
+};
+
 export function componentFactory<T extends ElementType>(
   elementCreationFunction: () => T,
-) {
+): CreateComponent<T> {
 
   function createComponent(): ComponentObservable<T>
   function createComponent<A extends EventOperators<any>>(
