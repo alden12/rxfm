@@ -1,5 +1,6 @@
-import { Observable, OperatorFunction, of } from 'rxjs';
-import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
+import { Observable, OperatorFunction, of, from } from 'rxjs';
+import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap, takeUntil, filter, mergeAll, shareReplay, startWith } from 'rxjs/operators';
+import { ComponentObservable } from './components';
 
 export type EventKeys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
 
@@ -15,7 +16,7 @@ export interface Dictionary<T> { [key: string]: T }
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.
  */
-export const SHARE_REPLAY_CONFIG = { bufferSize: 1, refCount: true };
+export const SHARE_REPLAY_CONFIG = { bufferSize: 1 as 1, refCount: true as true };
 
 /**
  * An observable operator to watch a given part of a source observable defined by the watchingFunction.
@@ -31,16 +32,44 @@ export function watch<T, U>(
   );
 }
 
+export function watchFrom<T, U>(
+  input: Observable<T>,
+  watchingFunction: (item: T) => U,
+): Observable<U> {
+  return input.pipe(watch(watchingFunction));
+}
+
 /**
  * An observable operator to select a given key from a source observable stream.
  * @param key A key (K) belonging to the source type (T).
  * @returns An observable emitting the value of T[K] whenever it changes.
  */
-export function select<T, K extends keyof T>(
-  key: K,
-): OperatorFunction<T, T[K]> {
+// tslint:disable: max-line-length
+// export function select<T, K extends keyof T>(): OperatorFunction<T, any>
+export function select<T, K extends keyof T>(key: K): OperatorFunction<T, T[K]>
+export function select<T, K0 extends keyof T, K1 extends keyof T[K0]>(key0: K0, key1: K1): OperatorFunction<T, T[K0][K1]>
+export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(key0: K0, key1: K1, key2: K2): OperatorFunction<T, T[K0][K1][K2]>
+export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(key0: K0, key1: K1, key2: K2, key3: K3): OperatorFunction<T, T[K0][K1][K2][K3]>
+// tslint:enable: max-line-length
+export function select<T>(...keys: string[]): OperatorFunction<T, any> {
   return (input: Observable<T>) => input.pipe(
-    pluck(key),
+    pluck(...keys),
+    distinctUntilChanged(),
+  );
+}
+
+// tslint:disable: max-line-length
+export function selectFrom<T, K extends keyof T>(input: Observable<T>, key: K): Observable<T[K]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>
+// tslint:enable: max-line-length
+export function selectFrom<T>(
+  input: Observable<T>,
+  ...keys: string[]
+): Observable<any> {
+  return input.pipe(
+    pluck(...keys),
     distinctUntilChanged(),
   );
 }
@@ -99,4 +128,90 @@ export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
   return (source: Observable<T>) => source.pipe(
     tap(ev => ev.stopPropagation()),
   );
+}
+
+export function activeCombineLatest<T>(): OperatorFunction<Map<string | number, Observable<T>>, T[]> {
+  return (map$: Observable<Map<string | number, Observable<T>>>) => {
+    const itemMap = new Map<string | number, T>();
+
+    return map$.pipe(
+      switchMap(itemObservableMap => {
+        const addedItems = Array.from(itemObservableMap.entries())
+          .filter(([id]) => !itemMap.has(id));
+
+        const removed = Array.from(itemMap.keys()).filter(id => !itemObservableMap.has(id));
+
+        removed.forEach(id => itemMap.delete(id));
+
+        return from([
+          ...addedItems.map(([id, item$]) => item$.pipe(
+            tap(item => itemMap.set(id, item)),
+          )),
+          of(Array.from(itemObservableMap.keys())).pipe(
+            map(ids => ids.map(id => itemMap.get(id)!))
+          ),
+        ]);
+      }),
+      mergeAll(),
+      filter(compOrCompArray => Array.isArray(compOrCompArray)),
+      map(compOrCompArray => compOrCompArray as T[])
+    );
+  }
+}
+
+export function generate<T, U>(
+  idFunction: (item: T) => string | number,
+  creationFunction: (item: Observable<T>) => Observable<U>,
+): OperatorFunction<T[], U[]> {
+
+  // const updates: Observable<Map<string | number, T>>
+  // const removed: Observable<Set<string | number>>
+  // const resultObservables: Observable<Map<string | number, Observable<U>>>
+
+  return (items$: Observable<T[]>) => {
+
+    let previousItemMap = new Map<string | number, T>();
+    const changes = items$.pipe(
+      map(items => {
+        const itemsAndIds = items.map(item => [idFunction(item), item] as const);
+        const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
+        const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
+        const itemMap = new Map(itemsAndIds);
+        previousItemMap = itemMap;
+        return { updated, removed, itemMap };
+      }),
+      shareReplay(SHARE_REPLAY_CONFIG),
+    );
+
+    let previousResultMap = new Map<string | number, Observable<U>>();
+    const resultObservableMap = changes.pipe(
+      map(({ itemMap }) => {
+
+        const resultsAndIds = Array.from(itemMap.entries()).map(([id, item]) => {
+          if (previousResultMap.has(id)) {
+            return [id, previousResultMap.get(id)!] as const;
+          } else {
+            const updates = changes.pipe(
+              filter(({ updated }) => updated.has(id)),
+              map(({ updated }) => updated.get(id) as T),
+              startWith(item),
+              distinctUntilChanged(),
+              takeUntil(changes.pipe(
+                filter(({ removed }) => removed.has(id)),
+              )),
+            );
+            return [id, creationFunction(updates)] as const;
+          }
+        });
+
+        const resultMap = new Map(resultsAndIds);
+        previousResultMap = resultMap;
+        return resultMap;
+      })
+    );
+
+    return resultObservableMap.pipe(
+      activeCombineLatest(),
+    )
+  };
 }

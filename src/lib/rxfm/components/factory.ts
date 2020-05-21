@@ -53,6 +53,9 @@ export type AttributeEvents<T extends EventOperators<any>> = T extends EventOper
 
 // const test = foo({ click: setState(e => e), type: 'radio', foo: 1 }, 'test');
 
+/**
+ * A function to create a component of type T.
+ */
 export type CreateComponent<T extends ElementType> = {
   (): ComponentObservable<T, never>;
   <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, AttributeEvents<A>>;

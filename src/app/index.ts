@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 
@@ -89,6 +89,7 @@ const statedStateless = (state: Observable<IState>) => div(
   },
   state.pipe(map(({ enabled }) => enabled ? 'yay' : 'nope')),
   state.pipe(select('foo')),
+  selectFrom(state, 'foo')
 )
 
 // .pipe(
