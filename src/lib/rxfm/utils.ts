@@ -1,6 +1,5 @@
 import { Observable, OperatorFunction, of, from } from 'rxjs';
-import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap, takeUntil, filter, mergeAll, shareReplay, startWith } from 'rxjs/operators';
-import { ComponentObservable } from './components';
+import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
 
 export type EventKeys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
 
@@ -130,88 +129,94 @@ export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
   );
 }
 
-export function activeCombineLatest<T>(): OperatorFunction<Map<string | number, Observable<T>>, T[]> {
-  return (map$: Observable<Map<string | number, Observable<T>>>) => {
-    const itemMap = new Map<string | number, T>();
-
-    return map$.pipe(
-      switchMap(itemObservableMap => {
-        const addedItems = Array.from(itemObservableMap.entries())
-          .filter(([id]) => !itemMap.has(id));
-
-        const removed = Array.from(itemMap.keys()).filter(id => !itemObservableMap.has(id));
-
-        removed.forEach(id => itemMap.delete(id));
-
-        return from([
-          ...addedItems.map(([id, item$]) => item$.pipe(
-            tap(item => itemMap.set(id, item)),
-          )),
-          of(Array.from(itemObservableMap.keys())).pipe(
-            map(ids => ids.map(id => itemMap.get(id)!))
-          ),
-        ]);
-      }),
-      mergeAll(),
-      filter(compOrCompArray => Array.isArray(compOrCompArray)),
-      map(compOrCompArray => compOrCompArray as T[])
-    );
-  }
+export function log<T>(message?: string): OperatorFunction<T, T> {
+  return (input: Observable<T>) => input.pipe(
+    tap(val => message ? console.log(message, val) : console.log(val)),
+  );
 }
 
-export function generate<T, U>(
-  idFunction: (item: T) => string | number,
-  creationFunction: (item: Observable<T>) => Observable<U>,
-): OperatorFunction<T[], U[]> {
+// export function activeCombineLatest<T>(): OperatorFunction<Map<string | number, Observable<T>>, T[]> {
+//   return (map$: Observable<Map<string | number, Observable<T>>>) => {
+//     const itemMap = new Map<string | number, T>();
 
-  // const updates: Observable<Map<string | number, T>>
-  // const removed: Observable<Set<string | number>>
-  // const resultObservables: Observable<Map<string | number, Observable<U>>>
+//     return map$.pipe(
+//       switchMap(itemObservableMap => {
+//         const addedItems = Array.from(itemObservableMap.entries())
+//           .filter(([id]) => !itemMap.has(id));
 
-  return (items$: Observable<T[]>) => {
+//         const removed = Array.from(itemMap.keys()).filter(id => !itemObservableMap.has(id));
 
-    let previousItemMap = new Map<string | number, T>();
-    const changes = items$.pipe(
-      map(items => {
-        const itemsAndIds = items.map(item => [idFunction(item), item] as const);
-        const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
-        const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
-        const itemMap = new Map(itemsAndIds);
-        previousItemMap = itemMap;
-        return { updated, removed, itemMap };
-      }),
-      shareReplay(SHARE_REPLAY_CONFIG),
-    );
+//         removed.forEach(id => itemMap.delete(id));
 
-    let previousResultMap = new Map<string | number, Observable<U>>();
-    const resultObservableMap = changes.pipe(
-      map(({ itemMap }) => {
+//         return from([
+//           ...addedItems.map(([id, item$]) => item$.pipe(
+//             tap(item => itemMap.set(id, item)),
+//           )),
+//           of(Array.from(itemObservableMap.keys())).pipe(
+//             map(ids => ids.map(id => itemMap.get(id)!))
+//           ),
+//         ]);
+//       }),
+//       mergeAll(),
+//       filter(compOrCompArray => Array.isArray(compOrCompArray)),
+//       map(compOrCompArray => compOrCompArray as T[])
+//     );
+//   }
+// }
 
-        const resultsAndIds = Array.from(itemMap.entries()).map(([id, item]) => {
-          if (previousResultMap.has(id)) {
-            return [id, previousResultMap.get(id)!] as const;
-          } else {
-            const updates = changes.pipe(
-              filter(({ updated }) => updated.has(id)),
-              map(({ updated }) => updated.get(id) as T),
-              startWith(item),
-              distinctUntilChanged(),
-              takeUntil(changes.pipe(
-                filter(({ removed }) => removed.has(id)),
-              )),
-            );
-            return [id, creationFunction(updates)] as const;
-          }
-        });
+// export function generate<T, U>(
+//   idFunction: (item: T) => string | number,
+//   creationFunction: (item: Observable<T>) => Observable<U>,
+// ): OperatorFunction<T[], U[]> {
 
-        const resultMap = new Map(resultsAndIds);
-        previousResultMap = resultMap;
-        return resultMap;
-      })
-    );
+//   // const updates: Observable<Map<string | number, T>>
+//   // const removed: Observable<Set<string | number>>
+//   // const resultObservables: Observable<Map<string | number, Observable<U>>>
 
-    return resultObservableMap.pipe(
-      activeCombineLatest(),
-    )
-  };
-}
+//   return (items$: Observable<T[]>) => {
+
+//     let previousItemMap = new Map<string | number, T>();
+//     const changes = items$.pipe(
+//       map(items => {
+//         const itemsAndIds = items.map(item => [idFunction(item), item] as const);
+//         const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
+//         const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
+//         const itemMap = new Map(itemsAndIds);
+//         previousItemMap = itemMap;
+//         return { updated, removed, itemMap };
+//       }),
+//       shareReplay(SHARE_REPLAY_CONFIG),
+//     );
+
+//     let previousResultMap = new Map<string | number, Observable<U>>();
+//     const resultObservableMap = changes.pipe(
+//       map(({ itemMap }) => {
+
+//         const resultsAndIds = Array.from(itemMap.entries()).map(([id, item]) => {
+//           if (previousResultMap.has(id)) {
+//             return [id, previousResultMap.get(id)!] as const;
+//           } else {
+//             const updates = changes.pipe(
+//               filter(({ updated }) => updated.has(id)),
+//               map(({ updated }) => updated.get(id) as T),
+//               startWith(item),
+//               distinctUntilChanged(),
+//               takeUntil(changes.pipe(
+//                 filter(({ removed }) => removed.has(id)),
+//               )),
+//             );
+//             return [id, creationFunction(updates)] as const;
+//           }
+//         });
+
+//         const resultMap = new Map(resultsAndIds);
+//         previousResultMap = resultMap;
+//         return resultMap;
+//       })
+//     );
+
+//     return resultObservableMap.pipe(
+//       activeCombineLatest(),
+//     )
+//   };
+// }
