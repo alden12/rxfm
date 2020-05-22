@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 
@@ -136,7 +136,8 @@ const attributeTest = input(
 );
 
 const generateTest = of([1, 2, 3, 4]).pipe(
-  generate(i => i, i => of(new Component(document.createElement('span'))))
+  // generate(i => i, i => of('span').pipe(map(type => new Component(document.createElement(type)))))
+  generate(i => i, i => span(i)),
 );
 
 const newChildren = div(
@@ -148,7 +149,6 @@ const newChildren = div(
   ),
   'these are new children!',
   stated,
-  generateTest,
 );
 
 const test = div().pipe(
@@ -158,7 +158,7 @@ const test = div().pipe(
 );
 
 const app = div().pipe(
-  children(test, stated, newChildren),
+  children(test, stated, newChildren, generateTest),
   event('test', map(ev => console.log(ev))),
   event('test2', map(ev => console.log(ev))),
 );
