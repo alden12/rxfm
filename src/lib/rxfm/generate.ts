@@ -6,34 +6,35 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
 import { ElementType, Component, ComponentObservable } from './components';
 import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, share, tap } from 'rxjs/operators';
-import { log } from './utils';
 
 type Id = string | number;
 
-interface ItemChanges<T> {
+interface ItemDiff<T> {
   updated: Map<Id, T>;
+  added: Id[];
   removed: Set<Id>;
   itemMap: Map<Id, T>;
 }
 
-function itemChanges<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemChanges<T>> {
+function itemDiffer<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemDiff<T>> {
   return (items$: Observable<T[]>) => {
     let previousItemMap = new Map<Id, T>();
     return items$.pipe(
       map(items => {
         const itemsAndIds = items.map(item => [idFunction(item), item] as const);
         const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
+        const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id)
         const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
         const itemMap = new Map(itemsAndIds);
         previousItemMap = itemMap;
-        return { updated, removed, itemMap };
+        return { updated, added, removed, itemMap };
       }),
       share(),
     );
   }
 }
 
-interface ComponentObservableChanges<T extends ElementType, E extends Record<string, any> = never> {
+interface ComponentDiff<T extends ElementType, E extends Record<string, any> = never> {
   newComponents: [Id, ComponentObservable<T, E>][];
   removedIds: Id[];
   ids: Id[];
@@ -41,41 +42,37 @@ interface ComponentObservableChanges<T extends ElementType, E extends Record<str
 
 function createComponents<T, ET extends ElementType, E extends Record<string, any> = never>(
   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
-): OperatorFunction<ItemChanges<T>, ComponentObservableChanges<ET, E>> {
-  return (changes: Observable<ItemChanges<T>>) => {
+): OperatorFunction<ItemDiff<T>, ComponentDiff<ET, E>> {
+  return (changes: Observable<ItemDiff<T>>) => changes.pipe(
+    map(({ added, removed, itemMap }) => {
 
-    let previousIds = new Set<Id>();
-    return changes.pipe(
-      map(({ itemMap }) => {
-        const ids = Array.from(itemMap.keys());
-        const addedIds = ids.filter(id => !previousIds.has(id));
-        const removedIds = Array.from(previousIds.keys()).filter(id => !itemMap.has(id));
-        previousIds = new Set(ids);
+      const newComponents = added.map(id => {
+        const updates = changes.pipe(
+          filter(({ updated }) => updated.has(id)),
+          map(({updated}) => updated.get(id) as T),
+          startWith(itemMap.get(id)!),
+          distinctUntilChanged(),
+        );
+        const componentObservable = creationFunction(updates).pipe(
+          takeUntil(changes.pipe(
+            filter(diff => diff.removed.has(id)),
+          )),
+        );
+        return [id, componentObservable] as [Id, ComponentObservable<ET, E>];
+      });
 
-        const newComponents = addedIds.map(id => {
-          const updates = changes.pipe(
-            filter(({ updated }) => updated.has(id)),
-            map(({ updated }) => updated.get(id) as T),
-            startWith(itemMap.get(id)!),
-            distinctUntilChanged(),
-          );
-          const componentObservable = creationFunction(updates).pipe(
-            takeUntil(changes.pipe(
-              filter(({ removed }) => removed.has(id)),
-            )),
-          );
-          return [id, componentObservable] as [Id, ComponentObservable<ET, E>];
-        });
-
-        return { newComponents, removedIds, ids };
-      })
-    );
-  }
+      return {
+        newComponents,
+        removedIds: Array.from(removed),
+        ids: Array.from(itemMap.keys()),
+      };
+    })
+  );
 }
 
-function coerceToComponentsObservable<T extends ElementType, E extends Record<string, any> = never>(
-): OperatorFunction<ComponentObservableChanges<T, E>, Component<T, E>[]> {
-  return (componentObservableChanges: Observable<ComponentObservableChanges<T, E>>) => {
+function combineComponents<T extends ElementType, E extends Record<string, any> = never>(
+): OperatorFunction<ComponentDiff<T, E>, Component<T, E>[]> {
+  return (componentObservableChanges: Observable<ComponentDiff<T, E>>) => {
 
     const componentMap = new Map<Id, Component<T, E>>();
     return componentObservableChanges.pipe(
@@ -85,14 +82,12 @@ function coerceToComponentsObservable<T extends ElementType, E extends Record<st
           ...newComponents.map(([id, item$]) => item$.pipe(
             tap(component => componentMap.set(id, component)),
           )),
-          of(ids).pipe(
-            map(idArray => idArray.map(id => componentMap.get(id)!))
-          ),
+          of(ids),
         ]);
       }),
       mergeAll(),
-      filter(compOrCompArray => Array.isArray(compOrCompArray)),
-      map(compOrCompArray => compOrCompArray as Component<T, E>[])
+      filter(componentOrIds => Array.isArray(componentOrIds)),
+      map((ids: Id[]) => ids.map(id => componentMap.get(id)!)),
     );
   }
 }
@@ -102,9 +97,10 @@ export function generate<T, ET extends ElementType, E extends Record<string, any
   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
 ): OperatorFunction<T[], Component<ET, E>[]> {
   return (items$: Observable<T[]>) => items$.pipe(
-    itemChanges(idFunction),
+    itemDiffer(idFunction),
     createComponents(creationFunction),
-    coerceToComponentsObservable(),
+    combineComponents(),
+    startWith([]),
   );
 }
 
