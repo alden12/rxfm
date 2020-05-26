@@ -77,7 +77,7 @@ export type ComponentInjectChildren<T extends ElementType, E extends Record<stri
   <C extends ChildComponent[] = []>(children: C) => ComponentObservable<T, E | ChildEvents<C>>;
 
 export function component<T extends ElementType, E extends Record<string, any> = never>(
-  componentOrFn: ComponentObservable<T, E> | ComponentInjectChildren<T, E>,
+  componentFn: ComponentInjectChildren<T, E>,
 ): ComponentCreator<T, E> {
 
   function componentCreator(): ComponentObservable<T, E>
@@ -101,10 +101,8 @@ export function component<T extends ElementType, E extends Record<string, any> =
       [attributes, ...childComponents] : childComponents;
     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
 
-    return of(componentOrFn).pipe(
-      map(compOrFn => typeof compOrFn === 'function' ? compOrFn(_childComponents) : compOrFn.pipe(
-        children(..._childComponents),
-      )),
+    return of(componentFn).pipe(
+      map(compFn => compFn(_childComponents)),
       switchMap(comp => Object.keys(_attributes)
       .filter(key => typeof _attributes[key] === 'function')
       .reduce((c, key) => c.pipe(

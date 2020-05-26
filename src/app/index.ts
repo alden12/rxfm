@@ -158,9 +158,14 @@ const test = div().pipe(
   event('click', emitEvent('test', ev => ev.timeStamp)),
 );
 
-const customComponent = (id: string) => component(div({ click: setState(ev => 'hello') }, id));
+const customComponent = (id: string) => component(ch => div(
+  { click: setState(ev => 'hello') },
+  'things',
+  ...ch,
+  id,
+));
 
-const custom = customComponent('did this work do you think?')({ click: setState(ev => 1) }, 'hi there', 'how about now?');
+const custom = customComponent('leonidas this is madness')({ click: setState(ev => 1) }, 'hi there', 'how about now?');
 
 const app = div().pipe(
   children(test, stated, newChildren, generateTest, custom),
