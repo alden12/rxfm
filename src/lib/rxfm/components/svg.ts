@@ -1,4 +1,4 @@
-import { componentFactory, CreateComponent } from './factory';
+import { ComponentCreator } from './factory';
 
 export type SVGElementTypes = {
   [K in keyof SVGElementTagNameMap]: K;
@@ -71,16 +71,16 @@ function svgElementCreator<K extends keyof SVGElementTagNameMap>(tagName: K): ()
 }
 
 export type SVGComponents = {
-  [K in keyof SVGElementTagNameMap]: CreateComponent<SVGElementTagNameMap[K]>;
+  [K in keyof SVGElementTagNameMap]: ComponentCreator<SVGElementTagNameMap[K]>;
 };
 
-export const SVG: SVGComponents = Object.keys(SVGElements).reduce(
-  (components: SVGComponents, tagName: keyof SVGElementTagNameMap) => {
-    components[tagName] = componentFactory(svgElementCreator(tagName)) as CreateComponent<any>;
-    return components;
-  }, {} as SVGComponents
-);
+// export const SVG: SVGComponents = Object.keys(SVGElements).reduce(
+//   (components: SVGComponents, tagName: keyof SVGElementTagNameMap) => {
+//     components[tagName] = componentFactory(svgElementCreator(tagName)) as ComponentCreator<any>;
+//     return components;
+//   }, {} as SVGComponents
+// );
 
-export const svg = SVG.svg;
-export const g = SVG.g;
+// export const svg = SVG.svg;
+// export const g = SVG.g;
 // TODO: Add more default element types.

@@ -53,39 +53,46 @@ export type AttributeEvents<T extends EventOperators<any>> = T extends EventOper
 
 // const test = foo({ click: setState(e => e), type: 'radio', foo: 1 }, 'test');
 
+// export interface ComponentAttributes<P extends object> {
+//   props?: Partial<P>;
+// };
+
 /**
  * A function to create a component of type T.
  */
-export type CreateComponent<T extends ElementType> = {
-  (): ComponentObservable<T, never>;
-  <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, AttributeEvents<A>>;
+export type ComponentCreator<T extends ElementType, E extends Record<string, any> = never> = {
+  (): ComponentObservable<T, E>;
+  <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, E | AttributeEvents<A>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
-  ): ComponentObservable<T, ChildEvents<[C0]> | ChildEvents<C>>;
+  ): ComponentObservable<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
   <A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
-  ): ComponentObservable<T, ChildEvents<C> | AttributeEvents<A>>;
+  ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 
-export function componentFactory<T extends ElementType>(
-  elementCreationFunction: () => T,
-): CreateComponent<T> {
+export type ComponentInjectChildren<T extends ElementType, E extends Record<string, any> = never> =
+  <C extends ChildComponent[] = []>(children: C) => ComponentObservable<T, E | ChildEvents<C>>;
 
-  function createComponent(): ComponentObservable<T>
-  function createComponent<A extends EventOperators<any>>(
+export function component<T extends ElementType, E extends Record<string, any> = never>(
+  componentOrFn: ComponentObservable<T, E> | ComponentInjectChildren<T, E>,
+): ComponentCreator<T, E> {
+
+  function componentCreator(): ComponentObservable<T, E>
+  function componentCreator<A extends EventOperators<any>>(
     attributes: A & IAttributes,
-  ): ComponentObservable<T, AttributeEvents<A>>
-  function createComponent<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
+  ): ComponentObservable<T, E | AttributeEvents<A>>
+  function componentCreator<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
-  ): ComponentObservable<T, ChildEvents<[C0]> | ChildEvents<C>>
-  function createComponent<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
+  ): ComponentObservable<T, E | ChildEvents<[C0]> | ChildEvents<C>>
+  function componentCreator<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
-  ): ComponentObservable<T, ChildEvents<C> | AttributeEvents<A>>
-  function createComponent(
+  ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>
+  function componentCreator(
     attributes?: EventOperators<any> & IAttributes | ChildComponent<ElementType, any>,
     ...childComponents: ChildComponent<ElementType, any>[]
   ): ComponentObservable<T, any> {
@@ -94,20 +101,60 @@ export function componentFactory<T extends ElementType>(
       [attributes, ...childComponents] : childComponents;
     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
 
-    return of(elementCreationFunction).pipe(
-      map(elementFn => new Component(elementFn())),
-      children(..._childComponents),
-      switchMap(component => Object.keys(_attributes)
-        .filter(key => typeof _attributes[key] === 'function')
-        .reduce((component$, key) => component$.pipe(
-          event(key, _attributes[key] as OperatorFunction<Event, any>)
-        ), of(component))
-      ),
+    return of(componentOrFn).pipe(
+      map(compOrFn => typeof compOrFn === 'function' ? compOrFn(_childComponents) : compOrFn.pipe(
+        children(..._childComponents),
+      )),
+      switchMap(comp => Object.keys(_attributes)
+      .filter(key => typeof _attributes[key] === 'function')
+      .reduce((c, key) => c.pipe(
+        event(key, _attributes[key] as OperatorFunction<Event, any>)
+      ), comp)),
     );
   }
 
-  return createComponent;
+  return componentCreator;
 }
+
+// export function componentFactory<T extends ElementType>(
+//   elementCreationFunction: () => T,
+// ): ComponentCreator<T> {
+
+//   function createComponent(): ComponentObservable<T>
+//   function createComponent<A extends EventOperators<any>>(
+//     attributes: A & IAttributes,
+//   ): ComponentObservable<T, AttributeEvents<A>>
+//   function createComponent<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
+//     childComponent: C0,
+//     ...childComponents: C
+//   ): ComponentObservable<T, ChildEvents<[C0]> | ChildEvents<C>>
+//   function createComponent<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
+//     attributes: A & IAttributes,
+//     ...childComponents: C
+//   ): ComponentObservable<T, ChildEvents<C> | AttributeEvents<A>>
+//   function createComponent(
+//     attributes?: EventOperators<any> & IAttributes | ChildComponent<ElementType, any>,
+//     ...childComponents: ChildComponent<ElementType, any>[]
+//   ): ComponentObservable<T, any> {
+
+//     const _childComponents = (attributes instanceof Observable || typeof attributes !== 'object') ?
+//       [attributes, ...childComponents] : childComponents;
+//     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
+
+//     return of(elementCreationFunction).pipe(
+//       map(elementFn => new Component(elementFn())),
+//       children(..._childComponents),
+//       switchMap(component => Object.keys(_attributes)
+//         .filter(key => typeof _attributes[key] === 'function')
+//         .reduce((component$, key) => component$.pipe(
+//           event(key, _attributes[key] as OperatorFunction<Event, any>)
+//         ), of(component))
+//       ),
+//     );
+//   }
+
+//   return createComponent;
+// }
 
 // type EventTypes<T extends EventOperators> = {
 //   [K in keyof T]: T[K] extends OperatorFunction<any, EmitEvent<infer EK, infer EV>> ? Record<EK, EV> : never;

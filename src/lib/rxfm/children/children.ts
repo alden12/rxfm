@@ -17,7 +17,7 @@ export type ComponentLike<T extends ElementType, E extends Record<string, any> =
 //   string | number | NullLike |
 //   Observable<string | number | NullLike | EventWrapper<T, E> | EventWrapper<T, E>[]>;
 
-export type ChildComponent<T extends ElementType, E> =
+export type ChildComponent<T extends ElementType = ElementType, E = Record<string, any>> =
   StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
@@ -87,7 +87,7 @@ export type ChildEvents<T extends ChildComponent<ElementType, Record<string, any
   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 }>;
 
-// type StringChildTest = ChildEvents<string[]>;
+type StringChildTest = ChildEvents<[]>;
 
 export function children<T extends ElementType, C extends ChildComponent<ElementType, Record<string, any>>[], E = never>(
   ...childComponents: C

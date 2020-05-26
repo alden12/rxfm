@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, component } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 
@@ -143,6 +143,7 @@ const generateTest = of([1, 2, 3, 4]).pipe(
 const newChildren = div(
   {
     click: emitEvent('attribute', ev => { console.log('it worked!'); return 1 }),
+    // props: {},
   },
   div('button').pipe(
     event('click', map(ev => new EmitEvent('test2', ev.screenX))),
@@ -157,8 +158,12 @@ const test = div().pipe(
   event('click', emitEvent('test', ev => ev.timeStamp)),
 );
 
+const customComponent = (id: string) => component(div({ click: setState(ev => 'hello') }, id));
+
+const custom = customComponent('did this work do you think?')({ click: setState(ev => 1) }, 'hi there', 'how about now?');
+
 const app = div().pipe(
-  children(test, stated, newChildren, generateTest),
+  children(test, stated, newChildren, generateTest, custom),
   event('test', map(ev => console.log(ev))),
   event('test2', map(ev => console.log(ev))),
 );
