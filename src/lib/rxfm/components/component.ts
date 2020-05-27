@@ -2,6 +2,7 @@ import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
 import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { EventKeys, EventValue, EventDelete } from '../utils';
 import { EmitEvent, ElementEventMap } from '../events';
+import { getComponentCreator } from './creator';
 
 export type ElementType = HTMLElement | SVGElement;
 
@@ -24,6 +25,8 @@ export type ComponentObservable<T extends ElementType, E extends Record<string, 
 //   Observable<T | Component<T, E>>;
 
 export class Component<T extends ElementType, E extends Record<string, any> = never> {
+
+  public static readonly wrap = getComponentCreator;
 
   constructor(public readonly element: T) {}
 

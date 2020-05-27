@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, component } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 
@@ -158,7 +158,7 @@ const test = div().pipe(
   event('click', emitEvent('test', ev => ev.timeStamp)),
 );
 
-const customComponent = (id: string) => component(ch => div(
+const customComponent = (id: string) => Component.wrap(ch => div(
   { click: setState(ev => 'hello') },
   'things',
   ...ch,

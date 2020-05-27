@@ -60,7 +60,7 @@ export type AttributeEvents<T extends EventOperators<any>> = T extends EventOper
 /**
  * A function to create a component of type T.
  */
-export type ComponentCreator<T extends ElementType, E extends Record<string, any> = never> = {
+export type ComponentCreatorFunction<T extends ElementType, E extends Record<string, any> = never> = {
   (): ComponentObservable<T, E>;
   <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, E | AttributeEvents<A>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
@@ -73,12 +73,12 @@ export type ComponentCreator<T extends ElementType, E extends Record<string, any
   ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 
-export type ComponentInjectChildren<T extends ElementType, E extends Record<string, any> = never> =
+export type ComponentFromChildren<T extends ElementType, E extends Record<string, any> = never> =
   <C extends ChildComponent[] = []>(children: C) => ComponentObservable<T, E | ChildEvents<C>>;
 
-export function component<T extends ElementType, E extends Record<string, any> = never>(
-  componentFn: ComponentInjectChildren<T, E>,
-): ComponentCreator<T, E> {
+export function getComponentCreator<T extends ElementType, E extends Record<string, any> = never>(
+  componentFunction: ComponentFromChildren<T, E>,
+): ComponentCreatorFunction<T, E> {
 
   function componentCreator(): ComponentObservable<T, E>
   function componentCreator<A extends EventOperators<any>>(
@@ -101,7 +101,7 @@ export function component<T extends ElementType, E extends Record<string, any> =
       [attributes, ...childComponents] : childComponents;
     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
 
-    return of(componentFn).pipe(
+    return of(componentFunction).pipe(
       map(compFn => compFn(_childComponents)),
       switchMap(comp => Object.keys(_attributes)
       .filter(key => typeof _attributes[key] === 'function')

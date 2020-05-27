@@ -1,4 +1,4 @@
-import { ComponentCreator } from './factory';
+import { ComponentCreatorFunction } from './creator';
 
 export type SVGElementTypes = {
   [K in keyof SVGElementTagNameMap]: K;
@@ -71,7 +71,7 @@ function svgElementCreator<K extends keyof SVGElementTagNameMap>(tagName: K): ()
 }
 
 export type SVGComponents = {
-  [K in keyof SVGElementTagNameMap]: ComponentCreator<SVGElementTagNameMap[K]>;
+  [K in keyof SVGElementTagNameMap]: ComponentCreatorFunction<SVGElementTagNameMap[K]>;
 };
 
 // export const SVG: SVGComponents = Object.keys(SVGElements).reduce(
