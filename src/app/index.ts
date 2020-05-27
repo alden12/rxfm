@@ -169,9 +169,7 @@ const customComponent = (id: string) => Component.wrap((childElements, attribute
 ));
 
 const custom = customComponent('leonidas this is madness')(
-  {
-    click: setState(ev => '1'),
-  },
+  { click: setState(ev => '1') },
   'hi there',
   'how about now?',
 );

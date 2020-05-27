@@ -1,8 +1,7 @@
 import { ComponentCreatorFunction, ComponentFunction } from './creator';
-import { ChildComponent, ChildEvents, children } from '../children/children';
-import { ElementType, ComponentObservable, Component } from './component';
+import { ChildComponent, children } from '../children/children';
+import { Component } from './component';
 import { of } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 export type HTMLElementTypes = {
   [K in keyof HTMLElementTagNameMap]: K;
@@ -130,12 +129,12 @@ const HTMLElements: HTMLElementTypes = {
   wbr: 'wbr',
 };
 
-function getHTMLCreationFunction<K extends keyof HTMLElementTagNameMap>(
+function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<HTMLElementTagNameMap[K]> {
   return<C extends ChildComponent[] = []>(childComponents: C) => of(new Component(document.createElement(tagName))).pipe(
     children(...childComponents),
-  );
+  ); // TODO: Handle attributes.
 }
 
 export type HTMLComponentCreators = {
@@ -144,16 +143,10 @@ export type HTMLComponentCreators = {
 
 export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
   (components: HTMLComponentCreators, tagName: keyof HTMLElementTagNameMap) => {
-    components[tagName] = Component.wrap(getHTMLCreationFunction(tagName)) as ComponentCreatorFunction<any>;
+    components[tagName] = Component.wrap(getHTMLComponentFunction(tagName)) as ComponentCreatorFunction<any>;
     return components;
   }, {} as HTMLComponentCreators
 );
-// export const HTML: HTMLComponents = Object.keys(HTMLElements).reduce(
-//   (components: HTMLComponents, tagName: keyof HTMLElementTagNameMap) => {
-//     components[tagName] = componentFactory(htmlElementCreator(tagName)) as ComponentCreator<any>;
-//     return components;
-//   }, {} as HTMLComponents
-// );
 
 export const div = HTML.div;
 export const span = HTML.span;
