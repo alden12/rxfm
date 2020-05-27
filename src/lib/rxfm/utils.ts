@@ -1,4 +1,4 @@
-import { Observable, OperatorFunction, of, from } from 'rxjs';
+import { Observable, OperatorFunction, of } from 'rxjs';
 import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
 
 export type EventKeys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
@@ -133,6 +133,18 @@ export function log<T>(message?: string): OperatorFunction<T, T> {
   return (input: Observable<T>) => input.pipe(
     tap(val => message ? console.log(message, val) : console.log(val)),
   );
+}
+
+export function filterObject<T extends object>(
+  object: T,
+  filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
+): Partial<T> {
+  return Object.keys(object).reduce((filtered, key) => {
+    if (filterFn(object[key], key as keyof T)) {
+      filtered[key] = object[key];
+    }
+    return filtered;
+  }, {} as Partial<T>)
 }
 
 // export function activeCombineLatest<T>(): OperatorFunction<Map<string | number, Observable<T>>, T[]> {

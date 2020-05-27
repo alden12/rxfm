@@ -2,13 +2,13 @@ import { ElementType, Component, ComponentObservable } from './component';
 import { ChildComponent, children, ChildEvents } from '../children/children';
 import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Dictionary } from '../utils';
+import { Dictionary, filterObject } from '../utils';
 import { ElementEventMap, EmitEvent, event } from '../events';
 import { setState } from '../state';
 import { IAttributes } from '../attributes';
 // import { ElementAttributeMap, ElementAttributes, AttributeEvents, EventOperators } from '../attributes';
 
-export type EventOperators<E> = {
+export type EventOperators<E = any> = {
   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
 }
 
@@ -23,7 +23,7 @@ export type EventOperators<E> = {
 //   attributes?: Dictionary<string> | Observable<Dictionary<string>>;
 // }
 
-export type AttributeEvents<T extends EventOperators<any>> = T extends EventOperators<infer E> ?
+export type AttributeEvents<T extends EventOperators> = T extends EventOperators<infer E> ?
   E extends EmitEvent<infer ET, infer EV> ? Record<ET, EV> : never : never;
 
 // function inputAttributes <T extends IAttributes, E extends keyof ElementAttributes>(
@@ -73,11 +73,11 @@ export type ComponentCreatorFunction<T extends ElementType, E extends Record<str
   ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 
-export type ComponentFromChildren<T extends ElementType, E extends Record<string, any> = never> =
-  <C extends ChildComponent[] = []>(children: C) => ComponentObservable<T, E | ChildEvents<C>>;
+export type ComponentFunction<T extends ElementType, E extends Record<string, any> = never> =
+  <C extends ChildComponent[] = []>(children: C, attributes: IAttributes) => ComponentObservable<T, E | ChildEvents<C>>;
 
 export function getComponentCreator<T extends ElementType, E extends Record<string, any> = never>(
-  componentFunction: ComponentFromChildren<T, E>,
+  componentFunction: ComponentFunction<T, E>,
 ): ComponentCreatorFunction<T, E> {
 
   function componentCreator(): ComponentObservable<T, E>
@@ -102,12 +102,12 @@ export function getComponentCreator<T extends ElementType, E extends Record<stri
     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
 
     return of(componentFunction).pipe(
-      map(compFn => compFn(_childComponents)),
+      map(compFn => compFn(_childComponents, filterObject(_attributes, val => typeof val !== 'function'))),
       switchMap(comp => Object.keys(_attributes)
-      .filter(key => typeof _attributes[key] === 'function')
-      .reduce((c, key) => c.pipe(
-        event(key, _attributes[key] as OperatorFunction<Event, any>)
-      ), comp)),
+        .filter(key => typeof _attributes[key] === 'function')
+        .reduce((c, key) => c.pipe(
+          event(key, _attributes[key] as OperatorFunction<Event, any>)
+        ), comp)),
     );
   }
 

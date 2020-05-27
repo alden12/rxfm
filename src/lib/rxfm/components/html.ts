@@ -1,4 +1,4 @@
-import { ComponentCreatorFunction, ComponentFromChildren } from './creator';
+import { ComponentCreatorFunction, ComponentFunction } from './creator';
 import { ChildComponent, ChildEvents, children } from '../children/children';
 import { ElementType, ComponentObservable, Component } from './component';
 import { of } from 'rxjs';
@@ -132,7 +132,7 @@ const HTMLElements: HTMLElementTypes = {
 
 function getHTMLCreationFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): ComponentFromChildren<HTMLElementTagNameMap[K]> {
+): ComponentFunction<HTMLElementTagNameMap[K]> {
   return<C extends ChildComponent[] = []>(childComponents: C) => of(new Component(document.createElement(tagName))).pipe(
     children(...childComponents),
   );

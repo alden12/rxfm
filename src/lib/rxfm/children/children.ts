@@ -17,6 +17,7 @@ export type ComponentLike<T extends ElementType, E extends Record<string, any> =
 //   string | number | NullLike |
 //   Observable<string | number | NullLike | EventWrapper<T, E> | EventWrapper<T, E>[]>;
 
+// TODO: Add ability to pass component creator function?
 export type ChildComponent<T extends ElementType = ElementType, E = Record<string, any>> =
   StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
