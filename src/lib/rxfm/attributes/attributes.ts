@@ -3,12 +3,13 @@
 // import { attributeDiffer } from './attribute-differ';
 // import { ComponentOld, ComponentOperatorOld } from '../components';
 // import { distinctUntilKeysChanged } from '../utils';
-import { OperatorFunction, Observable } from 'rxjs';
+import { OperatorFunction, Observable, of, combineLatest } from 'rxjs';
 import { EmitEvent } from '../events';
 import { Dictionary } from '../utils';
-import { ElementType } from '../components';
+import { ElementType, ComponentOperator, input, ComponentObservable, EventType } from '../components';
 import { HTMLAttributes } from './html';
 import { SVGAttributes } from './svg';
+import { switchMap, mapTo, distinctUntilChanged, tap, map, debounceTime } from 'rxjs/operators';
 
 // export type EventOperators<E> = {
 //   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
@@ -25,6 +26,46 @@ export type TypeOrObservable<T> = T | Observable<T>;
 export type IAttributes = {
   [K in keyof (HTMLAttributes & SVGAttributes)]?: TypeOrObservable<(HTMLAttributes & SVGAttributes)[K]>;
 };
+
+export function attribute<T extends ElementType, E extends EventType>(
+  type: string,
+  value: string | Observable<string>,
+): ComponentOperator<T, E> {
+  return (component: ComponentObservable<T, E>) => component.pipe(
+    switchMap(comp => {
+      const attributeObservable = value instanceof Observable ? value : of(value);
+      return attributeObservable.pipe(
+        distinctUntilChanged(),
+        tap(val => val ? comp.element.setAttribute(type, val) : comp.element.removeAttribute(type)),
+        mapTo(comp),
+        distinctUntilChanged(),
+      );
+    }),
+  );
+}
+
+// export function attributes<T extends ElementType, E extends EventType>(
+//   attributeDict: Dictionary<string | Observable<string>>,
+// ): ComponentOperator<T, E> {
+//   const res = (component: ComponentObservable<T, E>) => component.pipe(
+//     switchMap(comp => {
+//       const attributeObservables = Object.keys(attributeDict).map<Observable<[string, string]>>(key => {
+//         const value = attributeDict[key];
+//         const attributeObservable = value instanceof Observable ? value : of(value);
+//         return attributeObservable.pipe(
+//           map(val => [key, val])
+//         )
+//       });
+//       return combineLatest(attributeObservables).pipe(
+//         debounceTime(0),
+//         map(keyValPairs => keyValPairs.reduce((result, [name, value]) => {
+//           result[name] = value;
+//           return result;
+//         }, {} as StringAttributes)),
+//       );
+//     }),
+//   );
+// }
 
 // export type KnownPartial<T> = {
 //   [K in keyof T]?:

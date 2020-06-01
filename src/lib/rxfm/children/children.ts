@@ -3,12 +3,12 @@ import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo,
 // import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
 import { childDiffer } from './child-differ';
 import { SHARE_REPLAY_CONFIG } from '../utils';
-import { ElementType, Component, ComponentOperator, ComponentObservable } from '../components';
+import { ElementType, Component, ComponentOperator, ComponentObservable, EventType } from '../components';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
 // export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
-export type ComponentLike<T extends ElementType, E extends Record<string, any> = never> = Component<T, E> | Component<T, E>[];
+export type ComponentLike<T extends ElementType, E extends EventType = never> = Component<T, E> | Component<T, E>[];
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
@@ -18,7 +18,7 @@ export type ComponentLike<T extends ElementType, E extends Record<string, any> =
 //   Observable<string | number | NullLike | EventWrapper<T, E> | EventWrapper<T, E>[]>;
 
 // TODO: Add ability to pass component creator function?
-export type ChildComponent<T extends ElementType = ElementType, E = Record<string, any>> =
+export type ChildComponent<T extends ElementType = ElementType, E = EventType> =
   StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
@@ -79,18 +79,18 @@ function updateElementChildren<T extends ElementType>(
   return el;
 }
 
-export type ArrayType<T extends any[]> = T extends (infer A)[] ? A extends Record<string, any> ? A : never : never;
+export type ArrayType<T extends any[]> = T extends (infer A)[] ? A extends EventType ? A : never : never;
 
 // export type ChildEvent<T extends ChildComponent<ElementType, any>> =
 //   T extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 
-export type ChildEvents<T extends ChildComponent<ElementType, Record<string, any>>[]> = ArrayType<{
+export type ChildEvents<T extends ChildComponent<ElementType, EventType>[]> = ArrayType<{
   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 }>;
 
 type StringChildTest = ChildEvents<[]>;
 
-export function children<T extends ElementType, C extends ChildComponent<ElementType, Record<string, any>>[], E = never>(
+export function children<T extends ElementType, C extends ChildComponent<ElementType, EventType>[], E = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
   return (component$: ComponentObservable<T, E>) => component$.pipe(

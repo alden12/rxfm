@@ -6,31 +6,33 @@ import { getComponentCreator } from './creator';
 
 export type ElementType = HTMLElement | SVGElement;
 
+export type EventType<K extends string = string, V = any> = Record<K, V>;
+
 // Deprecated
 // tslint:disable: max-line-length
-export type EventsFor <T extends Element, E extends Record<any, any>> = T & {
+export type EventsFor <T extends Element, E extends EventType> = T & {
   addEventListener<K extends EventKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<EventValue<E, K>>) => any, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends EventKeys<E>>(type: K, listener: (this: T, ev: CustomEvent<EventValue<E, K>>) => any, options?: boolean | EventListenerOptions): void;
 };
 // tslint:enable: max-line-length
 
-export interface ICapture<T extends ElementType, E extends Record<string, any>, EV> {
+export interface ICapture<T extends ElementType, E extends EventType, EV> {
   component: Component<T, E>;
   event: Observable<EV>;
 }
 
-export type ComponentObservable<T extends ElementType, E extends Record<string, any> = never> = Observable<Component<T, E>>;
+export type ComponentObservable<T extends ElementType, E extends EventType = never> = Observable<Component<T, E>>;
 
-// export type ComponentOrElementObservable<T extends ElementType, E extends Record<string, any> = never> =
+// export type ComponentOrElementObservable<T extends ElementType, E extends EventType = never> =
 //   Observable<T | Component<T, E>>;
 
-export class Component<T extends ElementType, E extends Record<string, any> = never> {
+export class Component<T extends ElementType, E extends EventType = never> {
 
   public static readonly wrap = getComponentCreator;
 
   constructor(public readonly element: T) {}
 
-  public dispatch<K extends string, V>(type: K, value: V): Component<T, E | Record<K, V>> {
+  public dispatch<K extends string, V>(type: K, value: V): Component<T, E | EventType<K, V>> {
     this.element.dispatchEvent(new CustomEvent(type, { detail: value, bubbles: true }));
     return this;
   }
@@ -50,7 +52,7 @@ export class Component<T extends ElementType, E extends Record<string, any> = ne
   public inject<EC, EV, K extends string, V>(
     capture: ICapture<T, EC, EV>,
     operator: OperatorFunction<EV, EmitEvent<K, V>>,
-  ): ComponentObservable<T, EC | Record<K, V>>
+  ): ComponentObservable<T, EC | EventType<K, V>>
   public inject<EC, EV>(
     capture: ICapture<T, EC, EV>,
     operator: OperatorFunction<EV, any>,
@@ -68,10 +70,10 @@ export class Component<T extends ElementType, E extends Record<string, any> = ne
   }
 }
 
-export type ComponentOperator<T extends ElementType, E extends Record<string, any> = never, O = E> =
+export type ComponentOperator<T extends ElementType, E extends EventType = never, O = E> =
   (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;
 
-// export function coerceToComponent<T extends ElementType, E extends Record<string, any> = never>(
+// export function coerceToComponent<T extends ElementType, E extends EventType = never>(
 // ): OperatorFunction<T | Component<T, E>, Component<T, E>> {
 //   return (component: Observable<T | Component<T, E>>) => component.pipe(
 //     map(_component => _component instanceof Component ? _component : new Component<T, E>(_component)),

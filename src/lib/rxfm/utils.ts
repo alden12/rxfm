@@ -1,13 +1,14 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
 import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
+import { EventType } from './components';
 
-export type EventKeys<T extends Record<any, any>> = T extends Record<infer K, any> ? K : never;
+export type EventKeys<T extends EventType> = T extends EventType<infer K, any> ? K : never;
 
-export type EventValue<T extends Record<any, any>, K extends EventKeys<T>> = T extends Record<K, infer V> ? V : never;
+export type EventValue<T extends EventType, K extends EventKeys<T>> = T extends EventType<K, infer V> ? V : never;
 
-export type EventGet<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? Record<K, T[K]> : never;
+export type EventGet<T extends EventType, K extends string> = T extends EventType<K, any> ? EventType<K, T[K]> : never;
 
-export type EventDelete<T extends Record<any, any>, K extends string> = T extends Record<K, any> ? never : T;
+export type EventDelete<T extends EventType, K extends string> = T extends EventType<K, any> ? never : T;
 
 export interface Dictionary<T> { [key: string]: T }
 

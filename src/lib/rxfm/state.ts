@@ -4,7 +4,7 @@
 // import { SHARE_REPLAY_CONFIG, distinctUntilKeysChanged } from './utils';
 // import { extractEvent } from './events';
 
-import { ElementType, ComponentObservable } from './components';
+import { ElementType, ComponentObservable, EventType } from './components';
 import { Observable, BehaviorSubject, OperatorFunction, of } from 'rxjs';
 import { EventDelete } from './utils';
 import { event, EmitEvent, emitEvent } from './events';
@@ -13,7 +13,7 @@ import { tap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 export const SET_STATE = 'rxfmSetState' as const;
 export type SetState = typeof SET_STATE;
 
-export function stateful<T extends ElementType, S, E extends Record<SetState, Partial<S>>>(
+export function stateful<T extends ElementType, S, E extends EventType<SetState, Partial<S>>>(
     initialState: S,
     creationFunction: (state: Observable<S>) => ComponentObservable<T, E>,
 ): ComponentObservable<T, EventDelete<E, SetState>> {

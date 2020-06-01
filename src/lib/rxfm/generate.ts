@@ -4,7 +4,7 @@
 // import { ComponentOld, IComponent } from './components';
 
 import { Observable, OperatorFunction, from, of } from 'rxjs';
-import { ElementType, Component, ComponentObservable } from './components';
+import { ElementType, Component, ComponentObservable, EventType } from './components';
 import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, share, tap } from 'rxjs/operators';
 
 type Id = string | number;
@@ -34,13 +34,13 @@ function itemDiffer<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemD
   }
 }
 
-interface ComponentDiff<T extends ElementType, E extends Record<string, any> = never> {
+interface ComponentDiff<T extends ElementType, E extends EventType = never> {
   newComponents: [Id, ComponentObservable<T, E>][];
   removedIds: Id[];
   ids: Id[];
 }
 
-function createComponents<T, ET extends ElementType, E extends Record<string, any> = never>(
+function createComponents<T, ET extends ElementType, E extends EventType = never>(
   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
 ): OperatorFunction<ItemDiff<T>, ComponentDiff<ET, E>> {
   return (changes: Observable<ItemDiff<T>>) => changes.pipe(
@@ -70,7 +70,7 @@ function createComponents<T, ET extends ElementType, E extends Record<string, an
   );
 }
 
-function combineComponents<T extends ElementType, E extends Record<string, any> = never>(
+function combineComponents<T extends ElementType, E extends EventType = never>(
 ): OperatorFunction<ComponentDiff<T, E>, Component<T, E>[]> {
   return (componentObservableChanges: Observable<ComponentDiff<T, E>>) => {
 
@@ -92,7 +92,7 @@ function combineComponents<T extends ElementType, E extends Record<string, any> 
   }
 }
 
-export function generate<T, ET extends ElementType, E extends Record<string, any> = never>(
+export function generate<T, ET extends ElementType, E extends EventType = never>(
   idFunction: (item: T) => Id,
   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
 ): OperatorFunction<T[], Component<ET, E>[]> {
@@ -104,7 +104,7 @@ export function generate<T, ET extends ElementType, E extends Record<string, any
   );
 }
 
-// export function generate<T, ET extends ElementType, E extends Record<string, any> = never>(
+// export function generate<T, ET extends ElementType, E extends EventType = never>(
 //   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
 //   idFunction: (item: T) => string | number,
 // ): OperatorFunction<I[], Component<ET, E>[]> {

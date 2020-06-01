@@ -4,9 +4,10 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
+import './styles.css';
 
 // export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
 
@@ -58,7 +59,7 @@ import { interval, Observable, EMPTY, of } from 'rxjs';
 //   creationFunction: (state: Observable<Partial<S>>) => Observable<EventsFor<T, E>>,
 // ): Observable<EventsFor<T, UnionDelete<E, SetState>>> {
 
-// class RecordComponent<T extends keyof HTMLElementTagNameMap, E extends Record<string, any>> {
+// class RecordComponent<T extends keyof HTMLElementTagNameMap, E extends EventType> {
 // comp: T; evs: E };
 
 // export function stated_<S, E extends Record<SetState, Partial<S>>>(
@@ -90,6 +91,9 @@ const statedStateless = (state: Observable<IState>) => div(
   state.pipe(map(({ enabled }) => enabled ? 'yay' : 'nope')),
   state.pipe(select('foo')),
   selectFrom(state, 'foo')
+).pipe(
+  attribute('style', state.pipe(map(({ enabled }) => enabled ? 'color: red' : 'color: blue'))),
+  classes(selectFrom(state, 'enabled').pipe(map(enabled => enabled && 'test-class'))),
 )
 
 // .pipe(
@@ -156,6 +160,7 @@ const test = div().pipe(
   children('new component test'),
   event('contextmenu', map(ev => { console.log(ev); return ev; })),
   event('click', emitEvent('test', ev => ev.timeStamp)),
+  attribute('style', 'color: red'),
 );
 
 const customComponent = (id: string) => Component.wrap((childElements, attributes) => div(

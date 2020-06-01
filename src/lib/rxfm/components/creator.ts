@@ -1,4 +1,4 @@
-import { ElementType, Component, ComponentObservable } from './component';
+import { ElementType, Component, ComponentObservable, EventType } from './component';
 import { ChildComponent, children, ChildEvents } from '../children/children';
 import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -24,7 +24,7 @@ export type EventOperators<E = any> = {
 // }
 
 export type AttributeEvents<T extends EventOperators> = T extends EventOperators<infer E> ?
-  E extends EmitEvent<infer ET, infer EV> ? Record<ET, EV> : never : never;
+  E extends EmitEvent<infer ET, infer EV> ? EventType<ET, EV> : never : never;
 
 // function inputAttributes <T extends IAttributes, E extends keyof ElementAttributes>(
 //   attributes: T & ElementAttributes[E],
@@ -60,7 +60,7 @@ export type AttributeEvents<T extends EventOperators> = T extends EventOperators
 /**
  * A function to create a component of type T.
  */
-export type ComponentCreatorFunction<T extends ElementType, E extends Record<string, any> = never> = {
+export type ComponentCreatorFunction<T extends ElementType, E extends EventType = never> = {
   (): ComponentObservable<T, E>;
   <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, E | AttributeEvents<A>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
@@ -73,10 +73,10 @@ export type ComponentCreatorFunction<T extends ElementType, E extends Record<str
   ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 
-export type ComponentFunction<T extends ElementType, E extends Record<string, any> = never> =
+export type ComponentFunction<T extends ElementType, E extends EventType = never> =
   <C extends ChildComponent[] = []>(children: C, attributes: IAttributes) => ComponentObservable<T, E | ChildEvents<C>>;
 
-export function getComponentCreator<T extends ElementType, E extends Record<string, any> = never>(
+export function getComponentCreator<T extends ElementType, E extends EventType = never>(
   componentFunction: ComponentFunction<T, E>,
 ): ComponentCreatorFunction<T, E> {
 
