@@ -2,6 +2,7 @@ import { ComponentCreatorFunction, ComponentFunction } from './creator';
 import { ChildComponent, children } from '../children/children';
 import { Component } from './component';
 import { of } from 'rxjs';
+import { IAttributes, attributes } from '../attributes';
 
 export type SVGElementTypes = {
   [K in keyof SVGElementTagNameMap]: K;
@@ -72,10 +73,11 @@ const SVGNamespace = 'http://www.w3.org/2000/svg';
 function getSVGComponentFunction<K extends keyof SVGElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<SVGElementTagNameMap[K]> {
-  return<C extends ChildComponent[] = []>(childComponents: C) =>
+  return<C extends ChildComponent[] = []>(childComponents: C, _attributes: IAttributes) =>
     of(new Component(document.createElementNS(SVGNamespace, tagName))).pipe(
       children(...childComponents),
-    ); // TODO: Handle attributes.
+      attributes(_attributes),
+    );
 }
 
 export type SVGComponentCreators = {

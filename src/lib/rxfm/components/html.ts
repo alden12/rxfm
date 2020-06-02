@@ -2,6 +2,7 @@ import { ComponentCreatorFunction, ComponentFunction } from './creator';
 import { ChildComponent, children } from '../children/children';
 import { Component } from './component';
 import { of } from 'rxjs';
+import { IAttributes, attributes } from '../attributes';
 
 export type HTMLElementTypes = {
   [K in keyof HTMLElementTagNameMap]: K;
@@ -132,9 +133,11 @@ const HTMLElements: HTMLElementTypes = {
 function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<HTMLElementTagNameMap[K]> {
-  return<C extends ChildComponent[] = []>(childComponents: C) => of(new Component(document.createElement(tagName))).pipe(
+  return<C extends ChildComponent[] = []>(childComponents: C, _attributes: IAttributes) =>
+  of(new Component(document.createElement(tagName))).pipe(
     children(...childComponents),
-  ); // TODO: Handle attributes.
+    attributes(_attributes),
+  );
 }
 
 export type HTMLComponentCreators = {

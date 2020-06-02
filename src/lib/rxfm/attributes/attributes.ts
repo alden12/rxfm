@@ -5,11 +5,13 @@
 // import { distinctUntilKeysChanged } from '../utils';
 import { OperatorFunction, Observable, of, combineLatest } from 'rxjs';
 import { EmitEvent } from '../events';
-import { Dictionary } from '../utils';
-import { ElementType, ComponentOperator, input, ComponentObservable, EventType } from '../components';
+import { Dictionary, coerceToArray } from '../utils';
+import { ElementType, ComponentOperator, ComponentObservable, EventType } from '../components';
 import { HTMLAttributes } from './html';
 import { SVGAttributes } from './svg';
 import { switchMap, mapTo, distinctUntilChanged, tap, map, debounceTime } from 'rxjs/operators';
+import { styles, Styles, StylesOrNull } from './styles';
+import { classes, ClassType } from './classes';
 
 // export type EventOperators<E> = {
 //   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
@@ -23,9 +25,14 @@ import { switchMap, mapTo, distinctUntilChanged, tap, map, debounceTime } from '
 // }
 export type TypeOrObservable<T> = T | Observable<T>;
 
+export interface SpecialAttributes {
+  class?: ClassType | ClassType[];
+  style?: Styles | Observable<StylesOrNull>
+}
+
 export type IAttributes = {
   [K in keyof (HTMLAttributes & SVGAttributes)]?: TypeOrObservable<(HTMLAttributes & SVGAttributes)[K]>;
-};
+} & SpecialAttributes;
 
 export function attribute<T extends ElementType, E extends EventType>(
   type: string,
@@ -42,6 +49,21 @@ export function attribute<T extends ElementType, E extends EventType>(
       );
     }),
   );
+}
+
+export function attributes<T extends ElementType, E extends EventType>(
+  attributeDict: IAttributes,
+): ComponentOperator<T, E> {
+  return (input: ComponentObservable<T, E>) => Object.keys(attributeDict)
+  .filter(key => attributeDict[key] !== undefined)
+  .reduce((component, key) => {
+    if (key === 'style') {
+      return component.pipe(styles(attributeDict.style!));
+    } else if (key === 'class') {
+      return component.pipe(classes(...coerceToArray(attributeDict.class!)));
+    }
+    return component.pipe(attribute(key, attributeDict[key]!));
+  }, input);
 }
 
 // export function attributes<T extends ElementType, E extends EventType>(

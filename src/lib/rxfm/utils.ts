@@ -155,6 +155,10 @@ export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
   return value instanceof Observable ? value : of(value);
 }
 
+export function coerceToArray<T>(value: T | T[]): T[] {
+  return Array.isArray(value) ? value : [value];
+}
+
 // export function activeCombineLatest<T>(): OperatorFunction<Map<string | number, Observable<T>>, T[]> {
 //   return (map$: Observable<Map<string | number, Observable<T>>>) => {
 //     const itemMap = new Map<string | number, T>();

@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes, style, watchFrom, styles } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes, style, watchFrom, styles, attributes } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 import './styles.css';
@@ -86,7 +86,10 @@ interface IState { enabled: boolean, foo: string }
 
 const statedStateless = (state: Observable<IState>) => div(
   {
-    click: setState(state, ({ enabled }) => ({ enabled: !enabled }))
+    click: setState(state, ({ enabled }) => ({ enabled: !enabled })),
+    title: 'hello',
+    class: watchFrom(state, ({ enabled }) => enabled && 'test-class'),
+    style: { color: 'red' },
   },
   state.pipe(map(({ enabled }) => enabled ? 'yay' : 'nope')),
   state.pipe(select('foo')),
@@ -98,11 +101,17 @@ const statedStateless = (state: Observable<IState>) => div(
   //   fontSize: '18px',
   //   color: watchFrom(state, ({ enabled }) => enabled ? 'orange' : null),
   // }),
-  styles(watchFrom(state, ({ enabled }) => ({
-    fontSize: '20px',
-    color: enabled ? 'red' : null,
-  }))),
-  classes(selectFrom(state, 'enabled').pipe(map(enabled => enabled && 'test-class'))),
+  // styles(watchFrom(state, ({ enabled }) => ({
+  //   fontSize: '20px',
+  //   color: enabled ? 'red' : null,
+  // }))),
+  // classes(selectFrom(state, 'enabled').pipe(map(enabled => enabled && 'test-class'))),
+  // attributes({
+  //   title: 'hello',
+  //   class: watchFrom(state, ({ enabled }) => enabled && 'test-class'),
+  //   // class: 'test-class',
+  //   style: { color: 'red' },
+  // }),
 )
 
 // .pipe(
@@ -156,6 +165,7 @@ const generateTest = of([1, 2, 3, 4]).pipe(
 const newChildren = div(
   {
     click: emitEvent('attribute', ev => { console.log('it worked!'); return 1 }),
+    style: { padding: '10px' },
     // props: {},
   },
   div('button').pipe(

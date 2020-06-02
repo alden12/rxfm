@@ -21,7 +21,7 @@ export interface SVGAttributes {
   by: string;
   calcMode: string;
   'cap-height': string;
-  class: string;
+  // class: string;
   clip: string;
   clipPathUnits: string;
   'clip-path': string;
@@ -196,7 +196,7 @@ export interface SVGAttributes {
   'stroke-miterlimit': string;
   'stroke-opacity': string;
   'stroke-width': string;
-  style: string;
+  // style: string;
   surfaceScale: string;
   systemLanguage: string;
   tabindex: string;

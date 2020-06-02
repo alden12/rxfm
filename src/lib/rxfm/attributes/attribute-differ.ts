@@ -1,5 +1,7 @@
 // import { StringAttributes } from './attributes';
 
+// DEPRECATED
+
 // /**
 //  * An interface to describe the difference between two states of an HTML elements attributes.
 //  */
