@@ -27,6 +27,7 @@ export function watch<T, U>(
   watchingFunction: (item: T) => U,
 ): OperatorFunction<T, U> {
   return (input: Observable<T>) => input.pipe(
+    distinctUntilChanged(),
     map(watchingFunction),
     distinctUntilChanged(),
   );
@@ -36,7 +37,9 @@ export function watchFrom<T, U>(
   input: Observable<T>,
   watchingFunction: (item: T) => U,
 ): Observable<U> {
-  return input.pipe(watch(watchingFunction));
+  return input.pipe(
+    watch(watchingFunction),
+  );
 }
 
 /**
@@ -146,6 +149,10 @@ export function filterObject<T extends object>(
     }
     return filtered;
   }, {} as Partial<T>)
+}
+
+export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
+  return value instanceof Observable ? value : of(value);
 }
 
 // export function activeCombineLatest<T>(): OperatorFunction<Map<string | number, Observable<T>>, T[]> {

@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes, style, watchFrom, styles } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 import './styles.css';
@@ -92,7 +92,16 @@ const statedStateless = (state: Observable<IState>) => div(
   state.pipe(select('foo')),
   selectFrom(state, 'foo')
 ).pipe(
-  attribute('style', state.pipe(map(({ enabled }) => enabled ? 'color: red' : 'color: blue'))),
+  // attribute('style', state.pipe(map(({ enabled }) => enabled ? 'color: red' : 'color: blue'))),
+  // style('color', watchFrom(state, ({ enabled }) => enabled ? 'orange' : 'green')),
+  // styles({
+  //   fontSize: '18px',
+  //   color: watchFrom(state, ({ enabled }) => enabled ? 'orange' : null),
+  // }),
+  styles(watchFrom(state, ({ enabled }) => ({
+    fontSize: '20px',
+    color: enabled ? 'red' : null,
+  }))),
   classes(selectFrom(state, 'enabled').pipe(map(enabled => enabled && 'test-class'))),
 )
 

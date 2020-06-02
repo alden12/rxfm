@@ -52,6 +52,7 @@ export function childDiffer(
     unchangedNodes = new Set(remainingNewOrder); // If order has not changed, create set from common nodes.
 
   } else { // Otherwise find nodes whose order has not changed.
+    // NOTE: Is this necessary?
     const oldNodeAndNext = new Map( // Create a map of each common node to its next common node in the old order.
       remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]])
     );
