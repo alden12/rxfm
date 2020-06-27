@@ -1,10 +1,10 @@
 import { ElementType, Component, ComponentObservable, EventType } from './component';
 import { ChildComponent, children, ChildEvents } from '../children/children';
-import { of, Observable, OperatorFunction } from 'rxjs';
+import { of, Observable, OperatorFunction, BehaviorSubject } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Dictionary, filterObject } from '../utils';
+import { Dictionary, filterObject, EventDelete } from '../utils';
 import { ElementEventMap, EmitEvent, event } from '../events';
-import { setState } from '../state';
+import { setState, SetState, stateful } from '../state';
 import { IAttributes } from '../attributes';
 // import { ElementAttributeMap, ElementAttributes, AttributeEvents, EventOperators } from '../attributes';
 
@@ -73,11 +73,35 @@ export type ComponentCreatorFunction<T extends ElementType, E extends EventType 
   ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 
-export type ComponentFunction<T extends ElementType, E extends EventType = never> =
-  <C extends ChildComponent[] = []>(children: C, attributes: IAttributes) => ComponentObservable<T, E | ChildEvents<C>>;
+export interface IComponentArgs<C extends ChildComponent[]> {
+  children: C;
+  attributes: IAttributes;
+}
 
-export function getComponentCreator<T extends ElementType, E extends EventType = never>(
+export interface IStatefulComponentArgs<C extends ChildComponent[], S> extends IComponentArgs<C> {
+  state: Observable<S>;
+}
+
+export type ComponentArgs<C extends ChildComponent[], S = never> = IComponentArgs<C> | IStatefulComponentArgs<C, S>;
+
+// export type ComponentFunction<T extends ElementType, E extends EventType = never> =
+//   <C extends ChildComponent[] = []>(children: C, attributes: IAttributes) => ComponentObservable<T, E | ChildEvents<C>>;
+export type ComponentFunction<T extends ElementType, E extends EventType = never> =
+  <C extends ChildComponent[] = []>(args: IComponentArgs<C>) => ComponentObservable<T, E | ChildEvents<C>>;
+
+export type StatefulComponentFunction<T extends ElementType, E extends EventType<SetState, Partial<S>> = never, S = never> =
+  <C extends ChildComponent[] = []>(args: IStatefulComponentArgs<C, S>) => ComponentObservable<T, E | ChildEvents<C>>;
+
+export function component<T extends ElementType, E extends EventType = never>(
   componentFunction: ComponentFunction<T, E>,
+): ComponentCreatorFunction<T, E>
+export function component<T extends ElementType, S, E extends EventType<SetState, Partial<S>> = never>(
+  componentFunction: StatefulComponentFunction<T, E, S>,
+  initialState: S,
+): ComponentCreatorFunction<T, EventDelete<E, SetState>>
+export function component<T extends ElementType, S, E extends EventType<SetState, Partial<S>>>(
+  componentFunction: ComponentFunction<T, E> | StatefulComponentFunction<T, E, S>,
+  initialState?: S,
 ): ComponentCreatorFunction<T, E> {
 
   function componentCreator(): ComponentObservable<T, E>
@@ -102,7 +126,16 @@ export function getComponentCreator<T extends ElementType, E extends EventType =
     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
 
     return of(componentFunction).pipe(
-      map(compFn => compFn(_childComponents, filterObject(_attributes, val => typeof val !== 'function'))),
+      map(compFn => {
+        const staticAttributes = filterObject(_attributes, val => typeof val !== 'function');
+        if (initialState) {
+          const coFn: StatefulComponentFunction<T, E, S> = compFn;
+          return stateful(initialState, state => coFn({ state, children: _childComponents, attributes: staticAttributes }));
+        } else {
+          const coFn: ComponentFunction<T, E> = compFn;
+          return coFn({ children: _childComponents, attributes: staticAttributes });
+        }
+      }),
       switchMap(comp => Object.keys(_attributes)
         .filter(key => typeof _attributes[key] === 'function')
         .reduce((c, key) => c.pipe(

@@ -4,7 +4,7 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes, style, watchFrom, styles, attributes } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes, style, watchFrom, styles, attributes, log, component } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
 import { interval, Observable, EMPTY, of } from 'rxjs';
 import './styles.css';
@@ -182,15 +182,17 @@ const test = div().pipe(
   attribute('style', 'color: red'),
 );
 
-const customComponent = (id: string) => Component.wrap((childElements, attributes) => div(
+// tslint:disable-next-line: no-shadowed-variable
+const customComponent = (id: string) => component(({ children, attributes, state }) => div(
   {
     ...attributes,
-    click: setState(e => e.timeStamp),
+    click: setState(e => ({ lol: e.timeStamp })),
   },
   'things',
-  ...childElements,
+  selectFrom(state, 'lol'),
+  ...children,
   id,
-));
+), { lol: 0 });
 
 const custom = customComponent('leonidas this is madness')(
   { click: setState(ev => '1') },
@@ -198,8 +200,19 @@ const custom = customComponent('leonidas this is madness')(
   'how about now?',
 );
 
+const newStyleComponent = div(
+  {
+    style: {
+      color: interval(1000).pipe(map(i => i % 2 ? 'red' : 'cyan')),
+      margin: '10px',
+    },
+    click: ev => ev.pipe(map(val => {console.log(val); return val;})),
+  },
+  'did we do it?'
+);
+
 const app = div().pipe(
-  children(test, stated, newChildren, generateTest, custom),
+  children(test, stated, newChildren, generateTest, custom, newStyleComponent),
   event('test', map(ev => console.log(ev))),
   event('test2', map(ev => console.log(ev))),
 );

@@ -133,8 +133,8 @@ export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
   );
 }
 
-export function log<T>(message?: string): OperatorFunction<T, T> {
-  return (input: Observable<T>) => input.pipe(
+export function log<T = unknown>(message?: string): OperatorFunction<T, T> {
+  return (input: Observable<T>): Observable<T> => input.pipe(
     tap(val => message ? console.log(message, val) : console.log(val)),
   );
 }

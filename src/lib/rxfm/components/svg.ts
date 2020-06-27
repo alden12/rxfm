@@ -1,4 +1,4 @@
-import { ComponentCreatorFunction, ComponentFunction } from './creator';
+import { ComponentCreatorFunction, ComponentFunction, IComponentArgs } from './creator';
 import { ChildComponent, children } from '../children/children';
 import { Component } from './component';
 import { of } from 'rxjs';
@@ -73,10 +73,10 @@ const SVGNamespace = 'http://www.w3.org/2000/svg';
 function getSVGComponentFunction<K extends keyof SVGElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<SVGElementTagNameMap[K]> {
-  return<C extends ChildComponent[] = []>(childComponents: C, _attributes: IAttributes) =>
+  return<C extends ChildComponent[] = []>(args: IComponentArgs<C>) =>
     of(new Component(document.createElementNS(SVGNamespace, tagName))).pipe(
-      children(...childComponents),
-      attributes(_attributes),
+      children(...args.children),
+      attributes(args.attributes),
     );
 }
 
@@ -86,7 +86,7 @@ export type SVGComponentCreators = {
 
 export const SVG: SVGComponentCreators = Object.keys(SVGElements).reduce(
   (components: SVGComponentCreators, tagName: keyof SVGElementTagNameMap) => {
-    components[tagName] = Component.wrap(getSVGComponentFunction(tagName)) as ComponentCreatorFunction<any>;
+    components[tagName] = Component.from(getSVGComponentFunction(tagName)) as ComponentCreatorFunction<any>;
     return components;
   }, {} as SVGComponentCreators
 );
