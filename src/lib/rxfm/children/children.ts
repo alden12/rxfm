@@ -2,7 +2,6 @@ import { Observable, of, combineLatest, merge, EMPTY } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share, startWith } from 'rxjs/operators';
 // import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
 import { childDiffer } from './child-differ';
-import { SHARE_REPLAY_CONFIG } from '../utils';
 import { ElementType, Component, ComponentOperator, ComponentObservable, EventType } from '../components';
 
 export type NullLike = null | undefined | false;

@@ -16,7 +16,7 @@ export interface Dictionary<T> { [key: string]: T }
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.
  */
-export const SHARE_REPLAY_CONFIG = { bufferSize: 1 as 1, refCount: true as true };
+export const REF_COUNT = { bufferSize: 1 as 1, refCount: true as true };
 
 /**
  * An observable operator to watch a given part of a source observable defined by the watchingFunction.

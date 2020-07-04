@@ -40,20 +40,31 @@ export function setState<T, S, ST>(
   state: Observable<ST>,
   mappingFunction: (currentState: ST, event: T) => S,
 ): OperatorFunction<T, EmitEvent<SetState, S>>
-export function setState<T, S, ST>(
-  stateOrMappingFn: Observable<ST> | ((event: T) => S),
-  mappingFn?: (state: ST, event: T) => S,
+export function setState<T, S, STA, STB>(
+  stateA: Observable<STA>,
+  stateB: Observable<STB>,
+  mappingFunction: (stateA: STA, stateB: STB, event: T) => S,
+): OperatorFunction<T, EmitEvent<SetState, S>>
+export function setState<T, S, STA, STB>(
+  stateAOrMappingFn: Observable<STA> | ((event: T) => S),
+  stateBOrMappingFn?: Observable<STB> | ((currentState: STA, event: T) => S),
+  mappingFn?: (stateA: STA, stateB: STB, event: T) => S,
 ): OperatorFunction<T, EmitEvent<SetState, Partial<S>>> {
 
   if (mappingFn) {
     return (event$: Observable<T>) => event$.pipe(
-      withLatestFrom(stateOrMappingFn as Observable<ST>),
-      emitEvent(SET_STATE, ([ev, latestFrom]) => mappingFn(latestFrom, ev))
+      withLatestFrom(stateAOrMappingFn as Observable<STA>, stateBOrMappingFn as Observable<STB>),
+      emitEvent(SET_STATE, ([ev, latestFromA, latestFromB]) => mappingFn(latestFromA, latestFromB, ev))
+    );
+  } else if (typeof stateBOrMappingFn === 'function') {
+    return (event$: Observable<T>) => event$.pipe(
+      withLatestFrom(stateAOrMappingFn as Observable<STA>),
+      emitEvent(SET_STATE, ([ev, latestFromA]) => stateBOrMappingFn(latestFromA, ev))
     );
   }
 
   return (event$: Observable<T>) => event$.pipe(
-    emitEvent(SET_STATE, stateOrMappingFn as (event: T) => S)
+    emitEvent(SET_STATE, stateAOrMappingFn as (event: T) => S)
   );
 }
 

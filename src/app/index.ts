@@ -4,9 +4,9 @@
 // import { map } from 'rxjs/operators';
 
 // tslint:disable-next-line: max-line-length
-import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, Component, span, attribute, classes, style, watchFrom, styles, attributes, log, component } from 'rxfm';
+import { div, children, addToBody, event, input, EmitEvent, select, setState, stateful, emitEvent, selectFrom, generate, store, dispatch, span, attribute, classes, style, watchFrom, styles, attributes, log, component } from 'rxfm';
 import { map, tap } from 'rxjs/operators';
-import { interval, Observable, EMPTY, of } from 'rxjs';
+import { interval, Observable, EMPTY, of, BehaviorSubject } from 'rxjs';
 import './styles.css';
 
 // export type ArrayType<T extends any[]> = T extends (infer A)[] ? A : never;
@@ -81,6 +81,18 @@ import './styles.css';
 // export interface PostExtension<T extends HTMLElement> extends T {
 //   events: Set<string>;
 // }
+
+interface IStore {
+  things: number[];
+  isIt: boolean;
+  time: number;
+}
+
+const storeSubject = new BehaviorSubject<IStore>({
+  things: [],
+  isIt: false,
+  time: Date.now(),
+});
 
 interface IState { enabled: boolean, foo: string }
 
@@ -207,14 +219,18 @@ const newStyleComponent = div(
       margin: '10px',
     },
     click: ev => ev.pipe(map(val => {console.log(val); return val;})),
+    contextmenu: dispatch(ev => (state: IStore) => ({ time: ev.timeStamp, isIt: !state.isIt })),
   },
-  'did we do it?'
+  'did we do it?',
+  selectFrom(storeSubject, 'time'),
+  selectFrom(storeSubject, 'isIt').pipe(map(isIt => isIt ? 'yes' : 'no')),
 );
 
 const app = div().pipe(
   children(test, stated, newChildren, generateTest, custom, newStyleComponent),
   event('test', map(ev => console.log(ev))),
   event('test2', map(ev => console.log(ev))),
+  store(storeSubject),
 );
 
 addToBody(app);

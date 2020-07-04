@@ -4,24 +4,68 @@
 // import { extractEvent } from './events';
 // import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from './utils';
 
-// /**
-//  * A function taking the current state of an information store (of type S) and returning a new state for the store.
-//  * Reducer functions should be immutable (meaning that the state should not be modified and should instead be cloned)
-//  * and pure (meaning that they should have no side effects and should only operate based on their input).
-//  */
-// export type Reducer<S> = (state: S) => Partial<S>;
+import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
+import { EmitEvent, emitEvent, event } from './events';
+import { withLatestFrom, switchMap, tap } from 'rxjs/operators';
+import { ComponentOperator, ElementType, EventType, Component, ComponentObservable } from './components';
+import { EventDelete } from './utils';
 
-// /**
-//  * A function taking a payload event (of type T) and return a Reducer function of type S.
-//  */
-// export type Action<T, S> = (payload: T) => Reducer<S>;
+/**
+ * A function taking the current state of an information store (of type S) and returning a new state for the store.
+ * Reducer functions should be immutable (meaning that the state should not be modified and should instead be cloned)
+ * and pure (meaning that they should have no side effects and should only operate based on their input).
+ */
+export type Reducer<S> = (state: S) => Partial<S>;
 
-// /**
-//  * A record used to emit a reducer action to the store.
-//  */
-// export interface IAction<S> {
-//   action?: Reducer<S>;
-// }
+/**
+ * A function taking a payload event (of type T) and return a Reducer function of type S.
+ */
+export type Action<T, S> = (payload: T) => Reducer<S>;
+
+/**
+ * A record used to emit a reducer action to the store.
+ */
+export interface IAction<S> {
+  action?: Reducer<S>;
+}
+
+export const DISPATCH = 'rxfmDispatch' as const;
+export type Dispatch = typeof DISPATCH;
+
+export function dispatch<T, S>(
+  action: Action<T, S>,
+): OperatorFunction<T, EmitEvent<Dispatch, Reducer<S>>>
+export function dispatch<T, S, ST>(
+  state: Observable<ST>,
+  action: (currentState: ST, event: T) => Reducer<S>,
+): OperatorFunction<T, EmitEvent<Dispatch, Reducer<S>>>
+export function dispatch<T, S, STA, STB>(
+  stateA: Observable<STA>,
+  stateB: Observable<STB>,
+  action: (stateA: STA, stateB: STB, event: T) => Reducer<S>,
+): OperatorFunction<T, EmitEvent<Dispatch, Reducer<S>>>
+export function dispatch<T, S, STA, STB>(
+  stateAOrAction: Observable<STA> | Action<T, S>,
+  stateBOrAction?: Observable<STB> | ((currentState: STA, event: T) => Reducer<S>),
+  action?: (stateA: STA, stateB: STB, event: T) => Reducer<S>,
+): OperatorFunction<T, EmitEvent<Dispatch, Reducer<S>>> {
+
+  if (action) {
+    return (event$: Observable<T>) => event$.pipe(
+      withLatestFrom(stateAOrAction as Observable<STA>, stateBOrAction as Observable<STB>),
+      emitEvent(DISPATCH, ([ev, latestFromA, latestFromB]) => action(latestFromA, latestFromB, ev))
+    );
+  } else if (typeof stateBOrAction === 'function') {
+    return (event$: Observable<T>) => event$.pipe(
+      withLatestFrom(stateAOrAction as Observable<STA>),
+      emitEvent(DISPATCH, ([ev, latestFromA]) => stateBOrAction(latestFromA, ev))
+    );
+  }
+
+  return (event$: Observable<T>) => event$.pipe(
+    emitEvent(DISPATCH, stateAOrAction as Action<T, S>)
+  );
+}
 
 // /**
 //  * An observable operator to dispatch an 'action' to the store (see the 'store' operator). These actions should be of
@@ -39,25 +83,43 @@
 //   );
 // }
 
-// /**
-//  * An observable operator to manage a 'store' of global state. Similar to Redux.
-//  * Extracts any 'action' events which should be functions taking the current state and returning the new state for the
-//  * store. These actions should be created from the 'dispatch' operator. Action functions (reducers) are then executed
-//  * and the new state is emitted by the state subject. This subject can be mapped and used as input for components.
-//  * @param stateSubject A behavior subject ot be used as the store.
-//  */
-// export function store<T extends Node, S, E extends IAction<S>>(
-//   stateSubject: BehaviorSubject<S>,
-// ): ComponentOperatorOld<T, E, { [EK in Exclude<keyof E, 'action'>]?: E[EK] }> {
-//   return (component: ComponentOld<T, E>) => component.pipe(
-//     extractEvent('action'), // Extract action events.
-//     // Execute the actions reducer and emit the new state.
-//     switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
-//       tap(reducer => stateSubject.next({ ...stateSubject.value, ...reducer(stateSubject.value) })),
-//       startWith({ node, events }),
-//       mapTo({ node, events }),
-//     )),
-//     distinctUntilKeysChanged(),
-//     shareReplay(SHARE_REPLAY_CONFIG),
-//   );
-// }
+/**
+ * An observable operator to manage a 'store' of global state. Similar to Redux.
+ * Extracts any 'action' events which should be functions taking the current state and returning the new state for the
+ * store. These actions should be created from the 'dispatch' operator. Action functions (reducers) are then executed
+ * and the new state is emitted by the state subject. This subject can be mapped and used as input for components.
+ * @param stateSubject A behavior subject ot be used as the store.
+ */
+export function store<T extends ElementType, S, E extends EventType<Dispatch, Reducer<S>>>(
+  stateSubject: BehaviorSubject<S>,
+): ComponentOperator<T, E, EventDelete<E, Dispatch>> {
+  return (component$: ComponentObservable<T, E>) => component$.pipe(
+    event(
+      DISPATCH,
+      tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(stateSubject.value) })),
+    )
+    // extractEvent('action'), // Extract action events.
+    // // Execute the actions reducer and emit the new state.
+    // switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
+    //   tap(reducer => stateSubject.next({ ...stateSubject.value, ...reducer(stateSubject.value) })),
+    //   startWith({ node, events }),
+    //   mapTo({ node, events }),
+    // )),
+    // distinctUntilKeysChanged(),
+    // shareReplay(SHARE_REPLAY_CONFIG),
+  );
+}
+
+// return of(creationFunction).pipe(
+//   map(creationFn => {
+//     const stateSubject = new BehaviorSubject<S>({ ...initialState });
+//     const component = creationFn(stateSubject);
+//     return [component, stateSubject] as const;
+//   }),
+//   switchMap(([component, stateSubject]) => component.pipe(
+//     event(
+//       SET_STATE,
+//       tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Partial<S>>).detail })),
+//     )
+//   )),
+// );
