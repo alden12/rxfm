@@ -49,30 +49,43 @@ export type InjectEvent<T extends ElementType, E extends EventType, ET extends s
 
 // TODO: Are operators needed? Or should it simple provide an optional function to map ev onto an event emission?
 // Overloads: event(type, outputType, mappingFunction) and events(type, operator).
+export function event<T extends ElementType, EV, E extends EventType = never>(
+  event: Observable<EV> | ((node: T) => Observable<EV>),
+): EV extends EmitEvent<infer K, infer V> ? ComponentOperator<T, E | Record<K, V>> : ComponentOperator<T, E>
+// export function event<T extends ElementType, E extends EventType = never>(eventType: string): ComponentOperator<T, E>
+export function event<T extends ElementType, ET extends string, R, E extends EventType = never>(
+  eventType: ET,
+  operatorFunction: OperatorFunction<Events<E, ET>, R>,
+): InjectEvent<T, E, ET, R>
+export function event<T extends ElementType, ET extends string, O, OT extends string, E extends EventType = never>(
+  eventType: ET,
+  outputType: OT,
+  mappingFunction: (event: Events<E, ET>) => O,
+): InjectEvent<T, E, ET, Record<OT, O>>
 // tslint:disable: max-line-length
-export function event<T extends ElementType, ET, E extends EventType = never>(event: Observable<ET> | ((node: T) => Observable<ET>)): ET extends EmitEvent<infer K, infer V> ? ComponentOperator<T, E | Record<K, V>> : ComponentOperator<T, E>
-export function event<T extends ElementType, E extends EventType = never>(eventType: string): ComponentOperator<T, E>
-export function event<T extends ElementType, K extends string, R, E extends EventType = never>(eventType: K, op: OperatorFunction<Events<E, K>, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, opN: OperatorFunction<OP1, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, OP2, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, OP2, OP3, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, OP5, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, OP5, OP6, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, op6: OperatorFunction<OP5, OP6>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
-export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, OP5, OP6, OP7, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, op6: OperatorFunction<OP5, OP6>, op7: OperatorFunction<OP6, OP7>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
-export function event<T extends HTMLElement, E extends EventType = never, ET extends string = never, EV = never, A extends EventType = never>(
-  // tslint:enable: max-line-length
+// export function event<T extends ElementType, K extends string, OP1, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, opN: OperatorFunction<OP1, R>): InjectEvent<T, E, K, R>
+// export function event<T extends ElementType, K extends string, OP1, OP2, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
+// export function event<T extends ElementType, K extends string, OP1, OP2, OP3, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
+// export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
+// export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, OP5, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
+// export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, OP5, OP6, OP7, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, op6: OperatorFunction<OP5, OP6>, op7: OperatorFunction<OP6, OP7>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
+// export function event<T extends ElementType, K extends string, OP1, OP2, OP3, OP4, OP5, OP6, R, E extends EventType = never>(eventType: K, op1: OperatorFunction<Events<E, K>, OP1>, op2: OperatorFunction<OP1, OP2>, op3: OperatorFunction<OP2, OP3>, op4: OperatorFunction<OP3, OP4>, op5: OperatorFunction<OP4, OP5>, op6: OperatorFunction<OP5, OP6>, opN: OperatorFunction<OP2, R>): InjectEvent<T, E, K, R>
+// tslint:enable: max-line-length
+export function event<
+  T extends HTMLElement,
+  E extends EventType = never,
+  ET extends string = never,
+  OT extends string = never,
+  EV = never,
+  R extends EventType = never
+>(
   eventType: ET | Observable<EV> | ((node: T) => Observable<EV>),
-  ...operators: OperatorFunction<any, any>[]
-): ComponentOperator<T, E, EventDelete<E, ET> | A> {
+  operatorOrOutputType?: OperatorFunction<Events<E, ET>, R> | OT,
+  mappingFunction?: (event: Events<E, ET>) => EV,
+): ComponentOperator<T, E, EventDelete<E, ET> | R> {
 
   return (component$: ComponentObservable<T, E>) => component$.pipe(
     switchMap(component => {
-      // const event = eventType instanceof Observable ? eventType :
-      //   typeof eventType === 'function' ? eventType(component.element) :
-      //   typeof eventType === 'string' ? operators.reduce(
-      //     (obs, opr) => obs.pipe(opr),
-      //   );
       const capture: ICapture<T, any, any> = typeof eventType === 'string' ? component.capture(eventType) : {
         component,
         event: eventType instanceof Observable ? eventType :
@@ -80,44 +93,14 @@ export function event<T extends HTMLElement, E extends EventType = never, ET ext
           EMPTY,
       };
 
-      return component.inject(capture, ev => operators.reduce((obs, opr) => obs.pipe(opr), ev));
+      if (mappingFunction) {
+        return component.inject(capture, emitEvent(operatorOrOutputType as OT, mappingFunction));
+      } else if (operatorOrOutputType) {
+        return component.inject(capture, operatorOrOutputType as OperatorFunction<Events<E, ET>, R>)
+      }
+      return component.inject(capture);
     })
   );
-
-  // const resOld = (component: ComponentOld<T, E>) => component.pipe(
-  //   switchMap(node => {
-
-  //     const eventObservable =
-  //       eventType instanceof Observable ? eventType :
-  //       typeof eventType === 'function' ? eventType(node) :
-  //       typeof eventType === 'string' ? operators.reduce(
-  //         (obs, opr) => obs.pipe(opr),
-  //         fromEvent(node, eventType).pipe(
-  //           map(ev => {
-  //             if (ev instanceof CustomEvent && ev.detail[RXFM_INTERNAL_EVENT] === true) {
-  //               ev.stopPropagation();
-  //               return ev.detail['value'];
-  //             }
-  //             return ev;
-  //           }),
-  //         )
-  //       ) :
-  //       EMPTY;
-
-  //     return eventObservable.pipe(
-  //       tap(ev => ev instanceof EmitEvent && node.dispatchEvent(
-  //         new CustomEvent(ev.type, {
-  //           detail: { value: ev.value, [RXFM_INTERNAL_EVENT]: true },
-  //           bubbles: true,
-  //         }),
-  //       )),
-  //       startWith(node),
-  //       mapTo(node),
-  //     );
-
-  //   }),
-  //   distinctUntilChanged(),
-  // );
 }
 
 // /**

@@ -55,14 +55,14 @@ export class Component<T extends ElementType, E extends EventType = never> {
   ): ComponentObservable<T, EC | EventType<K, V>>
   public inject<EC, EV>(
     capture: ICapture<T, EC, EV>,
-    operator: OperatorFunction<EV, any>,
+    operator?: OperatorFunction<EV, any>,
   ): ComponentObservable<T, EC>
   public inject<EC, EV>(
+    // tslint:disable-next-line: no-shadowed-variable
     { component, event }: ICapture<T, EC, EV>,
-    operator: OperatorFunction<EV, any>,
+    operator?: OperatorFunction<EV, any>,
   ): ComponentObservable<T, any> {
-    return event.pipe(
-      operator,
+    return (operator ? event.pipe(operator) : event).pipe(
       map(ev => ev instanceof EmitEvent ? component.dispatch(ev.type, ev.value) : component),
       startWith(component),
       distinctUntilChanged(),

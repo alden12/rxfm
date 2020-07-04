@@ -61,7 +61,6 @@ export function dispatch<T, S, STA, STB>(
       emitEvent(DISPATCH, ([ev, latestFromA]) => stateBOrAction(latestFromA, ev))
     );
   }
-
   return (event$: Observable<T>) => event$.pipe(
     emitEvent(DISPATCH, stateAOrAction as Action<T, S>)
   );
@@ -98,28 +97,5 @@ export function store<T extends ElementType, S, E extends EventType<Dispatch, Re
       DISPATCH,
       tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(stateSubject.value) })),
     )
-    // extractEvent('action'), // Extract action events.
-    // // Execute the actions reducer and emit the new state.
-    // switchMap(({ node, events, extractedEvents }) => extractedEvents.pipe(
-    //   tap(reducer => stateSubject.next({ ...stateSubject.value, ...reducer(stateSubject.value) })),
-    //   startWith({ node, events }),
-    //   mapTo({ node, events }),
-    // )),
-    // distinctUntilKeysChanged(),
-    // shareReplay(SHARE_REPLAY_CONFIG),
   );
 }
-
-// return of(creationFunction).pipe(
-//   map(creationFn => {
-//     const stateSubject = new BehaviorSubject<S>({ ...initialState });
-//     const component = creationFn(stateSubject);
-//     return [component, stateSubject] as const;
-//   }),
-//   switchMap(([component, stateSubject]) => component.pipe(
-//     event(
-//       SET_STATE,
-//       tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Partial<S>>).detail })),
-//     )
-//   )),
-// );

@@ -62,7 +62,6 @@ export function setState<T, S, STA, STB>(
       emitEvent(SET_STATE, ([ev, latestFromA]) => stateBOrMappingFn(latestFromA, ev))
     );
   }
-
   return (event$: Observable<T>) => event$.pipe(
     emitEvent(SET_STATE, stateAOrMappingFn as (event: T) => S)
   );
