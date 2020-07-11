@@ -1,58 +1,37 @@
-// import {
-//   children,
-//   select,
-//   event,
-//   dispatch,
-//   classes,
-//   styles,
-//   attributes,
-//   mapToLatest,
-//   conditionalMapTo,
-//   stopPropagation,
-//   div,
-//   input,
-//   button,
-// } from 'rxfm';
-// import { Observable } from 'rxjs';
-// import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
+import { dispatch, conditionalMapTo, stopPropagation, div, input, button, selectFrom, span } from 'rxfm';
+import { Observable, of } from 'rxjs';
+import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
 
-// import './todo-item.css';
+import './todo-item.css';
+import { mapTo, tap, startWith, map, distinctUntilChanged } from 'rxjs/operators';
 
-// export const todoItem = (item: Observable<ITodo>) => div().pipe(
-//   classes(
-//     'todo-item',
-//     item.pipe(
-//       select('done'),
-//       conditionalMapTo('done'),
-//     )
-//   ),
-//   event(
-//     'click',
-//     mapToLatest(item),
-//     dispatch(({ label }) => toggleTodoAction(label))
-//   ),
-//   children(
+// const test = span({});
 
-//     input().pipe(
-//       attributes({
-//         type: 'checkbox',
-//         checked: item.pipe(select('done')),
-//       }),
-//       styles({ cursor: 'pointer' }),
-//     ),
-
-//     item.pipe(select('label')),
-
-//     button().pipe(
-//       styles({ marginLeft: '10px' }),
-//       event(
-//         'click',
-//         stopPropagation(),
-//         mapToLatest(item),
-//         dispatch(({ label }) => deleteTodoAction(label)),
-//       ),
-//       children('Delete'),
-//     ),
-
-//   ),
-// );
+export const todoItem = (item: Observable<ITodo>) => div(
+  {
+    // class: of({ done: true }).pipe(
+    //   map(({ done }) => done ? 'done' : null),
+    // ),
+    class: selectFrom(item, 'done').pipe(conditionalMapTo('done')),
+    // class: of('done'),
+    click: dispatch(item, ({ label }) => toggleTodoAction(label)),
+  },
+  input({
+    type: 'checkbox',
+    checked: selectFrom(item, 'done'),
+    style: { cursor: 'pointer' },
+  }),
+  // span({}),
+  // input({}),
+  selectFrom(item, 'label'),
+  button(
+    {
+      style: { marginLeft: '10px' },
+      click: ev => ev.pipe(
+        stopPropagation(),
+        dispatch(item, ({ label }) => deleteTodoAction(label)),
+      ),
+    },
+    'Delete',
+  ),
+);

@@ -1,4 +1,4 @@
-import { ComponentCreatorFunction, ComponentFunction, IComponentArgs } from './creator';
+import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
 import { ChildComponent, children } from '../children/children';
 import { Component } from './component';
 import { of } from 'rxjs';
@@ -146,7 +146,7 @@ export type HTMLComponentCreators = {
 
 export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
   (components: HTMLComponentCreators, tagName: keyof HTMLElementTagNameMap) => {
-    components[tagName] = Component.from(getHTMLComponentFunction(tagName)) as ComponentCreatorFunction<any>;
+    components[tagName] = component(getHTMLComponentFunction(tagName)) as ComponentCreatorFunction<any>;
     return components;
   }, {} as HTMLComponentCreators
 );
@@ -154,6 +154,7 @@ export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
 export const div = HTML.div;
 export const span = HTML.span;
 export const input = HTML.input;
+export const button = HTML.button;
 export const h1 = HTML.h1;
 export const h2 = HTML.h2;
 export const h3 = HTML.h3;

@@ -13,9 +13,17 @@ import { tap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 export const SET_STATE = 'rxfmSetState' as const;
 export type SetState = typeof SET_STATE;
 
-export function stateful<T extends ElementType, S, E extends EventType<SetState, Partial<S>>>(
+// type EventIncludes<E extends EventType, K extends string, V> = E extends EventType<infer EK, infer EV> ?
+//   EK extends K ? EV extends V ? EventType<K, V> : never : EventType<K, V> : EventType<K, V>;
+
+type EventTest<E extends EventType<SetState, string>> = E;
+
+type Test = EventTest<{ rxfmSetState: 'foo' }>;
+
+export function stateful<T extends ElementType, S, E extends EventType>(
     initialState: S,
-    creationFunction: (state: Observable<S>) => ComponentObservable<T, E>,
+    // tslint:disable-next-line: max-line-length
+    creationFunction: (state: Observable<S>) => ComponentObservable<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState>>,
 ): ComponentObservable<T, EventDelete<E, SetState>> {
 
   return of(creationFunction).pipe(

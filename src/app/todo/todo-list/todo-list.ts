@@ -1,57 +1,34 @@
-// import {
-//   children,
-//   generate,
-//   event,
-//   dispatch,
-//   stateful,
-//   setState,
-//   select,
-//   attributes,
-//   mapToLatest,
-//   div,
-//   button,
-//   input,
-// } from 'rxfm';
-// import { todos$, addTodoAction } from '../store';
-// import { todoItem } from '../todo-item/todo-item';
-// import { Observable } from 'rxjs';
+import { generate, dispatch, setState, div, button, input, component, selectFrom } from 'rxfm';
+import { todos$, addTodoAction } from '../store';
+import { todoItem } from '../todo-item/todo-item';
+import { Observable } from 'rxjs';
 
-// interface ITodoListState {
-//   label: string,
-// };
+interface ITodoListState {
+  label: string,
+};
 
-// const todoListInitialState: ITodoListState = {
-//   label: 'insert',
-// };
+const todoListInitialState: ITodoListState = {
+  label: 'insert',
+};
 
-// const todoListStateless = (state: Observable<ITodoListState>) => div().pipe(
-//   children(
+const stateless = (state: Observable<ITodoListState>) =>  div(
+  todos$.pipe(
+    generate(item => item.label, todoItem),
+  ),
+  input({
+    type: 'text',
+    value: selectFrom(state, 'label'),
+    change: setState(({ target }) => ({ label: (target as HTMLInputElement).value })),
+  }),
+  button(
+    {
+      click: dispatch(state, ({ label }) => addTodoAction({ label, done: false })),
+    },
+    'Add Todo',
+  ),
+);
 
-//     todos$.pipe(
-//       generate(todoItem, item => item.label),
-//     ),
-
-//     input().pipe(
-//       attributes({
-//         type: 'text',
-//         value: state.pipe(select('label')),
-//       }),
-//       event(
-//         'change',
-//         setState(({ target }) => ({ label: target.value })),
-//       ),
-//     ),
-
-//     button().pipe(
-//       event(
-//         'click',
-//         mapToLatest(state),
-//         dispatch(({ label }) => addTodoAction({ label, done: false }))
-//       ),
-//       children('Add Todo'),
-//     ),
-
-//   ),
-// );
-
-// export const todoList = () => stateful(todoListInitialState, todoListStateless);
+export const todoList = component(
+  ({ state }) => stateless(state),
+  todoListInitialState,
+);

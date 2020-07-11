@@ -89,9 +89,9 @@ export function dispatch<T, S, STA, STB>(
  * and the new state is emitted by the state subject. This subject can be mapped and used as input for components.
  * @param stateSubject A behavior subject ot be used as the store.
  */
-export function store<T extends ElementType, S, E extends EventType<Dispatch, Reducer<S>>>(
+export function store<T extends ElementType, S, E extends EventType>(
   stateSubject: BehaviorSubject<S>,
-): ComponentOperator<T, E, EventDelete<E, Dispatch>> {
+): ComponentOperator<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>, EventDelete<E, Dispatch>> {
   return (component$: ComponentObservable<T, E>) => component$.pipe(
     event(
       DISPATCH,

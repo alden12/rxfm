@@ -24,8 +24,8 @@ function itemDiffer<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemD
         const itemsAndIds = items.map(item => [idFunction(item), item] as const);
         const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id)
-        const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
         const itemMap = new Map(itemsAndIds);
+        const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
         previousItemMap = itemMap;
         return { updated, added, removed, itemMap };
       }),
@@ -99,6 +99,7 @@ export function generate<T, ET extends ElementType, E extends EventType = never>
   return (items$: Observable<T[]>) => items$.pipe(
     itemDiffer(idFunction),
     createComponents(creationFunction),
+    // tap((val) => console.log(val)),
     combineComponents(),
     startWith([]),
   );

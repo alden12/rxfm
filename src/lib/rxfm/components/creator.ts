@@ -8,7 +8,7 @@ import { setState, SetState, stateful } from '../state';
 import { IAttributes } from '../attributes';
 // import { ElementAttributeMap, ElementAttributes, AttributeEvents, EventOperators } from '../attributes';
 
-export type EventOperators<E = any> = {
+export type EventOperators<E = unknown> = {
   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
 }
 
@@ -22,6 +22,12 @@ export type EventOperators<E = any> = {
 //   styles?: Dictionary<string> | Observable<Dictionary<string>>;
 //   attributes?: Dictionary<string> | Observable<Dictionary<string>>;
 // }
+
+// type Test2 = EventOperators<{}>;
+
+// type Test1 =  extends EventOperators<infer E> ? E : never;
+
+// type Test3 = any extends EmitEvent<infer K, infer V> ? EventType<K, V> : never;
 
 export type AttributeEvents<T extends EventOperators> = T extends EventOperators<infer E> ?
   E extends EmitEvent<infer ET, infer EV> ? EventType<ET, EV> : never : never;
@@ -62,12 +68,12 @@ export type AttributeEvents<T extends EventOperators> = T extends EventOperators
  */
 export type ComponentCreatorFunction<T extends ElementType, E extends EventType = never> = {
   (): ComponentObservable<T, E>;
-  <A extends EventOperators<any>>(attributes: A & IAttributes): ComponentObservable<T, E | AttributeEvents<A>>;
+  <A extends EventOperators<unknown>>(attributes: A & IAttributes): ComponentObservable<T, E | AttributeEvents<A>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
   ): ComponentObservable<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
-  <A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
+  <A extends EventOperators<unknown>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
   ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
@@ -89,17 +95,20 @@ export type ComponentArgs<C extends ChildComponent[], S = never> = IComponentArg
 export type ComponentFunction<T extends ElementType, E extends EventType = never> =
   <C extends ChildComponent[] = []>(args: IComponentArgs<C>) => ComponentObservable<T, E | ChildEvents<C>>;
 
-export type StatefulComponentFunction<T extends ElementType, E extends EventType<SetState, Partial<S>> = never, S = never> =
-  <C extends ChildComponent[] = []>(args: IStatefulComponentArgs<C, S>) => ComponentObservable<T, E | ChildEvents<C>>;
+// tslint:disable-next-line: max-line-length
+export type StatefulComponentFunction<T extends ElementType, E extends EventType = never, S = never> =
+  // tslint:disable-next-line: max-line-length
+  <C extends ChildComponent[] = []>(args: IStatefulComponentArgs<C, S>) =>
+    ComponentObservable<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState> | ChildEvents<C>>;
 
 export function component<T extends ElementType, E extends EventType = never>(
   componentFunction: ComponentFunction<T, E>,
 ): ComponentCreatorFunction<T, E>
-export function component<T extends ElementType, S, E extends EventType<SetState, Partial<S>> = never>(
+export function component<T extends ElementType, S, E extends EventType = never>(
   componentFunction: StatefulComponentFunction<T, E, S>,
   initialState: S,
 ): ComponentCreatorFunction<T, EventDelete<E, SetState>>
-export function component<T extends ElementType, S, E extends EventType<SetState, Partial<S>>>(
+export function component<T extends ElementType, S, E extends EventType = never>(
   componentFunction: ComponentFunction<T, E> | StatefulComponentFunction<T, E, S>,
   initialState?: S,
 ): ComponentCreatorFunction<T, E> {
@@ -132,7 +141,7 @@ export function component<T extends ElementType, S, E extends EventType<SetState
           const coFn: StatefulComponentFunction<T, E, S> = compFn;
           return stateful(initialState, state => coFn({ state, children: _childComponents, attributes: staticAttributes }));
         } else {
-          const coFn: ComponentFunction<T, E> = compFn;
+          const coFn: ComponentFunction<T, E> = compFn as ComponentFunction<T, E>;
           return coFn({ children: _childComponents, attributes: staticAttributes });
         }
       }),

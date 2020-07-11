@@ -87,7 +87,7 @@ export type ChildEvents<T extends ChildComponent<ElementType, EventType>[]> = Ar
   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 }>;
 
-type StringChildTest = ChildEvents<[]>;
+// type StringChildTest = ChildEvents<[]>;
 
 export function children<T extends ElementType, C extends ChildComponent<ElementType, EventType>[], E = never>(
   ...childComponents: C

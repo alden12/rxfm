@@ -1,8 +1,8 @@
-import { ComponentCreatorFunction, ComponentFunction, IComponentArgs } from './creator';
+import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
 import { ChildComponent, children } from '../children/children';
 import { Component } from './component';
 import { of } from 'rxjs';
-import { IAttributes, attributes } from '../attributes';
+import { attributes } from '../attributes';
 
 export type SVGElementTypes = {
   [K in keyof SVGElementTagNameMap]: K;
@@ -86,7 +86,7 @@ export type SVGComponentCreators = {
 
 export const SVG: SVGComponentCreators = Object.keys(SVGElements).reduce(
   (components: SVGComponentCreators, tagName: keyof SVGElementTagNameMap) => {
-    components[tagName] = Component.from(getSVGComponentFunction(tagName)) as ComponentCreatorFunction<any>;
+    components[tagName] = component(getSVGComponentFunction(tagName)) as ComponentCreatorFunction<any>;
     return components;
   }, {} as SVGComponentCreators
 );
