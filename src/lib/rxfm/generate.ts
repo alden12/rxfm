@@ -99,7 +99,6 @@ export function generate<T, ET extends ElementType, E extends EventType = never>
   return (items$: Observable<T[]>) => items$.pipe(
     itemDiffer(idFunction),
     createComponents(creationFunction),
-    // tap((val) => console.log(val)),
     combineComponents(),
     startWith([]),
   );

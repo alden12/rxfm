@@ -2,7 +2,7 @@ import { Observable, of, combineLatest, merge, EMPTY } from 'rxjs';
 import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share, startWith } from 'rxjs/operators';
 // import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
 import { childDiffer } from './child-differ';
-import { ElementType, Component, ComponentOperator, ComponentObservable, EventType } from '../components';
+import { ElementType, Component, ComponentOperator, ComponentObservable, EventType, ComponentCreatorFunction } from '../components';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
@@ -18,11 +18,9 @@ export type ComponentLike<T extends ElementType, E extends EventType = never> = 
 
 // TODO: Add ability to pass component creator function?
 export type ChildComponent<T extends ElementType = ElementType, E = EventType> =
-  StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
+  StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>> | ComponentCreatorFunction<T, E>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
-
-// TODO: Add distinct until changed to text children.
 
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
@@ -30,29 +28,29 @@ export type CoercedChildComponent = (ElementType | Text)[];
 function coerceChildComponent<E>(
   childComponent: ChildComponent<ElementType, E>,
 ): Observable<CoercedChildComponent | null> {
-  if (childComponent instanceof Observable) { // If observable.
+  if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or creation function.
+    const comp = typeof childComponent === 'function' ? childComponent() : childComponent; // Coerce to observable.
     let node: Text; // Create outer reference to text node if it is needed.
-    return childComponent.pipe(
+    return comp.pipe(
       startWith(null),
+      distinctUntilChanged(),
       map(child => {
-        if (typeof child === 'string' || typeof child === 'number') { // TODO: Do this whenever unrecognized type? Safer
-          node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
-          node.nodeValue = typeof child !== 'string' ? child.toString() : child; // Update text node value.
-          return [node]; // Return component in an array.
-        } else if (child !== undefined && child !== null && child !== false) {
+        if (child && typeof child !== 'string' && typeof child !== 'number') {
           // If child was already a component or component array, coerce to array of elements and return
           return Array.isArray(child) ? child.map(({ element }) => element) : [child.element];
+        } else if (child !== undefined && child !== null && child !== false) { // Else if string like
+          node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
+          node.nodeValue = child.toString(); // Coerce to string and update text node value.
+          return [node]; // Return component in an array.
         }
         return null // Otherwise return null to indicate empty.
       }),
     );
   } else if (typeof childComponent === 'string' || typeof childComponent === 'number') {
-    // If child is string-like, coerce to a string.
-    const content = typeof childComponent !== 'string' ? childComponent.toString() : childComponent;
-    const node = document.createTextNode(content); // Create text node with string value.
-    return of([node]); // Return component in an array.
+    const node = document.createTextNode(childComponent.toString()); // Coerce to string and create text node with string value.
+    return of([node]); // Return observable component in an array.
   }
-  return of(null); // Otherwise return null to indicate empty.
+  return of(null); // Otherwise return null observable to indicate empty.
 }
 
 /**

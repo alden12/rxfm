@@ -20,6 +20,7 @@ export const storeSubject = new BehaviorSubject<IApp>({
   ],
 });
 
+// TODO: Create selector function taking either mapping function or keys with share built in.
 // Selectors
 export const todos$ = storeSubject.pipe(
   select('todos'),
