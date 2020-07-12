@@ -1,6 +1,6 @@
 import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
 import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
-import { EventKeys, EventValue, EventDelete } from '../utils';
+import { EventKeys, EventValue, EventDelete } from '../events';
 import { EmitEvent, ElementEventMap } from '../events';
 import { component } from './creator';
 

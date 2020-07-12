@@ -1,6 +1,6 @@
 import { ElementType, ComponentObservable, EventType } from './components';
 import { Observable, BehaviorSubject, OperatorFunction, of } from 'rxjs';
-import { EventDelete } from './utils';
+import { EventDelete } from './events';
 import { event, EmitEvent, emitEvent } from './events';
 import { tap, map, switchMap, withLatestFrom } from 'rxjs/operators';
 
