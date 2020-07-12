@@ -1,13 +1,7 @@
-// import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
-// import { map, switchMap, tap, startWith, mapTo, shareReplay } from 'rxjs/operators';
-// import { ComponentOld, ComponentOperatorOld } from './components';
-// import { extractEvent } from './events';
-// import { distinctUntilKeysChanged, SHARE_REPLAY_CONFIG } from './utils';
-
 import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
 import { EmitEvent, emitEvent, event } from './events';
-import { withLatestFrom, switchMap, tap } from 'rxjs/operators';
-import { ComponentOperator, ElementType, EventType, Component, ComponentObservable } from './components';
+import { withLatestFrom, tap } from 'rxjs/operators';
+import { ComponentOperator, ElementType, EventType, ComponentObservable } from './components';
 import { EventDelete } from './utils';
 
 /**
@@ -32,6 +26,14 @@ export interface IAction<S> {
 export const DISPATCH = 'rxfmDispatch' as const;
 export type Dispatch = typeof DISPATCH;
 
+// /**
+//  * An observable operator to dispatch an 'action' to the store (see the 'store' operator). These actions should be of
+//  * type 'Action'. Actions functions (of type Action) take a payload and return a reducer function (of type
+//  * Reducer). The reducer function takes the current state (of type S) and returns a new state for the store. Reducer
+//  * functions should be immutable (meaning that the state should not be modified and should instead be cloned) and pure
+//  * (meaning that they should have no side effects and should only operate based on their input).
+//  * @param actionFunction A function taking an event payload (of type T) and returning a Reducer function.
+//  */
 export function dispatch<T, S>(
   action: Action<T, S>,
 ): OperatorFunction<T, EmitEvent<Dispatch, Reducer<S>>>
@@ -65,22 +67,6 @@ export function dispatch<T, S, STA, STB>(
     emitEvent(DISPATCH, stateAOrAction as Action<T, S>)
   );
 }
-
-// /**
-//  * An observable operator to dispatch an 'action' to the store (see the 'store' operator). These actions should be of
-//  * type 'Action'. Actions functions (of type Action) take a payload and return a reducer function (of type
-//  * Reducer). The reducer function takes the current state (of type S) and returns a new state for the store. Reducer
-//  * functions should be immutable (meaning that the state should not be modified and should instead be cloned) and pure
-//  * (meaning that they should have no side effects and should only operate based on their input).
-//  * @param actionFunction A function taking an event payload (of type T) and returning a Reducer function.
-//  */
-// export function dispatch<T, S>(
-//   actionFunction: Action<T, S>, // Can this be made to also take a reducer function directly?
-// ): OperatorFunction<T, Record<'action', Reducer<S>>> {
-//   return (event: Observable<T>) => event.pipe(
-//     map(ev => ({ action: actionFunction(ev) })), // Execute the action and map to the reducer function.
-//   );
-// }
 
 /**
  * An observable operator to manage a 'store' of global state. Similar to Redux.

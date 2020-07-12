@@ -10,7 +10,6 @@ export interface HTMLAttributes {
   charset: string;
   checked: string;
   cite: string;
-  // class: string;
   cols: string;
   colspan: string;
   content: string;
@@ -81,7 +80,6 @@ export interface HTMLAttributes {
   srcset: string;
   start: string;
   step: string;
-  // style: string;
   tabindex: string;
   target: string;
   title: string;

@@ -1,67 +1,18 @@
-import { ElementType, Component, ComponentObservable, EventType } from './component';
-import { ChildComponent, children, ChildEvents } from '../children/children';
-import { of, Observable, OperatorFunction, BehaviorSubject } from 'rxjs';
+import { ElementType, ComponentObservable, EventType } from './component';
+import { ChildComponent, ChildEvents } from '../children/children';
+import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Dictionary, filterObject, EventDelete } from '../utils';
+import { filterObject, EventDelete } from '../utils';
 import { ElementEventMap, EmitEvent, event } from '../events';
-import { setState, SetState, stateful } from '../state';
+import { SetState, stateful } from '../state';
 import { IAttributes } from '../attributes';
-// import { ElementAttributeMap, ElementAttributes, AttributeEvents, EventOperators } from '../attributes';
 
 export type EventOperators<E = unknown> = {
   [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
 }
 
-// const a: EventOperators<any> = {
-//   click: setState(e => e),
-//   foo: 'bar',
-// };
-
-// export interface IAttributes extends EventOperators<any> {
-//   class?: string | Observable<string>;
-//   styles?: Dictionary<string> | Observable<Dictionary<string>>;
-//   attributes?: Dictionary<string> | Observable<Dictionary<string>>;
-// }
-
-// type Test2 = EventOperators<{}>;
-
-// type Test1 =  extends EventOperators<infer E> ? E : never;
-
-// type Test3 = any extends EmitEvent<infer K, infer V> ? EventType<K, V> : never;
-
 export type AttributeEvents<T extends EventOperators> = T extends EventOperators<infer E> ?
   E extends EmitEvent<infer ET, infer EV> ? EventType<ET, EV> : never : never;
-
-// function inputAttributes <T extends IAttributes, E extends keyof ElementAttributes>(
-//   attributes: T & ElementAttributes[E],
-//   type: E
-// ): AttributeEvents<T> {
-//   return {};
-// }
-
-// const test = inputAttributes({ click: setState(e => e), disabled: 'true' }, 'input' as const)
-
-// export type ElementAttributes<T extends string> = T extends keyof ElementAttributeMap ?
-//   Partial<ElementAttributeMap[T]> : Partial<GlobalAttributes>;
-
-
-// interface Foo {
-//   bar?: string;
-//   baz?: boolean;
-// }
-
-// function foo<A extends EventOperators<any> & IAttributes>(
-//   attributes: A,
-//   ...args: any[]
-// ): ComponentObservable<any, AttributeEvents<A>> {
-//   return;
-// }
-
-// const test = foo({ click: setState(e => e), type: 'radio', foo: 1 }, 'test');
-
-// export interface ComponentAttributes<P extends object> {
-//   props?: Partial<P>;
-// };
 
 /**
  * A function to create a component of type T.
@@ -90,14 +41,10 @@ export interface IStatefulComponentArgs<C extends ChildComponent[], S> extends I
 
 export type ComponentArgs<C extends ChildComponent[], S = never> = IComponentArgs<C> | IStatefulComponentArgs<C, S>;
 
-// export type ComponentFunction<T extends ElementType, E extends EventType = never> =
-//   <C extends ChildComponent[] = []>(children: C, attributes: IAttributes) => ComponentObservable<T, E | ChildEvents<C>>;
 export type ComponentFunction<T extends ElementType, E extends EventType = never> =
   <C extends ChildComponent[] = []>(args: IComponentArgs<C>) => ComponentObservable<T, E | ChildEvents<C>>;
 
-// tslint:disable-next-line: max-line-length
 export type StatefulComponentFunction<T extends ElementType, E extends EventType = never, S = never> =
-  // tslint:disable-next-line: max-line-length
   <C extends ChildComponent[] = []>(args: IStatefulComponentArgs<C, S>) =>
     ComponentObservable<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState> | ChildEvents<C>>;
 
@@ -155,101 +102,3 @@ export function component<T extends ElementType, S, E extends EventType = never>
 
   return componentCreator;
 }
-
-// export function componentFactory<T extends ElementType>(
-//   elementCreationFunction: () => T,
-// ): ComponentCreator<T> {
-
-//   function createComponent(): ComponentObservable<T>
-//   function createComponent<A extends EventOperators<any>>(
-//     attributes: A & IAttributes,
-//   ): ComponentObservable<T, AttributeEvents<A>>
-//   function createComponent<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
-//     childComponent: C0,
-//     ...childComponents: C
-//   ): ComponentObservable<T, ChildEvents<[C0]> | ChildEvents<C>>
-//   function createComponent<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
-//     attributes: A & IAttributes,
-//     ...childComponents: C
-//   ): ComponentObservable<T, ChildEvents<C> | AttributeEvents<A>>
-//   function createComponent(
-//     attributes?: EventOperators<any> & IAttributes | ChildComponent<ElementType, any>,
-//     ...childComponents: ChildComponent<ElementType, any>[]
-//   ): ComponentObservable<T, any> {
-
-//     const _childComponents = (attributes instanceof Observable || typeof attributes !== 'object') ?
-//       [attributes, ...childComponents] : childComponents;
-//     const _attributes = (attributes instanceof Observable || typeof attributes !== 'object' || !attributes) ? {} : attributes;
-
-//     return of(elementCreationFunction).pipe(
-//       map(elementFn => new Component(elementFn())),
-//       children(..._childComponents),
-//       switchMap(component => Object.keys(_attributes)
-//         .filter(key => typeof _attributes[key] === 'function')
-//         .reduce((component$, key) => component$.pipe(
-//           event(key, _attributes[key] as OperatorFunction<Event, any>)
-//         ), of(component))
-//       ),
-//     );
-//   }
-
-//   return createComponent;
-// }
-
-// type EventTypes<T extends EventOperators> = {
-//   [K in keyof T]: T[K] extends OperatorFunction<any, EmitEvent<infer EK, infer EV>> ? Record<EK, EV> : never;
-// }
-
-// interface EventsTest {
-//   click: (click$: Observable<MouseEvent>) => Observable<EmitEvent<'test', number>>;
-//   contextmenu: (click$: Observable<MouseEvent>) => Observable<EmitEvent<'test1', boolean>>;
-//   change: (click$: Observable<MouseEvent>) => Observable<boolean>;
-// }
-
-// type InferTest = AttributeEvents<EventsTest>;
-
-// const attribute: IAttributes = {
-//   click: setState(ev => ev.screenX),
-//   class: 'test',
-// };
-
-// function withAttributes<B extends any[]>(
-//   foo1: number,
-//   ...foo: B
-// ): undefined
-// function withAttributes<T extends IAttributes, B extends any[]>(
-//   _attribute: T | B,
-//   ...foo: B
-// ): AttributeEvents<T>
-// function withAttributes<T extends IAttributes, B extends any[]>(
-//   _attribute: T,
-//   ...foo: B
-// ): AttributeEvents<T> {
-//   return {};
-// }
-
-// const attributeTest = withAttributes({
-//   click: setState(ev => ev.screenX),
-//   // class: 'test',
-// }, ['test']);
-
-// interface Classes {
-//   class?: Observable<string>;
-// }
-
-// type ArgTypes = EventOperators<any> & Classes & Partial<Dictionary<string>>;
-
-// type ComponentArgs<T extends ArgTypes> = {
-//   [K in keyof T]: K extends keyof ElementEventMap ? OperatorFunction<ElementEventMap[K], any> :
-//     K extends keyof Classes ? Classes[K] : string;
-// }
-
-// function componentArgs<T extends ArgTypes>(
-//   attributes: ComponentArgs<T>,
-// ): EventTypes<ComponentArgs<T>> {
-//   return {};
-// }
-
-// const inferTest = componentArgs({
-//   click: setState(ev => ev.screenX),
-// });

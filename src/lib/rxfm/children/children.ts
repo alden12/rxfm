@@ -1,22 +1,15 @@
-import { Observable, of, combineLatest, merge, EMPTY } from 'rxjs';
-import { map, switchMap, debounceTime, shareReplay, distinctUntilChanged, mapTo, switchAll, share, startWith } from 'rxjs/operators';
-// import { IComponent, ComponentOld, ComponentOperatorOld } from '../components';
+import { Observable, of, combineLatest } from 'rxjs';
+import { map, switchMap, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { childDiffer } from './child-differ';
 import { ElementType, Component, ComponentOperator, ComponentObservable, EventType, ComponentCreatorFunction } from '../components';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
-// export type ComponentLike<T extends ElementType, E> = EventsFor<T, E> | EventsFor<T, E>[];
-export type ComponentLike<T extends ElementType, E extends EventType = never> = Component<T, E> | Component<T, E>[];
-
 /**
  * The possible types which can be added as a child component through the 'children' operator.
  */
-// export type ChildComponent<T extends ElementType, E> =
-//   string | number | NullLike |
-//   Observable<string | number | NullLike | EventWrapper<T, E> | EventWrapper<T, E>[]>;
+export type ComponentLike<T extends ElementType, E extends EventType = never> = Component<T, E> | Component<T, E>[];
 
-// TODO: Add ability to pass component creator function?
 export type ChildComponent<T extends ElementType = ElementType, E = EventType> =
   StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>> | ComponentCreatorFunction<T, E>;
 
@@ -46,7 +39,7 @@ function coerceChildComponent<E>(
         return null // Otherwise return null to indicate empty.
       }),
     );
-  } else if (typeof childComponent === 'string' || typeof childComponent === 'number') {
+  } else if (childComponent !== undefined && childComponent !== null && childComponent !== false) { // If string like.
     const node = document.createTextNode(childComponent.toString()); // Coerce to string and create text node with string value.
     return of([node]); // Return observable component in an array.
   }
@@ -78,15 +71,17 @@ function updateElementChildren<T extends ElementType>(
 
 export type ArrayType<T extends any[]> = T extends (infer A)[] ? A extends EventType ? A : never : never;
 
-// export type ChildEvent<T extends ChildComponent<ElementType, any>> =
-//   T extends Observable<ComponentLike<infer _, infer E>> ? E : never;
-
 export type ChildEvents<T extends ChildComponent<ElementType, EventType>[]> = ArrayType<{
   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 }>;
 
-// type StringChildTest = ChildEvents<[]>;
-
+// /**
+//  * An observable operator to add children to a component.
+//  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
+//  * forms, the simplest of which are strings, numbers or booleans or observables emitting any of these. Other components
+//  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
+//  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
+//  */
 export function children<T extends ElementType, C extends ChildComponent<ElementType, EventType>[], E = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
@@ -111,66 +106,3 @@ export function children<T extends ElementType, C extends ChildComponent<Element
     }),
   );
 }
-
-// /**
-//  * An observable operator to add children to a component.
-//  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
-// tslint:disable: max-line-length
-//  * forms, the simplest of which are strings, numbers or booleans or observables emitting any of these. Other components
-//  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
-//  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
-//  */
-// // tslint:disable: max-line-length
-// export function children<T extends HTMLElement, EV>(): ComponentOperatorOld<T, EV>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node>(childA: ChildComponent<TA, A>): ComponentOperatorOld<T, EV, EV & A>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>): ComponentOperatorOld<T, EV, EV & A & B>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>): ComponentOperatorOld<T, EV, EV & A & B & C>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>): ComponentOperatorOld<T, EV, EV & A & B & C & D>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>): ComponentOperatorOld<T, EV, EV & A & B & C & D & E>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>): ComponentOperatorOld<T, EV, EV & A & B & C & D & E & F>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node, G = {}, TG extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>, childG: ChildComponent<TG, G>): ComponentOperatorOld<T, EV, EV & A & B & C & D & E & F & G>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node, G = {}, TG extends Node = Node, H = {}, TH extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>, childG: ChildComponent<TG, G>, childH: ChildComponent<TH, H>): ComponentOperatorOld<T, EV, EV & A & B & C & D & E & F & G & H>
-// export function children<T extends HTMLElement, EV, A = {}, TA extends Node = Node, B = {}, TB extends Node = Node, C = {}, TC extends Node = Node, D = {}, TD extends Node = Node, E = {}, TE extends Node = Node, F = {}, TF extends Node = Node, G = {}, TG extends Node = Node, H = {}, TH extends Node = Node, I = {}, TI extends Node = Node>(childA: ChildComponent<TA, A>, childB: ChildComponent<TB, B>, childC: ChildComponent<TC, C>, childD: ChildComponent<TD, D>, childE: ChildComponent<TE, E>, childF: ChildComponent<TF, F>, childG: ChildComponent<TG, G>, childH: ChildComponent<TH, H>, childI: ChildComponent<TI, I>): ComponentOperatorOld<T, EV, EV & A & B & C & D & E & F & G & H & I>
-// // tslint:enable: max-line-length
-
-// export function children<T extends HTMLElement, E>(
-//   ...childComponents: ChildComponent<Node, any>[]
-// ): ComponentOperatorOld<T, E, any> {
-//   return (component: ComponentOld<T, E>) => component.pipe(
-//     switchMap(({ node, events }) => {
-
-//       const children$ = combineLatest<IComponent<Node, any>[][]>(
-//         ...childComponents.map(coerceChildComponent) // Coerce all child nodes to be most generic type and combine.
-//       ).pipe(
-//         debounceTime(0), // Prevent repeated emission for simultaneous changes.
-//         map(childrenOrNull => childrenOrNull.filter(child => child !== null)), // Remove empty children then flatten.
-//         map(unflattened => unflattened.reduce<IComponent<Node, any>[]>((flat, comps) => flat.concat(comps), [])),
-//         shareReplay(SHARE_REPLAY_CONFIG), // Share to prevent duplication of stream.
-//       );
-
-//       const events$ = children$.pipe( // Merge child events with component events.
-//         map(components =>
-//           merge<any>(
-//             ...(events ? [events] : []),
-//             ...components.map(comp => comp.events).filter(ev => ev !== undefined),
-//           )
-//         ),
-//         switchAll(),
-//         share(), // Remove in favour of sharing when used?
-//       );
-
-//       let previousNodes: Node[] = [];
-//       return children$.pipe( // Add child updating to the stream and return component.
-//         map(components => {
-//           const nodes = components.map(comp => comp.node);
-//           updateElementChildren(node, previousNodes, nodes); // Update the component child nodes.
-//           previousNodes = nodes; // Store nodes for reference.
-//           return node;
-//         }),
-//         distinctUntilChanged(),
-//         mapTo({ node, events: events$ }), // Map to component type.
-//         shareReplay(SHARE_REPLAY_CONFIG), // Is this share needed?
-//       );
-//     }),
-//   );
-// }
