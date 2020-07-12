@@ -1,7 +1,7 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, switchMap, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { childDiffer } from './child-differ';
-import { ElementType, Component, ComponentOperator, ComponentObservable, EventType, ComponentCreatorFunction } from '../components';
+import { ElementType, Component, ComponentOperator, ComponentObservable, EventType } from '../components';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;
@@ -10,8 +10,9 @@ export type StringLike = string | number;
  */
 export type ComponentLike<T extends ElementType, E extends EventType = never> = Component<T, E> | Component<T, E>[];
 
+// TODO: Add option to pass component creation function if event types can be inferred.
 export type ChildComponent<T extends ElementType = ElementType, E = EventType> =
-  StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>> | ComponentCreatorFunction<T, E>;
+  StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
 
@@ -21,10 +22,9 @@ export type CoercedChildComponent = (ElementType | Text)[];
 function coerceChildComponent<E>(
   childComponent: ChildComponent<ElementType, E>,
 ): Observable<CoercedChildComponent | null> {
-  if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or creation function.
-    const comp = typeof childComponent === 'function' ? childComponent() : childComponent; // Coerce to observable.
+  if (childComponent instanceof Observable) { // If observable.
     let node: Text; // Create outer reference to text node if it is needed.
-    return comp.pipe(
+    return childComponent.pipe(
       startWith(null),
       distinctUntilChanged(),
       map(child => {
