@@ -1,8 +1,9 @@
 import { Observable } from 'rxjs';
-import { ElementType, EventType, ComponentOperator, ComponentObservable } from '../components';
+import { ElementType, ComponentOperator, ComponentObservable } from '../components';
 import { switchMap, tap, mapTo, distinctUntilChanged } from 'rxjs/operators';
 import { coerceToObservable } from '../utils';
 import { NullLike } from '../children/children';
+import { EventType } from '../events';
 
 export type StyleKeys = Extract<keyof CSSStyleDeclaration, string>;
 

@@ -1,8 +1,7 @@
 import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
-import { EmitEvent, emitEvent, event } from './events';
+import { EmitEvent, emitEvent, event, EventType, EventDelete } from './events';
 import { withLatestFrom, tap } from 'rxjs/operators';
-import { ComponentOperator, ElementType, EventType, ComponentObservable } from './components';
-import { EventDelete } from './events';
+import { ComponentOperator, ElementType, ComponentObservable } from './components';
 
 /**
  * A function taking the current state of an information store (of type S) and returning a new state for the store.

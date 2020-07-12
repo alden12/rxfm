@@ -1,10 +1,9 @@
-import { ElementType, ComponentObservable, EventType } from './component';
+import { ElementType, ComponentObservable } from './component';
 import { ChildComponent, ChildEvents } from '../children/children';
 import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { filterObject } from '../utils';
-import { EventDelete } from '../events';
-import { ElementEventMap, EmitEvent, event } from '../events';
+import { ElementEventMap, EmitEvent, event, EventType, EventDelete } from '../events';
 import { SetState, stateful } from '../state';
 import { IAttributes } from '../attributes';
 

@@ -1,12 +1,9 @@
 import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
 import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
-import { EventKeys, EventValue, EventDelete } from '../events';
-import { EmitEvent, ElementEventMap } from '../events';
+import { EventKeys, EventValue, EventDelete, EmitEvent, ElementEventMap, EventType } from '../events';
 import { component } from './creator';
 
 export type ElementType = HTMLElement | SVGElement;
-
-export type EventType<K extends string = string, V = any> = Record<K, V>;
 
 export interface ICapture<T extends ElementType, E extends EventType, EV> {
   component: Component<T, E>;

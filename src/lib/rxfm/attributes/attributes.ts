@@ -1,11 +1,12 @@
 import { Observable, of } from 'rxjs';
 import { coerceToArray } from '../utils';
-import { ElementType, ComponentOperator, ComponentObservable, EventType } from '../components';
+import { ElementType, ComponentOperator, ComponentObservable } from '../components';
 import { HTMLAttributes } from './html';
 import { SVGAttributes } from './svg';
 import { switchMap, mapTo, distinctUntilChanged, tap, startWith } from 'rxjs/operators';
 import { styles, Styles, StylesOrNull } from './styles';
 import { classes, ClassType } from './classes';
+import { EventType } from '../events';
 
 export type TypeOrObservable<T> = T | Observable<T>;
 

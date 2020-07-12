@@ -1,6 +1,8 @@
-import { ElementType, ComponentOperator, ComponentObservable, ICapture, EventType } from './components';
+import { ElementType, ComponentOperator, ComponentObservable, ICapture } from './components';
 import { Observable, OperatorFunction, EMPTY } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
+
+export type EventType<K extends string = string, V = any> = Record<K, V>;
 
 export type EventKeys<T extends EventType> = T extends EventType<infer K, any> ? K : never;
 

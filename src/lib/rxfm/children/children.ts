@@ -1,7 +1,8 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, switchMap, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { childDiffer } from './child-differ';
-import { ElementType, Component, ComponentOperator, ComponentObservable, EventType } from '../components';
+import { ElementType, Component, ComponentOperator, ComponentObservable } from '../components';
+import { EventType } from '../events';
 
 export type NullLike = null | undefined | false;
 export type StringLike = string | number;

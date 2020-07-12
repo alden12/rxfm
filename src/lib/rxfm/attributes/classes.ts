@@ -1,8 +1,9 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { NullLike } from '../children/children';
 import { map, debounceTime } from 'rxjs/operators';
-import { ComponentOperator, ElementType, ComponentObservable, EventType } from '../components';
+import { ComponentOperator, ElementType, ComponentObservable } from '../components';
 import { attribute } from './attributes';
+import { EventType } from '../events';
 
 export type ClassSingle = string | NullLike;
 

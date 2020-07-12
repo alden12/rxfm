@@ -1,6 +1,7 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
-import { ElementType, Component, ComponentObservable, EventType } from './components';
+import { ElementType, Component, ComponentObservable } from './components';
 import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, share, tap } from 'rxjs/operators';
+import { EventType } from './events';
 
 type Id = string | number;
 
