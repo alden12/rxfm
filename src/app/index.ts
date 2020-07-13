@@ -1,4 +1,11 @@
 import { app } from './todo';
-import { addToBody } from 'rxfm';
+import { addToBody, div } from 'rxfm';
 
-addToBody(app);
+import './styles.css';
+
+addToBody(
+  div(
+    { id: 'app' },
+    app,
+  )
+);

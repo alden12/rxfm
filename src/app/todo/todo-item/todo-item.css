@@ -5,7 +5,6 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  font-family: sans-serif;
 }
 
 .done {
