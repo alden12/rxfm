@@ -5,13 +5,16 @@ import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
 import './todo-item.css';
 
 export const todoItem = (item: Observable<ITodo>) => div({
-    class: selectFrom(item, 'done').pipe(conditionalMapTo('done')),
+    class: [
+      'todo-item',
+      selectFrom(item, 'done').pipe(conditionalMapTo('done')),
+    ],
     click: dispatch(item, ({ label }) => toggleTodoAction(label)),
   },
   input({
     type: 'checkbox',
     checked: selectFrom(item, 'done'),
-    style: { cursor: 'pointer' },
+    style: { marginRight: '10px' },
   }),
   selectFrom(item, 'label'),
   button({

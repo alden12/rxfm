@@ -1,0 +1,9 @@
+.todo-list {
+  width: 300px;
+}
+
+.todo-list .actions {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}

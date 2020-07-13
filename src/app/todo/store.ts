@@ -15,8 +15,9 @@ export interface IApp {
 // Store subject
 export const storeSubject = new BehaviorSubject<IApp>({
   todos: [
-    { label: 'test', done: false },
-    { label: 'test1', done: true },
+    { label: 'Write RxFM', done: true },
+    { label: 'Buy Bananas', done: true },
+    { label: 'Fix All The Bugs', done: false },
   ],
 });
 

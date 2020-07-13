@@ -8,8 +8,6 @@ export type EventKeys<T extends EventType> = T extends EventType<infer K, any> ?
 
 export type EventValue<T extends EventType, K extends EventKeys<T>> = T extends EventType<K, infer V> ? V : never;
 
-export type EventGet<T extends EventType, K extends string> = T extends EventType<K, any> ? EventType<K, T[K]> : never;
-
 export type EventDelete<T extends EventType, K extends string> = T extends EventType<K, any> ? never : T;
 
 export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
