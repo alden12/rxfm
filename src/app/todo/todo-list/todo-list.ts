@@ -49,9 +49,9 @@ const todoActions = (state: Observable<ITodoList>) => div(
 export const todoList = component(({ state }) =>  div(
   { class: 'todo-list' },
   todoHeader(state),
-  selectFrom(state, 'showDone').pipe(
-    switchMap(showDone => showDone ? todos$ : todos$.pipe(
-      map(todos => todos.filter(({ done }) => done))
+  state.pipe(
+    switchMap(({ showDone }) => showDone ? todos$ : todos$.pipe(
+      map(todos => todos.filter(({ done }) => !done))
     )),
     generate(item => item.label, todoItem),
   ),
