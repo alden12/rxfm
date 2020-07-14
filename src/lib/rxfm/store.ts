@@ -26,6 +26,12 @@ export interface IAction<S> {
 export const DISPATCH = 'rxfmDispatch' as const;
 export type Dispatch = typeof DISPATCH;
 
+export type Store<S> = BehaviorSubject<S>;
+
+export function store<S>(initialState: S): Store<S> {
+  return new BehaviorSubject(initialState);
+}
+
 // /**
 //  * An observable operator to dispatch an 'action' to the store (see the 'store' operator). These actions should be of
 //  * type 'Action'. Actions functions (of type Action) take a payload and return a reducer function (of type
@@ -49,13 +55,13 @@ export function dispatch<T, S, STA, STB>(
 export function dispatch<T, S, STA, STB>(
   stateAOrAction: Observable<STA> | Action<T, S>,
   stateBOrAction?: Observable<STB> | ((currentState: STA, event: T) => Reducer<S>),
-  action?: (stateA: STA, stateB: STB, event: T) => Reducer<S>,
+  _action?: (stateA: STA, stateB: STB, event: T) => Reducer<S>,
 ): OperatorFunction<T, EmitEvent<Dispatch, Reducer<S>>> {
 
-  if (action) {
+  if (_action) {
     return (event$: Observable<T>) => event$.pipe(
       withLatestFrom(stateAOrAction as Observable<STA>, stateBOrAction as Observable<STB>),
-      emitEvent(DISPATCH, ([ev, latestFromA, latestFromB]) => action(latestFromA, latestFromB, ev))
+      emitEvent(DISPATCH, ([ev, latestFromA, latestFromB]) => _action(latestFromA, latestFromB, ev))
     );
   } else if (typeof stateBOrAction === 'function') {
     return (event$: Observable<T>) => event$.pipe(
@@ -73,16 +79,25 @@ export function dispatch<T, S, STA, STB>(
  * Extracts any 'action' events which should be functions taking the current state and returning the new state for the
  * store. These actions should be created from the 'dispatch' operator. Action functions (reducers) are then executed
  * and the new state is emitted by the state subject. This subject can be mapped and used as input for components.
- * @param stateSubject A behavior subject ot be used as the store.
+ * @param storeSubject A behavior subject ot be used as the store.
  */
-export function store<T extends ElementType, S, E extends EventType>(
-  stateSubject: BehaviorSubject<S>,
+export function connect<T extends ElementType, S, E extends EventType>(
+  storeSubject: Store<S>,
 ): ComponentOperator<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>, EventDelete<E, Dispatch>> {
   return (component$: ComponentObservable<T, E>) => component$.pipe(
     event(
       DISPATCH,
-      tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(stateSubject.value) })),
+      tap(ev => storeSubject.next({ ...storeSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(storeSubject.value) })),
     )
+  );
+}
+
+export function connectStore<T extends ElementType, S, E extends EventType>(
+  component: ComponentObservable<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>>,
+  storeSubject: Store<S>,
+): ComponentObservable<T, EventDelete<E, Dispatch>> {
+  return component.pipe(
+    connect(storeSubject),
   );
 }
 

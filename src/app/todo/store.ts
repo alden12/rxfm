@@ -1,5 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
-import { selector, action } from 'rxfm';
+import { store, selector, action } from 'rxfm';
 
 // Interfaces:
 export interface ITodo {
@@ -12,7 +11,7 @@ export interface IApp {
 }
 
 // Store subject
-export const storeSubject = new BehaviorSubject<IApp>({
+export const appStore = store<IApp>({
   todos: [
     { label: 'Write RxFM', done: true },
     { label: 'Buy Bananas', done: true },
@@ -21,7 +20,7 @@ export const storeSubject = new BehaviorSubject<IApp>({
 });
 
 // Selectors
-export const todosSelector = selector(storeSubject, ({ todos }) => todos);
+export const todosSelector = selector(appStore, ({ todos }) => todos);
 
 // Actions
 export const addTodoAction = action(
