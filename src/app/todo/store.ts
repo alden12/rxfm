@@ -1,6 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { Action, select, REF_COUNT } from 'rxfm';
-import { shareReplay } from 'rxjs/operators';
+import { selector, action } from 'rxfm';
 
 // Interfaces:
 export interface ITodo {
@@ -21,20 +20,22 @@ export const storeSubject = new BehaviorSubject<IApp>({
   ],
 });
 
-// TODO: Create selector function taking either mapping function or keys with share built in.
 // Selectors
-export const todos$ = storeSubject.pipe(
-  select('todos'),
-  shareReplay(REF_COUNT),
-);
+export const todosSelector = selector(storeSubject, ({ todos }) => todos);
 
 // Actions
-export const addTodoAction: Action<ITodo, IApp> = (todo: ITodo) => ({ todos }) => ({ todos: [...todos, todo] });
+export const addTodoAction = action(
+  (state: IApp, todo: ITodo) => ({ todos: [...state.todos, todo] })
+);
 
-export const toggleTodoAction: Action<string, IApp> = (id: string) => ({ todos }) => ({
-  todos: todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
-});
+export const toggleTodoAction = action(
+  (state: IApp, id: string) => ({
+    todos: state.todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
+  })
+);
 
-export const deleteTodoAction: Action<string, IApp> = (id: string) => ({ todos }) => ({
-  todos: todos.filter(({ label }) => label !== id),
-});
+export const deleteTodoAction = action(
+  (state: IApp, id: string) => ({
+    todos: state.todos.filter(({ label }) => label !== id),
+  })
+);

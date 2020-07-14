@@ -1,7 +1,8 @@
 import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
 import { EmitEvent, emitEvent, event, EventType, EventDelete } from './events';
-import { withLatestFrom, tap } from 'rxjs/operators';
+import { withLatestFrom, tap, shareReplay } from 'rxjs/operators';
 import { ComponentOperator, ElementType, ComponentObservable } from './components';
+import { watch, REF_COUNT } from './utils';
 
 /**
  * A function taking the current state of an information store (of type S) and returning a new state for the store.
@@ -83,4 +84,34 @@ export function store<T extends ElementType, S, E extends EventType>(
       tap(ev => stateSubject.next({ ...stateSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(stateSubject.value) })),
     )
   );
+}
+
+export function selector<S, T>(storeObservable: Observable<S>, selectorFunction: (state: S) => T): Observable<T> {
+  return storeObservable.pipe(
+    watch(selectorFunction),
+    shareReplay(REF_COUNT),
+  );
+}
+
+export function action<T, S>(
+  reducer: (state: S, payload: T) => Partial<S>
+): Action<T, S>
+export function action<T, S, R extends keyof S>(
+  root: R,
+  reducer: (state: S[R], payload: T) => Partial<S[R]>
+): Action<T, S>
+export function action<T, S, R extends keyof S>(
+  reducerOrRoot: ((state: S, payload: T) => Partial<S>) | R,
+  reducer?: (state: S[R], payload: T) => Partial<S[R]>
+): Action<T, S> {
+  if (reducer) {
+    const key = reducerOrRoot as R;
+    return (payload: T) => (state: S) => {
+      const newState = { ...state };
+      newState[key] = { ...state[key], ...reducer(state[key], payload) };
+      return newState;
+    };
+  }
+  const _reducer = reducerOrRoot as (state: S, payload: T) => Partial<S>;
+  return (payload: T) => (state: S) => _reducer(state, payload);
 }

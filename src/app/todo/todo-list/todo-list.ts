@@ -1,5 +1,5 @@
 import { generate, dispatch, setState, div, button, input, component, selectFrom, span } from 'rxfm';
-import { todos$, addTodoAction } from '../store';
+import { todosSelector, addTodoAction } from '../store';
 import { todoItem } from '../todo-item/todo-item';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -50,7 +50,7 @@ export const todoList = component(({ state }) =>  div(
   { class: 'todo-list' },
   todoHeader(state),
   state.pipe(
-    switchMap(({ showDone }) => showDone ? todos$ : todos$.pipe(
+    switchMap(({ showDone }) => showDone ? todosSelector : todosSelector.pipe(
       map(todos => todos.filter(({ done }) => !done))
     )),
     generate(item => item.label, todoItem),
