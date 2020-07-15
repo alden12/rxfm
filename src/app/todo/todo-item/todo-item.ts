@@ -1,4 +1,4 @@
-import { dispatch, conditionalMapTo, stopPropagation, div, input, button, selectFrom } from 'rxfm';
+import { dispatch, stopPropagation, div, input, button, selectFrom, watchFrom } from 'rxfm';
 import { Observable } from 'rxjs';
 import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
 
@@ -7,7 +7,7 @@ import './todo-item.css';
 export const todoItem = (item: Observable<ITodo>) => div({
     class: [
       'todo-item',
-      selectFrom(item, 'done').pipe(conditionalMapTo('done')),
+      watchFrom(item, ({ done }) => done && 'done'),
     ],
     click: dispatch(item, ({ label }) => toggleTodoAction(label)),
   },

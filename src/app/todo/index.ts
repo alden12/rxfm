@@ -1,7 +1,6 @@
-import { connect } from 'rxfm';
 import { todoList } from './todo-list/todo-list';
-import { appStore } from './store';
+import { store } from './store';
 
-export const app = todoList().pipe(
-  connect(appStore),
+export const app = store.connect(
+  todoList(),
 );

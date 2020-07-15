@@ -1,4 +1,4 @@
-import { store, selector, action } from 'rxfm';
+import { Store } from 'rxfm';
 
 // Interfaces:
 export interface ITodo {
@@ -11,7 +11,7 @@ export interface IApp {
 }
 
 // Store subject
-export const appStore = store<IApp>({
+export const store = new Store<IApp>({
   todos: [
     { label: 'Write RxFM', done: true },
     { label: 'Buy Bananas', done: true },
@@ -20,21 +20,19 @@ export const appStore = store<IApp>({
 });
 
 // Selectors
-export const todosSelector = selector(appStore, ({ todos }) => todos);
+export const todosSelector = store.select(({ todos }) => todos);
 
 // Actions
-export const addTodoAction = action(
-  (state: IApp, todo: ITodo) => ({ todos: [...state.todos, todo] })
+export const addTodoAction = store.action(
+  (state, todo: ITodo) => ({ todos: [...state.todos, todo] })
 );
 
-export const toggleTodoAction = action(
-  (state: IApp, id: string) => ({
+export const toggleTodoAction = store.action(
+  (state, id: string) => ({
     todos: state.todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
   })
 );
 
-export const deleteTodoAction = action(
-  (state: IApp, id: string) => ({
-    todos: state.todos.filter(({ label }) => label !== id),
-  })
+export const deleteTodoAction = store.action(
+  (state, id: string) => ({ todos: state.todos.filter(({ label }) => label !== id) })
 );

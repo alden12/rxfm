@@ -1,4 +1,4 @@
-import { OperatorFunction, Observable, BehaviorSubject } from 'rxjs';
+import { OperatorFunction, Observable, BehaviorSubject, throwError } from 'rxjs';
 import { EmitEvent, emitEvent, event, EventType, EventDelete } from './events';
 import { withLatestFrom, tap, shareReplay } from 'rxjs/operators';
 import { ComponentOperator, ElementType, ComponentObservable } from './components';
@@ -25,12 +25,6 @@ export interface IAction<S> {
 
 export const DISPATCH = 'rxfmDispatch' as const;
 export type Dispatch = typeof DISPATCH;
-
-export type Store<S> = BehaviorSubject<S>;
-
-export function store<S>(initialState: S): Store<S> {
-  return new BehaviorSubject(initialState);
-}
 
 // /**
 //  * An observable operator to dispatch an 'action' to the store (see the 'store' operator). These actions should be of
@@ -82,22 +76,13 @@ export function dispatch<T, S, STA, STB>(
  * @param storeSubject A behavior subject ot be used as the store.
  */
 export function connect<T extends ElementType, S, E extends EventType>(
-  storeSubject: Store<S>,
+  storeSubject: BehaviorSubject<S>,
 ): ComponentOperator<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>, EventDelete<E, Dispatch>> {
   return (component$: ComponentObservable<T, E>) => component$.pipe(
     event(
       DISPATCH,
       tap(ev => storeSubject.next({ ...storeSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(storeSubject.value) })),
     )
-  );
-}
-
-export function connectStore<T extends ElementType, S, E extends EventType>(
-  component: ComponentObservable<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>>,
-  storeSubject: Store<S>,
-): ComponentObservable<T, EventDelete<E, Dispatch>> {
-  return component.pipe(
-    connect(storeSubject),
   );
 }
 
@@ -110,23 +95,55 @@ export function selector<S, T>(storeObservable: Observable<S>, selectorFunction:
 
 export function action<T, S>(
   reducer: (state: S, payload: T) => Partial<S>
-): Action<T, S>
-export function action<T, S, R extends keyof S>(
-  root: R,
-  reducer: (state: S[R], payload: T) => Partial<S[R]>
-): Action<T, S>
-export function action<T, S, R extends keyof S>(
-  reducerOrRoot: ((state: S, payload: T) => Partial<S>) | R,
-  reducer?: (state: S[R], payload: T) => Partial<S[R]>
 ): Action<T, S> {
-  if (reducer) {
-    const key = reducerOrRoot as R;
-    return (payload: T) => (state: S) => {
-      const newState = { ...state };
-      newState[key] = { ...state[key], ...reducer(state[key], payload) };
-      return newState;
-    };
+  return (payload: T) => (state: S) => reducer(state, payload);
+}
+
+export class Store<S> {
+
+  private storeSubject: BehaviorSubject<S>;
+  private isConnected = false;
+
+  constructor(initialState: S) {
+    this.storeSubject = new BehaviorSubject<S>(initialState);
   }
-  const _reducer = reducerOrRoot as (state: S, payload: T) => Partial<S>;
-  return (payload: T) => (state: S) => _reducer(state, payload);
+
+  public connect<T extends ElementType, E extends EventType>(
+    component: ComponentObservable<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>>,
+  ): ComponentObservable<T, EventDelete<E, Dispatch>> {
+    if (this.isConnected) {
+      return throwError('RxFM Error: Store already connected, store may only be connected once.')
+    }
+    this.isConnected = true;
+    return component.pipe(
+      connect(this.storeSubject),
+    );
+  }
+
+  public select<T>(selectorFunction: (state: S) => T): Observable<T> {
+    return selector(this.storeSubject, selectorFunction);
+  }
+
+  public action<T>(
+    reducer: (state: S, payload: T) => Partial<S>
+  ): Action<T, S>
+  public action<T, R extends keyof S>(
+    root: R,
+    reducer: (state: S[R], payload: T) => Partial<S[R]>
+  ): Action<T, S>
+  public action<T, R extends keyof S>(
+    reducerOrRoot: ((state: S, payload: T) => Partial<S>) | R,
+    reducer?: (state: S[R], payload: T) => Partial<S[R]>
+  ): Action<T, S> {
+    if (reducer) {
+      const key = reducerOrRoot as R;
+      const _reducer = (state: S, payload: T) => {
+        const newState = { ...state };
+        newState[key] = { ...state[key], ...reducer(state[key], payload) };
+        return newState;
+      };
+      return action(_reducer);
+    }
+    return action(reducerOrRoot as (state: S, payload: T) => Partial<S>);
+  }
 }
