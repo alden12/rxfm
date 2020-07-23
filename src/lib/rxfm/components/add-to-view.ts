@@ -1,10 +1,10 @@
-import { Component } from './component';
-import { switchMap, tap, map, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { ElementType, ComponentObservable } from './component';
+import { distinctUntilChanged } from 'rxjs/operators';
 
 /**
  * A function to remove a component from the view.
  */
-export type Remove = () => void;
+export type RemoveComponent = () => void;
 
 /**
  * Add an RxFM Component into the view.
@@ -13,26 +13,20 @@ export type Remove = () => void;
  * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
-export function addToView<E = {}>(
-  component: Component<Node, E> | (() => Component<Node, E>),
-  host: HTMLElement,
-  eventHandler?: (event: E) => void,
-): Remove {
+export function addToView(
+  component: ComponentObservable<ElementType, any>,
+  host: ElementType,
+): RemoveComponent {
   let oldNode: Node; // The node already in the view, if it exists.
-  const subscription = (typeof component === 'function' ? component() : component).pipe(
-    switchMap(({ node, events }) => events.pipe(
-      tap(event => typeof eventHandler === 'function' && eventHandler(event)), // Handle events if handler provided.
-      map(() => node),
-      startWith(node),
-    )),
+  const subscription = component.pipe(
     distinctUntilChanged(),
-  ).subscribe(node => {
+  ).subscribe(({ element }) => {
     if (oldNode) { // Add node to host or replace existing node.
-      host.replaceChild(node, oldNode);
+      host.replaceChild(element, oldNode);
     } else {
-      host.appendChild(node);
+      host.appendChild(element);
     }
-    oldNode = node;
+    oldNode = element;
   });
 
   return () => { // Return a function to remove the node and clean up subscription.
@@ -47,9 +41,8 @@ export function addToView<E = {}>(
  * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
-export function addToBody<E = {}>(
-  component: Component<Node, E> | (() => Component<Node, E>),
-  eventHandler?: (event: E) => void,
-): Remove {
-  return addToView(component, document.body, eventHandler);
+export function addToBody(
+  component: ComponentObservable<ElementType, any>,
+): RemoveComponent {
+  return addToView(component, document.body);
 }

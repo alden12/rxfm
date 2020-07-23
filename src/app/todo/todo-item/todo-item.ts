@@ -1,58 +1,29 @@
-import {
-  children,
-  select,
-  event,
-  dispatch,
-  classes,
-  styles,
-  attributes,
-  mapToLatest,
-  conditionalMapTo,
-  stopPropagation,
-  div,
-  input,
-  button,
-} from 'rxfm';
+import { dispatch, stopPropagation, div, input, button, selectFrom, watchFrom } from 'rxfm';
 import { Observable } from 'rxjs';
 import { ITodo, toggleTodoAction, deleteTodoAction } from '../store';
 
 import './todo-item.css';
 
-export const todoItem = (item: Observable<ITodo>) => div().pipe(
-  classes(
-    'todo-item',
-    item.pipe(
-      select('done'),
-      conditionalMapTo('done'),
-    )
-  ),
-  event(
-    'click',
-    mapToLatest(item),
-    dispatch(({ label }) => toggleTodoAction(label))
-  ),
-  children(
-
-    input().pipe(
-      attributes({
-        type: 'checkbox',
-        checked: item.pipe(select('done')),
-      }),
-      styles({ cursor: 'pointer' }),
-    ),
-
-    item.pipe(select('label')),
-
-    button().pipe(
-      styles({ marginLeft: '10px' }),
-      event(
-        'click',
+export const todoItem = (item: Observable<ITodo>) => div({
+    class: [
+      'todo-item',
+      watchFrom(item, ({ done }) => done && 'done'),
+    ],
+    click: dispatch(item, ({ label }) => toggleTodoAction(label)),
+  },
+  input({
+    type: 'checkbox',
+    checked: selectFrom(item, 'done'),
+    style: { marginRight: '10px' },
+  }),
+  selectFrom(item, 'label'),
+  button({
+      style: { marginLeft: '10px' },
+      click: ev => ev.pipe(
         stopPropagation(),
-        mapToLatest(item),
-        dispatch(({ label }) => deleteTodoAction(label)),
+        dispatch(item, ({ label }) => deleteTodoAction(label)),
       ),
-      children('Delete'),
-    ),
-
+    },
+    'Delete',
   ),
 );

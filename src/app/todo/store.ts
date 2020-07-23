@@ -1,6 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
-import { Action, select, SHARE_REPLAY_CONFIG } from 'rxfm';
-import { shareReplay } from 'rxjs/operators';
+import { Store } from 'rxfm';
 
 // Interfaces:
 export interface ITodo {
@@ -13,26 +11,28 @@ export interface IApp {
 }
 
 // Store subject
-export const storeSubject = new BehaviorSubject<IApp>({
+export const store = new Store<IApp>({
   todos: [
-    { label: 'test', done: false },
-    { label: 'test1', done: true },
+    { label: 'Write RxFM', done: true },
+    { label: 'Buy Bananas', done: true },
+    { label: 'Fix All The Bugs', done: false },
   ],
 });
 
 // Selectors
-export const todos$ = storeSubject.pipe(
-  select('todos'),
-  shareReplay(SHARE_REPLAY_CONFIG),
-);
+export const todosSelector = store.select(({ todos }) => todos);
 
 // Actions
-export const addTodoAction: Action<ITodo, IApp> = (todo: ITodo) => ({ todos }) => ({ todos: [...todos, todo] });
+export const addTodoAction = store.action(
+  (state, todo: ITodo) => ({ todos: [...state.todos, todo] })
+);
 
-export const toggleTodoAction: Action<string, IApp> = (id: string) => ({ todos }) => ({
-  todos: todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
-});
+export const toggleTodoAction = store.action(
+  (state, id: string) => ({
+    todos: state.todos.map(todo => todo.label === id ? { label: todo.label, done: !todo.done } : todo),
+  })
+);
 
-export const deleteTodoAction: Action<string, IApp> = (id: string) => ({ todos }) => ({
-  todos: todos.filter(({ label }) => label !== id),
-});
+export const deleteTodoAction = store.action(
+  (state, id: string) => ({ todos: state.todos.filter(({ label }) => label !== id) })
+);

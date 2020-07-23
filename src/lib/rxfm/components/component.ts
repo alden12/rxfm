@@ -1,65 +1,60 @@
-import { Observable, of, EMPTY } from 'rxjs';
-import { map, distinctUntilKeyChanged } from 'rxjs/operators';
+import { Observable, fromEvent, OperatorFunction } from 'rxjs';
+import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { EventKeys, EventValue, EventDelete, EmitEvent, ElementEventMap, EventType } from '../events';
 
-/**
- * An interface to describe an RxFM component object. This consists of an HTML Node which will represent the component
- * in the view along with an observable emitting any events emitted by the component or upstream components.
- * @typeParam T The Node type for this component.
- * @typeParam E The event type for this component.
- */
-export interface IComponent<T extends Node, E = {}> {
-  /**
-   * The HTML Node represented by this component.
-   */
-  node: T;
-  /**
-   * Events emitted by this component and any upstream components.
-   */
-  events: Observable<E>;
+export type ElementType = HTMLElement | SVGElement;
+
+export interface ICapture<T extends ElementType, E extends EventType, EV> {
+  component: Component<T, E>;
+  event: Observable<EV>;
 }
 
-/**
- * A type to describe an RxFM component. This consists of an observable emitting an IComponent interface.
- * @typeParam T The Node type for this component.
- * @typeParam E The event type for this component.
- */
-export type Component<T extends Node, E = {}> = Observable<IComponent<T, E>>;
+export type ComponentObservable<T extends ElementType, E extends EventType = never> = Observable<Component<T, E>>;
 
-/**
- * A function to operate on an RxFM Component stream. Takes a component observable and returns another component
- * observable.
- * @typeParam T The Node type of the component.
- * @typeParam E The event type of the incoming component.
- * @typeParam O The event type of the outgoing component.
- */
-export type ComponentOperator<T extends Node, E, O = E> = (component: Component<T, E>) => Component<T, O>;
+// /**
+//  * Create an RxFM component to represent an html element of tag name K.
+//  * @param tagName The HTML Element tag name (eg. 'div').
+//  */
+export class Component<T extends ElementType, E extends EventType = never> {
 
-// TODO: Deprecate in favor of always passing string directly to children operator?
-/**
- * Create an RxFM component to represent a text node.
- * @param textOrTextObservable The node text as a string, number or observable emitting either of these types.
- */
-export function text(
-  textOrTextObservable: string | number | Observable<string | number>
-): Observable<IComponent<Text, {}>> {
-  const textObservable = textOrTextObservable instanceof Observable ? textOrTextObservable : of(textOrTextObservable);
-  const node = document.createTextNode("");
-  return textObservable.pipe(
-    map(content => typeof content === 'string' ? content : content.toString()),
-    map(content => {
-      node.nodeValue = content;
-      return { node, events: EMPTY };
-    }),
-    distinctUntilKeyChanged('node'),
-  );
+  constructor(public readonly element: T) {}
+
+  public dispatch<K extends string, V>(type: K, value: V): Component<T, E | EventType<K, V>> {
+    this.element.dispatchEvent(new CustomEvent(type, { detail: value, bubbles: true }));
+    return this;
+  }
+
+  public capture<K extends EventKeys<E>>(type: K): ICapture<T, EventDelete<E, K>, CustomEvent<EventValue<E, K>>>
+  public capture<K extends keyof ElementEventMap>(type: K): ICapture<T, E, ElementEventMap[K]>
+  public capture<K extends string>(type: K): ICapture<T, E, Event>
+  public capture<K extends string>(type: K): ICapture<T, any, any> {
+    return {
+      component: this,
+      event: fromEvent(this.element, type).pipe(
+        tap(ev => ev instanceof CustomEvent && ev.stopPropagation()),
+      ),
+    };
+  }
+
+  public inject<EC, EV, K extends string, V>(
+    capture: ICapture<T, EC, EV>,
+    operator: OperatorFunction<EV, EmitEvent<K, V>>,
+  ): ComponentObservable<T, EC | EventType<K, V>>
+  public inject<EC, EV>(
+    capture: ICapture<T, EC, EV>,
+    operator?: OperatorFunction<EV, any>,
+  ): ComponentObservable<T, EC>
+  public inject<EC, EV>(
+    { component, event }: ICapture<T, EC, EV>,
+    operator?: OperatorFunction<EV, any>,
+  ): ComponentObservable<T, any> {
+    return (operator ? event.pipe(operator) : event).pipe(
+      map(ev => ev instanceof EmitEvent ? component.dispatch(ev.type, ev.value) : component),
+      startWith(component),
+      distinctUntilChanged(),
+    );
+  }
 }
 
-/**
- * Create an RxFM component to represent an html element of tag name K.
- * @param tagName The HTML Element tag name (eg. 'div').
- */
-export function component<K extends keyof HTMLElementTagNameMap>(
-  tagName: K,
-): Component<HTMLElementTagNameMap[K], {}> {
-  return of({ node: document.createElement(tagName), events: EMPTY });
-}
+export type ComponentOperator<T extends ElementType, E extends EventType = never, O extends EventType = E> =
+  (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;
