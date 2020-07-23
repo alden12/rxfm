@@ -47,7 +47,7 @@ export type InjectEvent<T extends ElementType, E extends EventType, ET extends s
 //  */
 export function event<T extends ElementType, EV, E extends EventType = never>(
   event: Observable<EV> | ((node: T) => Observable<EV>),
-): EV extends EmitEvent<infer K, infer V> ? ComponentOperator<T, E | Record<K, V>> : ComponentOperator<T, E>
+): EV extends EmitEvent<infer K, infer V> ? ComponentOperator<T, E | EventType<K, V>> : ComponentOperator<T, E>
 export function event<T extends ElementType, ET extends string, R, E extends EventType = never>(
   eventType: ET,
   operatorFunction: OperatorFunction<Events<E, ET>, R>,

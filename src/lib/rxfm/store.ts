@@ -108,7 +108,7 @@ export class Store<S> {
     this.storeSubject = new BehaviorSubject<S>(initialState);
   }
 
-  public connect<T extends ElementType, E extends EventType>(
+  public connect<T extends ElementType, E extends EventType = never>(
     component: ComponentObservable<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>>,
   ): ComponentObservable<T, EventDelete<E, Dispatch>> {
     if (this.isConnected) {

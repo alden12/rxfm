@@ -1,9 +1,9 @@
 import { Observable, of, combineLatest } from 'rxjs';
-import { NullLike } from '../children/children';
 import { map, debounceTime } from 'rxjs/operators';
 import { ComponentOperator, ElementType, ComponentObservable } from '../components';
 import { attribute } from './attributes';
 import { EventType } from '../events';
+import { NullLike, coerceToArray } from '../utils';
 
 export type ClassSingle = string | NullLike;
 
@@ -18,7 +18,7 @@ export type ClassType = ClassSingle | Observable<ClassSingle | ClassSingle[]>;
 function classTypesToStringObservable(classTypes: ClassType[]): Observable<string> {
 
   const classStrings = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
-    map(stringOrArray => Array.isArray(stringOrArray) ? stringOrArray : [stringOrArray]),
+    map(coerceToArray),
   ) : of([classType]));
 
   return combineLatest(classStrings).pipe(

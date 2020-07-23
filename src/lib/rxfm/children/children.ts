@@ -3,16 +3,15 @@ import { map, switchMap, debounceTime, distinctUntilChanged, startWith } from 'r
 import { childDiffer } from './child-differ';
 import { ElementType, Component, ComponentOperator, ComponentObservable } from '../components';
 import { EventType } from '../events';
+import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 
-export type NullLike = null | undefined | false;
-export type StringLike = string | number;
 /**
  * The possible types which can be added as a child component through the 'children' operator.
  */
 export type ComponentLike<T extends ElementType, E extends EventType = never> = Component<T, E> | Component<T, E>[];
 
 // TODO: Add option to pass component creation function if event types can be inferred.
-export type ChildComponent<T extends ElementType = ElementType, E = EventType> =
+export type ChildComponent<T extends ElementType = ElementType, E extends EventType = EventType> =
   StringLike | NullLike | Observable<StringLike | NullLike | ComponentLike<T, E>>;
 
 export type CoercedChildComponent = (ElementType | Text)[];
@@ -20,7 +19,7 @@ export type CoercedChildComponent = (ElementType | Text)[];
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
-function coerceChildComponent<E>(
+function coerceChildComponent<E extends EventType>(
   childComponent: ChildComponent<ElementType, E>,
 ): Observable<CoercedChildComponent | null> {
   if (childComponent instanceof Observable) { // If observable.
@@ -31,7 +30,7 @@ function coerceChildComponent<E>(
       map(child => {
         if (child && typeof child !== 'string' && typeof child !== 'number') {
           // If child was already a component or component array, coerce to array of elements and return
-          return Array.isArray(child) ? child.map(({ element }) => element) : [child.element];
+          return coerceToArray(child).map(({ element }) => element);
         } else if (child !== undefined && child !== null && child !== false) { // Else if string like
           node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
           node.nodeValue = child.toString(); // Coerce to string and update text node value.
@@ -83,7 +82,7 @@ export type ChildEvents<T extends ChildComponent<ElementType, EventType>[]> = Ar
 //  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
 //  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
 //  */
-export function children<T extends ElementType, C extends ChildComponent<ElementType, EventType>[], E = never>(
+export function children<T extends ElementType, C extends ChildComponent<ElementType, EventType>[], E extends EventType = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
   return (component$: ComponentObservable<T, E>) => component$.pipe(
@@ -96,7 +95,7 @@ export function children<T extends ElementType, C extends ChildComponent<Element
         startWith([]),
         //  Remove empty children then flatten.
         map(childrenOrNull => childrenOrNull.filter(child => child !== null) as CoercedChildComponent[]),
-        map(notFlat => notFlat.reduce<CoercedChildComponent>((flat, comps) => flat.concat(comps), [])),
+        map(flatten),
         map(nodes => {
           updateElementChildren(component.element, previousNodes, nodes); // Update the component child nodes.
           previousNodes = nodes; // Store nodes for reference.

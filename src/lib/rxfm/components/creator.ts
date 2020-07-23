@@ -39,8 +39,6 @@ export interface IStatefulComponentArgs<C extends ChildComponent[], S> extends I
   state: Observable<S>;
 }
 
-export type ComponentArgs<C extends ChildComponent[], S = never> = IComponentArgs<C> | IStatefulComponentArgs<C, S>;
-
 export type ComponentFunction<T extends ElementType, E extends EventType = never> =
   <C extends ChildComponent[] = []>(args: IComponentArgs<C>) => ComponentObservable<T, E | ChildEvents<C>>;
 

@@ -46,7 +46,7 @@ const todoActions = (state: Observable<ITodoList>) => div(
   ),
 );
 
-export const todoList = component(({ state }) =>  div(
+export const todoList = component(({ state }) => div(
   { class: 'todo-list' },
   todoHeader(state),
   state.pipe(

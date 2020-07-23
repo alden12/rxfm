@@ -3,6 +3,10 @@ import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from
 
 export interface Dictionary<T> { [key: string]: T }
 
+export type NullLike = null | undefined | false;
+
+export type StringLike = string | number;
+
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.
@@ -39,7 +43,6 @@ export function watchFrom<T, U>(
  * @returns An observable emitting the value of T[K] whenever it changes.
  */
 // tslint:disable: max-line-length
-// export function select<T, K extends keyof T>(): OperatorFunction<T, any>
 export function select<T, K extends keyof T>(key: K): OperatorFunction<T, T[K]>
 export function select<T, K0 extends keyof T, K1 extends keyof T[K0]>(key0: K0, key1: K1): OperatorFunction<T, T[K0][K1]>
 export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(key0: K0, key1: K1, key2: K2): OperatorFunction<T, T[K0][K1][K2]>
@@ -47,6 +50,7 @@ export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends
 // tslint:enable: max-line-length
 export function select<T>(...keys: string[]): OperatorFunction<T, any> {
   return (input: Observable<T>) => input.pipe(
+    distinctUntilChanged(),
     pluck(...keys),
     distinctUntilChanged(),
   );
@@ -63,6 +67,7 @@ export function selectFrom<T>(
   ...keys: string[]
 ): Observable<any> {
   return input.pipe(
+    distinctUntilChanged(),
     pluck(...keys),
     distinctUntilChanged(),
   );
@@ -148,4 +153,11 @@ export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
 
 export function coerceToArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
+}
+
+export function flatten<T>(notFlat: T[][]): T[] {
+  return notFlat.reduce<T[]>((flat, array) => {
+    flat.push(...array);
+    return flat;
+  }, [])
 }

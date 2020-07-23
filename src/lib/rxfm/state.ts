@@ -23,7 +23,7 @@ export function stateful<T extends ElementType, S, E extends EventType>(
   return of(creationFunction).pipe(
     map(creationFn => {
       const stateSubject = new BehaviorSubject<S>({ ...initialState });
-      const component = creationFn(stateSubject);
+      const component = creationFn(stateSubject.asObservable());
       return [component, stateSubject] as const;
     }),
     switchMap(([component, stateSubject]) => component.pipe(

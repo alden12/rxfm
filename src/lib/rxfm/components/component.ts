@@ -1,7 +1,6 @@
-import { Observable, of, fromEvent, OperatorFunction } from 'rxjs';
+import { Observable, fromEvent, OperatorFunction } from 'rxjs';
 import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { EventKeys, EventValue, EventDelete, EmitEvent, ElementEventMap, EventType } from '../events';
-import { component } from './creator';
 
 export type ElementType = HTMLElement | SVGElement;
 
@@ -17,8 +16,6 @@ export type ComponentObservable<T extends ElementType, E extends EventType = nev
 //  * @param tagName The HTML Element tag name (eg. 'div').
 //  */
 export class Component<T extends ElementType, E extends EventType = never> {
-
-  public static readonly from = component;
 
   constructor(public readonly element: T) {}
 
@@ -48,7 +45,6 @@ export class Component<T extends ElementType, E extends EventType = never> {
     operator?: OperatorFunction<EV, any>,
   ): ComponentObservable<T, EC>
   public inject<EC, EV>(
-    // tslint:disable-next-line: no-shadowed-variable
     { component, event }: ICapture<T, EC, EV>,
     operator?: OperatorFunction<EV, any>,
   ): ComponentObservable<T, any> {
@@ -60,5 +56,5 @@ export class Component<T extends ElementType, E extends EventType = never> {
   }
 }
 
-export type ComponentOperator<T extends ElementType, E extends EventType = never, O = E> =
+export type ComponentOperator<T extends ElementType, E extends EventType = never, O extends EventType = E> =
   (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;

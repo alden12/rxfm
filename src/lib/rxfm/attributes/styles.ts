@@ -1,8 +1,7 @@
 import { Observable } from 'rxjs';
 import { ElementType, ComponentOperator, ComponentObservable } from '../components';
-import { switchMap, tap, mapTo, distinctUntilChanged } from 'rxjs/operators';
-import { coerceToObservable } from '../utils';
-import { NullLike } from '../children/children';
+import { switchMap, tap, mapTo, distinctUntilChanged, startWith } from 'rxjs/operators';
+import { coerceToObservable, NullLike } from '../utils';
 import { EventType } from '../events';
 
 export type StyleKeys = Extract<keyof CSSStyleDeclaration, string>;
@@ -53,6 +52,7 @@ export function styles<T extends ElementType, E extends EventType>(
             previousStyles = dict;
           }),
           mapTo(component),
+          startWith(component),
           distinctUntilChanged(),
         ))
       );
