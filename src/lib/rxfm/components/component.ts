@@ -9,7 +9,7 @@ export interface ICapture<T extends ElementType, E extends EventType, EV> {
   event: Observable<EV>;
 }
 
-export type ComponentObservable<T extends ElementType, E extends EventType = never> = Observable<Component<T, E>>;
+export type ComponentObservable<T extends ElementType = ElementType, E extends EventType = never> = Observable<Component<T, E>>;
 
 // /**
 //  * Create an RxFM component to represent an html element of tag name K.
