@@ -1,7 +1,6 @@
 #sidenav {
-  width: 175px;
+  width: 200px;
   border-right: 1px solid rgba(0, 0, 0, 0.4);
-  padding-top: 10px;
   font-size: 18px;
   color: rgba(0, 0, 0, 0.8);
   background-color: rgba(0, 0, 0, 0.02);
@@ -22,4 +21,14 @@
 
 .sidenav-item.selected {
   background-color: rgba(0, 0, 0, 0.05);;
+}
+
+#search {
+  font-size: 16px;
+  margin: 15px;
+  margin-bottom: 5px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  outline: none;
 }
