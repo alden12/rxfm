@@ -30,15 +30,15 @@ function itemDiffer<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemD
   }
 }
 
-interface ComponentDiff<T extends ElementType, E extends EventType = never> {
-  newComponents: [Id, ComponentObservable<T, E>][];
-  removedIds: Id[];
-  ids: Id[];
+interface ComponentDiff<I, T extends ElementType, E extends EventType = never> {
+  newComponents: [I, ComponentObservable<T, E>][];
+  removedIds: I[];
+  ids: I[];
 }
 
 function createComponents<T, ET extends ElementType, E extends EventType = never>(
   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
-): OperatorFunction<ItemDiff<T>, ComponentDiff<ET, E>> {
+): OperatorFunction<ItemDiff<T>, ComponentDiff<Id, ET, E>> {
   return (changes: Observable<ItemDiff<T>>) => changes.pipe(
     map(({ added, removed, itemMap }) => {
 
@@ -66,11 +66,11 @@ function createComponents<T, ET extends ElementType, E extends EventType = never
   );
 }
 
-function combineComponents<T extends ElementType, E extends EventType = never>(
-): OperatorFunction<ComponentDiff<T, E>, Component<T, E>[]> {
-  return (componentObservableChanges: Observable<ComponentDiff<T, E>>) => {
+function combineComponents<I, T extends ElementType, E extends EventType = never>(
+): OperatorFunction<ComponentDiff<I, T, E>, Component<T, E>[]> {
+  return (componentObservableChanges: Observable<ComponentDiff<I, T, E>>) => {
 
-    const componentMap = new Map<Id, Component<T, E>>();
+    const componentMap = new Map<I, Component<T, E>>();
     return componentObservableChanges.pipe(
       switchMap(({ newComponents, removedIds, ids }) => {
         removedIds.forEach(id => componentMap.delete(id));
@@ -83,9 +83,30 @@ function combineComponents<T extends ElementType, E extends EventType = never>(
       }),
       mergeAll(),
       filter(componentOrIds => Array.isArray(componentOrIds)),
-      map((ids: Id[]) => ids.map(id => componentMap.get(id)!)),
+      map((ids: I[]) => ids.map(id => componentMap.get(id)!)),
     );
   }
+}
+
+function simpleComponentDiffer<T, ET extends ElementType, E extends EventType = never>(
+  creationFunction: (item: T) => ComponentObservable<ET, E>,
+): OperatorFunction<T[], ComponentDiff<T, ET, E>> {
+  return (items$: Observable<T[]>) => {
+
+    let previousComponentMap = new Map<T, ComponentObservable<ET, E>>();
+    return items$.pipe(
+      map(items => {
+        const componentArray = items.map(item => [item, previousComponentMap.get(item) || creationFunction(item)] as const);
+        const componentMap = new Map(componentArray);
+        const newComponents = items
+          .filter(item => !previousComponentMap.has(item))
+          .map(item => [item, componentMap.get(item)!] as [T, ComponentObservable<ET, E>]);
+        const removedIds = Array.from(previousComponentMap.keys()).filter(item => !componentMap.has(item));
+        previousComponentMap = componentMap;
+        return { newComponents, removedIds, ids: items };
+      }),
+    );
+  };
 }
 
 // /**
@@ -96,12 +117,26 @@ function combineComponents<T extends ElementType, E extends EventType = never>(
 //  * regeneration of components when the array is updated.
 //  */
 export function generate<T, ET extends ElementType, E extends EventType = never>(
-  idFunction: (item: T) => Id,
+  creationFunction: (item: T) => ComponentObservable<ET, E>,
+): OperatorFunction<T[], Component<ET, E>[]>
+export function generate<T, ET extends ElementType, E extends EventType = never>(
   creationFunction: (item: Observable<T>) => ComponentObservable<ET, E>,
+  idFunction: (item: T) => Id,
+): OperatorFunction<T[], Component<ET, E>[]>
+export function generate<T, ET extends ElementType, E extends EventType = never>(
+  creationFunction: (item: T | Observable<T>) => ComponentObservable<ET, E>,
+  idFunction?: (item: T) => Id,
 ): OperatorFunction<T[], Component<ET, E>[]> {
+  if (idFunction) {
+    return (items$: Observable<T[]>) => items$.pipe(
+      itemDiffer(idFunction),
+      createComponents(creationFunction as (item: Observable<T>) => ComponentObservable<ET, E>),
+      combineComponents(),
+      startWith([]),
+    );
+  }
   return (items$: Observable<T[]>) => items$.pipe(
-    itemDiffer(idFunction),
-    createComponents(creationFunction),
+    simpleComponentDiffer(creationFunction as (item: T) => ComponentObservable<ET, E>),
     combineComponents(),
     startWith([]),
   );

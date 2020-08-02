@@ -1,10 +1,9 @@
-import { div, component, dispatch, input, setState, selectFrom } from 'rxfm';
+import { div, component, dispatch, input, setState, selectFrom, generate } from 'rxfm';
 import { examples, exampleArray, Examples } from '../../examples';
 import { setActiveExampleAction, activeExampleSelector } from '../store';
-import { map, switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 import './sidenav.css';
-import { of } from 'rxjs';
 
 const search = input({
   id: 'search',
@@ -24,15 +23,16 @@ const sidenavItem = (id: keyof Examples) => div({
   examples[id].title,
 );
 
+const searchFunction = (term: string, value: string) => value.toLowerCase().includes(term.toLowerCase());
+
 export const sidenav = component(({ attributes, state }) => div(
   {
     ...attributes,
     id: 'sidenav',
   },
   search,
-  ...exampleArray.map(id => selectFrom(state, 'searchTerm').pipe(
-    map(term => examples[id].title.toLowerCase().includes(term.toLowerCase())),
-    distinctUntilChanged(),
-    switchMap(show => show ? sidenavItem(id) : of(null)),
-  )),
+  selectFrom(state, 'searchTerm').pipe(
+    map(term => exampleArray.filter(id => searchFunction(term, examples[id].title))),
+    generate(sidenavItem),
+  ),
 ), { searchTerm: '' });

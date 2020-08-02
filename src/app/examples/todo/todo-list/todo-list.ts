@@ -53,7 +53,7 @@ export const todoList = component(({ state }) => div(
     switchMap(({ showDone }) => showDone ? todosSelector : todosSelector.pipe(
       map(todos => todos.filter(({ done }) => !done))
     )),
-    generate(item => item.label, todoItem),
+    generate(todoItem, item => item.label),
   ),
   todoActions(state),
 ), todoListInitialState);
