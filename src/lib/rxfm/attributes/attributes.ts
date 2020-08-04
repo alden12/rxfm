@@ -1,9 +1,9 @@
 import { Observable, of } from 'rxjs';
-import { coerceToArray } from '../utils';
+import { coerceToArray, coerceToObservable } from '../utils';
 import { ElementType, ComponentOperator, ComponentObservable } from '../components';
 import { HTMLAttributes } from './html';
 import { SVGAttributes } from './svg';
-import { switchMap, mapTo, distinctUntilChanged, tap, startWith } from 'rxjs/operators';
+import { switchMap, mapTo, distinctUntilChanged, tap, startWith, elementAt } from 'rxjs/operators';
 import { styles, Styles, StylesOrNull } from './styles';
 import { classes, ClassType } from './classes';
 import { EventType } from '../events';
@@ -27,22 +27,26 @@ export type IAttributes = {
   [K in keyof (HTMLAttributes & SVGAttributes)]?: TypeOrObservable<AttributeType>;
 } & SpecialAttributes;
 
-export function attribute<T extends ElementType, E extends EventType>(
+export function attribute<T extends ElementType, E extends EventType = never>(
   type: string,
   value: TypeOrObservable<AttributeType>,
 ): ComponentOperator<T, E> {
   return (component: ComponentObservable<T, E>) => component.pipe(
-    switchMap(comp => {
-      const attributeObservable = value instanceof Observable ? value : of(value);
-      return attributeObservable.pipe(
-        distinctUntilChanged(),
-        tap(val => val || typeof val === 'number' ?
-          comp.element.setAttribute(type, val.toString()) : comp.element.removeAttribute(type)),
-        mapTo(comp),
-        startWith(comp),
-        distinctUntilChanged(),
-      );
-    }),
+    switchMap(comp => coerceToObservable(value).pipe(
+      distinctUntilChanged(),
+      tap(val => {
+        if (type === 'value' && comp.element instanceof HTMLInputElement) {
+          comp.element.value = val.toString();
+        } else if (val || typeof val === 'number') {
+          comp.element.setAttribute(type, val.toString());
+        } else {
+          comp.element.removeAttribute(type);
+        }
+      }),
+      mapTo(comp),
+      startWith(comp),
+      distinctUntilChanged(),
+    )),
   );
 }
 

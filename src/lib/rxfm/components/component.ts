@@ -1,5 +1,5 @@
 import { Observable, fromEvent, OperatorFunction } from 'rxjs';
-import { map, tap, startWith, distinctUntilChanged } from 'rxjs/operators';
+import { map, tap, startWith, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { EventKeys, EventValue, EventDelete, EmitEvent, ElementEventMap, EventType } from '../events';
 
 export type ElementType = HTMLElement | SVGElement;
@@ -58,3 +58,14 @@ export class Component<T extends ElementType, E extends EventType = never> {
 
 export type ComponentOperator<T extends ElementType, E extends EventType = never, O extends EventType = E> =
   (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;
+
+export function show<T extends ElementType, E extends EventType = never>(
+  visible: Observable<boolean | string | number>,
+): OperatorFunction<Component<T, E>, Component<T, E> | null> {
+  return (component$: ComponentObservable<T, E>) => component$.pipe(
+    switchMap(component => visible.pipe(
+      map(isVisible => isVisible ? component : null),
+      distinctUntilChanged(),
+    )),
+  );
+}
