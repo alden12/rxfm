@@ -1,7 +1,7 @@
 import { div, span } from 'rxfm';
 import { switchMap } from 'rxjs/operators';
-import { activeExampleSelector, store } from './store';
-import { examples } from '../examples';
+import { activePageSelector, store } from './store';
+import { pages } from './pages';
 import { sidenav } from './sidenav';
 
 import './layout.css';
@@ -18,8 +18,8 @@ export const layout = store.connect(div(
   sidenav({ class: 'sidenav' }),
   div(
     { id: 'content' },
-    activeExampleSelector.pipe(
-      switchMap(id => examples[id].component)
+    activePageSelector.pipe(
+      switchMap(id => pages[id].component)
     ),
   ),
 ));

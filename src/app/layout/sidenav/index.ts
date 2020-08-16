@@ -1,6 +1,6 @@
 import { div, component, dispatch, input, setState, selectFrom, generate, span, show } from 'rxfm';
-import { examples, exampleArray, Examples } from '../../examples';
-import { setActiveExampleAction, activeExampleSelector } from '../store';
+import { pages, pageArray, Pages } from '../pages';
+import { setActivePageAction, activePageSelector } from '../store';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
@@ -16,9 +16,9 @@ const search = (value: Observable<string>) => div(
     value,
     keyup: setState(event => ({ searchTerm: (event.target as HTMLInputElement).value })),
   }),
-  value,
   span({
       class: 'clear',
+      title: 'Clear',
       click: setState(() => ({ searchTerm: '' })),
     },
     '×',
@@ -27,14 +27,14 @@ const search = (value: Observable<string>) => div(
   ),
 );
 
-const sidenavItem = (id: keyof Examples) => div({
+const sidenavItem = (id: keyof Pages) => div({
     class: [
       'sidenav-item',
-      activeExampleSelector.pipe(map(activeId => activeId === id && 'selected')),
+      activePageSelector.pipe(map(activeId => activeId === id && 'selected')),
     ],
-    click: dispatch(() => setActiveExampleAction(id)),
+    click: dispatch(() => setActivePageAction(id)),
   },
-  examples[id].title,
+  pages[id].title,
 );
 
 const searchFunction = (term: string, value: string) => value.toLowerCase().includes(term.toLowerCase());
@@ -45,7 +45,7 @@ export const sidenav = component(({ attributes, state }) => div({
   },
   search(selectFrom(state, 'searchTerm')),
   selectFrom(state, 'searchTerm').pipe(
-    map(term => exampleArray.filter(id => searchFunction(term, examples[id].title))),
+    map(term => pageArray.filter(id => searchFunction(term, pages[id].title))),
     generate(sidenavItem),
   ),
 ), { searchTerm: '' });

@@ -1,0 +1,34 @@
+.expansion {
+  border-top: 1px solid grey;
+}
+
+.expansion .title {
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  background-color: lightgrey;
+  font-family: monospace;
+}
+
+.expansion .arrow {
+  margin-right: 10px;
+  transition: transform 50ms ease-in-out;
+}
+
+.expansion .arrow.down {
+  transform: rotate(90deg);
+}
+
+.expansion .content {
+  padding: 10px;
+  border-top: 1px solid grey;
+}
+
+.expansion-container {
+  border: 1px solid grey;
+}
+
+.expansion-container:last-child {
+  border-top: none;
+}

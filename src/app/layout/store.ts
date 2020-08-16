@@ -1,20 +1,20 @@
 import { Store } from 'rxfm';
-import { Examples } from '../examples';
+import { Pages } from './pages';
 
 // Interfaces:
 export interface IApp {
-  activeExample: keyof Examples;
+  activePage: keyof Pages;
 }
 
 // Store:
 export const store = new Store<IApp>({
-  activeExample: 'todo',
+  activePage: 'intro',
 });
 
 // Selectors:
-export const activeExampleSelector = store.select(({ activeExample }) => activeExample);
+export const activePageSelector = store.select(({ activePage: activeExample }) => activeExample);
 
 // Actions:
-export const setActiveExampleAction = store.action(
-  (_, activeExample: keyof Examples) => ({ activeExample })
+export const setActivePageAction = store.action(
+  (_, activeExample: keyof Pages) => ({ activePage: activeExample })
 );
