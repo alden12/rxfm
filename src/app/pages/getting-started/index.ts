@@ -21,7 +21,13 @@ export const gettingStarted = div(
     ' as long as you have ',
     a({ href: 'https://nodejs.org' }, 'NodeJS'),
     ' installed.',
-    p('Then run:', codeBlock('npm start', true)),
+  ),
+  p('Then run:', codeBlock('npm install', true)),
+  p('then', codeBlock('npm start', true)),
+  p(
+    'Once the app has started navigate to: ',
+    a({ href: 'http://localhost:3000/' }, 'localhost:3000/'),
+    ' in your browser to view the app.',
   ),
   h2('Useful Links'),
   ul(
