@@ -1,0 +1,29 @@
+.navigation-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 12px;
+  background-color: #8e99f377;
+  border-radius: 10px;
+  min-width: 90px;
+}
+
+.navigation-arrow:hover {
+  background-color: #8e99f388;
+}
+
+.navigation-arrow .arrow {
+  background-color: #5c6bc088;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  margin-top: 5px;
+  transform: scale(1.3)
+}

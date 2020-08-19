@@ -1,14 +1,14 @@
 import { Store } from 'rxfm';
-import { Pages } from './pages';
+import { IPages } from '../pages';
 
 // Interfaces:
 export interface IApp {
-  activePage: keyof Pages;
+  activePage: keyof IPages;
 }
 
 // Store:
 export const store = new Store<IApp>({
-  activePage: 'intro',
+  activePage: 'gettingStarted',
 });
 
 // Selectors:
@@ -16,5 +16,5 @@ export const activePageSelector = store.select(({ activePage: activeExample }) =
 
 // Actions:
 export const setActivePageAction = store.action(
-  (_, activeExample: keyof Pages) => ({ activePage: activeExample })
+  (_, activeExample: keyof IPages) => ({ activePage: activeExample })
 );

@@ -38,4 +38,12 @@
 #content {
   grid-area: content;
   margin: 15px;
+  margin-left: 8%;
+  margin-right: 8%;
+}
+
+.navigation-arrows {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 40px;
 }

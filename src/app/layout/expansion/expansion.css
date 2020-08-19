@@ -2,12 +2,16 @@
   border-top: 1px solid grey;
 }
 
+.expansion:first-child {
+  border-top: none;
+}
+
 .expansion .title {
   cursor: pointer;
   padding: 10px;
   display: flex;
   align-items: center;
-  background-color: lightgrey;
+  background-color: #8e99f3aa;;
   font-family: monospace;
 }
 
@@ -16,19 +20,25 @@
   transition: transform 50ms ease-in-out;
 }
 
-.expansion .arrow.down {
+.expansion.expanded .arrow {
   transform: rotate(90deg);
 }
 
 .expansion .content {
+  height: 0;
+  overflow: hidden;
+}
+
+.expansion.expanded .content {
+  height: unset;
+  overflow: auto;
   padding: 10px;
   border-top: 1px solid grey;
 }
 
 .expansion-container {
   border: 1px solid grey;
-}
-
-.expansion-container:last-child {
-  border-top: none;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
 }

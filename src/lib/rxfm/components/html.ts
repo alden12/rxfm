@@ -164,4 +164,8 @@ export const h6 = HTML.h6;
 export const hr = HTML.hr;
 export const img = HTML.img;
 export const p = HTML.p;
+export const a = HTML.a;
+export const ul = HTML.ul;
+export const ol = HTML.ol;
+export const li = HTML.li;
 // TODO: Add more default elements eg. table.

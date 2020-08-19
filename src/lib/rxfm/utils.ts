@@ -135,6 +135,26 @@ export function log<T = unknown>(message?: string): OperatorFunction<T, T> {
   );
 }
 
+export function ternary<T, OT>(
+  input: Observable<T>,
+  trueValue: OT,
+): Observable<OT | undefined>
+export function ternary<T, OT, OF>(
+  input: Observable<T>,
+  trueValue: OT,
+  falseValue: OF,
+): Observable<OT | OF>
+export function ternary<T, OT, OF>(
+  input: Observable<T>,
+  trueValue: OT,
+  falseValue?: OF,
+): Observable<OT | OF | undefined> {
+  return input.pipe(
+    distinctUntilChanged(),
+    map(ip => ip ? trueValue : falseValue)
+  );
+}
+
 export function filterObject<T extends object>(
   object: T,
   filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,

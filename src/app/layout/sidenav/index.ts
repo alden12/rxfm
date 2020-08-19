@@ -1,5 +1,5 @@
 import { div, component, dispatch, input, setState, selectFrom, generate, span, show } from 'rxfm';
-import { pages, pageArray, Pages } from '../pages';
+import { pages, pageArray, IPages } from '../../pages';
 import { setActivePageAction, activePageSelector } from '../store';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -27,7 +27,7 @@ const search = (value: Observable<string>) => div(
   ),
 );
 
-const sidenavItem = (id: keyof Pages) => div({
+const sidenavItem = (id: keyof IPages) => div({
     class: [
       'sidenav-item',
       activePageSelector.pipe(map(activeId => activeId === id && 'selected')),
