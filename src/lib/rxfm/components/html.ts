@@ -1,6 +1,6 @@
 import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
 import { ChildComponent, children } from '../children/children';
-import { Component } from './component';
+import { RxFMElement } from './component';
 import { of } from 'rxjs';
 import { attributes } from '../attributes';
 
@@ -134,7 +134,7 @@ function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<HTMLElementTagNameMap[K]> {
   return<C extends ChildComponent[] = []>(args: IComponentArgs<C>) =>
-  of(new Component(document.createElement(tagName))).pipe(
+  of(new RxFMElement(document.createElement(tagName))).pipe(
     children(...args.children),
     attributes(args.attributes),
   );

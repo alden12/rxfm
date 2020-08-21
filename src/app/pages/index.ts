@@ -1,11 +1,11 @@
 import { todoApp } from '../examples/todo';
-import { ComponentObservable } from 'rxfm';
-import { helloWorld } from './helloWorld';
+import { Component } from 'rxfm';
+import { helloWorld } from './hello-world';
 import { gettingStarted } from './getting-started';
 
 export interface IPage {
   title: string;
-  component: ComponentObservable;
+  component: Component;
 };
 
 export interface IPages {

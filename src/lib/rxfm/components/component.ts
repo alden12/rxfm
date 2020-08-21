@@ -5,21 +5,21 @@ import { EventKeys, EventValue, EventDelete, EmitEvent, ElementEventMap, EventTy
 export type ElementType = HTMLElement | SVGElement;
 
 export interface ICapture<T extends ElementType, E extends EventType, EV> {
-  component: Component<T, E>;
+  component: RxFMElement<T, E>;
   event: Observable<EV>;
 }
 
-export type ComponentObservable<T extends ElementType = ElementType, E extends EventType = never> = Observable<Component<T, E>>;
+export type Component<T extends ElementType = ElementType, E extends EventType = never> = Observable<RxFMElement<T, E>>;
 
 // /**
 //  * Create an RxFM component to represent an html element of tag name K.
 //  * @param tagName The HTML Element tag name (eg. 'div').
 //  */
-export class Component<T extends ElementType, E extends EventType = never> {
+export class RxFMElement<T extends ElementType, E extends EventType = never> {
 
   constructor(public readonly element: T) {}
 
-  public dispatch<K extends string, V>(type: K, value: V): Component<T, E | EventType<K, V>> {
+  public dispatch<K extends string, V>(type: K, value: V): RxFMElement<T, E | EventType<K, V>> {
     this.element.dispatchEvent(new CustomEvent(type, { detail: value, bubbles: true }));
     return this;
   }
@@ -39,15 +39,15 @@ export class Component<T extends ElementType, E extends EventType = never> {
   public inject<EC, EV, K extends string, V>(
     capture: ICapture<T, EC, EV>,
     operator: OperatorFunction<EV, EmitEvent<K, V>>,
-  ): ComponentObservable<T, EC | EventType<K, V>>
+  ): Component<T, EC | EventType<K, V>>
   public inject<EC, EV>(
     capture: ICapture<T, EC, EV>,
     operator?: OperatorFunction<EV, any>,
-  ): ComponentObservable<T, EC>
+  ): Component<T, EC>
   public inject<EC, EV>(
     { component, event }: ICapture<T, EC, EV>,
     operator?: OperatorFunction<EV, any>,
-  ): ComponentObservable<T, any> {
+  ): Component<T, any> {
     return (operator ? event.pipe(operator) : event).pipe(
       map(ev => ev instanceof EmitEvent ? component.dispatch(ev.type, ev.value) : component),
       startWith(component),
@@ -57,12 +57,12 @@ export class Component<T extends ElementType, E extends EventType = never> {
 }
 
 export type ComponentOperator<T extends ElementType, E extends EventType = never, O extends EventType = E> =
-  (component: ComponentObservable<T, E>) => ComponentObservable<T, O>;
+  (component: Component<T, E>) => Component<T, O>;
 
 export function show<T extends ElementType, E extends EventType = never>(
   visible: Observable<boolean | string | number>,
-): OperatorFunction<Component<T, E>, Component<T, E> | null> {
-  return (component$: ComponentObservable<T, E>) => component$.pipe(
+): OperatorFunction<RxFMElement<T, E>, RxFMElement<T, E> | null> {
+  return (component$: Component<T, E>) => component$.pipe(
     switchMap(component => visible.pipe(
       map(isVisible => isVisible ? component : null),
       distinctUntilChanged(),

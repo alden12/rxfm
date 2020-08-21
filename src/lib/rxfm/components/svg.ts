@@ -1,6 +1,6 @@
 import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
 import { ChildComponent, children } from '../children/children';
-import { Component } from './component';
+import { RxFMElement } from './component';
 import { of } from 'rxjs';
 import { attributes } from '../attributes';
 
@@ -74,7 +74,7 @@ function getSVGComponentFunction<K extends keyof SVGElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<SVGElementTagNameMap[K]> {
   return<C extends ChildComponent[] = []>(args: IComponentArgs<C>) =>
-    of(new Component(document.createElementNS(SVGNamespace, tagName))).pipe(
+    of(new RxFMElement(document.createElementNS(SVGNamespace, tagName))).pipe(
       children(...args.children),
       attributes(args.attributes),
     );

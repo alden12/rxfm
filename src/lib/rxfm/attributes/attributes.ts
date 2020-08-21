@@ -1,6 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { coerceToArray, coerceToObservable } from '../utils';
-import { ElementType, ComponentOperator, ComponentObservable } from '../components';
+import { ElementType, ComponentOperator, Component } from '../components';
 import { HTMLAttributes } from './html';
 import { SVGAttributes } from './svg';
 import { switchMap, mapTo, distinctUntilChanged, tap, startWith, elementAt } from 'rxjs/operators';
@@ -31,7 +31,7 @@ export function attribute<T extends ElementType, E extends EventType = never>(
   type: string,
   value: TypeOrObservable<AttributeType>,
 ): ComponentOperator<T, E> {
-  return (component: ComponentObservable<T, E>) => component.pipe(
+  return (component: Component<T, E>) => component.pipe(
     switchMap(comp => coerceToObservable(value).pipe(
       distinctUntilChanged(),
       tap(val => {
@@ -58,7 +58,7 @@ export function attribute<T extends ElementType, E extends EventType = never>(
 export function attributes<T extends ElementType, E extends EventType>(
   attributeDict: IAttributes,
 ): ComponentOperator<T, E> {
-  return (input: ComponentObservable<T, E>) => Object.keys(attributeDict)
+  return (input: Component<T, E>) => Object.keys(attributeDict)
   .filter(key => attributeDict[key] !== undefined)
   .reduce((component, key) => {
     if (key === 'style') {

@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { ElementType, ComponentOperator, ComponentObservable } from '../components';
+import { ElementType, ComponentOperator, Component } from '../components';
 import { switchMap, tap, mapTo, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { coerceToObservable, NullLike } from '../utils';
 import { EventType } from '../events';
@@ -14,7 +14,7 @@ export function style<T extends ElementType, E extends EventType, K extends Styl
   name: K,
   value: Style<K>,
 ): ComponentOperator<T, E> {
-  return (input: ComponentObservable<T, E>) => input.pipe(
+  return (input: Component<T, E>) => input.pipe(
     switchMap(component => coerceToObservable(value).pipe(
       distinctUntilChanged(),
       tap(val => val ? component.element.style[name] = val : component.element.style[name] = null as any),
@@ -37,7 +37,7 @@ export type StylesOrNull = { [K in keyof CSSStyleDeclaration]?: CSSStyleDeclarat
 export function styles<T extends ElementType, E extends EventType>(
   stylesDict: Styles | Observable<StylesOrNull>,
 ): ComponentOperator<T, E> {
-  return (input: ComponentObservable<T, E>) => {
+  return (input: Component<T, E>) => {
     if (stylesDict instanceof Observable) {
 
       let previousStyles: StylesOrNull = {};

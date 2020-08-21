@@ -1,4 +1,4 @@
-import { ElementType, ComponentOperator, ComponentObservable, ICapture } from './components';
+import { ElementType, ComponentOperator, Component, ICapture } from './components';
 import { Observable, OperatorFunction, EMPTY } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 
@@ -70,7 +70,7 @@ export function event<
   mappingFunction?: (event: Events<E, ET>) => EV,
 ): ComponentOperator<T, E, EventDelete<E, ET> | R> {
 
-  return (component$: ComponentObservable<T, E>) => component$.pipe(
+  return (component$: Component<T, E>) => component$.pipe(
     switchMap(component => {
       const capture: ICapture<T, any, any> = typeof eventType === 'string' ? component.capture(eventType) : {
         component,

@@ -1,4 +1,4 @@
-import { ElementType, ComponentObservable } from './component';
+import { ElementType, Component } from './component';
 import { ChildComponent, ChildEvents } from '../children/children';
 import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -18,19 +18,19 @@ export type AttributeEvents<T extends EventOperators> = T extends EventOperators
  * A function to create a component of type T.
  */
 export type ComponentCreatorFunction<T extends ElementType, E extends EventType = never> = {
-  (): ComponentObservable<T, E>;
-  <A extends EventOperators<unknown>>(attributes: A & IAttributes): ComponentObservable<T, E | AttributeEvents<A>>;
+  (): Component<T, E>;
+  <A extends EventOperators<unknown>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
   // <C extends ChildComponent<ElementType, any>[]>(
   //   ...childComponents: C
   // ): ComponentObservable<T, E | ChildEvents<C>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
-  ): ComponentObservable<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
+  ): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
   <A extends EventOperators<unknown>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
-  ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>;
+  ): Component<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 
 export interface IComponentArgs<C extends ChildComponent[]> {
@@ -43,11 +43,11 @@ export interface IStatefulComponentArgs<C extends ChildComponent[], S> extends I
 }
 
 export type ComponentFunction<T extends ElementType, E extends EventType = never> =
-  <C extends ChildComponent[] = []>(args: IComponentArgs<C>) => ComponentObservable<T, E | ChildEvents<C>>;
+  <C extends ChildComponent[] = []>(args: IComponentArgs<C>) => Component<T, E | ChildEvents<C>>;
 
 export type StatefulComponentFunction<T extends ElementType, E extends EventType = never, S = never> =
   <C extends ChildComponent[] = []>(args: IStatefulComponentArgs<C, S>) =>
-    ComponentObservable<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState> | ChildEvents<C>>;
+    Component<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState> | ChildEvents<C>>;
 
 export function component<T extends ElementType, E extends EventType = never>(
   componentFunction: ComponentFunction<T, E>,
@@ -61,25 +61,25 @@ export function component<T extends ElementType, S, E extends EventType = never>
   initialState?: S,
 ): ComponentCreatorFunction<T, E> {
 
-  function componentCreator(): ComponentObservable<T, E>
+  function componentCreator(): Component<T, E>
   function componentCreator<A extends EventOperators<any>>(
     attributes: A & IAttributes,
-  ): ComponentObservable<T, E | AttributeEvents<A>>
+  ): Component<T, E | AttributeEvents<A>>
   // function componentCreator<C extends ChildComponent<ElementType, any>[]>(
   //   ...childComponents: C
   // ): ComponentObservable<T, E | ChildEvents<C>>
   function componentCreator<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
-  ): ComponentObservable<T, E | ChildEvents<[C0]> | ChildEvents<C>>
+  ): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>
   function componentCreator<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
-  ): ComponentObservable<T, E | ChildEvents<C> | AttributeEvents<A>>
+  ): Component<T, E | ChildEvents<C> | AttributeEvents<A>>
   function componentCreator(
     attributes?: EventOperators<any> & IAttributes | ChildComponent<ElementType, any>,
     ...childComponents: ChildComponent<ElementType, any>[]
-  ): ComponentObservable<T, any> {
+  ): Component<T, any> {
 
     const _childComponents = (attributes instanceof Observable || typeof attributes !== 'object') ?
       [attributes, ...childComponents] : childComponents;

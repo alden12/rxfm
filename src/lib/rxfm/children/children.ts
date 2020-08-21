@@ -1,14 +1,14 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, switchMap, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 import { childDiffer } from './child-differ';
-import { ElementType, Component, ComponentOperator, ComponentObservable } from '../components';
+import { ElementType, RxFMElement, ComponentOperator, Component } from '../components';
 import { EventType } from '../events';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 
 /**
  * The possible types which can be added as a child component through the 'children' operator.
  */
-export type ComponentLike<T extends ElementType, E extends EventType = never> = Component<T, E> | Component<T, E>[];
+export type ComponentLike<T extends ElementType, E extends EventType = never> = RxFMElement<T, E> | RxFMElement<T, E>[];
 
 // TODO: Add option to pass component creation function if event types can be inferred.
 export type ChildComponent<T extends ElementType = ElementType, E extends EventType = EventType> =
@@ -85,7 +85,7 @@ export type ChildEvents<T extends ChildComponent<ElementType, EventType>[]> = Ar
 export function children<T extends ElementType, C extends ChildComponent<ElementType, EventType>[], E extends EventType = never>(
   ...childComponents: C
 ): ComponentOperator<T, E, E | ChildEvents<C>> {
-  return (component$: ComponentObservable<T, E>) => component$.pipe(
+  return (component$: Component<T, E>) => component$.pipe(
     switchMap(component => {
       let previousNodes: Node[] = [];
       return combineLatest<(CoercedChildComponent | null)[]>(

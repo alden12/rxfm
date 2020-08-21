@@ -1,6 +1,6 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, debounceTime } from 'rxjs/operators';
-import { ComponentOperator, ElementType, ComponentObservable } from '../components';
+import { ComponentOperator, ElementType, Component } from '../components';
 import { attribute } from './attributes';
 import { EventType } from '../events';
 import { NullLike, coerceToArray } from '../utils';
@@ -39,7 +39,7 @@ function classTypesToStringObservable(classTypes: ClassType[]): Observable<strin
 export function classes<T extends ElementType, E extends EventType>(
   ...classNames: ClassType[]
 ): ComponentOperator<T, E> {
-  return (input: ComponentObservable<T, E>) => input.pipe(
+  return (input: Component<T, E>) => input.pipe(
     attribute('class', classTypesToStringObservable(classNames)),
   );
 }

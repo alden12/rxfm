@@ -1,4 +1,4 @@
-import { ElementType, ComponentObservable } from './components';
+import { ElementType, Component } from './components';
 import { Observable, BehaviorSubject, OperatorFunction, of } from 'rxjs';
 import { event, EmitEvent, emitEvent, EventDelete, EventType } from './events';
 import { tap, map, switchMap, withLatestFrom } from 'rxjs/operators';
@@ -17,8 +17,8 @@ export type SetState = typeof SET_STATE;
 export function stateful<T extends ElementType, S, E extends EventType>(
     initialState: S,
     creationFunction: (state: Observable<S>) =>
-      ComponentObservable<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState>>,
-): ComponentObservable<T, EventDelete<E, SetState>> {
+      Component<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState>>,
+): Component<T, EventDelete<E, SetState>> {
 
   return of(creationFunction).pipe(
     map(creationFn => {

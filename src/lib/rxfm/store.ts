@@ -1,7 +1,7 @@
 import { OperatorFunction, Observable, BehaviorSubject, throwError } from 'rxjs';
 import { EmitEvent, emitEvent, event, EventType, EventDelete } from './events';
 import { withLatestFrom, tap, shareReplay } from 'rxjs/operators';
-import { ComponentOperator, ElementType, ComponentObservable } from './components';
+import { ComponentOperator, ElementType, Component } from './components';
 import { watch, REF_COUNT } from './utils';
 
 /**
@@ -78,7 +78,7 @@ export function dispatch<T, S, STA, STB>(
 export function connect<T extends ElementType, S, E extends EventType>(
   storeSubject: BehaviorSubject<S>,
 ): ComponentOperator<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>, EventDelete<E, Dispatch>> {
-  return (component$: ComponentObservable<T, E>) => component$.pipe(
+  return (component$: Component<T, E>) => component$.pipe(
     event(
       DISPATCH,
       tap(ev => storeSubject.next({ ...storeSubject.value, ...(ev as CustomEvent<Reducer<S>>).detail(storeSubject.value) })),
@@ -109,8 +109,8 @@ export class Store<S> {
   }
 
   public connect<T extends ElementType, E extends EventType = never>(
-    component: ComponentObservable<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>>,
-  ): ComponentObservable<T, EventDelete<E, Dispatch>> {
+    component: Component<T, EventType<Dispatch, Reducer<S>> | EventDelete<E, Dispatch>>,
+  ): Component<T, EventDelete<E, Dispatch>> {
     if (this.isConnected) {
       return throwError('RxFM Error: Store already connected, store may only be connected once.')
     }

@@ -1,4 +1,4 @@
-import { ElementType, ComponentObservable } from './component';
+import { ElementType, Component } from './component';
 import { distinctUntilChanged } from 'rxjs/operators';
 
 /**
@@ -13,7 +13,7 @@ export type RemoveComponent = () => void;
  * @returns A function to remove the component from the view.
  */
 export function addToView(
-  component: ComponentObservable<ElementType, any>,
+  component: Component<ElementType, any>,
   host: ElementType,
 ): RemoveComponent {
   let oldNode: Node; // The node already in the view, if it exists.
@@ -40,7 +40,7 @@ export function addToView(
  * @returns A function to remove the component from the view.
  */
 export function addToBody(
-  component: ComponentObservable<ElementType, any>,
+  component: Component<ElementType, any>,
 ): RemoveComponent {
   return addToView(component, document.body);
 }
@@ -51,7 +51,7 @@ export function addToBody(
  * @returns A function to remove the component from the view.
  */
 export function addToHead(
-  component: ComponentObservable<ElementType, any>,
+  component: Component<ElementType, any>,
 ): RemoveComponent {
   return addToView(component, document.head);
 }
