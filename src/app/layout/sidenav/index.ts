@@ -40,8 +40,8 @@ const sidenavItem = (id: keyof IPages) => div({
 const searchFunction = (term: string, value: string) => value.toLowerCase().includes(term.toLowerCase());
 
 export const sidenav = component(({ attributes, state }) => div({
-    ...attributes,
-    id: 'sidenav',
+  ...attributes,
+  id: 'sidenav',
   },
   search(selectFrom(state, 'searchTerm')),
   selectFrom(state, 'searchTerm').pipe(

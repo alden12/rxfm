@@ -1,9 +1,7 @@
 #sidenav {
-  border-right: 1px solid rgba(0, 0, 0, 0.4);
   font-size: 18px;
   color: rgba(0, 0, 0, 0.8);
   background-color: rgb(250 250 250);
-  box-shadow: 0px 0 3px 2px #00000025;
   display: flex;
   flex-direction: column;
 }

@@ -50,16 +50,22 @@
 .sidenav.open {
   width: 200px;
   transition: width 75ms ease-out;
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 0 3px 2px #00000025;
 }
 
 @media only screen and (max-width: 800px) {
   .sidenav {
     grid-area: content;
     width: 200px;
+    border-right: 1px solid rgba(0, 0, 0, 0.4);
+    box-shadow: 0px 0 3px 2px #00000025;
   }
 
   .sidenav.open {
     width: 0;
+    border-right: none;
+    box-shadow: none;
   }
 }
 
