@@ -8,9 +8,8 @@ export type RemoveComponent = () => void;
 
 /**
  * Add an RxFM Component into the view.
- * @param component The component to add or a function emitting a component.
+ * @param component The component observable to add.
  * @param host The host element to add to.
- * @param eventHandler An optional function to handle events emitted by the component.
  * @returns A function to remove the component from the view.
  */
 export function addToView(
@@ -37,12 +36,22 @@ export function addToView(
 
 /**
  * Add an RxFM Component to the document body.
- * @param component The component to add or a function emitting a component.
- * @param eventHandler An optional function to handle events emitted by the component.
+ * @param component The component observable to add.
  * @returns A function to remove the component from the view.
  */
 export function addToBody(
   component: ComponentObservable<ElementType, any>,
 ): RemoveComponent {
   return addToView(component, document.body);
+}
+
+/**
+ * Add an RxFM Component to the document head.
+ * @param component The component observable to add.
+ * @returns A function to remove the component from the view.
+ */
+export function addToHead(
+  component: ComponentObservable<ElementType, any>,
+): RemoveComponent {
+  return addToView(component, document.head);
 }

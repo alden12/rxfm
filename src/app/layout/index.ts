@@ -1,16 +1,27 @@
-import { div, span, h1 } from 'rxfm';
+import { div, span, h1, i, dispatch, ternary } from 'rxfm';
 import { switchMap, map } from 'rxjs/operators';
-import { activePageSelector, store } from './store';
-import { pages, IPage, pageArray } from '../pages';
+import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector } from '../store';
+import { pages, pageArray } from '../pages';
 import { sidenav } from './sidenav';
+import { navigationArrow } from './navigation-arrow';
 
 import './layout.css';
-import { navigationArrow } from './navigation-arrow';
+
+const menuButton = i({
+    id: 'menu-button',
+    class: ['material-icons'],
+    click: dispatch(() => setSidenavOpenAction(undefined))
+  },
+  'menu'
+);
 
 const toolbar = div(
   { id: 'toolbar' },
+  menuButton,
   span({ id: 'branding' }, 'RxFM'),
-  span({ id: 'title' }, 'Example App'),
+  span({ id: 'title' }, activePageSelector.pipe(
+    map(id => pages[id].title),
+  )),
 );
 
 const navigationArrows = (index: number) => {
@@ -21,12 +32,12 @@ const navigationArrows = (index: number) => {
     div(backPage && navigationArrow(pages[backPage].title, backPage, false)),
     div(forwardPage && navigationArrow(pages[forwardPage].title, forwardPage)),
   );
-};
+}
 
-export const layout = store.connect(div(
+export const layout = div(
   { id: 'layout' },
   toolbar,
-  sidenav({ class: 'sidenav' }),
+  sidenav({ class: ['sidenav', ternary(sidenavOpenSelector, 'open')] }),
   div(
     { id: 'content' },
     h1(activePageSelector.pipe(map(id => pages[id].title))),
@@ -37,4 +48,4 @@ export const layout = store.connect(div(
       switchMap(id => navigationArrows(pageArray.indexOf(id)))
     ),
   ),
-));
+);

@@ -1,6 +1,6 @@
-import { div, span, dispatch } from 'rxfm';
+import { div, span, dispatch, i } from 'rxfm';
 import { IPages } from '../../pages';
-import { setActivePageAction } from '../store';
+import { setActivePageAction } from '../../store';
 
 import './navigation-arrow.css';
 
@@ -8,6 +8,6 @@ export const navigationArrow = (title: string, link: keyof IPages, forward = tru
     class: 'navigation-arrow',
     click: dispatch(() => setActivePageAction(link)),
   },
-  div({ class: 'arrow' }, forward ? '›' : '‹'),
+  i({ class: ['material-icons', 'arrow'] }, forward ? 'navigate_next' : 'navigate_before'),
   span(title),
 );

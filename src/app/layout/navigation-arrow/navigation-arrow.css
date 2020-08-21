@@ -8,6 +8,7 @@
   background-color: #8e99f377;
   border-radius: 10px;
   min-width: 90px;
+  user-select: none;
 }
 
 .navigation-arrow:hover {
@@ -17,13 +18,11 @@
 .navigation-arrow .arrow {
   background-color: #5c6bc088;
   color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
-  margin-top: 5px;
-  transform: scale(1.3)
+  margin-bottom: 5px;
 }

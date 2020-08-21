@@ -168,4 +168,10 @@ export const a = HTML.a;
 export const ul = HTML.ul;
 export const ol = HTML.ol;
 export const li = HTML.li;
-// TODO: Add more default elements eg. table.
+export const i = HTML.i;
+export const iframe = HTML.iframe;
+export const link = HTML.link;
+export const table = HTML.table;
+export const td = HTML.td;
+export const tr = HTML.tr;
+// TODO: Add more default elements.
