@@ -7,4 +7,5 @@
   margin: 10px 0;
   background-color: #8e99f355;
   border-radius: 10px;
+  overflow-x: auto;
 }

@@ -1,7 +1,8 @@
 import { todoApp } from '../examples/todo';
 import { Component } from 'rxfm';
-import { helloWorld } from './hello-world';
+import { components } from './components';
 import { gettingStarted } from './getting-started';
+import { attributesPage } from './attributes';
 
 export interface IPage {
   title: string;
@@ -10,7 +11,8 @@ export interface IPage {
 
 export interface IPages {
   gettingStarted: IPage;
-  helloWorld: IPage;
+  components: IPage;
+  attributes: IPage;
   todo: IPage;
 }
 
@@ -19,9 +21,13 @@ export const pages: IPages = {
     title: 'Getting Started',
     component: gettingStarted,
   },
-  helloWorld: {
-    title: 'Hello World',
-    component: helloWorld,
+  components: {
+    title: 'Components',
+    component: components,
+  },
+  attributes: {
+    title: 'Attributes',
+    component: attributesPage,
   },
   todo: {
     title: 'Todo App',
@@ -29,4 +35,4 @@ export const pages: IPages = {
   },
 };
 
-export const pageArray: (keyof IPages)[] = ['gettingStarted', 'helloWorld', 'todo'];
+export const pageArray: (keyof IPages)[] = ['gettingStarted', 'components', 'attributes', 'todo'];
