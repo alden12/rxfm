@@ -42,7 +42,7 @@ export const components = div(
   p(
     `RxFM is built from reactive elements called 'observables'.`,
     ` These observables can emit all kinds of things whenever we want them to.`,
-    ` RxFM works using special observables which emit HTML elements in a simple wrapper, to display on the screen.`,
+    ` RxFM works using special observables which emit HTML elements, in a simple wrapper, to display on the screen.`,
     ` We'll refer to these as 'components'.`
   ),
   p(
