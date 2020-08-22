@@ -1,4 +1,4 @@
-import { div, component, setState, selectFrom, span, ternary } from 'rxfm';
+import { div, component, setState, selectFrom, span, ternary, show } from 'rxfm';
 
 import './expansion.css';
 
@@ -14,6 +14,8 @@ export const expansion = (title: string, expanded = false) => component(({ child
   div(
     { class: 'content' },
     ...children,
+  ).pipe(
+    show(selectFrom(state, 'expanded')),
   ),
 ), { expanded });
 

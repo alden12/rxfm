@@ -174,4 +174,5 @@ export const link = HTML.link;
 export const table = HTML.table;
 export const td = HTML.td;
 export const tr = HTML.tr;
+export const textarea = HTML.textarea;
 // TODO: Add more default elements.

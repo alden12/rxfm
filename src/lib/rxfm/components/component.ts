@@ -1,4 +1,4 @@
-import { Observable, fromEvent, OperatorFunction } from 'rxjs';
+import { Observable, fromEvent, OperatorFunction, of } from 'rxjs';
 import { map, tap, startWith, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { EventKeys, EventValue, EventDelete, EmitEvent, ElementEventMap, EventType } from '../events';
 
@@ -62,10 +62,9 @@ export type ComponentOperator<T extends ElementType, E extends EventType = never
 export function show<T extends ElementType, E extends EventType = never>(
   visible: Observable<boolean | string | number>,
 ): OperatorFunction<RxFMElement<T, E>, RxFMElement<T, E> | null> {
-  return (component$: Component<T, E>) => component$.pipe(
-    switchMap(component => visible.pipe(
-      map(isVisible => isVisible ? component : null),
-      distinctUntilChanged(),
-    )),
+  return (component$: Component<T, E>) => visible.pipe(
+    distinctUntilChanged(),
+    switchMap(isVisible => isVisible ? component$ : of(null)),
+    distinctUntilChanged(),
   );
 }

@@ -32,6 +32,12 @@ export const counter = div(
 );`
 ;
 
+const blockQuoteCode =
+`import { HTML } from 'rxfm;
+
+const quote = HTML.blockquote('Someone said a thing one time probably.')`
+;
+
 const counterExpansion = expansionContainer(
   expansion('counter.ts', true)(codeBlock(counterCode)),
   expansion('Result', true)(counter),
@@ -67,7 +73,7 @@ export const components = div(
   h2('Reactive Components'),
   p(
     `To make things a bit more interesting, we can add some more dynamic content to our components.`,
-    ` Lets start with a simple counter.`,
+    ` Let's start with a simple counter.`,
     ` We can use the built in 'interval' function in RxJS to give us an observable which emits numbers at the given interval.`,
     ` RxFM components may take observables directly as an input so we can do the following:`
   ),
@@ -75,4 +81,17 @@ export const components = div(
   p(
     `Later we'll see that we can also do the same thing with child components to dynamically change whatever we want.`,
   ),
+  h2('More Information'),
+  expansionContainer(
+    expansion('Element Types')(
+      p(
+        `Most common element types are exported directly from RxFM.`,
+        ` Some less common elements must be accessed from the HTML type like this:`,
+      ),
+      codeBlock(blockQuoteCode, true),
+      p(
+        `This has been done to prevent potential name collisions as HTML has a lot of element names.`
+      ),
+    )
+  )
 );

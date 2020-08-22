@@ -37,7 +37,10 @@ const navigationArrows = (index: number) => {
 export const layout = div(
   { id: 'layout' },
   toolbar,
-  sidenav({ class: ['sidenav', ternary(sidenavOpenSelector, 'open')] }),
+  sidenav({
+    class: ['sidenav', ternary(sidenavOpenSelector, 'open')],
+    click: dispatch(() => setSidenavOpenAction(true)),
+  }),
   div(
     { id: 'content' },
     h1(activePageSelector.pipe(map(id => pages[id].title))),
