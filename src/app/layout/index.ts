@@ -1,5 +1,5 @@
 import { div, span, h1, i, dispatch, ternary } from 'rxfm';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap, map, distinctUntilChanged } from 'rxjs/operators';
 import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector } from '../store';
 import { pages, pageArray } from '../pages';
 import { sidenav } from './sidenav';
@@ -50,5 +50,13 @@ export const layout = div(
     activePageSelector.pipe(
       switchMap(id => navigationArrows(pageArray.indexOf(id)))
     ),
+  ).pipe(
+    switchMap(component => activePageSelector.pipe(
+      map(() => {
+        component.element.scrollTo(0, 0);
+        return component;
+      }),
+    )),
+    distinctUntilChanged(),
   ),
 );

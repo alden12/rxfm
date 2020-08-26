@@ -20,9 +20,6 @@ export type AttributeEvents<T extends EventOperators> = T extends EventOperators
 export type ComponentCreatorFunction<T extends ElementType, E extends EventType = never> = {
   (): Component<T, E>;
   <A extends EventOperators<unknown>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
-  // <C extends ChildComponent<ElementType, any>[]>(
-  //   ...childComponents: C
-  // ): ComponentObservable<T, E | ChildEvents<C>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
@@ -65,9 +62,6 @@ export function component<T extends ElementType, S, E extends EventType = never>
   function componentCreator<A extends EventOperators<any>>(
     attributes: A & IAttributes,
   ): Component<T, E | AttributeEvents<A>>
-  // function componentCreator<C extends ChildComponent<ElementType, any>[]>(
-  //   ...childComponents: C
-  // ): ComponentObservable<T, E | ChildEvents<C>>
   function componentCreator<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
