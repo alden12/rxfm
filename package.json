@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "build": "webpack --config webpack.prod.js",
+    "build::app": "webpack --config webpack.app.js",
     "start": "webpack-dev-server --config webpack.dev.js"
   },
   "dependencies": {
