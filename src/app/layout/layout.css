@@ -54,6 +54,10 @@
   box-shadow: 0px 0 3px 2px #00000025;
 }
 
+.sidenav-overlay {
+  display: none;
+}
+
 @media only screen and (max-width: 800px) {
   .sidenav {
     grid-area: content;
@@ -66,6 +70,19 @@
     width: 0;
     border-right: none;
     box-shadow: none;
+  }
+
+  .sidenav-overlay {
+    grid-area: content;
+    display: unset;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.3;
+  }
+
+  .sidenav-overlay.open {
+    display: none;
   }
 }
 

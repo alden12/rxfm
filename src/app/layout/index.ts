@@ -41,6 +41,10 @@ export const layout = div(
     class: ['sidenav', ternary(sidenavOpenSelector, 'open')],
     click: dispatch(() => setSidenavOpenAction(true)),
   }),
+  div({
+    class: ['sidenav-overlay', ternary(sidenavOpenSelector, 'open')],
+    click: dispatch(() => setSidenavOpenAction(true)),
+  }),
   activePageSelector.pipe(
     switchMap(id => div(
       { id: 'content' },
