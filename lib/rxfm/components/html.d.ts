@@ -1,0 +1,32 @@
+import { ComponentCreatorFunction } from './creator';
+export declare type HTMLElementTypes = {
+    [K in keyof HTMLElementTagNameMap]: K;
+};
+export declare type HTMLComponentCreators = {
+    [K in keyof HTMLElementTagNameMap]: ComponentCreatorFunction<HTMLElementTagNameMap[K]>;
+};
+export declare const HTML: HTMLComponentCreators;
+export declare const div: ComponentCreatorFunction<HTMLDivElement, never>;
+export declare const span: ComponentCreatorFunction<HTMLSpanElement, never>;
+export declare const input: ComponentCreatorFunction<HTMLInputElement, never>;
+export declare const button: ComponentCreatorFunction<HTMLButtonElement, never>;
+export declare const h1: ComponentCreatorFunction<HTMLHeadingElement, never>;
+export declare const h2: ComponentCreatorFunction<HTMLHeadingElement, never>;
+export declare const h3: ComponentCreatorFunction<HTMLHeadingElement, never>;
+export declare const h4: ComponentCreatorFunction<HTMLHeadingElement, never>;
+export declare const h5: ComponentCreatorFunction<HTMLHeadingElement, never>;
+export declare const h6: ComponentCreatorFunction<HTMLHeadingElement, never>;
+export declare const hr: ComponentCreatorFunction<HTMLHRElement, never>;
+export declare const img: ComponentCreatorFunction<HTMLImageElement, never>;
+export declare const p: ComponentCreatorFunction<HTMLParagraphElement, never>;
+export declare const a: ComponentCreatorFunction<HTMLAnchorElement, never>;
+export declare const ul: ComponentCreatorFunction<HTMLUListElement, never>;
+export declare const ol: ComponentCreatorFunction<HTMLOListElement, never>;
+export declare const li: ComponentCreatorFunction<HTMLLIElement, never>;
+export declare const i: ComponentCreatorFunction<HTMLElement, never>;
+export declare const iframe: ComponentCreatorFunction<HTMLIFrameElement, never>;
+export declare const link: ComponentCreatorFunction<HTMLLinkElement, never>;
+export declare const table: ComponentCreatorFunction<HTMLTableElement, never>;
+export declare const td: ComponentCreatorFunction<HTMLTableDataCellElement, never>;
+export declare const tr: ComponentCreatorFunction<HTMLTableRowElement, never>;
+export declare const textarea: ComponentCreatorFunction<HTMLTextAreaElement, never>;
