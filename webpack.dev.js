@@ -6,7 +6,7 @@ module.exports = [
     mode: "development",
     devtool: "inline-source-map",
     devServer: {
-      contentBase: path.join(__dirname, "dist"),
+      // contentBase: path.join(__dirname, "dist"),
       port: 3000,
       compress: true
     },
@@ -35,6 +35,6 @@ module.exports = [
         },
       ]
     },
-    plugins: [new HtmlWebpackPlugin()]
+    // plugins: [new HtmlWebpackPlugin()]
   }
 ];
