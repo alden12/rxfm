@@ -1,5 +1,5 @@
 import { div, span, h1, i, dispatch, ternary } from 'rxfm';
-import { switchMap, map, distinctUntilChanged } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector } from '../store';
 import { pages, pageArray } from '../pages';
 import { sidenav } from './sidenav';
@@ -41,22 +41,12 @@ export const layout = div(
     class: ['sidenav', ternary(sidenavOpenSelector, 'open')],
     click: dispatch(() => setSidenavOpenAction(true)),
   }),
-  div(
-    { id: 'content' },
-    h1(activePageSelector.pipe(map(id => pages[id].title))),
-    activePageSelector.pipe(
-      switchMap(id => pages[id].component)
-    ),
-    activePageSelector.pipe(
-      switchMap(id => navigationArrows(pageArray.indexOf(id)))
-    ),
-  ).pipe(
-    switchMap(component => activePageSelector.pipe(
-      map(() => {
-        component.element.scrollTo(0, 0);
-        return component;
-      }),
+  activePageSelector.pipe(
+    switchMap(id => div(
+      { id: 'content' },
+      h1(pages[id].title),
+      pages[id].component,
+      navigationArrows(pageArray.indexOf(id)),
     )),
-    distinctUntilChanged(),
   ),
 );
