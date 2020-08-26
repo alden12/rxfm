@@ -1,4 +1,3 @@
-import { todoApp } from '../examples/todo';
 import { Component } from 'rxfm';
 import { components } from './components';
 import { gettingStarted } from './getting-started';
@@ -8,6 +7,7 @@ import { events } from './events';
 import { statePage } from './state';
 import { generatePage } from './generate';
 import { storePage } from './store';
+import { examples } from './examples';
 
 export interface IPage {
   title: string;
@@ -23,7 +23,7 @@ export interface IPages {
   state: IPage;
   generate: IPage;
   store: IPage;
-  todo: IPage;
+  examples: IPage;
 }
 
 export const pages: IPages = {
@@ -59,9 +59,9 @@ export const pages: IPages = {
     title: 'Store',
     component: storePage,
   },
-  todo: {
-    title: 'Todo App',
-    component: todoApp,
+  examples: {
+    title: 'Examples',
+    component: examples,
   },
 };
 
@@ -74,5 +74,5 @@ export const pageArray: (keyof IPages)[] = [
   'state',
   'generate',
   'store',
-  'todo',
+  'examples',
 ];
