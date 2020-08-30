@@ -58,7 +58,7 @@ export const pages: IPages = {
     component: statePage,
   },
   generate: {
-    title: 'Generate',
+    title: 'Dynamic Content',
     component: generatePage,
   },
   store: {

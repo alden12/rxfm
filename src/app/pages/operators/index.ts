@@ -100,11 +100,7 @@ export const operators = div(
     ` For example if we only wanted to emit multiples of 3,`,
     ` and we also wanted to multiply the outgoing value by 10,`,
     ` we can use the filter operator to remove anything which is not divisible by 3,`,
-    ` then multiply the result by 10 using map.`
-  ),
-  h2('Switch Map'),
-  p(
-    `The switchMap operator. Should we explain this in the generate article?`
+    ` then multiply the result by 10 using map.`,
   ),
   p(
     `We'll see more examples of operators being used in actual code in the coming articles.`,
