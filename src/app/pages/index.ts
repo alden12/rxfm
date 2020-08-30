@@ -8,6 +8,7 @@ import { statePage } from './state';
 import { generatePage } from './generate';
 import { storePage } from './store';
 import { examples } from './examples';
+import { childrenPage } from './children';
 
 export interface IPage {
   title: string;
@@ -19,6 +20,7 @@ export interface IPages {
   components: IPage;
   operators: IPage;
   attributes: IPage;
+  children: IPage;
   events: IPage;
   state: IPage;
   generate: IPage;
@@ -42,6 +44,10 @@ export const pages: IPages = {
   attributes: {
     title: 'Attributes',
     component: attributesPage,
+  },
+  children: {
+    title: 'Children',
+    component: childrenPage,
   },
   events: {
     title: 'Events',
@@ -70,6 +76,7 @@ export const pageArray: (keyof IPages)[] = [
   'components',
   'operators',
   'attributes',
+  'children',
   'events',
   'state',
   'generate',

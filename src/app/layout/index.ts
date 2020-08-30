@@ -1,6 +1,6 @@
-import { div, span, h1, i, dispatch, ternary } from 'rxfm';
+import { div, span, h1, i, dispatch, ternary, a } from 'rxfm';
 import { switchMap, map } from 'rxjs/operators';
-import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector } from '../store';
+import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector, setActivePageAction } from '../store';
 import { pages, pageArray } from '../pages';
 import { sidenav } from './sidenav';
 import { navigationArrow } from './navigation-arrow';
@@ -18,7 +18,10 @@ const menuButton = i({
 const toolbar = div(
   { id: 'toolbar' },
   menuButton,
-  span({ id: 'branding' }, 'RxFM'),
+  span({ id: 'branding',
+    click: dispatch(() => setActivePageAction('gettingStarted')) },
+    'RxFM',
+  ),
   span({ id: 'title' }, activePageSelector.pipe(
     map(id => pages[id].title),
   )),
@@ -33,6 +36,13 @@ const navigationArrows = (index: number) => {
     div(forwardPage && navigationArrow(pages[forwardPage].title, forwardPage)),
   );
 }
+
+const footer = div(
+  { id: 'footer' },
+  'Please visit the ',
+  a({ href: 'https://github.com/alden12/rxfm' }, 'RxFM Github Page'),
+  ' for license information'
+)
 
 export const layout = div(
   { id: 'layout' },
@@ -51,6 +61,7 @@ export const layout = div(
       h1(pages[id].title),
       pages[id].component,
       navigationArrows(pageArray.indexOf(id)),
+      footer,
     )),
   ),
 );

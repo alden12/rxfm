@@ -102,8 +102,12 @@ export const operators = div(
     ` we can use the filter operator to remove anything which is not divisible by 3,`,
     ` then multiply the result by 10 using map.`
   ),
+  h2('Switch Map'),
   p(
-    `We'll see examples of operators being used in actual code in the next articles.`,
+    `The switchMap operator. Should we explain this in the generate article?`
+  ),
+  p(
+    `We'll see more examples of operators being used in actual code in the coming articles.`,
     ` This should help to make it clearer why we would want to operate on observables in this way.`
   ),
   h2('Further Reading'),

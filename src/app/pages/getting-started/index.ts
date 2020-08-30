@@ -10,6 +10,24 @@ export const gettingStarted = div(
     `These reactive elements or 'Observables' can emit whatever and whenever they like, `,
     'so your webpage can show whatever and whenever it wants!',
   ),
+  h2('Motivation'),
+  p(
+    `RxJS opens up a lot of cool new ways to write code which can be really useful in user interfaces.`,
+    ` I created this framework to extend these into creating web pages directly,`,
+    ` essentially to cut out the middle man.`,
+  ),
+  p(
+    `Reactive code lets us express how we want our application to look and react to events,`,
+    ` without having to worry about when changes will happen.`,
+    ` What this means is that we can write code with another dimension,`,
+    ` which takes into account the time-changing nature of our application.`,
+  ),
+  p(
+    `Modern user interfaces are designed to respond to their users and to change dynamically.`,
+    ` So it makes sense to write the code for them in a way that allows for this change and flow.`,
+    ` RxFM is built on these data-flow principles, taking the web page along for the ride and`,
+    ` spitting out a fully formed document at the end!`,
+  ),
   h2('Installation'),
   p(
     'To install RxFM in an existing project with npm simply use:',

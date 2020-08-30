@@ -32,6 +32,7 @@
 
 #branding {
   margin-right: 20px;
+  cursor: pointer;
 }
 
 #title {
@@ -96,4 +97,11 @@
   display: flex;
   justify-content: space-between;
   padding-top: 40px;
+}
+
+#footer {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 12px;
+  color: grey;
 }
