@@ -9,5 +9,5 @@ export const navigationArrow = (title: string, link: keyof IPages, forward = tru
     click: dispatch(() => setActivePageAction(link)),
   },
   i({ class: ['material-icons', 'arrow'] }, forward ? 'navigate_next' : 'navigate_before'),
-  span(title),
+  span({ class: 'title' }, title),
 );

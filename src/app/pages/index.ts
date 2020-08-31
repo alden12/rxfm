@@ -45,13 +45,13 @@ export const pages: IPages = {
     title: 'Attributes',
     component: attributesPage,
   },
-  children: {
-    title: 'Children',
-    component: childrenPage,
-  },
   events: {
     title: 'Events',
     component: events,
+  },
+  children: {
+    title: 'Custom Creators',
+    component: childrenPage,
   },
   state: {
     title: 'State',
@@ -74,10 +74,10 @@ export const pages: IPages = {
 export const pageArray: (keyof IPages)[] = [
   'gettingStarted',
   'components',
-  'operators',
   'attributes',
-  'children',
+  'operators',
   'events',
+  'children',
   'state',
   'generate',
   'store',

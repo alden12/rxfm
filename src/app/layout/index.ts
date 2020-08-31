@@ -32,15 +32,15 @@ const navigationArrows = (index: number) => {
   const forwardPage = pageArray[index + 1];
   return div(
     { class: 'navigation-arrows' },
-    div(backPage && navigationArrow(pages[backPage].title, backPage, false)),
-    div(forwardPage && navigationArrow(pages[forwardPage].title, forwardPage)),
+    div({ class: 'arrow-container' }, backPage && navigationArrow(pages[backPage].title, backPage, false)),
+    div({ class: 'arrow-container' }, forwardPage && navigationArrow(pages[forwardPage].title, forwardPage)),
   );
 }
 
 const footer = div(
   { id: 'footer' },
   'Please visit the ',
-  a({ href: 'https://github.com/alden12/rxfm' }, 'RxFM Github Page'),
+  a({ href: 'https://github.com/alden12/rxfm' }, 'RxFM GitHub Page'),
   ' for license information'
 )
 

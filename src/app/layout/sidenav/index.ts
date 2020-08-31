@@ -1,4 +1,4 @@
-import { div, component, dispatch, input, setState, selectFrom, generate, span, show } from 'rxfm';
+import { div, component, dispatch, input, setState, selectFrom, generate, span, show, stopPropagation } from 'rxfm';
 import { pages, pageArray, IPages } from '../../pages';
 import { setActivePageAction, activePageSelector } from '../../store';
 import { map } from 'rxjs/operators';
@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 import './sidenav.css';
 
 const search = (value: Observable<string>) => div(
-  { class: 'search' },
+  { class: 'search', click: stopPropagation() },
   input({
     id: 'search-input',
     autocomplete: 'off',

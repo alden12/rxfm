@@ -1,7 +1,7 @@
 import { div, p, h2 } from 'rxfm';
 import { codeBlock } from '../../layout/code-block';
 import { expansionContainer, expansion } from '../../layout/expansion';
-import { counter } from '../../examples/components';
+import { counter, childComponents } from '../../examples/components';
 
 const divExample =
 `import { div } from 'rxfm';
@@ -20,6 +20,14 @@ const helloWorld = div('Hello World!');
 
 addToBody(helloWorld);`
 ;
+
+const childComponentsCode =
+`import { div, h2, p } from 'rxfm';
+
+export const childComponents = div(
+  h2('Adding Child Components'),
+  p('As you can see, you can add components inside of another component like this!'),
+);`;
 
 const counterCode =
 `import { div } from 'rxfm';
@@ -49,7 +57,7 @@ export const components = div(
     `RxFM is built from reactive elements called 'observables'.`,
     ` These observables can emit all kinds of things whenever we want them to.`,
     ` RxFM works using special observables which emit HTML elements, in a simple wrapper, to display on the screen.`,
-    ` We'll refer to these as 'components'.`
+    ` We'll refer to these as 'components'.`,
   ),
   p(
     `We create components using functions.`,
@@ -69,6 +77,13 @@ export const components = div(
   p(
     `We only use the addToBody function once in our application on the root component.`,
     ` Everything else gets added as a child element of the root, or of one of its children.`
+  ),
+  p(
+    `The example belows shows how we can add any number of components as a child of another component:`
+  ),
+  expansionContainer(
+    expansion('child-components.ts')(codeBlock(childComponentsCode)),
+    expansion('Result')(childComponents),
   ),
   h2('Reactive Components'),
   p(

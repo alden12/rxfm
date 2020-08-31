@@ -47,9 +47,14 @@ export const gettingStarted = div(
     a({ href: 'http://localhost:3000/' }, 'localhost:3000/'),
     ' in your browser to view the app.',
   ),
+  p(
+    `RxFM is fully typed and works best with `,
+    a({ href: 'https://www.typescriptlang.org/' }, 'TypeScript'),
+    '.',
+  ),
   h2('Useful Links'),
   ul(
-    li(a({ href: 'https://github.com/alden12/rxfm' }, 'RxFM Github Page')),
+    li(a({ href: 'https://github.com/alden12/rxfm' }, 'RxFM GitHub Page')),
     li(a({ href: 'https://www.npmjs.com/package/rxfm' }, 'RxFM on npm')),
     li(a({ href: 'https://www.learnrxjs.io/' }, 'Learn RxJS')),
   ),

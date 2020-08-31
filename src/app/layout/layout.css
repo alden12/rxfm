@@ -99,6 +99,10 @@
   padding-top: 40px;
 }
 
+.navigation-arrows .arrow-container {
+  max-width: 49%;
+}
+
 #footer {
   text-align: center;
   margin-top: 30px;
