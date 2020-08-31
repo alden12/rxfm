@@ -1,7 +1,7 @@
 import { div, p, h2, a } from 'rxfm';
 import { expansionContainer, expansion } from '../../layout/expansion';
 import { codeBlock } from '../../layout/code-block';
-import { intervalExample, filteredIntervalExample, mappedIntervalExample } from '../../examples/operators';
+import { intervalExample, filteredIntervalExample, mappedIntervalExample, rxfmOperators } from '../../examples/operators';
 
 const intervalExampleCode =
 `import { interval } from 'rxjs';
@@ -37,6 +37,24 @@ const mappedIntervalObservable = interval(1000).pipe(
 
 export const mappedIntervalExample = div('The number is: ', mappedIntervalObservable);`
 ;
+
+const operatorStyleCode =
+`import { div, p, styles, children } from 'rxfm';
+
+const normalStyle = p(
+  { style: { color: 'blue' } },
+  'A regular component!',
+)
+
+const operatorStyle = p().pipe(
+  styles({ color: 'blue' }),
+  children('A component using operators!')
+)
+
+export const rxfmOperators = div(
+  normalStyle,
+  operatorStyle,
+);`;
 
 export const operators = div(
   p(
@@ -78,7 +96,7 @@ export const operators = div(
     ` To use an operator we need to use the 'pipe' method on an observable.`,
     ` The pipe method takes any number of operators to modify the stream as we like.`,
     ` The code to do this is as follows:`,
-  ), // TODO: Make a while paragraph explaining pipe.
+  ),
   expansionContainer(
     expansion('filtered-interval-example.ts')(codeBlock(filteredExampleCode)),
     expansion('Result')(filteredIntervalExample),
@@ -112,5 +130,24 @@ export const operators = div(
     ` If you want to read more about them check out the `,
     a({ href: 'https://www.learnrxjs.io/learn-rxjs/operators' }, 'Learn RxJS article'),
     ` on operators.`,
+  ),
+  h2('RxFM Operators'),
+  p(
+    `All the code we've seen so far for adding children and attributes to components are actually just useful shorthand.`,
+    ` Under the hood RxFM is almost entirely made of operators.`,
+    ` The style presented in the previous articles is the recommended way to use RxFM.`,
+    ` But if you prefer, or in certain situations find it useful,`,
+    ` you can write almost anything in RxFM using the operator form.`,
+  ),
+  p(
+    `In the example below you'll see that both components are equivalent:`,
+  ),
+  expansionContainer(
+    expansion('rxfm-operators.ts')(codeBlock(operatorStyleCode)),
+    expansion('Result')(rxfmOperators),
+  ),
+  p(
+    `If this operator style looks a little confusing to you, don't worry about it!`,
+    ` It isn't needed to use RxFM but is simply presented here for completeness.`
   ),
 );
