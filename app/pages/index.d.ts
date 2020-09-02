@@ -8,6 +8,7 @@ export interface IPages {
     components: IPage;
     operators: IPage;
     attributes: IPage;
+    children: IPage;
     events: IPage;
     state: IPage;
     generate: IPage;
