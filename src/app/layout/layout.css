@@ -90,7 +90,7 @@
 #content {
   grid-area: content;
   padding: 15px 10%;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
 .navigation-arrows {
