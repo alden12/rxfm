@@ -2,13 +2,13 @@ import { ElementType, Component } from './component';
 import { ChildComponent, ChildEvents } from '../children/children';
 import { of, Observable, OperatorFunction } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { filterObject } from '../utils';
+import { filterObject, coerceToArray, flatten } from '../utils';
 import { ElementEventMap, EmitEvent, event, EventType, EventDelete } from '../events';
 import { SetState, stateful } from '../state';
 import { IAttributes } from '../attributes';
 
 export type EventOperators<E = unknown> = {
-  [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
+  [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E> | OperatorFunction<ElementEventMap[K], E>[];
 }
 
 export type AttributeEvents<T extends EventOperators> = T extends EventOperators<infer E> ?
@@ -46,6 +46,9 @@ export type StatefulComponentFunction<T extends ElementType, E extends EventType
   <C extends ChildComponent[] = []>(args: IStatefulComponentArgs<C, S>) =>
     Component<T, EventType<SetState, Partial<S>> | EventDelete<E, SetState> | ChildEvents<C>>;
 
+const isEventOperator = <T>(value: T): boolean =>
+  typeof value === 'function' || (Array.isArray(value) && value.every(item => typeof item === 'function'));
+
 export function component<T extends ElementType, E extends EventType = never>(
   componentFunction: ComponentFunction<T, E>,
 ): ComponentCreatorFunction<T, E>
@@ -81,7 +84,7 @@ export function component<T extends ElementType, S, E extends EventType = never>
 
     return of(componentFunction).pipe(
       map(compFn => {
-        const staticAttributes = filterObject(_attributes, val => typeof val !== 'function');
+        const staticAttributes = filterObject(_attributes, val => !isEventOperator(val));
         if (initialState) {
           const coFn: StatefulComponentFunction<T, E, S> = compFn;
           return stateful(initialState, state => coFn({ state, children: _childComponents, attributes: staticAttributes }));
@@ -90,11 +93,14 @@ export function component<T extends ElementType, S, E extends EventType = never>
           return coFn({ children: _childComponents, attributes: staticAttributes });
         }
       }),
-      switchMap(comp => Object.keys(_attributes)
-        .filter(key => typeof _attributes[key] === 'function')
-        .reduce((c, key) => c.pipe(
-          event(key, _attributes[key] as OperatorFunction<Event, any>)
-        ), comp)),
+      switchMap(comp => {
+        const eventKeys = Object.keys(_attributes)
+          .filter(key => isEventOperator(_attributes[key])) as (keyof ElementEventMap)[];
+        const operators = flatten(eventKeys.map(key => coerceToArray(_attributes[key]!).map(op => ({ key, op }))));
+        return operators.reduce<Component<T, any>>((c, { key, op }) => c.pipe(
+          event(key, op as OperatorFunction<Event, any>)
+        ), comp);
+      }),
     );
   }
 

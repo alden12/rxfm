@@ -129,9 +129,9 @@ export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
   );
 }
 
-export function log<T = unknown>(message?: string): OperatorFunction<T, T> {
-  return (input: Observable<T>): Observable<T> => input.pipe(
-    tap(val => message ? console.log(message, val) : console.log(val)),
+export function log<T = unknown>(message?: string): OperatorFunction<T, T extends never ? never : T> {
+  return (input: Observable<T>): Observable<T extends never ? never : T> => input.pipe(
+    tap<T extends never ? never : T>(val => message ? console.log(message, val) : console.log(val)),
   );
 }
 
@@ -175,9 +175,9 @@ export function coerceToArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
-export function flatten<T>(notFlat: T[][]): T[] {
+export function flatten<T>(notFlat: (T | T[])[]): T[] {
   return notFlat.reduce<T[]>((flat, array) => {
-    flat.push(...array);
+    flat.push(...coerceToArray(array));
     return flat;
   }, [])
 }
