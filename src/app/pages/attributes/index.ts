@@ -48,21 +48,21 @@ export const styleExample = div(
 
 export const attributesPage = div(
   p(
-    `We've seen how to add children to our components, but we'd also like to be able to modify their attributes.`,
-    ` Attributes can be passed to a component as the first argument of a component function.`,
-    ` To do this we pass an object where keys are attribute names and values are the value we want to provide.`,
-    ` To set the id of a div element to 'myFavoriteDiv' we can do it like this:`
+    `We've seen how to add children to our components, but we'd also like to be able to modify their attributes.
+    Attributes can be passed to a component as the first argument of a component function.
+    To do this we pass an object where keys are attribute names and values are the value we want to provide.
+    To set the id of a div element to 'myFavoriteDiv' we can do it like this:`,
   ),
   codeBlock(idAttributeCode, true),
   p(
-    `Attribute values can either be static values or observables.`,
-    ` Some special attributes such as class and style may take some other types as well.`,
+    `Attribute values can either be static values or observables.
+    Some special attributes such as class and style may take some other types as well.`,
   ),
   h2('Class'),
   p(
-    `The class attribute can take a string or a string observable just like all the other attributes.`,
-    ` We may want to pass more than one class to an element however.`,
-    ` For this we can also pass an array of strings or string observables like this:`,
+    `The class attribute can take a string or a string observable just like all the other attributes.
+    We may want to pass more than one class to an element however.
+    For this we can also pass an array of strings or string observables like this:`,
   ),
   expansionContainer(
     expansion('class-example.ts')(codeBlock(classCode)),
@@ -76,15 +76,15 @@ export const attributesPage = div(
   ),
   h2('Style'),
   p(
-    `The style attribute can again take a regular string or string observable.`,
-    ` It can also take an object of style names and values as below:`
+    `The style attribute can again take a regular string or string observable.
+    It can also take an object of style names and values as below:`,
   ),
   expansionContainer(
     expansion('style-example.ts')(codeBlock(styleCode)),
     expansion('Result')(styleExample),
   ),
   p(
-    `Here we can see that style names inside this object are written in camel case.`,
-    ` An observable emitting this style object can also be provided to set styles dynamically.`
+    `Here we can see that style names inside this object are written in camel case.
+    An observable emitting this style object can also be provided to set styles dynamically.`,
   ),
 );
