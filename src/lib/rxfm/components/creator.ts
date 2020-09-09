@@ -96,7 +96,9 @@ export function component<T extends ElementType, S, E extends EventType = never>
       switchMap(comp => {
         const eventKeys = Object.keys(_attributes)
           .filter(key => isEventOperator(_attributes[key])) as (keyof ElementEventMap)[];
-        const operators = flatten(eventKeys.map(key => coerceToArray(_attributes[key]!).map(op => ({ key, op }))));
+        const operators = flatten(eventKeys.map(
+          key => coerceToArray(_attributes[key]!).map(op => ({ key, op })))
+        );
         return operators.reduce<Component<T, any>>((c, { key, op }) => c.pipe(
           event(key, op as OperatorFunction<Event, any>)
         ), comp);

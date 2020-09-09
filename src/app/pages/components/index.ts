@@ -55,12 +55,12 @@ export const components = div(
   h2('Hello World'),
   p(
     `RxFM is built from reactive elements called 'observables'.`,
-    ` These observables can emit all kinds of things whenever we want them to.`,
+    ` Observables are essentially event emitters which can emit all kinds of things whenever we want them to.`,
     ` RxFM works using special observables which emit HTML elements, in a simple wrapper, to display on the screen.`,
     ` We'll refer to these as 'components'.`,
   ),
   p(
-    `We create components using functions.`,
+    `To make our components we use component creator functions which we can import from RxFM.`,
     ` For example, we can create a really simple HTML div (generic container) element like this:`
   ),
   codeBlock(divExample, true),
@@ -76,7 +76,7 @@ export const components = div(
   codeBlock(helloWorldCode, true),
   p(
     `We only use the addToBody function once in our application on the root component.`,
-    ` Everything else gets added as a child element of the root, or of one of its children.`
+    ` Everything else gets added as a child element of the root, or of one of its children.`,
   ),
   p(
     `The example belows shows how we can add any number of components as a child of another component:`
@@ -107,6 +107,26 @@ export const components = div(
       p(
         `This has been done to prevent potential name collisions as HTML has a lot of element names.`
       ),
+    ),
+    expansion('Subscriptions')(
+      `If you've used RxJS before then you may be familiar with the 'subscribe' method on an observable.`,
+      ` This is how we get data out of an observable,`,
+      ` we register a callback function to handle the data whenever the observable emits.`,
+      ` For example:`,
+      codeBlock(`div().subscribe(value => console.log(value))`, true),
+      `would log an RxFM div element in the console.`,
+      ` In RxFM subscription is handled inside the addToBody function.`,
+      ` The framework only needs to subscribe to the root element of the application,`,
+      ` meaning that we never need to call subscribe directly.`,
+    ),
+    expansion('Add to View')(
+      `The addToBody function is used to add the root element of our application to the document body.`,
+      ` However if we want to add our root element in a different place we can use the 'addToView' function`,
+      ` This works in the same way as addToBody`,
+      ` but also takes the element we would like to add our component to as a second argument. For example: `,
+      codeBlock(`addToView(component, document.head)`, true),
+      `will add a component to the document head.`,
+      ` This is shown as a general example and there is in fact an 'addToHead' function exported from RxFM to do this directly.`
     )
   )
 );

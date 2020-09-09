@@ -12,7 +12,7 @@ export const gettingStarted = div(
   ),
   h2('Motivation'),
   p(
-    `RxJS opens up a lot of cool new ways to write code which can be really useful in user interfaces.`,
+    `The RxJS library opens up a lot of cool new ways to write code which can be really useful in user interfaces.`,
     ` I created this framework to extend these into creating web pages directly,`,
     ` essentially to cut out the middle man.`,
   ),
@@ -26,7 +26,7 @@ export const gettingStarted = div(
     `Modern user interfaces are designed to respond to their users and to change dynamically.`,
     ` So it makes sense to write the code for them in a way that allows for this change and flow.`,
     ` RxFM is built on these data-flow principles, taking the web page along for the ride and`,
-    ` spitting out a fully formed document at the end!`,
+    ` giving you a fully formed document at the end!`,
   ),
   h2('Installation'),
   p(
@@ -47,10 +47,17 @@ export const gettingStarted = div(
     a({ href: 'http://localhost:3000/' }, 'localhost:3000/'),
     ' in your browser to view the app.',
   ),
+  h2('Paradigms'),
   p(
-    `RxFM is fully typed and works best with `,
+    `RxFM is built around the paradigms of functional, reactive, and strongly-typed code.`,
+    ` Code is generally written to be immutable,`,
+    ` meaning that state is handled trough replacing objects rather than modifying them.`,
+    ` For these reasons you won't see too many classes when working with RxFM.`,
+    ` RxFM is strongly-typed and is best used with `,
     a({ href: 'https://www.typescriptlang.org/' }, 'TypeScript'),
-    '.',
+    `.`,
+    ` This helps to reduce errors and bugs by making sure that the building blocks`,
+    ` are always used with the correct types and in the right places.`
   ),
   h2('Useful Links'),
   ul(
