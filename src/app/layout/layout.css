@@ -111,6 +111,10 @@
   overflow-y: scroll;
 }
 
+.page-heading {
+  color: #005cb2;
+}
+
 .navigation-arrows {
   display: flex;
   justify-content: space-between;
