@@ -1,4 +1,4 @@
-import { div, span, h1, i, dispatch, ternary, a, img } from 'rxfm';
+import { div, span, h1, i, dispatch, ternary, a } from 'rxfm';
 import { switchMap, map } from 'rxjs/operators';
 import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector, setActivePageAction } from '../store';
 import { pages, pageArray } from '../pages';
@@ -64,7 +64,6 @@ export const layout = div(
   activePageSelector.pipe(
     switchMap(id => div(
       { id: 'content' },
-      id === pageArray[0] && div({ id: 'homepage-branding' }, branding),
       h1(pages[id].title),
       pages[id].component,
       navigationArrows(pageArray.indexOf(id)),

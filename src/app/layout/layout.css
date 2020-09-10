@@ -35,12 +35,6 @@
   cursor: pointer;
 }
 
-#homepage-branding {
-  font-size: 2.75em;
-  margin: 0.5em 0;
-  color: #0069c0;
-}
-
 .branding {
   display: flex;
   align-items: center;
@@ -59,6 +53,9 @@
 #title {
   font-size: 18px;
   align-self: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidenav {
