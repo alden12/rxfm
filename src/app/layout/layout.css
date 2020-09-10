@@ -30,9 +30,30 @@
   cursor: pointer;
 }
 
-#branding {
+#toolbar-branding {
   margin-right: 20px;
   cursor: pointer;
+}
+
+#homepage-branding {
+  font-size: 2.75em;
+  margin: 0.5em 0;
+  color: #0069c0;
+}
+
+.branding {
+  display: flex;
+  align-items: center;
+  font-family: 'Exo', sans-serif;
+}
+
+.branding .logo {
+  font-size: 1em;
+  padding-right: 0.25em;
+}
+
+.branding .name {
+  font-size: 1em;
 }
 
 #title {

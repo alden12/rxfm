@@ -1,4 +1,4 @@
-import { div, span, h1, i, dispatch, ternary, a } from 'rxfm';
+import { div, span, h1, i, dispatch, ternary, a, img } from 'rxfm';
 import { switchMap, map } from 'rxjs/operators';
 import { activePageSelector, setSidenavOpenAction, sidenavOpenSelector, setActivePageAction } from '../store';
 import { pages, pageArray } from '../pages';
@@ -15,12 +15,18 @@ const menuButton = i({
   'menu'
 );
 
+const branding = div(
+  { class: 'branding' },
+  i({ class: ['material-icons', 'logo'] }, 'double_arrow'),
+  span({ class: 'name' }, 'RxFM'),
+);
+
 const toolbar = div(
   { id: 'toolbar' },
   menuButton,
-  span({ id: 'branding',
+  span({ id: 'toolbar-branding',
     click: dispatch(() => setActivePageAction('gettingStarted')) },
-    'RxFM',
+    branding,
   ),
   span({ id: 'title' }, activePageSelector.pipe(
     map(id => pages[id].title),
@@ -58,6 +64,7 @@ export const layout = div(
   activePageSelector.pipe(
     switchMap(id => div(
       { id: 'content' },
+      id === pageArray[0] && div({ id: 'homepage-branding' }, branding),
       h1(pages[id].title),
       pages[id].component,
       navigationArrows(pageArray.indexOf(id)),

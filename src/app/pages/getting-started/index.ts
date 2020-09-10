@@ -1,4 +1,4 @@
-import { div, a, p, h2, ul, li } from 'rxfm'
+import { div, a, p, h2, ul, li, h1 } from 'rxfm'
 import { codeBlock } from '../../layout/code-block';
 
 export const gettingStarted = div(

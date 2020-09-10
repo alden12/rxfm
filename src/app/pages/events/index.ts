@@ -13,7 +13,7 @@ export const clickExample = button(
 
 export const events = div(
   p(
-    `Until now we've seen seen how create components and to give them children and attributes.
+    `Until now we've seen seen how to create components and to give them children and attributes.
     But we need some way for our components to react to user input and to communicate between each other.`,
   ),
   h2('User Events'),
