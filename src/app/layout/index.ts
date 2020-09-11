@@ -64,7 +64,8 @@ export const layout = div(
   activePageSelector.pipe(
     switchMap(id => div(
       { id: 'content' },
-      h1({ class: 'page-heading' }, pages[id].title),
+      id === pageArray[0] && div({ id: 'homepage-branding' }, branding),
+      h1(pages[id].title),
       pages[id].component,
       navigationArrows(pageArray.indexOf(id)),
       footer,

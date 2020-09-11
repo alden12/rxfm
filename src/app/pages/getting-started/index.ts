@@ -7,7 +7,7 @@ export const gettingStarted = div(
     a({ href: 'https://github.com/ReactiveX/rxjs' }, 'RxJS'),
     ` reactive library!
     RxFM lets you express your apps using inherently reactive building blocks.
-    These reactive elements or  'Observables' can emit whatever and whenever they like,
+    These reactive elements or 'observables' can emit whatever and whenever they like,
     so your webpage can show whatever and whenever it wants!`,
   ),
   h2('Motivation'),

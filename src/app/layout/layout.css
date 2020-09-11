@@ -35,6 +35,14 @@
   cursor: pointer;
 }
 
+#homepage-branding {
+  color: #26418f;
+  font-size: 4em;
+  margin: 0.5em 0;
+  display: flex;
+  justify-content: center;
+}
+
 .branding {
   display: flex;
   align-items: center;
@@ -103,16 +111,16 @@
   .sidenav-overlay.open {
     display: none;
   }
+
+  #homepage-branding {
+    display: none;
+  }
 }
 
 #content {
   grid-area: content;
   padding: 15px 10%;
   overflow-y: scroll;
-}
-
-.page-heading {
-  color: #005cb2;
 }
 
 .navigation-arrows {
