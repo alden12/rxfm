@@ -1,6 +1,7 @@
-import { button, log } from 'rxfm';
+import { button } from 'rxfm';
+import { tap } from 'rxjs/operators';
 
 export const clickExample = button(
-  { click: log() },
+  { click: tap(() => window.alert('You clicked the button!')) },
   'Click Me',
 );

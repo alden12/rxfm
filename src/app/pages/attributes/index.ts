@@ -65,7 +65,7 @@ export const attributesPage = div(
     For this we can also pass an array of strings or string observables like this:`,
   ),
   expansionContainer(
-    expansion('class-example.ts')(codeBlock(classCode)),
+    expansion('class-example.ts', true)(codeBlock(classCode)),
     expansion('class-example.css')(codeBlock(classCss)),
     expansion('Result')(classExample),
   ),
@@ -80,7 +80,7 @@ export const attributesPage = div(
     It can also take an object of style names and values as below:`,
   ),
   expansionContainer(
-    expansion('style-example.ts')(codeBlock(styleCode)),
+    expansion('style-example.ts', true)(codeBlock(styleCode)),
     expansion('Result')(styleExample),
   ),
   p(

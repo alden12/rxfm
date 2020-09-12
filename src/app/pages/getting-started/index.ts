@@ -1,5 +1,10 @@
-import { div, a, p, h2, ul, li, h1 } from 'rxfm'
+import { div, a, p, h2, ul, li } from 'rxfm'
 import { codeBlock } from '../../layout/code-block';
+
+const welcome = `const welcome = div(
+  h1('Welcome to RxFM!'),
+  p('A web framework based on the RxJS reactive library.'),
+);`;
 
 export const gettingStarted = div(
   p(
@@ -10,6 +15,7 @@ export const gettingStarted = div(
     These reactive elements or 'observables' can emit whatever and whenever they like,
     so your webpage can show whatever and whenever it wants!`,
   ),
+  codeBlock(welcome, true),
   h2('Motivation'),
   p(
     `The RxJS library opens up a lot of cool new ways to write code which can be really useful in user interfaces.
