@@ -27,13 +27,13 @@ const emitEventOperator = button(
   'Emit Event Operator',
 );`;
 
-const handleTwiceCode = `import { button, emitEvent, log } from 'rxfm';
+const handleTwiceCode = `import { button, log } from 'rxfm';
+import { tap } from 'rxjs/operators';
 
 const handleEventTwice = button(
-  { click: [log(), emitEvent('test', event => event.timeStamp)] },
+  { click: [log(), tap(() => window.alert('You clicked the button!'))] },
   'Handled Twice',
-);
-`;
+);`;
 
 export const events = div(
   p(
@@ -65,6 +65,18 @@ export const events = div(
     `As we'll see later on, most operators that we'd want to use here are provided by RxFM.
     So we rarely need to worry about creating custom operators.`
   ),
+  expansionContainer(
+    expansion('Handling Events More Than Once')(
+      p(
+        `We can also pass an array of operators to perform more than one action for an event:`,
+      ),
+      codeBlock(handleTwiceCode, true),
+      p(
+        `The log operator here will console log any events which pass through it.
+        The overall result will be that an alert will be triggered and we will log the event in the console.`
+      ),
+    ),
+  ),
   h2('Emitting Events'),
   p(
     `We've seen how user events are handled but how do we emit our own events?
@@ -86,23 +98,13 @@ export const events = div(
     The events which are emitted are handled by wrapper functions,
     completing the component communication pipeline.
     If we ever want to handle theses events ourselves, we need to use the operator syntax as outlined in the next section.`
-  ),
+  ), // TODO: Say strongly typed
   h2('More Information'),
   expansionContainer(
     expansion('Operator Syntax')(
       p(
         `Almost everything in RxFM is made up of operators and event handling and emission is no exception.
         The event operator syntax is not needed to use RxFM but can be useful in certain situations.`,
-      ),
-    ),
-    expansion('Handling Events More Than Once')(
-      p(
-        `To do more than one thing for a certain event we can provide an array of operators like this:`,
-      ),
-      codeBlock(handleTwiceCode, true),
-      p(
-        `The log operator here will console log any events which pass through it.
-        The overall result will be that a custom event will be emitted and we will log the event in the console.`
       ),
     ),
   ),

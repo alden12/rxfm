@@ -19,12 +19,12 @@ export type AttributeEvents<T extends EventOperators> = T extends EventOperators
  */
 export type ComponentCreatorFunction<T extends ElementType, E extends EventType = never> = {
   (): Component<T, E>;
-  <A extends EventOperators<unknown>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
+  <AE, A extends EventOperators<AE>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
   ): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
-  <A extends EventOperators<unknown>, C extends ChildComponent<ElementType, any>[]>(
+  <AE, A extends EventOperators<AE>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
   ): Component<T, E | ChildEvents<C> | AttributeEvents<A>>;
@@ -62,19 +62,19 @@ export function component<T extends ElementType, S, E extends EventType = never>
 ): ComponentCreatorFunction<T, E> {
 
   function componentCreator(): Component<T, E>
-  function componentCreator<A extends EventOperators<any>>(
+  function componentCreator<AE, A extends EventOperators<AE>>(
     attributes: A & IAttributes,
   ): Component<T, E | AttributeEvents<A>>
   function componentCreator<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
     childComponent: C0,
     ...childComponents: C
   ): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>
-  function componentCreator<A extends EventOperators<any>, C extends ChildComponent<ElementType, any>[]>(
+  function componentCreator<AE, A extends EventOperators<AE>, C extends ChildComponent<ElementType, any>[]>(
     attributes: A & IAttributes,
     ...childComponents: C
   ): Component<T, E | ChildEvents<C> | AttributeEvents<A>>
   function componentCreator(
-    attributes?: EventOperators<any> & IAttributes | ChildComponent<ElementType, any>,
+    attributes?: EventOperators & IAttributes | ChildComponent<ElementType, any>,
     ...childComponents: ChildComponent<ElementType, any>[]
   ): Component<T, any> {
 

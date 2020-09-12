@@ -1,5 +1,5 @@
 import { button, EmitEvent, emitEvent, log } from 'rxfm';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 
 const emitEventExample = button(
   { click: map(event => new EmitEvent('test', event.timeStamp)) },
@@ -12,6 +12,6 @@ const emitEventOperator = button(
 );
 
 const handleEventTwice = button(
-  { click: [log(), emitEvent('test', event => event.timeStamp)] },
+  { click: [log(), tap(() => window.alert('You clicked the button!'))] },
   'Handled Twice',
 );
