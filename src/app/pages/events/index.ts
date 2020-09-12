@@ -93,19 +93,26 @@ export const events = div(
   ),
   codeBlock(emitEventOperatorCode, true),
   p(
+    `As events always travel from child to parent in RxFM,
+    we need a way to make sure we only allow the correct event types to be emitted by a child component.
+    This is where TypeScript really comes in handy.
+    It will run type checking to make sure we can only provide child components with the appropriate event types for a given situation.`
+  ),
+  p(
     `As we'll see in the coming state and store sections,
     emitting events is usually handled by specific operators for each purpose.
     The events which are emitted are handled by wrapper functions,
     completing the component communication pipeline.
     If we ever want to handle theses events ourselves, we need to use the operator syntax as outlined in the next section.`
-  ), // TODO: Say strongly typed
+  ),
   h2('More Information'),
   expansionContainer(
     expansion('Operator Syntax')(
       p(
-        `Almost everything in RxFM is made up of operators and event handling and emission is no exception.
+        `Almost everything in RxFM is made up of operators, and event handling and emission is no exception.
         The event operator syntax is not needed to use RxFM but can be useful in certain situations.`,
       ),
+      p('TBC.'),
     ),
   ),
 );
