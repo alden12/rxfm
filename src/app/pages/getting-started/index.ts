@@ -1,6 +1,8 @@
 import { div, a, p, h2, ul, li } from 'rxfm'
 import { codeBlock } from '../../layout/code-block';
 
+import './getting-started.css';
+
 const welcome = `const welcome = div(
   h1('Welcome to RxFM!'),
   p('A web framework based on the RxJS reactive library.'),
@@ -8,6 +10,7 @@ const welcome = `const welcome = div(
 
 export const gettingStarted = div(
   p(
+    { class: 'intro' },
     `Welcome to RxFM, a web framework based on the `,
     a({ href: 'https://github.com/ReactiveX/rxjs' }, 'RxJS'),
     ` reactive library!
