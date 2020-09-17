@@ -21,7 +21,7 @@ export const gettingStarted = div(
   codeBlock(welcome, true),
   h2('Motivation'),
   p(
-    `The RxJS library opens up a lot of cool new ways to write code which can be really useful in user interfaces.
+    `The RxJS library opens up a lot of exciting new ways to write code which can be really useful in user interfaces.
     I created this framework to extend these into creating web pages directly,
     essentially to cut out the middle man.`,
   ),

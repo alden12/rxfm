@@ -63,7 +63,7 @@ export const events = div(
   ),
   p(
     `As we'll see later on, most operators that we'd want to use here are provided by RxFM.
-    So we rarely need to worry about creating custom operators.`
+    So we rarely need to worry about creating our own as we have here.`
   ),
   expansionContainer(
     expansion('Handling Events More Than Once')(
@@ -84,7 +84,7 @@ export const events = div(
     but to get a better understanding of what's going on we can look a little deeper.
     A user event is handled by an operator function.
     If that operator returns an EmitEvent object it signals to RxFM that it should emit an event.
-    The following code will send a custom 'test' event with a payload containing the event timestamp into the DOM:`,
+    The following code will send a custom event of type 'test' with a payload containing the event timestamp into the DOM:`,
   ),
   codeBlock(emitEventExampleCode, true),
   p(
@@ -103,14 +103,15 @@ export const events = div(
     emitting events is usually handled by specific operators for each purpose.
     The events which are emitted are handled by wrapper functions,
     completing the component communication pipeline.
-    If we ever want to handle theses events ourselves, we need to use the operator syntax as outlined in the next section.`
+    If we ever want to handle theses events ourselves, we need to use the operator form as outlined below.`
   ),
   h2('More Information'),
   expansionContainer(
-    expansion('Operator Syntax')(
+    expansion('Operator Form')(
       p(
         `Almost everything in RxFM is made up of operators, and event handling and emission is no exception.
-        The event operator syntax is not needed to use RxFM but can be useful in certain situations.`,
+        The event operator form is not needed to use RxFM but can be useful in certain situations,
+        for example making custom event handlers.`,
       ),
       p('TBC.'),
     ),
