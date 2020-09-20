@@ -35,6 +35,27 @@ const handleEventTwice = button(
   'Handled Twice',
 );`;
 
+const operatorFormCode = `import { button, event } from 'rxfm';
+import { tap } from 'rxjs/operators';
+
+export const eventOperatorForm = button('Click Me').pipe(
+  event('click', tap(() => window.alert('You clicked the button!')))
+);`;
+
+const customOperatorCode = `import { button, emitEvent } from 'rxfm';
+import { mapTo, scan } from 'rxjs/operators';
+
+export const customEventOperator = button(
+  {
+    click: event => event.pipe(
+      mapTo(1),
+      scan((counter, i) => counter + i, 0),
+      emitEvent('clickCount', counter => counter)
+    ),
+  },
+  'Click Counter'
+);`;
+
 export const events = div(
   p(
     `Until now we've seen seen how to create components and to give them children and attributes.
@@ -110,10 +131,49 @@ export const events = div(
     expansion('Operator Form')(
       p(
         `Almost everything in RxFM is made up of operators, and event handling and emission is no exception.
-        The event operator form is not needed to use RxFM but can be useful in certain situations,
-        for example making custom event handlers.`,
+        The event operator form is not needed to use RxFM but can be useful in certain more advanced situations,
+        for example in making custom event handlers.`,
       ),
-      p('TBC.'),
+      p(
+        `The first event example from above could be rewritten using the operator form as follows:`,
+      ),
+      codeBlock(operatorFormCode, true),
+      p(
+        `Here the event operator takes the type of event to listen to, and an operator function to process it.
+        In this case we would create a window alert whenever the button was clicked as before.
+        Using event attributes we can only process default element events.
+        With the event operator however, we can process any event type,
+        giving us a way to handle custom event types.`,
+      ),
+      p(
+        `The event operator also has some other useful overloads.
+        It can take an observable directly giving us the option to create an event independently of element events.
+        It may also take a function taking the HTML element and returning an observable.
+        This can be used to manually listen to and process element events using the RxJS 'fromEvent' function.
+        Finally it has an overload which will listen to and map an event to a new event type for us.
+        Here it takes three arguments, the event type to listen to, the event type to emit,
+        and a function mapping the incoming event payload to the outgoing event.`,
+      ),
     ),
+    expansion('Custom Operators')(
+      p(
+        `It may sometimes be useful to define custom operators for handling events.
+        For example we may want to chain multiple operators together.
+        As you remember from the operators section,
+        an operator function is just a function taking an observable and returning another observable.
+        So we can easily define an operator in place as follows.`,
+      ),
+      codeBlock(customOperatorCode, true),
+      p(
+        `Here we will count the number of times the button has been clicked and emit a
+        'clickCount' event with the total number on each click.
+        The scan operator used here is similar to the javascript reduce function.
+        It takes a function which is called each time the observable emits, and a second argument for a starting value.
+        The function takes the previous result of itself (initially the starting value),
+        and the value of the emission.
+        It will then emit the returned value of the function, and use this the next time the function is called.
+        Using this we can count the number of times the button has been clicked.`
+      ),
+    )
   ),
 );

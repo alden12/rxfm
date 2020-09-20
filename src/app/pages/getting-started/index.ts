@@ -5,7 +5,7 @@ import './getting-started.css';
 
 const welcome = `const welcome = div(
   h1('Welcome to RxFM!'),
-  p('A web framework based on the RxJS reactive library.'),
+  p('A web framework based on the RxJS reactive library!'),
 );`;
 
 export const gettingStarted = div(
@@ -59,14 +59,17 @@ export const gettingStarted = div(
   h2('Paradigms'),
   p(
     `RxFM is built around the paradigms of functional, reactive, and strongly-typed code.
-    Code is generally written to be immutable,
-    meaning that state is handled trough replacing objects rather than modifying them.
-    For these reasons you won't see too many classes when working with RxFM.
+    As a result you won't see too many classes when working with RxFM.
+    Code is generally written to be immutable whenever possible,
+    meaning that state is handled through replacing objects rather than modifying them.
     RxFM is strongly-typed and is best used with `,
     a({ href: 'https://www.typescriptlang.org/' }, 'TypeScript'),
     `.
     This helps to reduce errors and bugs by making sure that the building blocks
-    are always used with the correct types and in the right places.`
+    are always used with the correct types and in the right places.
+    Writing HTML directly has been foregone in RxFM in favor of the advantages given by
+    writing our templates as code,
+    however JSX/ TSX support could be added in a future release to bring back HTML-like syntax.`,
   ),
   h2('Useful Links'),
   ul(
