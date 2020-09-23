@@ -1,9 +1,9 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ClassType, IAttributes, Styles, StaticStyles } from '../attributes';
+import { ClassType, IAttributes, Styles, StaticStyles } from '.';
 import { coerceToArray, filterObject, NullLike } from '../utils';
-import { StyleKeys } from '../attributes/styles';
-import { EventOperators } from './creator';
+import { StyleKeys } from './styles';
+import { EventOperators } from '../components/creator';
 
 export function mergeClasses(
   secondaryClasses: ClassType | ClassType[] | NullLike,
@@ -16,9 +16,11 @@ export function mergeClasses(
 }
 
 function getStylesObservable(
-  styles: Styles | Observable<StaticStyles>,
+  styles: Styles | Observable<StaticStyles> | undefined,
 ): Observable<StaticStyles> {
-  if (styles instanceof Observable) {
+  if (!styles) {
+    return of({} as StaticStyles);
+  } else if (styles instanceof Observable) {
     return styles;
   } else if (Object.keys(styles).some(key => styles[key] instanceof Observable)) {
 
@@ -44,8 +46,8 @@ export function mergeStyles(
   secondaryStyles: Styles | Observable<StaticStyles> | undefined,
   primaryStyles: Styles | Observable<StaticStyles> | undefined,
 ): Observable<StaticStyles> {
-  const primary = primaryStyles ? getStylesObservable(primaryStyles) : of({} as StaticStyles);
-  const secondary = secondaryStyles ? getStylesObservable(secondaryStyles) : of({} as StaticStyles);
+  const primary = getStylesObservable(primaryStyles);
+  const secondary = getStylesObservable(secondaryStyles);
   return combineLatest([primary, secondary]).pipe(
     map(([pri, sec]) => ({ ...sec, ...pri })),
   );
