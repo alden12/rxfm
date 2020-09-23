@@ -1,6 +1,6 @@
 import { div, h2 } from 'rxfm';
 import { todoApp } from '../../examples/todo';
-import { logicGates } from '../../examples/logicGates';
+import { logicGates } from '../../examples/logic-gates';
 
 export const examples = div(
   h2('Todo App'),

@@ -8,7 +8,7 @@ import { statePage } from './state';
 import { generatePage } from './generate';
 import { storePage } from './store';
 import { examples } from './examples';
-import { childrenPage } from './children';
+import { customCreatorsPage } from './custom-creators';
 
 export interface IPage {
   title: string;
@@ -51,7 +51,7 @@ export const pages: IPages = {
   },
   children: {
     title: 'Custom Creators',
-    component: childrenPage,
+    component: customCreatorsPage,
   },
   state: {
     title: 'State',

@@ -124,7 +124,9 @@ export const events = div(
     emitting events is usually handled by specific operators for each purpose.
     The events which are emitted are handled by wrapper functions,
     completing the component communication pipeline.
-    If we ever want to handle theses events ourselves, we need to use the operator form as outlined below.`
+    These wrapper functions are built in to RxFM for a variety of useful situations.
+    If we ever need to handle theses events ourselves in more advanced situations,
+    we use the operator form as outlined below.`,
   ),
   h2('More Information'),
   expansionContainer(
@@ -161,7 +163,7 @@ export const events = div(
         For example we may want to chain multiple operators together.
         As you remember from the operators section,
         an operator function is just a function taking an observable and returning another observable.
-        So we can easily define an operator in place as follows.`,
+        So we can easily define an operator in place as follows:`,
       ),
       codeBlock(customOperatorCode, true),
       p(
@@ -172,7 +174,7 @@ export const events = div(
         The function takes the previous result of itself (initially the starting value),
         and the value of the emission.
         It will then emit the returned value of the function, and use this the next time the function is called.
-        Using this we can count the number of times the button has been clicked.`
+        Using this we can count the number of times the button has been clicked.`,
       ),
     )
   ),
