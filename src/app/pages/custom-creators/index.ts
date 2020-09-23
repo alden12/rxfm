@@ -1,4 +1,5 @@
 import { div, h2, p } from 'rxfm';
+import { styledTwice } from '../../examples/custom-creators';
 
 export const customCreatorsPage = div(
   p(
@@ -12,4 +13,5 @@ export const customCreatorsPage = div(
     `The component function is named this for brevity,
     it is actually a function which returns a component creator function.`,
   ),
+  styledTwice,
 );

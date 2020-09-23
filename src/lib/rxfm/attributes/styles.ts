@@ -4,15 +4,19 @@ import { switchMap, tap, mapTo, distinctUntilChanged, startWith } from 'rxjs/ope
 import { coerceToObservable, NullLike } from '../utils';
 import { EventType } from '../events';
 
-export type StyleKeys = Extract<keyof CSSStyleDeclaration, string>;
+// TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
+export type StyleKeys = Exclude<
+  Extract<keyof CSSStyleDeclaration, string>,
+  'getPropertyPriority' | 'getPropertyValue' | 'item' | 'removeProperty' | 'setProperty' | 'parentRule' | 'length'
+>;
 
-export type StyleType<K extends StyleKeys> = CSSStyleDeclaration[K] | NullLike;
+export type StyleType = string | NullLike;
 
-export type Style<K extends StyleKeys> = StyleType<K> | Observable<StyleType<K>>
+export type Style = StyleType | Observable<StyleType>
 
 export function style<T extends ElementType, E extends EventType, K extends StyleKeys>(
   name: K,
-  value: Style<K>,
+  value: Style,
 ): ComponentOperator<T, E> {
   return (input: Component<T, E>) => input.pipe(
     switchMap(component => coerceToObservable(value).pipe(
@@ -25,22 +29,24 @@ export function style<T extends ElementType, E extends EventType, K extends Styl
 }
 
 export type Styles = {
-  [K in StyleKeys]?: Style<K>;
+  [K in StyleKeys]?: Style;
 };
 
-export type StylesOrNull = { [K in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[K] | null }
+export type StaticStyles = {
+  [K in StyleKeys]?: StyleType;
+};
 
 // /**
 //  * An observable operator to update the styles on an RxFM component.
 //  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
 //  */
 export function styles<T extends ElementType, E extends EventType>(
-  stylesDict: Styles | Observable<StylesOrNull>,
+  stylesDict: Styles | Observable<StaticStyles>,
 ): ComponentOperator<T, E> {
   return (input: Component<T, E>) => {
     if (stylesDict instanceof Observable) {
 
-      let previousStyles: StylesOrNull = {};
+      let previousStyles: StaticStyles = {};
       return input.pipe(
         switchMap(component => stylesDict.pipe(
           tap(dict => {

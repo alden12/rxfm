@@ -21,7 +21,7 @@ export type ComponentCreatorFunction<T extends ElementType, E extends EventType 
   (): Component<T, E>;
   <AE, A extends EventOperators<AE>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
   <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
-    childComponent: C0,
+    childComponent?: C0,
     ...childComponents: C
   ): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
   <AE, A extends EventOperators<AE>, C extends ChildComponent<ElementType, any>[]>(
@@ -66,7 +66,7 @@ export function component<T extends ElementType, S, E extends EventType = never>
     attributes: A & IAttributes,
   ): Component<T, E | AttributeEvents<A>>
   function componentCreator<C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(
-    childComponent: C0,
+    childComponent?: C0,
     ...childComponents: C
   ): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>
   function componentCreator<AE, A extends EventOperators<AE>, C extends ChildComponent<ElementType, any>[]>(

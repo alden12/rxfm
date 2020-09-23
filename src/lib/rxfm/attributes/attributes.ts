@@ -4,7 +4,7 @@ import { ElementType, ComponentOperator, Component } from '../components';
 import { HTMLAttributes } from './html';
 import { SVGAttributes } from './svg';
 import { switchMap, mapTo, distinctUntilChanged, tap, startWith, elementAt } from 'rxjs/operators';
-import { styles, Styles, StylesOrNull } from './styles';
+import { styles, Styles, StaticStyles } from './styles';
 import { classes, ClassType } from './classes';
 import { EventType } from '../events';
 
@@ -12,7 +12,7 @@ export type TypeOrObservable<T> = T | Observable<T>;
 
 export interface SpecialAttributes {
   class?: ClassType | ClassType[];
-  style?: Styles | Observable<StylesOrNull>
+  style?: Styles | Observable<StaticStyles>
 }
 
 // /**
