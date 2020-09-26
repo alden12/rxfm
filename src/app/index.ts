@@ -12,6 +12,10 @@ addToHead(
   link({ href: 'https://fonts.googleapis.com/css2?family=Exo:wght@500&display=swap', rel: 'stylesheet' }),
 );
 
+addToHead(
+  link({ href: 'https://fonts.googleapis.com/css2?family=Roboto&display=swap', rel: 'stylesheet' }),
+);
+
 addToBody(
   div(
     { id: 'app' },

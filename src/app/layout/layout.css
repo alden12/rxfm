@@ -14,7 +14,6 @@
   color: white;
   background-color: #2196f3;
   font-size: 24px;
-  font-family: sans-serif;
   display: grid;
   grid-template-columns: max-content max-content 1fr;
   align-content: center;
