@@ -47,7 +47,7 @@ const styledTextInput = component(({ children, attributes }) => input(
     ...attributes,
     type: 'text',
     style: mergeStyles(attributes.style, { margin: '5px' }),
-    class: mergeClasses('styled-text-input', attributes.class),
+    class: mergeClasses(attributes.class, 'styled-text-input'),
   },
   ...children,
 ));
@@ -62,7 +62,7 @@ export const myStyledTextInput = styledTextInput(
 
 const styledInputCss = `.styled-text-input {
   border-radius: 5px;
-  border: 1px solid black;
+  border: 2px solid black;
   padding: 5px;
   background-color: white;
 }
@@ -73,6 +73,7 @@ const styledInputCss = `.styled-text-input {
   border-color: darkgrey;
 }`;
 
+// TODO: Rename to inputs?
 export const customCreatorsPage = div(
   p(
     `So far we've seen how to use component creator functions to make various kinds of HTML elements.
@@ -142,7 +143,8 @@ export const customCreatorsPage = div(
     expansion('Result')(myStyledTextInput),
   ),
   p(
-    `Again the order in which we pass the styles and classes are important,
+    `Again the order in which we pass the styles is important,
     we should pass the styles inside the component creator last to make sure they take precedence.`
   ),
+  // TODO: Talk about combined component function and inputs.
 );

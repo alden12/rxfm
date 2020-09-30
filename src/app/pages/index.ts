@@ -50,7 +50,7 @@ export const pages: IPages = {
     component: events,
   },
   children: {
-    title: 'Custom Creators',
+    title: 'Inputs',
     component: customCreatorsPage,
   },
   state: {
