@@ -1,28 +1,20 @@
-import { component, input, mergeClasses, mergeStyles } from 'rxfm';
+import { component, input, mergeAttributes } from 'rxfm';
 
 import './styled-text-input.css';
 
 const styledTextInput = component(({ children, attributes }) => input(
-  {
-    ...attributes,
+  mergeAttributes(attributes, {
     type: 'text',
-    style: mergeStyles(attributes.style, { margin: '5px' }),
-    class: mergeClasses(attributes.class, 'styled-text-input'),
-  },
+    style: { margin: '5px' },
+    class: 'styled-text-input',
+  }),
   ...children,
 ));
 
 export const myStyledTextInput = styledTextInput(
-  // ['test', 'text'],
   {
     placeholder: 'Styled Text Input!',
     style: { fontWeight: 'bold' },
-    class: 'invert',
+    class: 'dark-theme',
   },
 );
-
-// type Test = [x: number, y?: string];
-
-// type NonNull = string | number | boolean | object | ((...args: any[]) => (any | void));
-
-// type Is = Test extends [NonNull, ...any[]] ? true : false;
