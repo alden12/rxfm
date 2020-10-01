@@ -3,18 +3,10 @@ import { component, input, mergeAttributes } from 'rxfm';
 import './styled-text-input.css';
 
 const styledTextInput = component(({ children, attributes }) => input(
-  mergeAttributes(attributes, {
-    type: 'text',
-    style: { margin: '5px' },
-    class: 'styled-text-input',
-  }),
+  mergeAttributes(attributes, { type: 'text', class: 'styled-text-input' }),
   ...children,
 ));
 
 export const myStyledTextInput = styledTextInput(
-  {
-    placeholder: 'Styled Text Input!',
-    style: { fontWeight: 'bold' },
-    class: 'dark-theme',
-  },
+  { placeholder: 'Styled Text Input!', class: 'dark-theme' },
 );

@@ -77,20 +77,12 @@ const styledTextInputCode = `import { component, input, mergeAttributes } from '
 import './styled-text-input.css';
 
 const styledTextInput = component(({ children, attributes }) => input(
-  mergeAttributes(attributes, {
-    type: 'text',
-    style: { margin: '5px' },
-    class: 'styled-text-input',
-  }),
+  mergeAttributes(attributes, { type: 'text', class: 'styled-text-input' }),
   ...children,
 ));
 
 export const myStyledTextInput = styledTextInput(
-  {
-    placeholder: 'Styled Text Input!',
-    style: { fontWeight: 'bold' },
-    class: 'dark-theme',
-  },
+  { placeholder: 'Styled Text Input!', class: 'dark-theme' },
 );`;
 
 const styledInputCss = `.styled-text-input {
@@ -201,41 +193,46 @@ export const customCreatorsPage = div(
   ),
   p(
     `Here we can see that attributes are applied as we would expect for any other component creator.
-    In this case we are simply passing the attributes through to the created component.`,
-  ),
-  h3('Attribute Merging'),
-  p(
-    `If we want to define some attributes of the component from inside the custom creator
-    then we need to merge these with those attributes which are passed in from outside:`,
+    In this case we are simply passing the attributes through to the created component.
+    If we want to add some other attributes as well then we need to merge them together.`,
   ),
   expansionContainer(
-    expansion('text-input.ts')(codeBlock(textInputCode)),
-    expansion('Result')(myTextInput),
-  ),
-  p(
-    `Here we are creating a custom text input component by defining the input type to be 'text' inside the creator,
-    then passing other attributes such as placeholder from outside.
-    We merge these attributes together using the spread syntax.
-    Here it's important to place the attributes passed in from outside before those which we define in the creator.
-    This way the attributes defined inside the creator will always take precedence over the incoming ones.`
-  ),
-  p(
-    `Finally, if we're defining some classes or styles inside the custom creator,
-    but still want to allow others to be passed in from outside,
-    then we need to merge these more intelligently.
-    Otherwise they would overwrite each other.
-    To do this, there is a utility functions called mergeAttributes provided by RxFM
-    which will do the work for us:`,
-  ),
-  expansionContainer(
-    expansion('styled-text-input.ts')(codeBlock(styledTextInputCode)),
-    expansion('styled-text-input.css')(codeBlock(styledInputCss)),
-    expansion('Result')(myStyledTextInput),
-  ),
-  p(
-    `Again the order in which we pass the attributes in is important,
-    we should pass the attributes inside the custom creator last to make sure they take precedence.
-    There are also functions called mergeStyles and mergeClasses if you prefer to merge these individually.`
+    expansion('Attribute Merging')(
+      // h3('Attribute Merging'),
+      p(
+        `If we want to define some attributes of the component from inside the custom creator
+        then we need to merge these with those attributes which are passed in from outside:`,
+      ),
+      expansionContainer(
+        expansion('text-input.ts')(codeBlock(textInputCode)),
+        expansion('Result')(myTextInput),
+      ),
+      p(
+        `Here we are creating a custom text input component by defining the input type to be 'text' inside the creator,
+        then passing other attributes such as placeholder from outside.
+        We merge these attributes together using the spread syntax.
+        Here it's important to place the attributes passed in from outside before those which we define in the creator.
+        This way the attributes defined inside the creator will always take precedence over the incoming ones.`
+      ),
+      p(
+        `Finally, if we're defining some classes or styles inside the custom creator,
+        but still want to allow others to be passed in from outside,
+        then we need to merge these more intelligently.
+        Otherwise they would overwrite each other.
+        To do this, there is a utility functions called mergeAttributes provided by RxFM
+        which will do the work for us:`,
+      ),
+      expansionContainer(
+        expansion('styled-text-input.ts')(codeBlock(styledTextInputCode)),
+        expansion('styled-text-input.css')(codeBlock(styledInputCss)),
+        expansion('Result')(myStyledTextInput),
+      ),
+      p(
+        `Again the order in which we pass the attributes in is important,
+        we should pass the attributes inside the custom creator last to make sure they take precedence.
+        There are also functions called mergeStyles and mergeClasses if you prefer to merge these individually.`
+      ),
+    ),
   ),
   h2('Custom Creators With Inputs'),
   p(
