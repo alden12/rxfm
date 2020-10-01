@@ -1,3 +1,5 @@
-import { div } from 'rxfm';
+import { div, p } from 'rxfm';
 
-export const storePage = div();
+export const storePage = div(
+  p('Page under construction.'),
+);
