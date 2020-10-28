@@ -5,6 +5,7 @@ Express your apps using nothing else but the awesome power of [RxJS](https://git
 RxJS lets us express data as a stream rather than as single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
 ## [View the documentation for the upcoming release (0.1.0) here](https://alden12.github.io/rxfm/)
+NOTE: Documentation is currently under development and contains concepts not available in the current release. Docs should be used for informational purposes only until relase of version 0.1.0.
 
 * Check out the [Demo App on StackBlitz](https://stackblitz.com/edit/rxfm-demo)
 * Fork the [Starter App](https://github.com/alden12/rxfm-starter-app)
