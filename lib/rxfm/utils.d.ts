@@ -61,10 +61,10 @@ export declare function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean,
  * An observable operator taking an Event object, stopping propagation on the event, and passing it through.
  */
 export declare function stopPropagation<T extends Event>(): OperatorFunction<T, T>;
-export declare function log<T = unknown>(message?: string): OperatorFunction<T, T>;
+export declare function log<T = unknown>(message?: string): OperatorFunction<T, T extends never ? never : T>;
 export declare function ternary<T, OT>(input: Observable<T>, trueValue: OT): Observable<OT | undefined>;
 export declare function ternary<T, OT, OF>(input: Observable<T>, trueValue: OT, falseValue: OF): Observable<OT | OF>;
 export declare function filterObject<T extends object>(object: T, filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean): Partial<T>;
 export declare function coerceToObservable<T>(value: T | Observable<T>): Observable<T>;
 export declare function coerceToArray<T>(value: T | T[]): T[];
-export declare function flatten<T>(notFlat: T[][]): T[];
+export declare function flatten<T>(notFlat: (T | T[])[]): T[];

@@ -5,7 +5,7 @@ import { ElementEventMap, EmitEvent, EventType, EventDelete } from '../events';
 import { SetState } from '../state';
 import { IAttributes } from '../attributes';
 export declare type EventOperators<E = unknown> = {
-    [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E>;
+    [K in keyof ElementEventMap]?: OperatorFunction<ElementEventMap[K], E> | OperatorFunction<ElementEventMap[K], E>[];
 };
 export declare type AttributeEvents<T extends EventOperators> = T extends EventOperators<infer E> ? E extends EmitEvent<infer ET, infer EV> ? EventType<ET, EV> : never : never;
 /**
@@ -13,9 +13,9 @@ export declare type AttributeEvents<T extends EventOperators> = T extends EventO
  */
 export declare type ComponentCreatorFunction<T extends ElementType, E extends EventType = never> = {
     (): Component<T, E>;
-    <A extends EventOperators<unknown>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
-    <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(childComponent: C0, ...childComponents: C): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
-    <A extends EventOperators<unknown>, C extends ChildComponent<ElementType, any>[]>(attributes: A & IAttributes, ...childComponents: C): Component<T, E | ChildEvents<C> | AttributeEvents<A>>;
+    <AE, A extends EventOperators<AE>>(attributes: A & IAttributes): Component<T, E | AttributeEvents<A>>;
+    <C0 extends ChildComponent<ElementType, any>, C extends ChildComponent<ElementType, any>[]>(childComponent?: C0, ...childComponents: C): Component<T, E | ChildEvents<[C0]> | ChildEvents<C>>;
+    <AE, A extends EventOperators<AE>, C extends ChildComponent<ElementType, any>[]>(attributes: A & IAttributes, ...childComponents: C): Component<T, E | ChildEvents<C> | AttributeEvents<A>>;
 };
 export interface IComponentArgs<C extends ChildComponent[]> {
     children: C;
