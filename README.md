@@ -1,4 +1,4 @@
-# RxFM (RxJS Framework)
+# RxFM - A Web Framework Built on RxJS
 
 Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautifully minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
 

@@ -1,12 +1,16 @@
 import { Observable, of, combineLatest } from 'rxjs';
-import { ComponentOperator, Component } from '../components';
-import { attributes } from './attributes';
 import { map, debounceTime } from 'rxjs/operators';
+import { ComponentOperator, ElementType, Component } from '../components';
+import { attribute } from './attributes';
+import { EventType } from '../events';
+import { NullLike, coerceToArray } from '../utils';
+
+export type ClassSingle = string | NullLike;
 
 /**
  * The possible types to pass as a CSS class name to the 'classes' operator.
  */
-export type ClassType = string | false | Observable<string | false | (string | false)[]>;
+export type ClassType = ClassSingle | Observable<ClassSingle | ClassSingle[]>;
 
 /**
  * Coerce an array of ClassType types to be an observable emitting a string of CSS class names.
@@ -14,7 +18,7 @@ export type ClassType = string | false | Observable<string | false | (string | f
 function classTypesToStringObservable(classTypes: ClassType[]): Observable<string> {
 
   const classStrings = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
-    map(stringOrArray => Array.isArray(stringOrArray) ? stringOrArray : [stringOrArray]),
+    map(coerceToArray),
   ) : of([classType]));
 
   return combineLatest(classStrings).pipe(
@@ -32,12 +36,10 @@ function classTypesToStringObservable(classTypes: ClassType[]): Observable<strin
  * @param classNames A spread array of class names. These may either be of type string, string observable or string
  * array observable. If the class name value is falsy (false, undefined, null , 0) The class will be removed.
  */
-export function classes<T extends HTMLElement, E>(
+export function classes<T extends ElementType, E extends EventType>(
   ...classNames: ClassType[]
 ): ComponentOperator<T, E> {
-  return (component: Component<T, E>) => component.pipe(
-    attributes({
-      class: classTypesToStringObservable(classNames),
-    }),
+  return (input: Component<T, E>) => input.pipe(
+    attribute('class', classTypesToStringObservable(classNames)),
   );
 }
