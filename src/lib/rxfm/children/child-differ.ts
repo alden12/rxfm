@@ -1,3 +1,5 @@
+import { ChildElement } from "./children";
+
 /**
  * An interface to describe how a node should be added to a parent node.
  */
@@ -5,11 +7,11 @@ export interface INodeUpdate {
   /**
    * The node to add.
    */
-  node: Node;
+  node: ChildElement;
   /**
    * The node to insert this node before, if omitted, insert at the end.
    */
-  insertBefore?: Node;
+  insertBefore?: ChildElement;
 }
 
 /**
@@ -23,7 +25,7 @@ export interface IChildDiff {
   /**
    * The nodes to remove.
    */
-  removed: Node[];
+  removed: ChildElement[];
 }
 
 /**
@@ -32,8 +34,8 @@ export interface IChildDiff {
  * compared to the old children array.
  */
 export function childDiffer(
-  oldChildren: Node[],
-  newChildren: Node[]
+  oldChildren: ChildElement[],
+  newChildren: ChildElement[]
 ): IChildDiff {
   const oldSet = new Set(oldChildren); // Create sets of both new and old children.
   const newSet = new Set(newChildren);
@@ -47,7 +49,7 @@ export function childDiffer(
     (node, i) => remainingOldOrder[i] === node
   );
 
-  let unchangedNodes: Set<Node>; // Create a set of all nodes which are common and have not changed order.
+  let unchangedNodes: Set<ChildElement>; // Create a set of all nodes which are common and have not changed order.
   if (orderUnchanged) {
     unchangedNodes = new Set(remainingNewOrder); // If order has not changed, create set from common nodes.
 
@@ -73,7 +75,7 @@ export function childDiffer(
   }
 
   // Create an array of node updates (an update is a node and the node to insert it before if applicable).
-  let insertBefore: Node | undefined;
+  let insertBefore: ChildElement | undefined;
   const updated: INodeUpdate[] = [];
   for (let i = newChildren.length - 1; i >= 0; i--) { // Loop through the new nodes in reverse order
     const node = newChildren[i];

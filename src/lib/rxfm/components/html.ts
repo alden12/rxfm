@@ -1,8 +1,13 @@
-import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
-import { ChildComponent, children } from '../children/children';
-import { RxFMElement } from './component';
-import { of } from 'rxjs';
-import { attributes } from '../attributes';
+// import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
+// import { ChildComponent, children } from '../children/children';
+// import { RxFMElement } from './component';
+// import { of } from 'rxjs';
+// import { attributes } from '../attributes';
+
+import { of } from "rxjs";
+import { map } from "rxjs/operators";
+import { children } from "../children/children";
+import { Component, DefaultComponentFunction } from "./component";
 
 export type HTMLElementTypes = {
   [K in keyof HTMLElementTagNameMap]: K;
@@ -132,21 +137,20 @@ const HTMLElements: HTMLElementTypes = {
 
 function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): ComponentFunction<HTMLElementTagNameMap[K]> {
-  return<C extends ChildComponent[] = []>(args: IComponentArgs<C>) =>
-  of(new RxFMElement(document.createElement(tagName))).pipe(
-    children(...args.children),
-    attributes(args.attributes),
+): DefaultComponentFunction<HTMLElementTagNameMap[K]> {
+  return (...childElements) => of(tagName).pipe(
+    map(tag => document.createElement(tag)),
+    children(...childElements),
   );
 }
 
 export type HTMLComponentCreators = {
-  [K in keyof HTMLElementTagNameMap]: ComponentCreatorFunction<HTMLElementTagNameMap[K]>;
+  [K in keyof HTMLElementTagNameMap]: DefaultComponentFunction<HTMLElementTagNameMap[K]>;
 };
 
 export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
   (components: HTMLComponentCreators, tagName: keyof HTMLElementTagNameMap) => {
-    components[tagName] = component(getHTMLComponentFunction(tagName)) as ComponentCreatorFunction<any>;
+    components[tagName] = getHTMLComponentFunction(tagName) as () => Component<any>;
     return components;
   }, {} as HTMLComponentCreators
 );
