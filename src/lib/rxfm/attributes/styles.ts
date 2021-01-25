@@ -5,8 +5,9 @@
 // import { EventType } from '../events';
 
 import { Observable } from "rxjs";
-import { distinctUntilChanged, mapTo, startWith, switchMap, tap } from "rxjs/operators";
+import { distinctUntilChanged, map, mapTo, startWith, switchMap, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
+import { elementMetadataService } from "../metadata";
 import { coerceToObservable, NullLike } from "../utils";
 
 // TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
@@ -19,15 +20,28 @@ export type StyleType = string | NullLike;
 
 export type Style = StyleType | Observable<StyleType>
 
+export type StyleObject = Partial<Record<StyleKeys, StyleType>>;
+
 export function style<T extends ElementType, K extends StyleKeys>(
   name: K,
   value: Style,
 ): ComponentOperator<T> {
-  return componentOperator(element => coerceToObservable(value).pipe(
-    startWith(null),
-    distinctUntilChanged(),
-    tap(val => val ? element.style[name] = val : element.style[name] = null as any),
-  ));
+  return componentOperator(element => {
+    const symbol = Symbol('Style Operator');
+
+    return coerceToObservable(value).pipe(
+      map(val => val || null),
+      startWith(undefined),
+      distinctUntilChanged(),
+      tap(val => {
+        elementMetadataService.setStyles(element, symbol, { [name]: val });
+        const primaryValue = elementMetadataService.getStyle(element, name);
+        if (primaryValue !== undefined) {
+          element.style[name] = primaryValue as string;
+        }
+      }),
+    );
+  });
 }
 
 // export type Styles = {

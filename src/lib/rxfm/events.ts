@@ -3,8 +3,8 @@
 // import { switchMap, map } from 'rxjs/operators';
 
 import { fromEvent } from "rxjs";
-import { distinctUntilChanged, mapTo, startWith, switchMap, tap } from "rxjs/operators";
-import { Component, componentOperator, ComponentOperator, ElementType } from "./components";
+import { tap } from "rxjs/operators";
+import { componentOperator, ComponentOperator, ElementType } from "./components";
 
 export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
 

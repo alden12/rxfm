@@ -1,59 +1,36 @@
-import { Observable, of, Subject } from "rxjs";
-import { filter, first, mapTo, tap } from "rxjs/operators";
-import { componentOperator, ComponentOperator, ElementType } from "./components";
+import { StyleKeys, StyleObject, StyleType } from "./attributes";
+import { ElementType } from "./components";
 
-export interface IMetaDataField<T> {
-  first: T[];
-  last: T[];
+class ElementMetadata {
+  public styles = new Map<symbol, StyleObject>();
 }
 
-export interface IElementMetaData { }
-
 class ElementMetadataService {
-  private elementMetadataMap = new WeakMap<ElementType, IElementMetaData>();
+  private elementMetadataMap = new WeakMap<ElementType, ElementMetadata>();
 
-  private elementCreateSubject = new Subject<ElementType>();
-  private elementDeleteSubject = new Subject<ElementType>();
-  public elementCreate = this.elementCreateSubject.asObservable();
-  public elementDelete = this.elementDeleteSubject.asObservable();
-
-  public hasElement(element: ElementType): boolean {
-    return this.elementMetadataMap.has(element);
+  public setStyles(element: ElementType, symbol: symbol, style: StyleObject) {
+    const styles = this.getMetadata(element).styles;
+    styles.set(symbol, style);
   }
 
-  public setElement(element: ElementType) {
-    if (!this.hasElement(element)) {
-      this.elementMetadataMap.set(element, {});
-      this.elementCreateSubject.next(element);
+  public getStyle(element: ElementType, name: StyleKeys): StyleType {
+    if (this.elementMetadataMap.has(element)) {
+      const styles = this.getMetadata(element).styles;
+      const style = Array.from(styles.values()).find(st => name in st);
+      return style ? style[name] : undefined;
     }
+    return undefined;
   }
 
-  public deleteElement(element: ElementType) {
-    if (this.hasElement(element)) {
-      this.elementMetadataMap.delete(element);
-      this.elementDeleteSubject.next(element);
+  private getMetadata(element: ElementType): ElementMetadata {
+    const metadata = this.elementMetadataMap.get(element);
+    if (!metadata) {
+      const initialMetadata = new ElementMetadata();
+      this.elementMetadataMap.set(element, initialMetadata);
+      return initialMetadata;
     }
-  }
-
-  public watchDelete(element: ElementType): Observable<null> {
-    return this.elementDelete.pipe(
-      filter(el => el === element),
-      mapTo(null),
-      first(),
-    );
+    return metadata;
   }
 }
 
 export const elementMetadataService = new ElementMetadataService();
-
-export function onDestroy<T extends ElementType>(callback: () => void): ComponentOperator<T> {
-  return componentOperator(element => elementMetadataService.watchDelete(element).pipe(
-    tap(callback),
-  ));
-}
-
-export function onCreate<T extends ElementType>(callback: () => void): ComponentOperator<T> {
-  return componentOperator(() => of(null).pipe(
-    tap(callback),
-  ));
-}
