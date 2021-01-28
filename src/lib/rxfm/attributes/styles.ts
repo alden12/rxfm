@@ -36,7 +36,7 @@ export function style<T extends ElementType, K extends StyleKeys>(
       tap(val => {
         elementMetadataService.setStyles(element, symbol, { [name]: val });
         const primaryValue = elementMetadataService.getStyle(element, name);
-        if (primaryValue !== undefined) {
+        if (primaryValue !== undefined && element.style[name] !== primaryValue) {
           element.style[name] = primaryValue as string;
         }
       }),

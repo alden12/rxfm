@@ -1,6 +1,6 @@
 // import { addToBody, div, link, addToHead } from 'rxfm';
 
-import { addToView, ChildComponent, Component, div, ElementType, event, span, style } from 'rxfm';
+import { addToView, ChildComponent, children, Component, div, ElementType, event, span, style } from 'rxfm';
 import { BehaviorSubject, interval, Observable, of, timer } from 'rxjs';
 import { distinctUntilChanged, finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
 import './styles.css';
@@ -30,7 +30,7 @@ const component2 = (...children: ChildComponent[]) => span(
   clickCounter(),
   ...children,
 ).pipe(
-  style('color', 'blue'),
+  style('color', interval(1000).pipe(map(i => i % 2 ? 'blue' : null))),
 );
 
 const component3 = component2('some more stuff').pipe(
@@ -38,59 +38,15 @@ const component3 = component2('some more stuff').pipe(
   style('color', 'green'),
 );
 
-of('value 0').pipe(
-  switchMap(val => of('effect 1').pipe(
-    tap(console.log),
-    mapTo(val),
-    startWith(val),
-    distinctUntilChanged(),
-  )),
-  switchMap(val => timer(1000).pipe(
-    startWith('effect 2'),
-    mapTo('effect 2'),
-    distinctUntilChanged(),
-    tap(console.log),
-    mapTo(val),
-    startWith(val),
-    distinctUntilChanged(),
-  )),
-).subscribe(console.log);
+const childrenTest = div().pipe(
+  children(div(1)),
+  children(div(2)),
+  children(div(3)),
+  children(interval(1000).pipe(switchMap(i => i % 2 ? div(4) : of(null)))),
+);
 
-// interval(1000).pipe(
-//   switchMap(val => of(val).pipe(
-//     finalize(() => console.log('ended')),
-//   )),
-// ).subscribe(console.log);
-
-// const test = of(1).pipe(
-//   tap(() => console.log('First')),
-//   startWith(2),
-//   tap(() => console.log('Second')),
-//   startWith(3),
-//   tap(() => console.log('Third')),
-//   startWith(4),
-//   tap(() => console.log('Fourth')),
-// ).subscribe(console.log);
-
-// const x = div('test').pipe(
-//     styles({ display: 'flex' }),
-//     classes('my-class'),
-//     event('click', () => console.log('test'))
-// )
-
-// div('test')
-//   .styles({ height: '100%' })
-//   .classes('my-class')
-//   .event('click', () => console.log('test'));
-
-// div(
-//   'test',
-//   classes('my-class'),
-//   styles({ color: 'red' }),
-// ).pipe(
-//   event('click', () => console.log('test'))
-// );
 
 addToView(component);
 addToView(component2());
 addToView(component3);
+addToView(childrenTest);

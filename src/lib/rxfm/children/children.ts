@@ -6,6 +6,7 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
+import { elementMetadataService } from '../metadata';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
 
@@ -49,19 +50,33 @@ function coerceChildComponent(childComponent: ChildComponent): Observable<Coerce
 function updateElementChildren<T extends ElementType>(
   element: T,
   previousChildren: ChildElement[],
-  newChildren: ChildElement[]
+  newChildren: ChildElement[],
+  symbol: symbol,
 ): T {
   const diff = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
-  diff.removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
-  element.append( // Append any nodes to the element which should appear after existing nodes.
-    ...diff.updated
-      .filter(update => !update.insertBefore)
-      .map(update => update.node)
+  diff.removed.forEach(node => elementMetadataService.removeChild(element, symbol, node)); // Remove all deleted nodes.
+
+  elementMetadataService.setChildren( // Append any nodes to the element which should appear after existing nodes.
+    element,
+    symbol,
+    diff.updated.filter(update => !update.insertBefore).map(update => update.node),
+    false,
   );
+
   diff.updated // Add any nodes which should go in between existing nodes.
     .filter(update => update.insertBefore)
-    .forEach(update => element.insertBefore(update.node, update.insertBefore || null));
+    .forEach(update => elementMetadataService.setChildren(element, symbol, update.node, false, update.insertBefore));
+
+  // diff.removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
+  // element.append( // Append any nodes to the element which should appear after existing nodes.
+  //   ...diff.updated
+  //     .filter(update => !update.insertBefore)
+  //     .map(update => update.node)
+  // );
+  // diff.updated // Add any nodes which should go in between existing nodes.
+  //   .filter(update => update.insertBefore)
+  //   .forEach(update => element.insertBefore(update.node, update.insertBefore || null));
 
   return element;
 }
@@ -82,6 +97,8 @@ function updateElementChildren<T extends ElementType>(
 export function children<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
+    const symbol = Symbol('Children Operator');
+
     // Coerce all child nodes to be most generic type and combine.
     return combineLatest(childComponents.map(coerceChildComponent)).pipe(
       debounceTime(0), // Prevent repeated emission for simultaneous changes.
@@ -89,7 +106,7 @@ export function children<T extends ElementType>(...childComponents: ChildCompone
       //  Remove empty children then flatten.
       map(childrenOrNull => flatten(childrenOrNull.filter(child => child !== null) as CoercedChildComponent[])),
       tap(elements => {
-        updateElementChildren(element, previousElements, elements); // Update the element child nodes.
+        updateElementChildren(element, previousElements, elements, symbol); // Update the element child nodes.
         previousElements = elements; // Store nodes for reference.
       }),
     );
