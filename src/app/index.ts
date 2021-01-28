@@ -39,10 +39,11 @@ const component3 = component2('some more stuff').pipe(
 );
 
 const childrenTest = div().pipe(
+  children(interval(1000).pipe(switchMap(i => i % 2 ? div(0) : of(null)))),
   children(div(1)),
   children(div(2)),
   children(div(3)),
-  children(interval(1000).pipe(switchMap(i => i % 2 ? div(4) : of(null)))),
+  children(interval(1600).pipe(switchMap(i => i % 2 ? div(4) : of(null)))),
 );
 
 

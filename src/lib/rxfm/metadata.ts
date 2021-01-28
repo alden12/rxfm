@@ -44,7 +44,7 @@ class ElementMetadataService {
     if (index === -1) { // If block has not yet been added, add an empty block to the metadata.
       index = childrenMetadata.center;
       childrenMetadata.blocks.splice(index, 0, { symbol, length: 0 });
-      if (!end) { // If block is start alligned, increment center point.
+      if (end) { // If block is end alligned, increment center point (as children operators are added in reverse order).
         childrenMetadata.center++;
       }
     }
