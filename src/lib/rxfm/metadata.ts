@@ -14,7 +14,7 @@ class ElementMetadata {
 }
 
 class ElementMetadataService {
-  private elementMetadataMap = new WeakMap<ElementType, ElementMetadata>();
+  protected elementMetadataMap = new WeakMap<ElementType, ElementMetadata>();
 
   public setStyles(element: ElementType, symbol: symbol, style: StyleObject) {
     const styles = this.getMetadata(element).styles;
@@ -78,7 +78,7 @@ class ElementMetadataService {
     element.removeChild(child);
   }
 
-  private getMetadata(element: ElementType): ElementMetadata {
+  protected getMetadata(element: ElementType): ElementMetadata {
     const metadata = this.elementMetadataMap.get(element);
     if (!metadata) {
       const initialMetadata = new ElementMetadata();
@@ -90,3 +90,9 @@ class ElementMetadataService {
 }
 
 export const elementMetadataService = new ElementMetadataService();
+
+export class TestElementMetadataService extends ElementMetadataService {
+  public inspectMetadata(element: ElementType) {
+    return this.elementMetadataMap.get(element);
+  }
+}
