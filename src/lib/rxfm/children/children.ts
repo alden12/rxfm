@@ -52,6 +52,7 @@ function updateElementChildren<T extends ElementType>(
   previousChildren: ChildElement[],
   newChildren: ChildElement[],
   symbol: symbol,
+  end: boolean,
 ): T {
   const diff = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
@@ -61,12 +62,12 @@ function updateElementChildren<T extends ElementType>(
     element,
     symbol,
     diff.updated.filter(update => !update.insertBefore).map(update => update.node),
-    false,
+    end,
   );
 
   diff.updated // Add any nodes which should go in between existing nodes.
     .filter(update => update.insertBefore)
-    .forEach(update => elementMetadataService.setChildren(element, symbol, update.node, false, update.insertBefore));
+    .forEach(update => elementMetadataService.setChildren(element, symbol, update.node, end, update.insertBefore));
 
   return element;
 }
@@ -77,14 +78,7 @@ function updateElementChildren<T extends ElementType>(
 //   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
 // }>;
 
-// /**
-//  * An observable operator to add children to a component.
-//  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
-//  * forms, the simplest of which are strings, numbers or booleans or observables emitting any of these. Other components
-//  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
-//  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
-//  */
-export function children<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+function firstOrLastChildren<T extends ElementType>(childComponents: ChildComponent[], end: boolean): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
     const symbol = Symbol('Children Operator');
@@ -96,9 +90,24 @@ export function children<T extends ElementType>(...childComponents: ChildCompone
       //  Remove empty children then flatten.
       map(childrenOrNull => flatten(childrenOrNull.filter(child => child !== null) as CoercedChildComponent[])),
       tap(elements => {
-        updateElementChildren(element, previousElements, elements, symbol); // Update the element child nodes.
+        updateElementChildren(element, previousElements, elements, symbol, end); // Update the element child nodes.
         previousElements = elements; // Store nodes for reference.
       }),
     );
   });
+}
+
+// /**
+//  * An observable operator to add children to a component.
+//  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
+//  * forms, the simplest of which are strings, numbers or booleans or observables emitting any of these. Other components
+//  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
+//  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
+//  */
+export function children<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+  return firstOrLastChildren(childComponents, false);
+}
+
+export function lastChildren<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+  return firstOrLastChildren(childComponents, true);
 }
