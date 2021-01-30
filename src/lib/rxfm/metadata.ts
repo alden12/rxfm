@@ -44,7 +44,7 @@ class ElementMetadataService {
     if (index === -1) { // If block has not yet been added, add an empty block to the metadata.
       index = childrenMetadata.center;
       childrenMetadata.blocks.splice(index, 0, { symbol, length: 0 });
-      if (end) { // If block is end alligned, increment center point (as children operators are added in reverse order).
+      if (end) { // If block is end alligned, increment center point (would be start but operators are added in reverse order).
         childrenMetadata.center++;
       }
     }
@@ -56,6 +56,7 @@ class ElementMetadataService {
       insertBefore = element.childNodes[insertBeforeIndex] as ChildElement;
     }
 
+    // TODO: Do this outside the metadata service and only pass out insertBefore element?
     // Insert element(s).
     if (insertBefore) { // If insert before, insert element(s) before given node.
       children.forEach(child => element.insertBefore(child, insertBefore!));

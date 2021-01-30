@@ -68,16 +68,6 @@ function updateElementChildren<T extends ElementType>(
     .filter(update => update.insertBefore)
     .forEach(update => elementMetadataService.setChildren(element, symbol, update.node, false, update.insertBefore));
 
-  // diff.removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
-  // element.append( // Append any nodes to the element which should appear after existing nodes.
-  //   ...diff.updated
-  //     .filter(update => !update.insertBefore)
-  //     .map(update => update.node)
-  // );
-  // diff.updated // Add any nodes which should go in between existing nodes.
-  //   .filter(update => update.insertBefore)
-  //   .forEach(update => element.insertBefore(update.node, update.insertBefore || null));
-
   return element;
 }
 
