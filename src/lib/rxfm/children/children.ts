@@ -6,7 +6,7 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
-import { elementMetadataService } from '../metadata';
+import { childrenModifierService } from './children-modifier-service';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
 
@@ -56,9 +56,9 @@ function updateElementChildren<T extends ElementType>(
 ): T {
   const diff = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
-  diff.removed.forEach(node => elementMetadataService.removeChild(element, symbol, node)); // Remove all deleted nodes.
+  diff.removed.forEach(node => childrenModifierService.removeChild(element, symbol, node)); // Remove all deleted nodes.
 
-  elementMetadataService.setChildren( // Append any nodes to the element which should appear after existing nodes.
+  childrenModifierService.setChildren( // Append any nodes to the element which should appear after existing nodes.
     element,
     symbol,
     diff.updated.filter(update => !update.insertBefore).map(update => update.node),
@@ -67,7 +67,7 @@ function updateElementChildren<T extends ElementType>(
 
   diff.updated // Add any nodes which should go in between existing nodes.
     .filter(update => update.insertBefore)
-    .forEach(update => elementMetadataService.setChildren(element, symbol, update.node, end, update.insertBefore));
+    .forEach(update => childrenModifierService.setChildren(element, symbol, update.node, end, update.insertBefore));
 
   return element;
 }

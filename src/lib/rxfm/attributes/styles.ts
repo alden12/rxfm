@@ -7,7 +7,7 @@
 import { Observable } from "rxjs";
 import { distinctUntilChanged, map, mapTo, startWith, switchMap, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
-import { elementMetadataService } from "../metadata";
+import { stylesModifierService } from "./styles-modifier-service";
 import { coerceToObservable, NullLike } from "../utils";
 
 // TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
@@ -34,8 +34,8 @@ export function style<T extends ElementType, K extends StyleKeys>(
       startWith(undefined),
       distinctUntilChanged(),
       tap(val => {
-        elementMetadataService.setStyles(element, symbol, { [name]: val });
-        const primaryValue = elementMetadataService.getStyle(element, name);
+        stylesModifierService.setStyles(element, symbol, { [name]: val });
+        const primaryValue = stylesModifierService.getStyle(element, name);
         if (primaryValue !== undefined && element.style[name] !== primaryValue) {
           element.style[name] = primaryValue as string;
         }
