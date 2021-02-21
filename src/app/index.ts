@@ -1,7 +1,7 @@
 // import { addToBody, div, link, addToHead } from 'rxfm';
 
 import { addToView, ChildComponent, children, Component, div, ElementType, event, span, style } from 'rxfm';
-import { BehaviorSubject, interval, Observable, of, timer } from 'rxjs';
+import { BehaviorSubject, EMPTY, interval, Observable, of, timer } from 'rxjs';
 import { distinctUntilChanged, finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
 import './styles.css';
 
@@ -40,10 +40,11 @@ const component3 = component2('some more stuff').pipe(
 
 const childrenTest = div().pipe(
   children(interval(1000).pipe(switchMap(i => i % 2 ? div(0, ' bar') : of(null)))),
-  children(div(1, ' foo')),
+  children(div(1)),
   children(div(2)),
   children(div(3)),
-  children(interval(1600).pipe(switchMap(i => i % 2 ? div(4) : of(null)))),
+  children(interval(1600).pipe(switchMap(i => i % 2 ? of(4) : of(null)))),
+  // children(timer(1600).pipe(switchMap(i => div(4)))),
 );
 
 
@@ -51,3 +52,4 @@ addToView(component);
 addToView(component2());
 addToView(component3);
 addToView(childrenTest);
+addToView(div(1, 2));

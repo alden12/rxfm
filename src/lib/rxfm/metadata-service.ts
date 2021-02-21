@@ -1,18 +1,44 @@
-import { ElementType } from "../components";
-import { AbstractModifierService } from "../modifier-service";
-import { coerceToArray } from "../utils";
-import { ChildElement } from "./children";
+import { StyleKeys, StyleObject, StyleType } from "./attributes";
+import { ChildElement } from "./children/children";
+import { ElementType } from "./components";
+import { coerceToArray } from "./utils";
 
 class ChildrenMetadata {
   public blocks: { symbol: symbol, length: number }[] = [];
   public center = 0;
 }
 
-class ChildrenModifierService extends AbstractModifierService<ChildrenMetadata> {
-  protected getEmptyMetadata() {
-    return new ChildrenMetadata();
+class ElementMetadata {
+  public styles = new Map<symbol, StyleObject>();
+  public children = new ChildrenMetadata();
+}
+
+class ElementMetadataService {
+  protected elementMetadataMap = new WeakMap<ElementType, ElementMetadata>();
+
+  public setStyles(element: ElementType, symbol: symbol, style: StyleObject) {
+    const styles = this.getMetadata(element).styles;
+    styles.set(symbol, style);
   }
 
+  public getStyle(element: ElementType, name: StyleKeys): StyleType {
+    if (this.elementMetadataMap.has(element)) {
+      const styles = this.getMetadata(element).styles;
+      const style = Array.from(styles.values()).find(st => name in st);
+      return style ? style[name] : undefined;
+    }
+    return undefined;
+  }
+
+  public getChildrenMetadata(element: ElementType): ChildrenMetadata {
+    return this.getMetadata(element).children;
+  }
+
+  public setChildrenMetadata(element: ElementType, metadata: ChildrenMetadata) {
+    this.getMetadata(element).children = metadata;
+  }
+
+  // Depricated
   public setChildren(
     element: ElementType,
     symbol: symbol,
@@ -20,7 +46,7 @@ class ChildrenModifierService extends AbstractModifierService<ChildrenMetadata> 
     end = false,
     insertBeforeElement?: ChildElement,
   ) {
-    const childrenMetadata = this.getMetadata(element);
+    const childrenMetadata = this.getMetadata(element).children;
     const children = coerceToArray(childElements);
     let index = childrenMetadata.blocks.findIndex((({ symbol: blockSymbol }) => blockSymbol === symbol));
 
@@ -52,19 +78,30 @@ class ChildrenModifierService extends AbstractModifierService<ChildrenMetadata> 
     block.length = block.length + children.length;
   }
 
+  // Depricated
   public removeChild(element: ElementType, symbol: symbol, child: ChildElement) {
-    const childrenMetadata = this.getMetadata(element);
+    const childrenMetadata = this.getMetadata(element).children;
     const block = childrenMetadata.blocks.find(({ symbol: blockSymbol }) => blockSymbol === symbol);
     if (block) { // If block exists, decrement block length.
       block.length--;
     }
     element.removeChild(child);
   }
+
+  protected getMetadata(element: ElementType): ElementMetadata {
+    const metadata = this.elementMetadataMap.get(element);
+    if (!metadata) {
+      const initialMetadata = new ElementMetadata();
+      this.elementMetadataMap.set(element, initialMetadata);
+      return initialMetadata;
+    }
+    return metadata;
+  }
 }
 
-export const childrenModifierService = new ChildrenModifierService();
+export const elementMetadataService = new ElementMetadataService();
 
-export class TestChildrenModifierService extends ChildrenModifierService {
+export class TestElementMetadataService extends ElementMetadataService {
   public inspectMetadata(element: ElementType) {
     return this.elementMetadataMap.get(element);
   }

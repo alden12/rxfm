@@ -6,9 +6,10 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
-import { childrenModifierService } from './children-modifier-service';
+import { ChildrenMetadata, childrenModifierService, addChildrenToMetadata, removeChildrenFromMetadata, registerChilrenBlockMetadata } from './children-metadata';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
+import { elementMetadataService } from '../metadata-service';
 
 export type ChildComponent = StringLike | NullLike | Observable<StringLike | NullLike | ElementType | ElementType[]>;
 
@@ -51,34 +52,38 @@ function updateElementChildren<T extends ElementType>(
   element: T,
   previousChildren: ChildElement[],
   newChildren: ChildElement[],
-  symbol: symbol,
+  blockSymbol: symbol,
   end: boolean,
 ): T {
-  const diff = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
+  let newChildrenMetadata = registerChilrenBlockMetadata(elementMetadataService.getChildrenMetadata(element), blockSymbol, end);
 
-  diff.removed.forEach(node => childrenModifierService.removeChild(element, symbol, node)); // Remove all deleted nodes.
+  const { updated, removed } = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
-  childrenModifierService.setChildren( // Append any nodes to the element which should appear after existing nodes.
-    element,
-    symbol,
-    diff.updated.filter(update => !update.insertBefore).map(update => update.node),
-    end,
+  removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
+  // TODO: Should really do reduce here and make sure the element was removed before updating metadata.
+  newChildrenMetadata = removeChildrenFromMetadata(
+    newChildrenMetadata,
+    blockSymbol,
+    removed.length,
   );
 
-  diff.updated // Add any nodes which should go in between existing nodes.
-    .filter(update => update.insertBefore)
-    .forEach(update => childrenModifierService.setChildren(element, symbol, update.node, end, update.insertBefore));
+  newChildrenMetadata = updated.reduce((metadata, update) => {
+    const { newMetadata, insertBeforeIndex } = addChildrenToMetadata(metadata, blockSymbol, end);
+    const insertBefore = update.insertBefore || element.childNodes[insertBeforeIndex];
+    if (insertBefore) {
+      element.insertBefore(update.node, insertBefore);
+    } else {
+      element.appendChild(update.node);
+    }
+    return newMetadata;
+  }, newChildrenMetadata);
+
+  elementMetadataService.setChildrenMetadata(element, newChildrenMetadata);
 
   return element;
 }
 
-// export type ArrayType<T extends any[]> = T extends (infer A)[] ? A extends EventType ? A : never : never;
-
-// export type ChildEvents<T extends ChildComponent<ElementType, EventType>[]> = ArrayType<{
-//   [P in keyof T]: T[P] extends Observable<ComponentLike<infer _, infer E>> ? E : never;
-// }>;
-
-function firstOrLastChildren<T extends ElementType>(childComponents: ChildComponent[], end: boolean): ComponentOperator<T> {
+function startOrEndChildren<T extends ElementType>(childComponents: ChildComponent[], end: boolean): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
     const symbol = Symbol('Children Operator');
@@ -105,9 +110,9 @@ function firstOrLastChildren<T extends ElementType>(childComponents: ChildCompon
 //  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
 //  */
 export function children<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
-  return firstOrLastChildren(childComponents, false);
+  return startOrEndChildren(childComponents, false);
 }
 
 export function lastChildren<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
-  return firstOrLastChildren(childComponents, true);
+  return startOrEndChildren(childComponents, true);
 }

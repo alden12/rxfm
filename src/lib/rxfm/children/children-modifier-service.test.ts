@@ -1,4 +1,4 @@
-import { childrenModifierService, TestChildrenModifierService } from "./children-modifier-service";
+import { childrenModifierService, TestChildrenModifierService } from "./children-metadata";
 
 const getChildElements = () => [
   document.createElement('span'),

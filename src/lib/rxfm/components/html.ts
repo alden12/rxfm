@@ -7,7 +7,7 @@
 import { of } from "rxjs";
 import { map } from "rxjs/operators";
 import { children } from "../children/children";
-import { Component, DefaultComponentFunction } from "./component";
+import { Component, ComponentFunction } from "./component";
 
 export type HTMLElementTypes = {
   [K in keyof HTMLElementTagNameMap]: K;
@@ -137,7 +137,7 @@ const HTMLElements: HTMLElementTypes = {
 
 function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): DefaultComponentFunction<HTMLElementTagNameMap[K]> {
+): ComponentFunction<HTMLElementTagNameMap[K]> {
   return (...childElements) => of(tagName).pipe(
     map(tag => document.createElement(tag)),
     children(...childElements),
@@ -145,7 +145,7 @@ function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
 }
 
 export type HTMLComponentCreators = {
-  [K in keyof HTMLElementTagNameMap]: DefaultComponentFunction<HTMLElementTagNameMap[K]>;
+  [K in keyof HTMLElementTagNameMap]: ComponentFunction<HTMLElementTagNameMap[K]>;
 };
 
 export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(

@@ -10,7 +10,7 @@ export type ElementType = HTMLElement | SVGElement;
 
 export type Component<T extends ElementType = ElementType> = Observable<T>;
 
-export type DefaultComponentFunction<T extends ElementType = ElementType> =
+export type ComponentFunction<T extends ElementType = ElementType> =
   (...childComponents: ChildComponent[]) => Component<T>;
 
 export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T>;
