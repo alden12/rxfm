@@ -1,6 +1,6 @@
 // import { addToBody, div, link, addToHead } from 'rxfm';
 
-import { addToView, ChildComponent, children, Component, div, ElementType, event, span, style } from 'rxfm';
+import { addToView, ChildComponent, children, classes, Component, div, ElementType, event, span, style } from 'rxfm';
 import { BehaviorSubject, EMPTY, interval, Observable, of, timer } from 'rxjs';
 import { distinctUntilChanged, finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
 import './styles.css';
@@ -47,9 +47,14 @@ const childrenTest = div().pipe(
   // children(timer(1600).pipe(switchMap(i => div(4)))),
 );
 
+const classTest = div('text to be styled').pipe(
+  classes('first-class', of('second-class')),
+  classes(interval(1000).pipe(map(i => i % 2 ? 'second-class' : null)))
+);
 
 addToView(component);
 addToView(component2());
 addToView(component3);
+addToView(classTest);
 addToView(childrenTest);
 addToView(div(1, 2));

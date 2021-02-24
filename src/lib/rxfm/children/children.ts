@@ -1,12 +1,7 @@
-// import { Observable, of, combineLatest } from 'rxjs';
-// import { map, switchMap, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
-// import { childDiffer } from './child-differ';
-// import { ElementType, RxFMElement, ComponentOperator, Component } from '../components';
-// import { EventType } from '../events';
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
-import { ChildrenMetadata, childrenModifierService, addChildrenToMetadata, removeChildrenFromMetadata, registerChilrenBlockMetadata } from './children-metadata';
+import { addChildrenToMetadata, removeChildrenFromMetadata, registerChilrenBlockMetadata } from './children-metadata';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
 import { elementMetadataService } from '../metadata-service';
@@ -55,12 +50,12 @@ function updateElementChildren<T extends ElementType>(
   blockSymbol: symbol,
   end: boolean,
 ): T {
-  let newChildrenMetadata = registerChilrenBlockMetadata(elementMetadataService.getChildrenMetadata(element), blockSymbol, end);
-
   const { updated, removed } = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
+  const currentChildrenMetadata = elementMetadataService.getChildrenMetadata(element);
+  let newChildrenMetadata = registerChilrenBlockMetadata(currentChildrenMetadata, blockSymbol, end);
+
   removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
-  // TODO: Should really do reduce here and make sure the element was removed before updating metadata.
   newChildrenMetadata = removeChildrenFromMetadata(
     newChildrenMetadata,
     blockSymbol,
