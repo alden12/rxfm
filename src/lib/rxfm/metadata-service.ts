@@ -24,7 +24,7 @@ class ElementMetadataService {
   public getStyle(element: ElementType, name: StyleKeys): StyleType {
     if (this.elementMetadataMap.has(element)) {
       const styles = this.getMetadata(element).styles;
-      const style = Array.from(styles.values()).find(st => name in st);
+      const style = Array.from(styles.values()).find(st => Boolean(st[name]));
       return style ? style[name] : undefined;
     }
     return undefined;

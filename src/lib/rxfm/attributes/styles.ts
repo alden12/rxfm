@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
-import { componentOperator, ComponentOperator, ElementType } from "../components";
+import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
 import { elementMetadataService } from "../metadata-service";
 import { coerceToObservable, NullLike } from "../utils";
 
@@ -19,9 +19,10 @@ export type StyleObject = Partial<Record<StyleKeys, StyleType>>;
 export function style<T extends ElementType, K extends StyleKeys>(
   name: K,
   value: Style,
+  externalSymbol?: symbol,
 ): ComponentOperator<T> {
   return componentOperator(element => {
-    const symbol = Symbol('Style Operator');
+    const symbol = externalSymbol || Symbol('Style Operator');
 
     return coerceToObservable(value).pipe(
       map(val => val || null),
@@ -38,45 +39,54 @@ export function style<T extends ElementType, K extends StyleKeys>(
   });
 }
 
-// export type Styles = {
-//   [K in StyleKeys]?: Style;
-// };
+export type Styles = {
+  [K in StyleKeys]?: Style;
+};
 
-// export type StaticStyles = {
-//   [K in StyleKeys]?: StyleType;
-// };
+export type StaticStyles = {
+  [K in StyleKeys]?: StyleType;
+};
 
-// // /**
-// //  * An observable operator to update the styles on an RxFM component.
-// //  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
-// //  */
-// export function styles<T extends ElementType, E extends EventType>(
-//   stylesDict: Styles | Observable<StaticStyles>,
-// ): ComponentOperator<T, E> {
-//   return (input: Component<T, E>) => {
-//     if (stylesDict instanceof Observable) {
+// /**
+//  * An observable operator to update the styles on an RxFM component.
+//  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
+//  */
+export function styles<T extends ElementType>(
+  stylesDict: Styles | Observable<StaticStyles>,
+): ComponentOperator<T> {
+  if (stylesDict instanceof Observable) {
+    return componentOperator(element => {
+      const symbol = Symbol('Styles Operator');
+      let previousStyles: StaticStyles = {};
 
-//       let previousStyles: StaticStyles = {};
-//       return input.pipe(
-//         switchMap(component => stylesDict.pipe(
-//           tap(dict => {
-//             Object.keys(dict).forEach(key => {
-//               if (dict[key] !== previousStyles[key]) {
-//                 component.element.style[key] = dict[key];
-//               }
-//             });
-//             previousStyles = dict;
-//           }),
-//           mapTo(component),
-//           startWith(component),
-//           distinctUntilChanged(),
-//         ))
-//       );
-//     } else {
+      return stylesDict.pipe(
+        startWith({} as StaticStyles),
+        tap(dict => {
+          const previousStylesNullValues = Object.keys(previousStyles).reduce((nullValues, key) => {
+            nullValues[key] = null;
+            return nullValues;
+          }, {} as Partial<Record<StyleKeys, null>>);
+          const newStyles = { ...previousStylesNullValues, ...dict };
 
-//       return Object.keys(stylesDict).reduce((component, key: StyleKeys) => component.pipe(
-//         style(key, stylesDict[key]),
-//       ), input);
-//     }
-//   }
-// }
+          previousStyles = dict;
+          elementMetadataService.setStyles(element, symbol, newStyles);
+
+          Object.keys(newStyles).forEach((key: StyleKeys) => {
+            const primaryValue = elementMetadataService.getStyle(element, key);
+            if (element.style[key] !== (primaryValue || '')) {
+              element.style[key] = (primaryValue || null) as string;
+            }
+          });
+        }),
+      );
+    });
+  } else {
+
+    return (input: Component<T>) => {
+      const symbol = Symbol('Styles Operator');
+      return Object.keys(stylesDict).reduce((component, key: StyleKeys) => component.pipe(
+        style(key, stylesDict[key], symbol),
+      ), input);
+    }
+  }
+}
