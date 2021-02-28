@@ -39,24 +39,12 @@ export function style<T extends ElementType, K extends StyleKeys>(
       map(val => val || null),
       startWith(null),
       distinctUntilChanged(),
-      tap(val => {
-        setAttributes<StyleKeys, string | null>(
-          setElementStyle,
-          elementMetadataService.getStylesMap(element),
-          symbol,
-          { [name]: val },
-        );
-
-        // elementMetadataService.setStyles(element, symbol, { [name]: val });
-        // const primaryValue = elementMetadataService.getStyle(element, name);
-        // if (element.style[name] !== primaryValue) {
-        //   element.style[name] = (primaryValue || null) as string;
-        // }
-
-        // if (primaryValue !== undefined && element.style[name] !== primaryValue) {
-        //   element.style[name] = primaryValue as string;
-        // }
-      }),
+      tap(val => setAttributes<StyleKeys, string | null>(
+        setElementStyle,
+        elementMetadataService.getStylesMap(element),
+        symbol,
+        { [name]: val },
+      )),
     );
   });
 }
@@ -65,6 +53,7 @@ export type Styles = {
   [K in StyleKeys]?: Style;
 };
 
+// TODO: Coerce styles to observable and use same operator for all cases?
 /**
  * An observable operator to update the styles on an RxFM component.
  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
@@ -90,24 +79,6 @@ export function styles<T extends ElementType>(
             previousStyleObject,
           );
           previousStyleObject = styleObject;
-
-          // const previousStylesNullValues = Object.keys(previousStyles).reduce((nullValues, key) => {
-          //   nullValues[key] = '';
-          //   return nullValues;
-          // }, {} as Partial<Record<StyleKeys, ''>>);
-          // const newStyles = { ...previousStylesNullValues, ...dict };
-
-          // previousStyles = dict;
-
-          // // TODO: Extract out the style setting into seperate function?
-          // elementMetadataService.setStyles(element, symbol, newStyles);
-
-          // Object.keys(newStyles).forEach((key: StyleKeys) => {
-          //   const primaryValue = elementMetadataService.getStyle(element, key);
-          //   if (element.style[key] !== (primaryValue || '')) {
-          //     element.style[key] = (primaryValue || null) as string;
-          //   }
-          // });
         }),
       );
     });

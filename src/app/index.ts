@@ -1,6 +1,19 @@
 // import { addToBody, div, link, addToHead } from 'rxfm';
 
-import { addToView, attribute, ChildComponent, children, classes, div, event, input, span, style, styles } from 'rxfm';
+import {
+  addToView,
+  attribute,
+  attributes,
+  ChildComponent,
+  children,
+  classes,
+  div,
+  event,
+  input,
+  span,
+  style,
+  styles,
+} from 'rxfm';
 import { BehaviorSubject, EMPTY, interval, Observable, of, timer } from 'rxjs';
 import { finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
 import './styles.css';
@@ -75,6 +88,10 @@ const attributesTest = div(
     // attribute('value', of('hello!')),
     attribute('best', interval(1000).pipe(map(i => i % 2 ? '' : null))),
     attribute('value', interval(1000).pipe(map(i => i % 2 ? 'world!' : null))),
+    attributes({
+      foo: 'bar',
+      style: { padding: '15px' },
+    }),
   ),
 );
 

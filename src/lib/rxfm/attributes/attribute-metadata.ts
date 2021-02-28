@@ -1,5 +1,7 @@
-export type AttributeMetadataDictionary<K extends string> = Partial<Record<K, string | null>>;
-export type AttributeMetadataObject<K extends string, T> = Partial<Record<K, T>>;
+import { PartialRecord } from "../utils";
+
+export type AttributeMetadataDictionary<K extends string> = PartialRecord<K, string | null>;
+export type AttributeMetadataObject<K extends string, T> = PartialRecord<K, T>;
 
 function addAttributesToMetadata<K extends string, T>(
   attributeObject: AttributeMetadataObject<K, T>,
@@ -50,7 +52,5 @@ export function setAttributes<K extends string, T>(
   Object.keys(attributeObjectWithDeletions).forEach((key: K) => {
     const value = getAttributeFromMetadata(key, attributesMetadata);
     setAttribute(key, value);
-    // if (getAttribute(key) !== value) {
-    // }
   });
 }
