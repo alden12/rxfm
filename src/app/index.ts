@@ -2,7 +2,7 @@
 
 import { addToView, attribute, ChildComponent, children, classes, div, event, input, span, style, styles } from 'rxfm';
 import { BehaviorSubject, EMPTY, interval, Observable, of, timer } from 'rxjs';
-import { distinctUntilChanged, finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
+import { finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
 import './styles.css';
 
 document.body.append('Hello World!');
@@ -71,6 +71,10 @@ const stylesTest = div('text with style').pipe(
 const attributesTest = div(
   input().pipe(
     attribute('best'),
+    attribute('value', 'hello!'),
+    // attribute('value', of('hello!')),
+    attribute('best', interval(1000).pipe(map(i => i % 2 ? '' : null))),
+    attribute('value', interval(1000).pipe(map(i => i % 2 ? 'world!' : null))),
   ),
 );
 
@@ -79,6 +83,16 @@ addToView(component2());
 addToView(component3);
 addToView(styleTest);
 addToView(classTest);
-addToView(stylesTest);
-addToView(childrenTest);
+// addToView(stylesTest);
+// addToView(childrenTest);
 addToView(div(1, 2, attributesTest));
+
+const example = () => {
+  const counter = new BehaviorSubject(0);
+
+  return div('counter: ', counter).pipe(
+    event('click', () => counter.next(counter.value + 1))
+  );
+};
+
+example().subscribe(el => document.body.appendChild(el))

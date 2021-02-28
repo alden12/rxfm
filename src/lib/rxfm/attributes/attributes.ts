@@ -9,7 +9,7 @@
 // import { EventType } from '../events';
 
 import { Observable } from "rxjs";
-import { distinctUntilChanged, tap } from "rxjs/operators";
+import { distinctUntilChanged, startWith, tap } from "rxjs/operators";
 import { componentOperator, ComponentOperator, ElementType } from "../components";
 import { elementMetadataService } from "../metadata-service";
 import { coerceToObservable, TypeOrObservable } from "../utils";
@@ -39,6 +39,19 @@ export type AttributeDictionary = AttributeMetadataDictionary<string>;
 
 export type AttributeObject = AttributeMetadataObject<string, AttributeType>;
 
+const setAttribute = (element: ElementType, key: string, val: string | null) => {
+  if (key === 'value' && element instanceof HTMLInputElement) {
+    const stringValue = val || '';
+    if (element.value !== stringValue) {
+      element.value = stringValue;
+    }
+  } else if (val !== null) {
+    element.setAttribute(key, val);
+  } else {
+    element.removeAttribute(key);
+  }
+};
+
 export function attribute<T extends ElementType>(
   type: string,
   value: TypeOrObservable<AttributeType> = '',
@@ -47,25 +60,14 @@ export function attribute<T extends ElementType>(
   return componentOperator(element => {
     const symbol = externalSymbol || Symbol('Attribute Operator');
 
-    const getAttribute = (key: string) => type === 'value' && element instanceof HTMLInputElement ?
-      element.value : element.getAttribute(key) || '';
-
-    const setAttribute = (key: string, val: string | null) => {
-      if (key === 'value' && element instanceof HTMLInputElement) {
-        element.value = val || '';
-      } else if (val !== null) {
-        element.setAttribute(key, val);
-      } else {
-        element.removeAttribute(key);
-      }
-    };
+    const setElementAttribute = (key: string, val: string | null) => setAttribute(element, key, val);
 
     return coerceToObservable(value).pipe(
+      startWith(null),
       distinctUntilChanged(),
       tap(val => {
         setAttributes<string, AttributeType>(
-          getAttribute,
-          (key: string, v: string) => setAttribute(key, val === null ? null : v),
+          setElementAttribute,
           elementMetadataService.getAttributesMap(element),
           symbol,
           { [type]: val },

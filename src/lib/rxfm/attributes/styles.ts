@@ -19,6 +19,12 @@ export type StyleDictionary = AttributeMetadataDictionary<StyleKeys>;
 
 export type StyleObject = AttributeMetadataObject<StyleKeys, StyleType>;
 
+const setStyle = (element: ElementType, key: StyleKeys, value: string | null) => {
+  if (element.style[key] || null !== value || null) {
+    element.style[key] = (value || null) as string
+  }
+};
+
 export function style<T extends ElementType, K extends StyleKeys>(
   name: K,
   value: Style,
@@ -27,14 +33,15 @@ export function style<T extends ElementType, K extends StyleKeys>(
   return componentOperator(element => {
     const symbol = externalSymbol || Symbol('Style Operator');
 
+    const setElementStyle = (key: StyleKeys, val: string | null) => setStyle(element, key, val);
+
     return coerceToObservable(value).pipe(
       map(val => val || null),
       startWith(null),
       distinctUntilChanged(),
       tap(val => {
         setAttributes<StyleKeys, string | null>(
-          (key: StyleKeys) => element.style[key],
-          (key: StyleKeys, styleVal: string) => element.style[key] = (styleVal || null) as string,
+          setElementStyle,
           elementMetadataService.getStylesMap(element),
           symbol,
           { [name]: val },
@@ -70,12 +77,13 @@ export function styles<T extends ElementType>(
       const symbol = Symbol('Styles Operator');
       let previousStyleObject: StyleObject = {};
 
+      const setElementStyle = (key: StyleKeys, val: string | null) => setStyle(element, key, val);
+
       return stylesDict.pipe(
         startWith({} as StyleObject),
         tap(styleObject => {
           setAttributes(
-            (key: StyleKeys) => element.style[key],
-            (key: StyleKeys, styleVal: string) => element.style[key] = (styleVal || null) as string,
+            setElementStyle,
             elementMetadataService.getStylesMap(element),
             symbol,
             styleObject,
