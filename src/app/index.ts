@@ -9,7 +9,9 @@ import {
   classes,
   div,
   event,
+  generate,
   input,
+  selectFrom,
   span,
   style,
   styles,
@@ -95,6 +97,25 @@ const attributesTest = div(
   ),
 );
 
+const generateTest = of([1, 2, 3, 4]).pipe(
+  generate(i => div('i: ', i)),
+);
+
+const generateDynamic = () => {
+  const items = new BehaviorSubject<{ name: string, enabled: boolean }[]>([{ name: '0', enabled: true }]);
+
+  return div(
+    items.pipe(
+      generate(
+        item => div(selectFrom(item, 'name')),
+        item => item.name,
+      ),
+    )
+  ).pipe(
+    event('click', () => items.next([...items.value, { name: Date.now().toString(), enabled: true }]))
+  );
+}
+
 addToView(component);
 addToView(component2());
 addToView(component3);
@@ -103,6 +124,8 @@ addToView(classTest);
 // addToView(stylesTest);
 // addToView(childrenTest);
 addToView(div(1, 2, attributesTest));
+addToView(div(generateTest));
+addToView(generateDynamic());
 
 const example = () => {
   const counter = new BehaviorSubject(0);
