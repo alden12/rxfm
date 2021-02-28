@@ -8,47 +8,109 @@
 // import { classes, ClassType } from './classes';
 // import { EventType } from '../events';
 
-// export type TypeOrObservable<T> = T | Observable<T>;
+import { Observable } from "rxjs";
+import { distinctUntilChanged, tap } from "rxjs/operators";
+import { componentOperator, ComponentOperator, ElementType } from "../components";
+import { elementMetadataService } from "../metadata-service";
+import { coerceToObservable, TypeOrObservable } from "../utils";
+import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-metadata";
+import { ClassType } from "./classes";
+import { HTMLAttributes } from "./html";
+import { StyleObject, Styles } from "./styles";
+import { SVGAttributes } from "./svg";
 
-// export interface SpecialAttributes {
-//   class?: ClassType | ClassType[];
-//   style?: Styles | Observable<StaticStyles>
-// }
+export interface SpecialAttributes {
+  class?: ClassType | ClassType[];
+  style?: Styles | Observable<StyleObject>
+}
 
-// // /**
-// //  * Allowed types for attribute values used in the 'attributes' operator.
-// //  */
-// export type AttributeType = string | boolean | number;
+// type AttributeKeys = (keyof HTMLAttributes) | (keyof SVGAttributes);
 
-// // /**
-// //  * A dictionary of attributes or observable attributes to be used in the 'attributes' operator.
-// //  */
-// export type IAttributes = {
-//   [K in keyof (HTMLAttributes & SVGAttributes)]?: TypeOrObservable<AttributeType>;
-// } & SpecialAttributes;
+export interface ElementAttributes extends HTMLAttributes, SVGAttributes {}
 
-// export function attribute<T extends ElementType, E extends EventType = never>(
-//   type: string,
-//   value: TypeOrObservable<AttributeType>,
-// ): ComponentOperator<T, E> {
-//   return (component: Component<T, E>) => component.pipe(
-//     switchMap(comp => coerceToObservable(value).pipe(
-//       distinctUntilChanged(),
-//       tap(val => {
-//         if (type === 'value' && comp.element instanceof HTMLInputElement) {
-//           comp.element.value = val.toString();
-//         } else if (val || typeof val === 'number') {
-//           comp.element.setAttribute(type, val.toString());
-//         } else {
-//           comp.element.removeAttribute(type);
-//         }
-//       }),
-//       mapTo(comp),
-//       startWith(comp),
-//       distinctUntilChanged(),
-//     )),
-//   );
-// }
+/**
+ * Allowed types for attribute values used in the 'attributes' operator.
+ */
+export type AttributeType = string | boolean | number | null;
+
+export type Attribute = AttributeType | Observable<AttributeType>;
+
+export type AttributeDictionary = AttributeMetadataDictionary<string>;
+
+export type AttributeObject = AttributeMetadataObject<string, AttributeType>;
+
+export function attribute<T extends ElementType>(
+  type: string,
+  value: TypeOrObservable<AttributeType> = '',
+  externalSymbol?: symbol,
+): ComponentOperator<T> {
+  return componentOperator(element => {
+    const symbol = externalSymbol || Symbol('Attribute Operator');
+
+    const getAttribute = (key: string) => type === 'value' && element instanceof HTMLInputElement ?
+      element.value : element.getAttribute(key) || '';
+
+    const setAttribute = (key: string, val: string | null) => {
+      if (key === 'value' && element instanceof HTMLInputElement) {
+        element.value = val || '';
+      } else if (val !== null) {
+        element.setAttribute(key, val);
+      } else {
+        element.removeAttribute(key);
+      }
+    };
+
+    return coerceToObservable(value).pipe(
+      distinctUntilChanged(),
+      tap(val => {
+        setAttributes<string, AttributeType>(
+          getAttribute,
+          (key: string, v: string) => setAttribute(key, val === null ? null : v),
+          elementMetadataService.getAttributesMap(element),
+          symbol,
+          { [type]: val },
+        );
+
+        // if (type === 'value' && element instanceof HTMLInputElement) {
+        //   if (val !== null) {
+        //     element.value = val.toString();
+        //   } else {
+        //     element.value = '';
+        //   }
+        // } else if (val !== null) {
+        //   element.setAttribute(type, val.toString());
+        // } else {
+        //   element.removeAttribute(type);
+        // }
+      }),
+    );
+  });
+
+  // return (component: Component<T, E>) => component.pipe(
+  //   switchMap(comp => coerceToObservable(value).pipe(
+  //     distinctUntilChanged(),
+  //     tap(val => {
+  //       if (type === 'value' && comp.element instanceof HTMLInputElement) {
+  //         comp.element.value = val.toString();
+  //       } else if (val || typeof val === 'number') {
+  //         comp.element.setAttribute(type, val.toString());
+  //       } else {
+  //         comp.element.removeAttribute(type);
+  //       }
+  //     }),
+  //     mapTo(comp),
+  //     startWith(comp),
+  //     distinctUntilChanged(),
+  //   )),
+  // );
+}
+
+// /**
+//  * A dictionary of attributes or observable attributes to be used in the 'attributes' operator.
+//  */
+export type Attributes = {
+  [K in keyof ElementAttributes]?: TypeOrObservable<AttributeType>;
+} & SpecialAttributes & Partial<Record<string, TypeOrObservable<AttributeType>>>;
 
 // // /**
 // //  * An observable operator to update the attributes on an RxFM component.

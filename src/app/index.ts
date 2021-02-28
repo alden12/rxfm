@@ -1,6 +1,6 @@
 // import { addToBody, div, link, addToHead } from 'rxfm';
 
-import { addToView, ChildComponent, children, classes, Component, div, ElementType, event, span, style, styles } from 'rxfm';
+import { addToView, attribute, ChildComponent, children, classes, div, event, input, span, style, styles } from 'rxfm';
 import { BehaviorSubject, EMPTY, interval, Observable, of, timer } from 'rxjs';
 import { distinctUntilChanged, finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
 import './styles.css';
@@ -34,8 +34,12 @@ const component2 = (...children: ChildComponent[]) => span(
 );
 
 const component3 = component2('some more stuff').pipe(
-  style('color', 'red'),
+  style('fontWeight', 'bold'),
   style('color', 'green'),
+);
+
+const styleTest = div('This should be bold').pipe(
+  style('fontWeight', 'bold'),
 );
 
 const childrenTest = div().pipe(
@@ -64,10 +68,17 @@ const stylesTest = div('text with style').pipe(
   }),
 );
 
+const attributesTest = div(
+  input().pipe(
+    attribute('best'),
+  ),
+);
+
 addToView(component);
 addToView(component2());
 addToView(component3);
+addToView(styleTest);
 addToView(classTest);
 addToView(stylesTest);
 addToView(childrenTest);
-addToView(div(1, 2));
+addToView(div(1, 2, attributesTest));

@@ -1,6 +1,5 @@
-// export * from './attributes';
+export * from './attributes';
 export * from './classes';
 export * from './styles';
-// export * from './html';
-// export * from './svg';
-// export * from './merge-attributes';
+export * from './html';
+export * from './svg';

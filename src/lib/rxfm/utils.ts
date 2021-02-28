@@ -7,6 +7,8 @@ export type NullLike = null | undefined | false;
 
 export type StringLike = string | number;
 
+export type TypeOrObservable<T> = T | Observable<T>;
+
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.

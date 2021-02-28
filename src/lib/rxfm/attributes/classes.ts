@@ -19,10 +19,24 @@ function classTypesToSetObservable(classTypes: ClassType[]): Observable<Set<stri
     map(coerceToArray),
   ) : of([classType]));
 
+  // TODO: Split on space in case multiple classes in one string?
   return combineLatest(classStringsObservables).pipe(
     debounceTime(0),
     map(stringArrayArray => new Set(flatten(stringArrayArray).filter(className => Boolean(className)) as string[])),
   )
+}
+
+function canRemoveClass(
+  symbol: symbol,
+  className: string,
+  classesMap: Map<symbol, Set<string>>,
+): boolean {
+  return !Array.from(classesMap.entries()).some(([blockSymbol, classSet]) => {
+    if (blockSymbol !== symbol) {
+      return classSet.has(className);
+    }
+    return false;
+  });
 }
 
 /**
@@ -39,7 +53,7 @@ export function classes<T extends ElementType>(
     return classTypesToSetObservable(classNames).pipe(
       startWith(new Set<string>()),
       tap(newClassSet => {
-        const currentClassSet = elementMetadataService.getClassSet(element, symbol);
+        const currentClassSet = elementMetadataService.getClassesMap(element).get(symbol);
 
         const added = currentClassSet ?
           Array.from(newClassSet).filter(className => !currentClassSet.has(className)) :
@@ -47,11 +61,11 @@ export function classes<T extends ElementType>(
         element.classList.add(...added);
 
         const removed = currentClassSet ? Array.from(currentClassSet).filter(className => {
-          return !newClassSet.has(className) && elementMetadataService.canRemoveClass(element, symbol, className);
+          return !newClassSet.has(className) && canRemoveClass(symbol, className, elementMetadataService.getClassesMap(element));
         }) : [];
         element.classList.remove(...removed);
 
-        elementMetadataService.setClassSet(element, symbol, newClassSet);
+        elementMetadataService.getClassesMap(element).set(symbol, newClassSet);
       }),
     );
   });

@@ -1,4 +1,4 @@
-import { StyleKeys, StyleObject, StyleType } from "./attributes";
+import { AttributeObject, StyleDictionary } from "./attributes";
 import { ElementType } from "./components";
 
 class ChildrenMetadata {
@@ -7,7 +7,8 @@ class ChildrenMetadata {
 }
 
 class ElementMetadata {
-  public styles = new Map<symbol, StyleObject>();
+  public styles = new Map<symbol, StyleDictionary>();
+  public attributes = new Map<symbol, AttributeObject>();
   public classes = new Map<symbol, Set<string>>();
   public children = new ChildrenMetadata();
 }
@@ -15,36 +16,16 @@ class ElementMetadata {
 class ElementMetadataService {
   protected elementMetadataMap = new WeakMap<ElementType, ElementMetadata>();
 
-  public setStyles(element: ElementType, symbol: symbol, style: StyleObject) {
-    const styles = this.getMetadata(element).styles;
-    const currentStyles = styles.get(symbol);
-    styles.set(symbol, { ...currentStyles, ...style });
+  public getStylesMap(element: ElementType): Map<symbol, StyleDictionary> {
+    return this.getMetadata(element).styles;
   }
 
-  public getStyle(element: ElementType, name: StyleKeys): StyleType {
-    if (this.elementMetadataMap.has(element)) {
-      const styles = this.getMetadata(element).styles;
-      const style = Array.from(styles.values()).find(st => Boolean(st[name]));
-      return style ? style[name] : undefined;
-    }
-    return undefined;
+  public getAttributesMap(element: ElementType): Map<symbol, StyleDictionary> {
+    return this.getMetadata(element).attributes;
   }
 
-  public getClassSet(element: ElementType, symbol: symbol): Set<string> | undefined {
-    return this.getMetadata(element).classes.get(symbol);
-  }
-
-  public setClassSet(element: ElementType, symbol: symbol, classSet: Set<string>) {
-    this.getMetadata(element).classes.set(symbol, classSet);
-  }
-
-  public canRemoveClass(element: ElementType, symbol: symbol, className: string): boolean {
-    return !Array.from(this.getMetadata(element).classes.entries()).some(([blockSymbol, classSet]) => {
-      if (blockSymbol !== symbol) {
-        return classSet.has(className);
-      }
-      return false;
-    });
+  public getClassesMap(element: ElementType): Map<symbol, Set<string>> {
+    return this.getMetadata(element).classes;
   }
 
   public getChildrenMetadata(element: ElementType): ChildrenMetadata {
