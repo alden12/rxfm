@@ -74,14 +74,14 @@ function combineComponents<I, T extends ElementType>(
       switchMap(({ newComponents, removedIds, ids }) => {
         removedIds.forEach(id => componentMap.delete(id));
         return from([
-          ...newComponents.map(([id, item$]) => item$.pipe(
-            tap(component => componentMap.set(id, component)),
+          ...newComponents.map(([id, component]) => component.pipe(
+            tap(element => componentMap.set(id, element)),
           )),
           of(ids),
         ]);
       }),
       mergeAll(),
-      filter(componentOrIds => Array.isArray(componentOrIds)),
+      filter(elementOrIds => Array.isArray(elementOrIds)),
       map((ids: I[]) => ids.map(id => componentMap.get(id)!)),
     );
   }
