@@ -1,0 +1,44 @@
+.expansion {
+  border-top: 1px solid grey;
+}
+
+.expansion:first-child {
+  border-top: none;
+}
+
+.expansion .title {
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  background-color: #8e99f3aa;;
+  font-family: monospace;
+}
+
+.expansion .arrow {
+  margin-right: 10px;
+  transition: transform 50ms ease-in-out;
+}
+
+.expansion.expanded .arrow {
+  transform: rotate(90deg);
+}
+
+/* .expansion .content {
+  height: 0;
+  overflow: hidden;
+} */
+
+.expansion.expanded .content {
+  /* height: unset; */
+  overflow: auto;
+  padding: 10px;
+  border-top: 1px solid grey;
+}
+
+.expansion-container {
+  border: 1px solid grey;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
+}

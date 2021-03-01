@@ -1,0 +1,13 @@
+.card {
+  width: 300px;
+  border-radius: 10px;
+  background-color: #434343cc;
+  padding: 15px 10px;
+  color: white;
+  box-shadow: 3px 3px 5px 0px #00000080;
+}
+
+.card h3 {
+  margin: 0;
+  margin-bottom: 15px;
+}
