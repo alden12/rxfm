@@ -1,9 +1,8 @@
 import { Observable, of, combineLatest } from 'rxjs';
-import { map, debounceTime } from 'rxjs/operators';
-import { ComponentOperator, ElementType, Component } from '../components';
-import { attribute } from './attributes';
-import { EventType } from '../events';
-import { NullLike, coerceToArray } from '../utils';
+import { map, debounceTime, startWith, tap } from 'rxjs/operators';
+import { ComponentOperator, ElementType, componentOperator } from '../components';
+import { elementMetadataService } from '../metadata-service';
+import { NullLike, coerceToArray, flatten } from '../utils';
 
 export type ClassSingle = string | NullLike;
 
@@ -15,20 +14,29 @@ export type ClassType = ClassSingle | Observable<ClassSingle | ClassSingle[]>;
 /**
  * Coerce an array of ClassType types to be an observable emitting a string of CSS class names.
  */
-function classTypesToStringObservable(classTypes: ClassType[]): Observable<string> {
-
-  const classStrings = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
+function classTypesToSetObservable(classTypes: ClassType[]): Observable<Set<string>> {
+  const classStringsObservables = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
     map(coerceToArray),
   ) : of([classType]));
 
-  return combineLatest(classStrings).pipe(
-    map(stringArrayArray => {
-      const classSet = new Set<string>();
-      stringArrayArray.forEach(stringArray => stringArray.forEach(str => str && classSet.add(str)));
-      return Array.from(classSet.values()).join(' ');
-    }),
+  // TODO: Split on space in case multiple classes in one string?
+  return combineLatest(classStringsObservables).pipe(
     debounceTime(0),
+    map(stringArrayArray => new Set(flatten(stringArrayArray).filter(className => Boolean(className)) as string[])),
   )
+}
+
+function canRemoveClass(
+  symbol: symbol,
+  className: string,
+  classesMap: Map<symbol, Set<string>>,
+): boolean {
+  return !Array.from(classesMap.entries()).some(([blockSymbol, classSet]) => {
+    if (blockSymbol !== symbol) {
+      return classSet.has(className);
+    }
+    return false;
+  });
 }
 
 /**
@@ -36,10 +44,29 @@ function classTypesToStringObservable(classTypes: ClassType[]): Observable<strin
  * @param classNames A spread array of class names. These may either be of type string, string observable or string
  * array observable. If the class name value is falsy (false, undefined, null , 0) The class will be removed.
  */
-export function classes<T extends ElementType, E extends EventType>(
+export function classes<T extends ElementType>(
   ...classNames: ClassType[]
-): ComponentOperator<T, E> {
-  return (input: Component<T, E>) => input.pipe(
-    attribute('class', classTypesToStringObservable(classNames)),
-  );
+): ComponentOperator<T> {
+  return componentOperator(element => {
+    const symbol = Symbol('Classes Operator');
+
+    return classTypesToSetObservable(classNames).pipe(
+      startWith(new Set<string>()),
+      tap(newClassSet => {
+        const currentClassSet = elementMetadataService.getClassesMap(element).get(symbol);
+
+        const added = currentClassSet ?
+          Array.from(newClassSet).filter(className => !currentClassSet.has(className)) :
+          Array.from(newClassSet);
+        element.classList.add(...added);
+
+        const removed = currentClassSet ? Array.from(currentClassSet).filter(className => {
+          return !newClassSet.has(className) && canRemoveClass(symbol, className, elementMetadataService.getClassesMap(element));
+        }) : [];
+        element.classList.remove(...removed);
+
+        elementMetadataService.getClassesMap(element).set(symbol, newClassSet);
+      }),
+    );
+  });
 }

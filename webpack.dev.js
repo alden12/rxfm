@@ -32,7 +32,7 @@ module.exports = [
           test: /\.css$/i,
           use: ['style-loader', 'css-loader'],
           exclude: '/node_modules/'
-        },
+        }
       ]
     },
     plugins: [new HtmlWebpackPlugin()]

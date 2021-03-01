@@ -33,3 +33,11 @@ p {
   margin: 1em 0;
   font-size: 1em;
 }
+
+.first-class {
+  font-weight: bold;
+}
+
+.second-class {
+  color: red;
+}

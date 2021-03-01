@@ -1,5 +1,5 @@
-import { ElementType, Component } from './component';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { distinctUntilChanged } from "rxjs/operators";
+import { Component, ElementType } from "./component";
 
 /**
  * A function to remove a component from the view.
@@ -13,13 +13,13 @@ export type RemoveComponent = () => void;
  * @returns A function to remove the component from the view.
  */
 export function addToView(
-  component: Component<ElementType, any>,
-  host: ElementType,
+  component: Component,
+  host: ElementType = document.body,
 ): RemoveComponent {
-  let oldNode: Node; // The node already in the view, if it exists.
+  let oldNode: ElementType; // The node already in the view, if it exists.
   const subscription = component.pipe(
     distinctUntilChanged(),
-  ).subscribe(({ element }) => {
+  ).subscribe(element => {
     if (oldNode) { // Add node to host or replace existing node.
       host.replaceChild(element, oldNode);
     } else {
@@ -32,26 +32,4 @@ export function addToView(
     subscription.unsubscribe();
     host.removeChild(oldNode);
   }
-}
-
-/**
- * Add an RxFM Component to the document body.
- * @param component The component observable to add.
- * @returns A function to remove the component from the view.
- */
-export function addToBody(
-  component: Component<ElementType, any>,
-): RemoveComponent {
-  return addToView(component, document.body);
-}
-
-/**
- * Add an RxFM Component to the document head.
- * @param component The component observable to add.
- * @returns A function to remove the component from the view.
- */
-export function addToHead(
-  component: Component<ElementType, any>,
-): RemoveComponent {
-  return addToView(component, document.head);
 }

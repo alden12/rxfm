@@ -1,8 +1,9 @@
-import { Observable } from 'rxjs';
-import { ElementType, ComponentOperator, Component } from '../components';
-import { switchMap, tap, mapTo, distinctUntilChanged, startWith } from 'rxjs/operators';
-import { coerceToObservable, NullLike } from '../utils';
-import { EventType } from '../events';
+import { Observable } from "rxjs";
+import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
+import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
+import { elementMetadataService } from "../metadata-service";
+import { coerceToObservable, NullLike } from "../utils";
+import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-metadata";
 
 // TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
 export type StyleKeys = Exclude<
@@ -14,59 +15,82 @@ export type StyleType = string | NullLike;
 
 export type Style = StyleType | Observable<StyleType>
 
-export function style<T extends ElementType, E extends EventType, K extends StyleKeys>(
+export type StyleDictionary = AttributeMetadataDictionary<StyleKeys>;
+
+export type StyleObject = AttributeMetadataObject<StyleKeys, StyleType>;
+
+const setStyle = (element: ElementType, key: StyleKeys, value: string | null) => {
+  if (element.style[key] || null !== value || null) {
+    element.style[key] = (value || null) as string
+  }
+};
+
+export function style<T extends ElementType, K extends StyleKeys>(
   name: K,
   value: Style,
-): ComponentOperator<T, E> {
-  return (input: Component<T, E>) => input.pipe(
-    switchMap(component => coerceToObservable(value).pipe(
+  externalSymbol?: symbol,
+): ComponentOperator<T> {
+  return componentOperator(element => {
+    const symbol = externalSymbol || Symbol('Style Operator');
+
+    const setElementStyle = (key: StyleKeys, val: string | null) => setStyle(element, key, val);
+
+    return coerceToObservable(value).pipe(
+      map(val => val || null),
+      startWith(null),
       distinctUntilChanged(),
-      tap(val => val ? component.element.style[name] = val : component.element.style[name] = null as any),
-      mapTo(component),
-    )),
-    distinctUntilChanged(),
-  );
+      tap(val => setAttributes<StyleKeys, string | null>(
+        setElementStyle,
+        elementMetadataService.getStylesMap(element),
+        symbol,
+        { [name]: val },
+      )),
+    );
+  });
 }
 
 export type Styles = {
   [K in StyleKeys]?: Style;
 };
 
-export type StaticStyles = {
-  [K in StyleKeys]?: StyleType;
-};
+// TODO: Coerce styles to observable and use same operator for all cases?
+/**
+ * An observable operator to update the styles on an RxFM component.
+ * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
+ */
+export function styles<T extends ElementType>(
+  stylesDict: Styles | Observable<StyleObject>,
+): ComponentOperator<T> {
+  if (stylesDict instanceof Observable) {
+    return componentOperator(element => {
+      const symbol = Symbol('Styles Operator');
+      let previousStyleObject: StyleObject = {};
 
-// /**
-//  * An observable operator to update the styles on an RxFM component.
-//  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
-//  */
-export function styles<T extends ElementType, E extends EventType>(
-  stylesDict: Styles | Observable<StaticStyles>,
-): ComponentOperator<T, E> {
-  return (input: Component<T, E>) => {
-    if (stylesDict instanceof Observable) {
+      const setElementStyle = (key: StyleKeys, val: string | null) => setStyle(element, key, val);
 
-      let previousStyles: StaticStyles = {};
-      return input.pipe(
-        switchMap(component => stylesDict.pipe(
-          tap(dict => {
-            Object.keys(dict).forEach(key => {
-              if (dict[key] !== previousStyles[key]) {
-                component.element.style[key] = dict[key];
-              }
-            });
-            previousStyles = dict;
-          }),
-          mapTo(component),
-          startWith(component),
-          distinctUntilChanged(),
-        ))
+      return stylesDict.pipe(
+        startWith({} as StyleObject),
+        tap(styleObject => {
+          setAttributes(
+            setElementStyle,
+            elementMetadataService.getStylesMap(element),
+            symbol,
+            styleObject,
+            previousStyleObject,
+          );
+          previousStyleObject = styleObject;
+        }),
       );
-    } else {
+    });
+  } else {
 
-      return Object.keys(stylesDict).reduce((component, key: StyleKeys) => component.pipe(
-        style(key, stylesDict[key]),
-      ), input);
+    return (input: Component<T>) => {
+      const symbol = Symbol('Styles Operator');
+      return Object.keys(stylesDict).reduce((component, key: StyleKeys) => {
+        return component.pipe(
+          style(key, stylesDict[key], symbol),
+        );
+      }, input);
     }
   }
 }
