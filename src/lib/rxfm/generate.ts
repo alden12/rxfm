@@ -69,20 +69,20 @@ function combineComponents<I, T extends ElementType>(
 ): OperatorFunction<ComponentDiff<I, T>, ElementType[]> {
   return (componentObservableChanges: Observable<ComponentDiff<I, T>>) => {
 
-    const componentMap = new Map<I, ElementType>();
+    const elementMap = new Map<I, ElementType>();
     return componentObservableChanges.pipe(
       switchMap(({ newComponents, removedIds, ids }) => {
-        removedIds.forEach(id => componentMap.delete(id));
+        removedIds.forEach(id => elementMap.delete(id));
         return from([
           ...newComponents.map(([id, component]) => component.pipe(
-            tap(element => componentMap.set(id, element)),
+            tap(element => elementMap.set(id, element)),
           )),
           of(ids),
         ]);
       }),
       mergeAll(),
       filter(elementOrIds => Array.isArray(elementOrIds)),
-      map((ids: I[]) => ids.map(id => componentMap.get(id)!)),
+      map((ids: I[]) => ids.map(id => elementMap.get(id)!)),
     );
   }
 }
