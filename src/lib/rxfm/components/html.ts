@@ -1,9 +1,3 @@
-// import { ComponentCreatorFunction, ComponentFunction, IComponentArgs, component } from './creator';
-// import { ChildComponent, children } from '../children/children';
-// import { RxFMElement } from './component';
-// import { of } from 'rxjs';
-// import { attributes } from '../attributes';
-
 import { of } from "rxjs";
 import { map } from "rxjs/operators";
 import { children } from "../children/children";

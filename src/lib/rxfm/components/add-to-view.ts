@@ -1,6 +1,3 @@
-// import { ElementType, Component } from './component';
-// import { distinctUntilChanged } from 'rxjs/operators';
-
 import { distinctUntilChanged } from "rxjs/operators";
 import { Component, ElementType } from "./component";
 
@@ -36,25 +33,3 @@ export function addToView(
     host.removeChild(oldNode);
   }
 }
-
-// /**
-//  * Add an RxFM Component to the document body.
-//  * @param component The component observable to add.
-//  * @returns A function to remove the component from the view.
-//  */
-// export function addToBody(
-//   component: Component<ElementType, any>,
-// ): RemoveComponent {
-//   return addToView(component, document.body);
-// }
-
-// /**
-//  * Add an RxFM Component to the document head.
-//  * @param component The component observable to add.
-//  * @returns A function to remove the component from the view.
-//  */
-// export function addToHead(
-//   component: Component<ElementType, any>,
-// ): RemoveComponent {
-//   return addToView(component, document.head);
-// }

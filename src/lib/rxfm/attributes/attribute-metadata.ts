@@ -26,7 +26,6 @@ function getAttributeFromMetadata<K extends string>(
 }
 
 export function setAttributes<K extends string, T>(
-  // getAttribute: (name: K) => string | null,
   setAttribute: (name: K, value: string | null) => void,
   attributesMetadata: Map<symbol, AttributeMetadataDictionary<K>>,
   symbol: symbol,

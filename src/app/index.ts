@@ -1,5 +1,3 @@
-// import { addToBody, div, link, addToHead } from 'rxfm';
-
 import {
   addToView,
   attribute,
@@ -16,11 +14,9 @@ import {
   style,
   styles,
 } from 'rxfm';
-import { BehaviorSubject, EMPTY, interval, Observable, of, timer } from 'rxjs';
-import { finalize, map, mapTo, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, interval, of } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs/operators';
 import './styles.css';
-
-document.body.append('Hello World!');
 
 const element = document.createElement('div');
 element.append('First component!');
@@ -30,7 +26,6 @@ const clickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
   return div('clicks: ', clicks).pipe(
-    // style('fontWeight', 'bold'),
     event('click', () => clicks.next(clicks.value + 1)),
     finalize(() => console.log('component removed')),
   );
@@ -39,9 +34,6 @@ const clickCounter = () => {
 const component2 = (...children: ChildComponent[]) => span(
   'test',
   'more tests',
-  // interval(1000).pipe(
-  //   switchMap(i => i % 2 ? clickCounter() : of(null))
-  // ),
   clickCounter(),
   ...children,
 ).pipe(
@@ -63,7 +55,6 @@ const childrenTest = div().pipe(
   children(div(2)),
   children(div(3)),
   children(interval(1600).pipe(switchMap(i => i % 2 ? of(4) : of(null)))),
-  // children(timer(1600).pipe(switchMap(i => div(4)))),
 );
 
 const classTest = div('text to be styled').pipe(
@@ -87,7 +78,6 @@ const attributesTest = div(
   input().pipe(
     attribute('best'),
     attribute('value', 'hello!'),
-    // attribute('value', of('hello!')),
     attribute('best', interval(1000).pipe(map(i => i % 2 ? '' : null))),
     attribute('value', interval(1000).pipe(map(i => i % 2 ? 'world!' : null))),
     attributes({
@@ -121,8 +111,8 @@ addToView(component2());
 addToView(component3);
 addToView(styleTest);
 addToView(classTest);
-// addToView(stylesTest);
-// addToView(childrenTest);
+addToView(stylesTest);
+addToView(childrenTest);
 addToView(div(1, 2, attributesTest));
 addToView(div(generateTest));
 addToView(generateDynamic());

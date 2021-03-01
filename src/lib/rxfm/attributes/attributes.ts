@@ -73,8 +73,6 @@ export type Attributes =
   SpecialAttributes |
   PartialRecord<string, TypeOrObservable<AttributeType>>;
 
-// TODO: Coerce attributes to observable and use same operator for all cases?
-
 // // /**
 // //  * An observable operator to update the attributes on an RxFM component.
 // //  * @param attributesOrObservableAttrs A dictionary (or observable emitting a dictionary) of attribute names to
