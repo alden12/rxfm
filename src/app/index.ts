@@ -5,6 +5,7 @@ import {
   ChildComponent,
   children,
   classes,
+  DestroySubject,
   div,
   event,
   generate,
@@ -15,7 +16,7 @@ import {
   styles,
 } from 'rxfm';
 import { BehaviorSubject, interval, of } from 'rxjs';
-import { finalize, map, switchMap } from 'rxjs/operators';
+import { finalize, map, switchMap, takeUntil } from 'rxjs/operators';
 import './styles.css';
 
 const element = document.createElement('div');
@@ -25,9 +26,17 @@ const component = of(element);
 const clickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
+  // const { takeUntilDestroy, destroyOnFinalize } = useDestroy();
+  const destroy = new DestroySubject();
+
+  // const clickCount = clicks.pipe(takeUntilDestroy());
+  const clickCount = clicks.pipe(takeUntil(destroy));
+
   return div('clicks: ', clicks).pipe(
     event('click', () => clicks.next(clicks.value + 1)),
     finalize(() => console.log('component removed')),
+    // destroyOnFinalize(),
+    finalize(destroy.emitAndComplete),
   );
 };
 

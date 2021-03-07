@@ -1,16 +1,6 @@
 import { Observable, OperatorFunction, of } from 'rxjs';
 import { map, distinctUntilChanged, pluck, switchMap, withLatestFrom, tap } from 'rxjs/operators';
 
-export interface Dictionary<T> { [key: string]: T }
-
-export type NullLike = null | undefined | false;
-
-export type StringLike = string | number;
-
-export type TypeOrObservable<T> = T | Observable<T>;
-
-export type PartialRecord<K extends string | number | symbol, T> = Partial<Record<K, T>>;
-
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.

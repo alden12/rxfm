@@ -3,7 +3,7 @@ export class ChildrenMetadata {
   public center = 0;
 }
 
-export function registerChilrenBlockMetadata(
+export function registerChildrenBlockMetadata(
   currentMetadata: ChildrenMetadata,
   blockSymbol: symbol,
   end: boolean,
@@ -28,7 +28,7 @@ export function addChildrenToMetadata(
   childrenLength = 1,
 ): { newMetadata: ChildrenMetadata, insertBeforeIndex: number } {
   // Add block if it's not yet present.
-  let newMetadata = registerChilrenBlockMetadata(currentMetadata, blockSymbol, end);
+  let newMetadata = registerChildrenBlockMetadata(currentMetadata, blockSymbol, end);
 
   // Clone metadata.
   newMetadata = newMetadata === currentMetadata ? { blocks: [...newMetadata.blocks], center: newMetadata.center } : newMetadata;
