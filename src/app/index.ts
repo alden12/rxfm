@@ -10,6 +10,7 @@ import {
   event,
   generate,
   input,
+  lastChildren,
   selectFrom,
   span,
   style,
@@ -59,11 +60,11 @@ const styleTest = div('This should be bold').pipe(
 );
 
 const childrenTest = div().pipe(
-  children(interval(1000).pipe(switchMap(i => i % 2 ? div(0, ' bar') : of(null)))),
-  children(div(1)),
-  children(div(2)),
-  children(div(3)),
+  lastChildren(interval(1000).pipe(switchMap(i => i % 2 ? div(0, ' bar') : of(null)))),
+  lastChildren(div(1)),
   children(interval(1600).pipe(switchMap(i => i % 2 ? of(4) : of(null)))),
+  lastChildren(div(2)),
+  lastChildren(div(3)),
 );
 
 const classTest = div('text to be styled').pipe(

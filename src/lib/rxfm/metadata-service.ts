@@ -1,16 +1,12 @@
 import { AttributeObject, StyleDictionary } from "./attributes";
+import { ChildrenBlockMetadata } from "./children/children-metadata";
 import { ElementType } from "./components";
-
-class ChildrenMetadata {
-  public blocks: { symbol: symbol, length: number }[] = [];
-  public center = 0;
-}
 
 class ElementMetadata {
   public styles = new Map<symbol, StyleDictionary>();
   public attributes = new Map<symbol, AttributeObject>();
   public classes = new Map<symbol, Set<string>>();
-  public children = new ChildrenMetadata();
+  public children: ChildrenBlockMetadata[] = [];
 }
 
 class ElementMetadataService {
@@ -28,11 +24,11 @@ class ElementMetadataService {
     return this.getMetadata(element).classes;
   }
 
-  public getChildrenMetadata(element: ElementType): ChildrenMetadata {
+  public getChildrenMetadata(element: ElementType): ChildrenBlockMetadata[] {
     return this.getMetadata(element).children;
   }
 
-  public setChildrenMetadata(element: ElementType, metadata: ChildrenMetadata) {
+  public setChildrenMetadata(element: ElementType, metadata: ChildrenBlockMetadata[]) {
     this.getMetadata(element).children = metadata;
   }
 
