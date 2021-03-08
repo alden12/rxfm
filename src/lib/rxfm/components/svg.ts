@@ -3,7 +3,10 @@ import { map } from "rxjs/operators";
 import { children } from "../children/children";
 import { Component, ComponentFunction } from "./component";
 
-export type SVGElementTypes = {
+/**
+ * A dictionary of SVG element tag names.
+ */
+type SVGElementTypes = {
   [K in keyof SVGElementTagNameMap]: K;
 };
 
@@ -69,6 +72,9 @@ const SVGElements: SVGElementTypes = {
 
 const SVGNamespace = 'http://www.w3.org/2000/svg';
 
+/**
+ * Get a component creator function for an SVG element with the given tagName.
+ */
 function getSVGComponentFunction<K extends keyof SVGElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<SVGElementTagNameMap[K]> {
@@ -78,10 +84,16 @@ function getSVGComponentFunction<K extends keyof SVGElementTagNameMap>(
   );
 }
 
+/**
+ * A type mapping SVG element tag names to RxFM component creator functions.
+ */
 export type SVGComponentCreators = {
   [K in keyof SVGElementTagNameMap]: ComponentFunction<SVGElementTagNameMap[K]>;
 };
 
+/**
+ * A object mapping SVG element tag names to RxFM component creator functions.
+ */
 export const SVG: SVGComponentCreators = Object.keys(SVGElements).reduce(
   (components: SVGComponentCreators, tagName: keyof SVGElementTagNameMap) => {
     components[tagName] = getSVGComponentFunction(tagName) as () => Component<any>;

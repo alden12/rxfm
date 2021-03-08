@@ -3,7 +3,10 @@ import { map } from "rxjs/operators";
 import { children } from "../children/children";
 import { Component, ComponentFunction } from "./component";
 
-export type HTMLElementTypes = {
+/**
+ * A dictionary of HTML element tag names.
+ */
+type HTMLElementTypes = {
   [K in keyof HTMLElementTagNameMap]: K;
 };
 
@@ -129,6 +132,9 @@ const HTMLElements: HTMLElementTypes = {
   wbr: 'wbr',
 };
 
+/**
+ * Get a component creator function for an HTML element with the given tagName.
+ */
 function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): ComponentFunction<HTMLElementTagNameMap[K]> {
@@ -138,10 +144,16 @@ function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   );
 }
 
+/**
+ * A type mapping HTML element tag names to RxFM component creator functions.
+ */
 export type HTMLComponentCreators = {
   [K in keyof HTMLElementTagNameMap]: ComponentFunction<HTMLElementTagNameMap[K]>;
 };
 
+/**
+ * A object mapping HTML element tag names to RxFM component creator functions.
+ */
 export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
   (components: HTMLComponentCreators, tagName: keyof HTMLElementTagNameMap) => {
     components[tagName] = getHTMLComponentFunction(tagName) as () => Component<any>;
