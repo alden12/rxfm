@@ -58,28 +58,29 @@ function updateElementChildren<T extends ElementType>(
 ): T {
   const { updated, removed } = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
-  const currentChildrenMetadata = elementMetadataService.getChildrenMetadata(element);
-  let newChildrenMetadata = registerChildrenBlockMetadata(currentChildrenMetadata, blockSymbol, end);
+  const currentChildrenMetadata = elementMetadataService.getChildrenMetadata(element); // Get current metadata.
+  let newChildrenMetadata = registerChildrenBlockMetadata(currentChildrenMetadata, blockSymbol, end); // Add block if not present.
 
   removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
-  newChildrenMetadata = removeChildrenFromMetadata(
+  newChildrenMetadata = removeChildrenFromMetadata( // Remove deleted nodes from metadata.
     newChildrenMetadata,
     blockSymbol,
     removed.length,
   );
 
   newChildrenMetadata = updated.reduce((metadata, update) => {
+    // Add child to metadata and find index to insert it before in the parent elements child nodes.
     const { newMetadata, insertBeforeIndex } = addChildrenToMetadata(metadata, blockSymbol, end);
-    const insertBefore = update.insertBefore || element.childNodes[insertBeforeIndex];
-    if (insertBefore) {
+    const insertBefore = update.insertBefore || element.childNodes[insertBeforeIndex]; // Find node to insert before.
+    if (insertBefore) { // If insert before node found, add before this.
       element.insertBefore(update.node, insertBefore);
-    } else {
+    } else { // Otherwise add to the end.
       element.appendChild(update.node);
     }
     return newMetadata;
   }, newChildrenMetadata);
 
-  elementMetadataService.setChildrenMetadata(element, newChildrenMetadata);
+  elementMetadataService.setChildrenMetadata(element, newChildrenMetadata); // Set updated metadata.
 
   return element;
 }
