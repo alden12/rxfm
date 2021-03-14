@@ -34,10 +34,12 @@ p {
   font-size: 1em;
 }
 
-.first-class {
-  font-weight: bold;
+.example-class {
+  color: green;
+  text-decoration: underline;
 }
 
-.second-class {
-  color: red;
+.another-class {
+  color: purple;
+  word-spacing: 2px;
 }
