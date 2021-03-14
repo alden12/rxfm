@@ -13,6 +13,8 @@ body {
   font-family: 'Roboto', sans-serif;
   font-size: 15px;
   height: 100%;
+  margin-top: 10px;
+  margin-left: 10px;
 }
 
 h1 {
@@ -32,6 +34,23 @@ p {
   display: block;
   margin: 1em 0;
   font-size: 1em;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.example {
+  width: 400px;
+  height: 200px;
+  border: 1px solid black;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  padding-top: 0;
 }
 
 .example-class {

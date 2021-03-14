@@ -1,5 +1,5 @@
-import { addToView, attribute, button, ChildComponent, div, event, h1, h3, b, styles, classes, input, attributes } from 'rxfm';
-import { BehaviorSubject, timer } from 'rxjs';
+import { attribute, button, ChildComponent, div, event, h1, h3, b, styles, classes, input, attributes, generate } from 'rxfm';
+import { BehaviorSubject, of, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
 import './styles.css';
 
@@ -59,26 +59,32 @@ const clickCounter = () => {
   );
 };
 
-const margin = '10px';
-
-const example = (title: string, ...children: ChildComponent[]) => div(
-  h3(title).pipe(styles({ margin: `0 0 ${margin} 0` })),
-  ...children,
-).pipe(
-  styles({
-    width: '400px',
-    height: '200px',
-    border: '1px solid black',
-    marginRight: margin,
-    marginBottom: margin,
-    display: 'flex',
-    flexDirection: 'column',
-    padding: margin,
-    paddingTop: '0',
-  }),
+const generateExample = of([
+  { name: 'Item 1', done: true, },
+  { name: 'Item 2', done: false, },
+  { name: 'Item 3', done: true, },
+]).pipe(
+  generate(
+    item => div(
+      item.pipe(
+        map(({ name }) => name)
+      ),
+      item.pipe(
+        map(({ done }) => done ? ' is done!' : ' is not done yet.'),
+      )
+    ),
+    item => item.name,
+  ),
 );
 
-const examples = () => div(
+const example = (title: string, ...children: ChildComponent[]) => div(
+  h3(title).pipe(styles({ margin: '0 0 10px 0' })),
+  ...children,
+).pipe(
+  classes('example'),
+);
+
+const examples = div(
   example('Hello World', helloWorld),
   example('Children', childrenExample),
   example('Styles', stylesExample),
@@ -88,22 +94,16 @@ const examples = () => div(
   example('Attributes', attributesExample),
   example('Dynamic Attributes', dynamicAttributes),
   example('State', clickCounter()),
+  example('Generate', generateExample),
 ).pipe(
-  styles({
-    display: 'flex',
-    flexWrap: 'wrap',
-  }),
+  classes('examples'),
 );
 
 const app = div(
   h1('RxFM Examples'),
-  examples(),
+  examples,
 ).pipe(
   attribute('id', 'app'),
-  styles({
-    marginTop: margin,
-    marginLeft: margin,
-  }),
 );
 
-addToView(app);
+app.subscribe(element => document.body.appendChild(element));
