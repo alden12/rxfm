@@ -1,6 +1,22 @@
-import { attribute, button, ChildComponent, div, event, h1, h3, b, styles, classes, input, attributes, generate } from 'rxfm';
+import {
+  attribute,
+  button,
+  ChildComponent,
+  div,
+  event,
+  h1,
+  h3,
+  b,
+  styles,
+  classes,
+  input,
+  attributes,
+  mapToComponents,
+  selectFrom,
+} from 'rxfm';
 import { BehaviorSubject, of, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { todoList } from './todo-example';
 import './styles.css';
 
 const helloWorld = div('Hello World');
@@ -59,26 +75,24 @@ const clickCounter = () => {
   );
 };
 
-const generateExample = of([
+const mapToComponentsExample = of([
   { name: 'Item 1', done: true, },
   { name: 'Item 2', done: false, },
   { name: 'Item 3', done: true, },
 ]).pipe(
-  generate(
+  mapToComponents(
     item => div(
-      item.pipe(
-        map(({ name }) => name)
-      ),
+      selectFrom(item, 'name'),
       item.pipe(
         map(({ done }) => done ? ' is done!' : ' is not done yet.'),
-      )
+      ),
     ),
     item => item.name,
   ),
 );
 
 const example = (title: string, ...children: ChildComponent[]) => div(
-  h3(title).pipe(styles({ margin: '0 0 10px 0' })),
+  h3(title).pipe(styles({ margin: '10px 0' })),
   ...children,
 ).pipe(
   classes('example'),
@@ -92,9 +106,10 @@ const examples = div(
   example('CSS Classes', classExample),
   example('Dynamic CSS Classes', dynamicClasses),
   example('Attributes', attributesExample),
-  example('Dynamic Attributes', dynamicAttributes),
+  // example('Dynamic Attributes', dynamicAttributes),
   example('State', clickCounter()),
-  example('Generate', generateExample),
+  example('Component Arrays', mapToComponentsExample),
+  example('Todo List Example', todoList()),
 ).pipe(
   classes('examples'),
 );

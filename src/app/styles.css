@@ -51,6 +51,7 @@ p {
   flex-direction: column;
   padding: 10px;
   padding-top: 0;
+  overflow: auto;
 }
 
 .example-class {
@@ -61,4 +62,12 @@ p {
 .another-class {
   color: purple;
   word-spacing: 2px;
+}
+
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 5px 0;
+  border-bottom: 1px solid black;
 }

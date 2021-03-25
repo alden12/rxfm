@@ -115,14 +115,14 @@ function simpleComponentDiffer<I, T extends ElementType>(
 //  * @param idFunction A function taking a T object and returning a unique id for this object. This is required to prevent
 //  * regeneration of components when the array is updated.
 //  */
-export function generate<I, T extends ElementType>(
+export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: I) => Component<T>,
 ): OperatorFunction<I[], ElementType[]>
-export function generate<I, T extends ElementType>(
+export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: Observable<I>) => Component<T>,
   idFunction: (item: I) => Id,
 ): OperatorFunction<I[], ElementType[]>
-export function generate<I, T extends ElementType>(
+export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: I | Observable<I>) => Component<T>,
   idFunction?: (item: I) => Id,
 ): OperatorFunction<I[], ElementType[]> {
