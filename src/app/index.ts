@@ -6,13 +6,13 @@ import {
   event,
   h1,
   h3,
-  b,
   styles,
   classes,
   input,
   attributes,
   mapToComponents,
   selectFrom,
+  b,
 } from 'rxfm';
 import { BehaviorSubject, of, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -122,3 +122,19 @@ const app = div(
 );
 
 app.subscribe(element => document.body.appendChild(element));
+
+// const test = of({ a: 1, enabled: true });
+
+// const { a } = destructure(test);
+
+// a.subscribe(val => console.log('we extracted:', val));
+
+// const toggler = using(test, t => () => !t.enabled)
+
+// toggler.subscribe(f => console.log('toggled:', f()));
+
+// const time = reuse(timer(0, 1000));
+
+// time.subscribe(t => console.log('the time was:', t));
+
+// setTimeout(() => time.subscribe(t => console.log('the time is:', t)), 2500);

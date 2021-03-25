@@ -1,6 +1,6 @@
-import { attributes, classes, div, event, mapToComponents, input, selectFrom } from "rxfm";
+import { attributes, classes, div, event, mapToComponents, input, using, destructure } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs"
-import { map, tap } from "rxjs/operators";
+import { tap } from "rxjs/operators";
 
 interface TodoItem {
   name: string;
@@ -9,21 +9,15 @@ interface TodoItem {
 
 const todoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) => {
 
-  const toggle = item.pipe(
-    map(({ name }) => () => onToggle(name)),
-  );
+  const { name, done } = destructure(item);
+
+  const toggle = using(name, name => () => onToggle(name));
 
   const checkbox = input().pipe(
-    attributes({
-      type: 'checkbox',
-      checked: selectFrom(item, 'done').pipe(tap(console.log)),
-    }),
+    attributes({ type: 'checkbox', checked: done.pipe(tap(console.log)) }),
   );
 
-  return div(
-    selectFrom(item, 'name'),
-    checkbox,
-  ).pipe(
+  return div(name, checkbox).pipe(
     event('click', toggle),
     classes('todo-item'),
   );
