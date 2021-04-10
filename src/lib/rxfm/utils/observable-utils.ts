@@ -28,6 +28,6 @@ export function conditional<T, S, F = undefined>(source: Observable<T>, successV
 export function reuse<T>(source: Observable<T>): Observable<T> {
   return source.pipe(
     distinctUntilChanged(),
-    shareReplay({ bufferSize: 1, refCount: true })
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 }

@@ -25,10 +25,6 @@ export type AttributeDictionary = AttributeMetadataDictionary<string>;
 export type AttributeObject = AttributeMetadataObject<string, AttributeType>;
 
 const setAttribute = (element: ElementType, key: string, val: string | null) => {
-  // TODO: Bug with checked, it is inverted.
-  if (key === 'checked') {
-    console.log('checked', val);
-  }
   if (key === 'value' && element instanceof HTMLInputElement) {
     const stringValue = val || '';
     if (element.value !== stringValue) {

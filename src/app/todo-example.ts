@@ -1,23 +1,20 @@
 import { attributes, classes, div, event, mapToComponents, input, using, destructure } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs"
-import { tap } from "rxjs/operators";
 
 interface TodoItem {
   name: string;
   done: boolean;
 }
 
+const checkbox = (checked: Observable<boolean>) => input().pipe(
+  attributes({ type: 'checkbox', checked }),
+);
+
 const todoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) => {
-
   const { name, done } = destructure(item);
-
   const toggle = using(name, name => () => onToggle(name));
 
-  const checkbox = input().pipe(
-    attributes({ type: 'checkbox', checked: done.pipe(tap(console.log)) }),
-  );
-
-  return div(name, checkbox).pipe(
+  return div(name, checkbox(done)).pipe(
     event('click', toggle),
     classes('todo-item'),
   );
