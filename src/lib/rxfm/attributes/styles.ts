@@ -13,6 +13,7 @@ export type StyleKeys = Exclude<
 
 export type StyleType = string | NullLike;
 
+// TODO: Remove in favour of TypeOrObservable? Then can export HTML style component.
 export type Style = StyleType | Observable<StyleType>
 
 export type StyleDictionary = AttributeMetadataDictionary<StyleKeys>;

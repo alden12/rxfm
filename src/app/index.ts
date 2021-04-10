@@ -1,138 +1,124 @@
 import {
-  addToView,
   attribute,
-  attributes,
+  button,
   ChildComponent,
-  children,
-  classes,
-  DestroySubject,
   div,
   event,
-  generate,
-  input,
-  lastChildren,
-  selectFrom,
-  span,
-  style,
+  h1,
+  h3,
   styles,
+  classes,
+  input,
+  attributes,
+  mapToComponents,
+  selectFrom,
+  b,
 } from 'rxfm';
-import { BehaviorSubject, interval, of } from 'rxjs';
-import { finalize, map, switchMap, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, of, timer } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { todoList } from './todo-example';
 import './styles.css';
 
-const element = document.createElement('div');
-element.append('First component!');
-const component = of(element);
+const helloWorld = div('Hello World');
+
+const childrenExample = div(
+  'Children can be strings, ',
+  b('child components, '),
+  'or observables: ',
+  timer(0, 1000),
+  's elapsed.',
+);
+
+const stylesExample = div('We can add styles').pipe(
+  styles({
+    color: 'blue',
+    fontStyle: 'italic',
+  })
+);
+
+const dynamicStyles = div('Styles can be dynamic').pipe(
+  styles({
+    color: timer(0, 1000).pipe(map(i => i % 2 ? 'red' : 'blue')),
+  }),
+);
+
+const classExample = div('We can add css classes').pipe(
+  classes('example-class'),
+);
+
+const dynamicClasses = div('Classes can be dynamic').pipe(
+  classes(
+    'example-class',
+    timer(0, 1000).pipe(map(i => i % 2 ? 'another-class' : null)),
+  ),
+);
+
+const attributesExample = input().pipe(
+  attributes({
+    type: 'text',
+    placeholder: 'We can set element attributes'
+  }),
+);
+
+const dynamicAttributes = input().pipe(
+  attributes({
+    type: 'checkbox',
+    checked: timer(0, 1000).pipe(map(i => i % 2 === 0))
+  })
+);
 
 const clickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
-  // const { takeUntilDestroy, destroyOnFinalize } = useDestroy();
-  const destroy = new DestroySubject();
-
-  // const clickCount = clicks.pipe(takeUntilDestroy());
-  const clickCount = clicks.pipe(takeUntil(destroy));
-
-  return div('clicks: ', clicks).pipe(
+  return button('clicks: ', clicks).pipe(
     event('click', () => clicks.next(clicks.value + 1)),
-    finalize(() => console.log('component removed')),
-    // destroyOnFinalize(),
-    finalize(destroy.emitAndComplete),
   );
 };
 
-const component2 = (...children: ChildComponent[]) => span(
-  'test',
-  'more tests',
-  clickCounter(),
-  ...children,
-).pipe(
-  style('color', interval(1000).pipe(map(i => i % 2 ? 'blue' : null))),
-);
-
-const component3 = component2('some more stuff').pipe(
-  style('fontWeight', 'bold'),
-  style('color', 'green'),
-);
-
-const styleTest = div('This should be bold').pipe(
-  style('fontWeight', 'bold'),
-);
-
-const childrenTest = div().pipe(
-  lastChildren(interval(1000).pipe(switchMap(i => i % 2 ? div(0, ' bar') : of(null)))),
-  lastChildren(div(1)),
-  children(interval(1600).pipe(switchMap(i => i % 2 ? of(4) : of(null)))),
-  lastChildren(div(2)),
-  lastChildren(div(3)),
-);
-
-const classTest = div('text to be styled').pipe(
-  classes('first-class', of('second-class')),
-  classes(interval(1000).pipe(map(i => i % 2 ? 'second-class' : null)))
-);
-
-const stylesTest = div('text with style').pipe(
-  styles({
-    fontWeight: 'bold',
-    padding: '5px',
-    color: 'orange',
-  }),
-  styles(interval(1000).pipe(map(i => i % 2 ? { color: 'green' } : {}))),
-  styles({
-    padding: interval(1500).pipe(map(i => i % 2 ? '10px' : null)),
-  }),
-);
-
-const attributesTest = div(
-  input().pipe(
-    attribute('best'),
-    attribute('value', 'hello!'),
-    attribute('best', interval(1000).pipe(map(i => i % 2 ? '' : null))),
-    attribute('value', interval(1000).pipe(map(i => i % 2 ? 'world!' : null))),
-    attributes({
-      foo: 'bar',
-      style: { padding: '15px' },
-    }),
+const mapToComponentsExample = of([
+  { name: 'Item 1', done: true, },
+  { name: 'Item 2', done: false, },
+  { name: 'Item 3', done: true, },
+]).pipe(
+  mapToComponents(
+    item => div(
+      selectFrom(item, 'name'),
+      item.pipe(
+        map(({ done }) => done ? ' is done!' : ' is not done yet.'),
+      ),
+    ),
+    item => item.name,
   ),
 );
 
-const generateTest = of([1, 2, 3, 4]).pipe(
-  generate(i => div('i: ', i)),
+const example = (title: string, ...children: ChildComponent[]) => div(
+  h3(title).pipe(styles({ margin: '10px 0' })),
+  ...children,
+).pipe(
+  classes('example'),
 );
 
-const generateDynamic = () => {
-  const items = new BehaviorSubject<{ name: string, enabled: boolean }[]>([{ name: '0', enabled: true }]);
+const examples = div(
+  example('Hello World', helloWorld),
+  example('Children', childrenExample),
+  example('Styles', stylesExample),
+  example('Dynamic Styles', dynamicStyles),
+  example('CSS Classes', classExample),
+  example('Dynamic CSS Classes', dynamicClasses),
+  example('Attributes', attributesExample),
+  example('Dynamic Attributes', dynamicAttributes),
+  example('State', clickCounter()),
+  example('Component Arrays', mapToComponentsExample),
+  example('Todo List Example', todoList()),
+).pipe(
+  classes('examples'),
+);
 
-  return div(
-    items.pipe(
-      generate(
-        item => div(selectFrom(item, 'name')),
-        item => item.name,
-      ),
-    )
-  ).pipe(
-    event('click', () => items.next([...items.value, { name: Date.now().toString(), enabled: true }]))
-  );
-}
+const app = div(
+  h1('RxFM Examples'),
+  examples,
+).pipe(
+  attribute('id', 'app'),
+);
 
-addToView(component);
-addToView(component2());
-addToView(component3);
-addToView(styleTest);
-addToView(classTest);
-addToView(stylesTest);
-addToView(childrenTest);
-addToView(div(1, 2, attributesTest));
-addToView(div(generateTest));
-addToView(generateDynamic());
-
-const example = () => {
-  const counter = new BehaviorSubject(0);
-
-  return div('counter: ', counter).pipe(
-    event('click', () => counter.next(counter.value + 1))
-  );
-};
-
-example().subscribe(el => document.body.appendChild(el))
+app.subscribe(element => document.body.appendChild(element));

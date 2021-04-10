@@ -13,6 +13,8 @@ body {
   font-family: 'Roboto', sans-serif;
   font-size: 15px;
   height: 100%;
+  margin-top: 10px;
+  margin-left: 10px;
 }
 
 h1 {
@@ -34,10 +36,38 @@ p {
   font-size: 1em;
 }
 
-.first-class {
-  font-weight: bold;
+.examples {
+  display: flex;
+  flex-wrap: wrap;
 }
 
-.second-class {
-  color: red;
+.example {
+  width: 400px;
+  height: 200px;
+  border: 1px solid black;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  padding-top: 0;
+  overflow: auto;
+}
+
+.example-class {
+  color: green;
+  text-decoration: underline;
+}
+
+.another-class {
+  color: purple;
+  word-spacing: 2px;
+}
+
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 5px 0;
+  border-bottom: 1px solid black;
 }

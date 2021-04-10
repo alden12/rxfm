@@ -1,6 +1,6 @@
 {
   "name": "rxfm",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "author": "Alden Laslett",
   "description": "A beautifully minimal framework to natively code the internet in observable streams.",
   "license": "MIT",

@@ -175,6 +175,7 @@ export const hr = HTML.hr;
 export const img = HTML.img;
 export const p = HTML.p;
 export const a = HTML.a;
+export const b = HTML.b;
 export const ul = HTML.ul;
 export const ol = HTML.ol;
 export const li = HTML.li;
@@ -186,3 +187,4 @@ export const td = HTML.td;
 export const tr = HTML.tr;
 export const textarea = HTML.textarea;
 // TODO: Add more default elements.
+// TODO: Make all default elements capitalized to prevent conflicts?
