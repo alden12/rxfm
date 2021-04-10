@@ -9,7 +9,7 @@ function addAttributesToMetadata<K extends string, T>(
 ): AttributeMetadataDictionary<K> {
   const newAttributeDictionary = Object.keys(attributeObject).reduce((newAttributeDict, key) => {
     const attributeValue: T = attributeObject[key];
-    newAttributeDict[key] = attributeValue === null ? null : attributeValue || '';
+    newAttributeDict[key] = typeof attributeValue === 'boolean' ? attributeValue ? '' : null : attributeValue;
     return newAttributeDict;
   }, {}) as AttributeMetadataDictionary<K>;
 
@@ -22,7 +22,7 @@ function getAttributeFromMetadata<K extends string>(
 ): string | null {
   const firstMatchingAttributeDict = Array.from(attributesMetadata.values()).find(attributeDict => typeof attributeDict[name] === 'string');
   const firstMatch: string | null | undefined = firstMatchingAttributeDict ? firstMatchingAttributeDict[name] : null;
-  return firstMatch === '' ? '' : firstMatch || null;
+  return firstMatch ?? null;
 }
 
 export function setAttributes<K extends string, T>(
