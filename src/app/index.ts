@@ -106,7 +106,7 @@ const examples = div(
   example('CSS Classes', classExample),
   example('Dynamic CSS Classes', dynamicClasses),
   example('Attributes', attributesExample),
-  // example('Dynamic Attributes', dynamicAttributes),
+  example('Dynamic Attributes', dynamicAttributes),
   example('State', clickCounter()),
   example('Component Arrays', mapToComponentsExample),
   example('Todo List Example', todoList()),
