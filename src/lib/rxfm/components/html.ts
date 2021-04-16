@@ -1,133 +1,7 @@
 import { of } from "rxjs";
 import { map } from "rxjs/operators";
 import { children } from "../children/children";
-import { Component, ComponentFunction } from "./component";
-
-export type HTMLElementTypes = {
-  [K in keyof HTMLElementTagNameMap]: K;
-};
-
-const HTMLElements: HTMLElementTypes = {
-  a: 'a',
-  abbr: 'abbr',
-  address: 'address',
-  applet: 'applet',
-  area: 'area',
-  article: 'article',
-  aside: 'aside',
-  audio: 'audio',
-  b: 'b',
-  base: 'base',
-  basefont: 'basefont',
-  bdi: 'bdi',
-  bdo: 'bdo',
-  blockquote: 'blockquote',
-  body: 'body',
-  br: 'br',
-  button: 'button',
-  canvas: 'canvas',
-  caption: 'caption',
-  cite: 'cite',
-  code: 'code',
-  col: 'col',
-  colgroup: 'colgroup',
-  data: 'data',
-  datalist: 'datalist',
-  dd: 'dd',
-  del: 'del',
-  details: 'details',
-  dfn: 'dfn',
-  dialog: 'dialog',
-  dir: 'dir',
-  div: 'div',
-  dl: 'dl',
-  dt: 'dt',
-  em: 'em',
-  embed: 'embed',
-  fieldset: 'fieldset',
-  figcaption: 'figcaption',
-  figure: 'figure',
-  font: 'font',
-  footer: 'footer',
-  form: 'form',
-  frame: 'frame',
-  frameset: 'frameset',
-  h1: 'h1',
-  h2: 'h2',
-  h3: 'h3',
-  h4: 'h4',
-  h5: 'h5',
-  h6: 'h6',
-  head: 'head',
-  header: 'header',
-  hgroup: 'hgroup',
-  hr: 'hr',
-  html: 'html',
-  i: 'i',
-  iframe: 'iframe',
-  img: 'img',
-  input: 'input',
-  ins: 'ins',
-  kbd: 'kbd',
-  label: 'label',
-  legend: 'legend',
-  li: 'li',
-  link: 'link',
-  main: 'main',
-  map: 'map',
-  mark: 'mark',
-  marquee: 'marquee',
-  menu: 'menu',
-  meta: 'meta',
-  meter: 'meter',
-  nav: 'nav',
-  noscript: 'noscript',
-  object: 'object',
-  ol: 'ol',
-  optgroup: 'optgroup',
-  option: 'option',
-  output: 'output',
-  p: 'p',
-  param: 'param',
-  picture: 'picture',
-  pre: 'pre',
-  progress: 'progress',
-  q: 'q',
-  rp: 'rp',
-  rt: 'rt',
-  ruby: 'ruby',
-  s: 's',
-  samp: 'samp',
-  script: 'script',
-  section: 'section',
-  select: 'select',
-  slot: 'slot',
-  small: 'small',
-  source: 'source',
-  span: 'span',
-  strong: 'strong',
-  style: 'style',
-  sub: 'sub',
-  summary: 'summary',
-  sup: 'sup',
-  table: 'table',
-  tbody: 'tbody',
-  td: 'td',
-  template: 'template',
-  textarea: 'textarea',
-  tfoot: 'tfoot',
-  th: 'th',
-  thead: 'thead',
-  time: 'time',
-  title: 'title',
-  tr: 'tr',
-  track: 'track',
-  u: 'u',
-  ul: 'ul',
-  var: 'var',
-  video: 'video',
-  wbr: 'wbr',
-};
+import { ComponentFunction } from "./component";
 
 function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
@@ -138,41 +12,122 @@ function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
   );
 }
 
-export type HTMLComponentCreators = {
-  [K in keyof HTMLElementTagNameMap]: ComponentFunction<HTMLElementTagNameMap[K]>;
-};
-
-export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
-  (components: HTMLComponentCreators, tagName: keyof HTMLElementTagNameMap) => {
-    components[tagName] = getHTMLComponentFunction(tagName) as () => Component<any>;
-    return components;
-  }, {} as HTMLComponentCreators
-);
-
-export const div = HTML.div;
-export const span = HTML.span;
-export const input = HTML.input;
-export const button = HTML.button;
-export const h1 = HTML.h1;
-export const h2 = HTML.h2;
-export const h3 = HTML.h3;
-export const h4 = HTML.h4;
-export const h5 = HTML.h5;
-export const h6 = HTML.h6;
-export const hr = HTML.hr;
-export const img = HTML.img;
-export const p = HTML.p;
-export const a = HTML.a;
-export const b = HTML.b;
-export const ul = HTML.ul;
-export const ol = HTML.ol;
-export const li = HTML.li;
-export const i = HTML.i;
-export const iframe = HTML.iframe;
-export const link = HTML.link;
-export const table = HTML.table;
-export const td = HTML.td;
-export const tr = HTML.tr;
-export const textarea = HTML.textarea;
-// TODO: Add more default elements.
-// TODO: Make all default elements capitalized to prevent conflicts?
+export const A = getHTMLComponentFunction('a');
+export const Abbr = getHTMLComponentFunction('abbr');
+export const Address = getHTMLComponentFunction('address');
+export const Applet = getHTMLComponentFunction('applet');
+export const Area = getHTMLComponentFunction('area');
+export const Article = getHTMLComponentFunction('article');
+export const Aside = getHTMLComponentFunction('aside');
+export const Audio = getHTMLComponentFunction('audio');
+export const B = getHTMLComponentFunction('b');
+export const Base = getHTMLComponentFunction('base');
+export const Basefont = getHTMLComponentFunction('basefont');
+export const Bdi = getHTMLComponentFunction('bdi');
+export const Bdo = getHTMLComponentFunction('bdo');
+export const Blockquote = getHTMLComponentFunction('blockquote');
+export const Body = getHTMLComponentFunction('body');
+export const Br = getHTMLComponentFunction('br');
+export const Button = getHTMLComponentFunction('button');
+export const Canvas = getHTMLComponentFunction('canvas');
+export const Caption = getHTMLComponentFunction('caption');
+export const Cite = getHTMLComponentFunction('cite');
+export const Code = getHTMLComponentFunction('code');
+export const Col = getHTMLComponentFunction('col');
+export const Colgroup = getHTMLComponentFunction('colgroup');
+export const Data = getHTMLComponentFunction('data');
+export const Datalist = getHTMLComponentFunction('datalist');
+export const Dd = getHTMLComponentFunction('dd');
+export const Del = getHTMLComponentFunction('del');
+export const Details = getHTMLComponentFunction('details');
+export const Dfn = getHTMLComponentFunction('dfn');
+export const Dialog = getHTMLComponentFunction('dialog');
+export const Dir = getHTMLComponentFunction('dir');
+export const Div = getHTMLComponentFunction('div');
+export const Dl = getHTMLComponentFunction('dl');
+export const Dt = getHTMLComponentFunction('dt');
+export const Em = getHTMLComponentFunction('em');
+export const Embed = getHTMLComponentFunction('embed');
+export const Fieldset = getHTMLComponentFunction('fieldset');
+export const Figcaption = getHTMLComponentFunction('figcaption');
+export const Figure = getHTMLComponentFunction('figure');
+export const Font = getHTMLComponentFunction('font');
+export const Footer = getHTMLComponentFunction('footer');
+export const Form = getHTMLComponentFunction('form');
+export const Frame = getHTMLComponentFunction('frame');
+export const Frameset = getHTMLComponentFunction('frameset');
+export const H1 = getHTMLComponentFunction('h1');
+export const H2 = getHTMLComponentFunction('h2');
+export const H3 = getHTMLComponentFunction('h3');
+export const H4 = getHTMLComponentFunction('h4');
+export const H5 = getHTMLComponentFunction('h5');
+export const H6 = getHTMLComponentFunction('h6');
+export const Head = getHTMLComponentFunction('head');
+export const Header = getHTMLComponentFunction('header');
+export const Hgroup = getHTMLComponentFunction('hgroup');
+export const Hr = getHTMLComponentFunction('hr');
+export const Html = getHTMLComponentFunction('html');
+export const I = getHTMLComponentFunction('i');
+export const Iframe = getHTMLComponentFunction('iframe');
+export const Img = getHTMLComponentFunction('img');
+export const Input = getHTMLComponentFunction('input');
+export const Ins = getHTMLComponentFunction('ins');
+export const Kbd = getHTMLComponentFunction('kbd');
+export const Label = getHTMLComponentFunction('label');
+export const Legend = getHTMLComponentFunction('legend');
+export const Li = getHTMLComponentFunction('li');
+export const Link = getHTMLComponentFunction('link');
+export const Main = getHTMLComponentFunction('main');
+export const Map = getHTMLComponentFunction('map');
+export const Mark = getHTMLComponentFunction('mark');
+export const Marquee = getHTMLComponentFunction('marquee');
+export const Menu = getHTMLComponentFunction('menu');
+export const Meta = getHTMLComponentFunction('meta');
+export const Meter = getHTMLComponentFunction('meter');
+export const Nav = getHTMLComponentFunction('nav');
+export const Noscript = getHTMLComponentFunction('noscript');
+export const HtmlObject = getHTMLComponentFunction('object');
+export const Ol = getHTMLComponentFunction('ol');
+export const Optgroup = getHTMLComponentFunction('optgroup');
+export const Option = getHTMLComponentFunction('option');
+export const Output = getHTMLComponentFunction('output');
+export const P = getHTMLComponentFunction('p');
+export const Param = getHTMLComponentFunction('param');
+export const Picture = getHTMLComponentFunction('picture');
+export const Pre = getHTMLComponentFunction('pre');
+export const Progress = getHTMLComponentFunction('progress');
+export const Q = getHTMLComponentFunction('q');
+export const Rp = getHTMLComponentFunction('rp');
+export const Rt = getHTMLComponentFunction('rt');
+export const Ruby = getHTMLComponentFunction('ruby');
+export const S = getHTMLComponentFunction('s');
+export const Samp = getHTMLComponentFunction('samp');
+export const Script = getHTMLComponentFunction('script');
+export const Section = getHTMLComponentFunction('section');
+export const Select = getHTMLComponentFunction('select');
+export const Slot = getHTMLComponentFunction('slot');
+export const Small = getHTMLComponentFunction('small');
+export const Source = getHTMLComponentFunction('source');
+export const Span = getHTMLComponentFunction('span');
+export const Strong = getHTMLComponentFunction('strong');
+export const Style = getHTMLComponentFunction('style');
+export const Sub = getHTMLComponentFunction('sub');
+export const Summary = getHTMLComponentFunction('summary');
+export const Sup = getHTMLComponentFunction('sup');
+export const Table = getHTMLComponentFunction('table');
+export const Tbody = getHTMLComponentFunction('tbody');
+export const Td = getHTMLComponentFunction('td');
+export const Template = getHTMLComponentFunction('template');
+export const Textarea = getHTMLComponentFunction('textarea');
+export const Tfoot = getHTMLComponentFunction('tfoot');
+export const Th = getHTMLComponentFunction('th');
+export const Thead = getHTMLComponentFunction('thead');
+export const Time = getHTMLComponentFunction('time');
+export const Title = getHTMLComponentFunction('title');
+export const Tr = getHTMLComponentFunction('tr');
+export const Track = getHTMLComponentFunction('track');
+export const U = getHTMLComponentFunction('u');
+export const Ul = getHTMLComponentFunction('ul');
+export const Var = getHTMLComponentFunction('var');
+export const Video = getHTMLComponentFunction('video');
+export const Wbr = getHTMLComponentFunction('wbr');
