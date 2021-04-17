@@ -6,14 +6,13 @@ RxJS lets us express data as a stream rather than as single values. This framewo
 
 Find [RxFM on npm](https://www.npmjs.com/package/rxfm). Works best with [TypeScript](https://www.typescriptlang.org/).
 
-### Installation:
-(other package managers are available)
+## Installation:
 ```sh
 npm install rxfm
 ```
-If you have `rxjs` installed, make sure it is the same version as RxFM is using (`npm install rxjs@6.5.2`).
+If you have `rxjs` installed, make sure it is the same version as RxFM is using `npm install rxjs@6.5.2`
 
-### Hello World:
+## Hello World:
 Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `Elements`. Component names are written in PascalCase with the first letter capitalized.
 ```typescript
 // Basic component creators can be imported from 'rxfm'
@@ -26,7 +25,7 @@ const HelloWorld = Div('Hello, World!');
 HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
 
-### State & Events:
+## State & Events:
 State can be held in Behavior Subjects and used in a similar way to hooks in React. The `event` operator function lets us handle element events.
 ```typescript
 import { Button, event } from 'rxfm';
@@ -43,9 +42,11 @@ const ClickCounter = () => {
 };
 ```
 
-### Attributes & Styling:
+## Attributes & Styling:
 Element attributes and styling can be set using operator functions for each. Style, attributes and CSS class values may also be observables.
 ```typescript
+import { Div, styles, classes, attributes } from 'rxfm';
+
 const StylesExample = Div('We can add styles').pipe(
   styles({
     color: 'blue',
@@ -66,7 +67,7 @@ const AttributesExample = Input().pipe(
 ```
 
 ## Conditionally Displaying Components
-We can conditionally add a component using the `switchMap` operator function. (This should not be used for generating component arrays, see the next section.)
+We can conditionally add a component using the `switchMap` operator function. You may also be tempted to use switchMap to create an array of components, but `mapToComponents` should instead be used in this case (see the next section).
 ```typescript
 import { Div } from 'rxfm';
 import { timer } from 'rxjs';
@@ -84,9 +85,12 @@ const ConditionalComponentsExample = Div(
 );
 ```
 
-### Component Arrays
+## Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
 ```typescript
+import { Div, mapToComponents } from 'rxfm';
+import { BehaviorSubject, Observable } from 'rxjs';
+
 interface TodoItem {
   name: string;
   done: boolean;
