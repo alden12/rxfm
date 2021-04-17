@@ -2,7 +2,7 @@ import { Observable } from "rxjs";
 import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
 import { elementMetadataService } from "../metadata-service";
-import { coerceToObservable, NullLike } from "../utils";
+import { coerceToObservable, NullLike, TypeOrObservable } from "../utils";
 import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-metadata";
 
 // TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
@@ -12,9 +12,6 @@ export type StyleKeys = Exclude<
 >;
 
 export type StyleType = string | NullLike;
-
-// TODO: Remove in favour of TypeOrObservable? Then can export HTML style component.
-export type Style = StyleType | Observable<StyleType>
 
 export type StyleDictionary = AttributeMetadataDictionary<StyleKeys>;
 
@@ -28,7 +25,7 @@ const setStyle = (element: ElementType, key: StyleKeys, value: string | null) =>
 
 export function style<T extends ElementType, K extends StyleKeys>(
   name: K,
-  value: Style,
+  value: TypeOrObservable<StyleType>,
   externalSymbol?: symbol,
 ): ComponentOperator<T> {
   return componentOperator(element => {
@@ -51,7 +48,7 @@ export function style<T extends ElementType, K extends StyleKeys>(
 }
 
 export type Styles = {
-  [K in StyleKeys]?: Style;
+  [K in StyleKeys]?: TypeOrObservable<StyleType>;
 };
 
 // TODO: Coerce styles to observable and use same operator for all cases?

@@ -18,8 +18,6 @@ export type AttributeKeys = keyof ElementAttributes;
  */
 export type AttributeType = string | boolean | number | null;
 
-export type Attribute = AttributeType | Observable<AttributeType>;
-
 export type AttributeDictionary = AttributeMetadataDictionary<string>;
 
 export type AttributeObject = AttributeMetadataObject<string, AttributeType>;

@@ -1,12 +1,21 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
-import { addChildrenToMetadata, removeChildrenFromMetadata, registerChilrenBlockMetadata } from './children-metadata';
+import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-metadata';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
 import { elementMetadataService } from '../metadata-service';
 
-export type ChildComponent = StringLike | NullLike | Observable<StringLike | NullLike | ElementType | ElementType[]>;
+export type ChildComponent =
+  | StringLike
+  | NullLike
+  | Observable<
+    | StringLike
+    | NullLike
+    | ElementType
+    | ElementType[]
+  >
+  | (() => Observable<ElementType>);
 
 export type ChildElement = ElementType | Text;
 
@@ -16,9 +25,9 @@ export type CoercedChildComponent = ChildElement[];
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
 function coerceChildComponent(childComponent: ChildComponent): Observable<CoercedChildComponent | null> {
-  if (childComponent instanceof Observable) { // If observable.
+  if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
     let node: Text; // Create outer reference to text node if it is needed.
-    return childComponent.pipe(
+    return (typeof childComponent === 'function' ? childComponent() : childComponent).pipe( // Create observable if applicable.
       startWith(null),
       distinctUntilChanged(),
       map(child => {
@@ -53,7 +62,7 @@ function updateElementChildren<T extends ElementType>(
   const { updated, removed } = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
   const currentChildrenMetadata = elementMetadataService.getChildrenMetadata(element);
-  let newChildrenMetadata = registerChilrenBlockMetadata(currentChildrenMetadata, blockSymbol, end);
+  let newChildrenMetadata = registerChildrenBlockMetadata(currentChildrenMetadata, blockSymbol, end);
 
   removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
   newChildrenMetadata = removeChildrenFromMetadata(
