@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
-import { distinctUntilChanged, map, shareReplay } from "rxjs/operators";
-import { selectFrom, watchFrom } from "./utils";
+import { distinctUntilChanged, map, shareReplay, switchMap } from "rxjs/operators";
+import { coerceToObservable, selectFrom, watchFrom } from "./utils";
 
 export type DestructuredObservable<T> = {
   [K in keyof T]: Observable<T[K]>;
@@ -17,10 +17,14 @@ export function using<T, U>(source: Observable<T>, action: (value: T) => U): Obs
   return watchFrom(source, action);
 }
 
-export function conditional<T, S, F = undefined>(source: Observable<T>, successValue: S, failValue?: F): Observable<S | F> {
+export function conditional<T, S, F = undefined>(
+  source: Observable<T>,
+  successValue: S | Observable<S>,
+  failValue?: F | Observable<F>,
+): Observable<S | F> {
   return source.pipe(
     distinctUntilChanged(),
-    map(value => Boolean(value) ? successValue as S : failValue as F),
+    switchMap(value => Boolean(value) ? coerceToObservable(successValue) : coerceToObservable(failValue as F)),
     distinctUntilChanged(),
   );
 }

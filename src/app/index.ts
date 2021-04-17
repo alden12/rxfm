@@ -13,6 +13,7 @@ import {
   mapToComponents,
   selectFrom,
   B,
+  conditional,
 } from 'rxfm';
 import { BehaviorSubject, Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -75,12 +76,13 @@ const ClickCounter = () => {
   );
 };
 
-const Visible = Div('Now you see me!');
-const Hidden = Div(`Now you don't`);
+const flipFlop = timer(0, 1000).pipe(
+  map(i => i % 2 === 0)
+);
 
 const ConditionalComponentsExample = Div(
-  timer(0, 1000).pipe(
-    switchMap(i => i % 2 === 0 ? Visible : Hidden),
+  flipFlop.pipe(
+    switchMap(visible => visible ? Div('Now you see me!') : of(null)),
   ),
 );
 
