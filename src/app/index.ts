@@ -14,8 +14,8 @@ import {
   selectFrom,
   B,
 } from 'rxfm';
-import { BehaviorSubject, of, timer } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, timer } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { TodoList } from './todo-example';
 import './styles.css';
 
@@ -42,7 +42,7 @@ const DynamicStyles = Div('Styles can be dynamic').pipe(
   }),
 );
 
-const ClassExample = Div('We can add css classes').pipe(
+const ClassExample = Div('We can add CSS classes').pipe(
   classes('example-class'),
 );
 
@@ -75,21 +75,39 @@ const ClickCounter = () => {
   );
 };
 
-const MapToComponentsExample = of([
-  { name: 'Item 1', done: true, },
-  { name: 'Item 2', done: false, },
-  { name: 'Item 3', done: true, },
-]).pipe(
-  mapToComponents(
-    item => Div(
-      item.pipe(map(({ name }) => name)),
-      item.pipe(
-        map(({ done }) => done ? ' is done!' : ' is not done yet.'),
-      ),
-    ),
-    item => item.name,
+const Visible = Div('Now you see me!');
+const Hidden = Div(`Now you don't`);
+
+const ConditionalComponentsExample = Div(
+  timer(0, 1000).pipe(
+    switchMap(i => i % 2 === 0 ? Visible : Hidden),
   ),
 );
+
+interface TodoItem {
+  name: string;
+  done: boolean;
+}
+
+const ComponentArraysExample = () => {
+  const items = new BehaviorSubject<TodoItem[]>([
+    { name: 'Item 1', done: true, },
+    { name: 'Item 2', done: false, },
+    { name: 'Item 3', done: true, },
+  ]);
+
+  const Item = (item: Observable<TodoItem>) => Div(
+    item.pipe(
+      map(({ name, done }) => `${name} is ${done ? '' : 'not'} done!`),
+    ),
+  );
+
+  const itemComponents = items.pipe(
+    mapToComponents(Item, item => item.name),
+  );
+
+  return Div(itemComponents);
+};
 
 const Example = (title: string, ...children: ChildComponent[]) => Div(
   H3(title).pipe(styles({ margin: '10px 0' })),
@@ -108,7 +126,8 @@ const Examples = Div(
   Example('Attributes', AttributesExample),
   Example('Dynamic Attributes', DynamicAttributes),
   Example('State', ClickCounter),
-  Example('Component Arrays', MapToComponentsExample),
+  Example('Conditional Components', ConditionalComponentsExample),
+  Example('Component Arrays', ComponentArraysExample),
   Example('Todo List Example', TodoList),
 ).pipe(
   classes('examples'),

@@ -11,12 +11,12 @@ interface ItemDiff<T> {
   itemMap: Map<Id, T>;
 }
 
-function itemDiffer<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemDiff<T>> {
+function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunction<T[], ItemDiff<T>> {
   return (items$: Observable<T[]>) => {
     let previousItemMap = new Map<Id, T>();
     return items$.pipe(
       map(items => {
-        const itemsAndIds = items.map(item => [idFunction(item), item] as const);
+        const itemsAndIds = items.map((item, i) => [idFunction(item, i), item] as const);
         const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id)
         const itemMap = new Map(itemsAndIds);
@@ -120,11 +120,11 @@ export function mapToComponents<I, T extends ElementType>(
 ): OperatorFunction<I[], ElementType[]>
 export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: Observable<I>) => Component<T>,
-  idFunction: (item: I) => Id,
+  idFunction: (item: I, index: number) => Id,
 ): OperatorFunction<I[], ElementType[]>
 export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: I | Observable<I>) => Component<T>,
-  idFunction?: (item: I) => Id,
+  idFunction?: (item: I, index: number) => Id,
 ): OperatorFunction<I[], ElementType[]> {
   if (idFunction) {
     return (items: Observable<I[]>) => items.pipe(
