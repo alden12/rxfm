@@ -5,7 +5,7 @@ Express your apps using nothing else but the awesome power of [RxJS](https://git
 
 RxJS lets us express data as a stream rather than as single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
 
-<!-- TODO: Add live example and starter project links back in -->
+<!-- TODO: Add live example and starter project links back in. Use gh-pages as live example and app as code? -->
 Find [RxFM on npm](https://www.npmjs.com/package/rxfm). Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ## Installation:
@@ -30,6 +30,7 @@ The root component can be added to the DOM by subscribing to it and adding its e
 ```typescript
 HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
+<!-- TODO: Say to only subscribe once in the application, say that root element should be a -->
 
 ## State & Events:
 State can be held in `BehaviorSubjects` and used in a similar way to hooks in React. The `event` operator function lets us handle element events.
@@ -128,10 +129,10 @@ const Item = (item: Observable<TodoItem>) => Div(
 );
 ```
 
-Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. Here the second argument is a function taking an item and returning its unique id (similar to the 'key' prop in React).
+Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. Here the first argument is a function taking an item and returning its unique id (similar to the 'key' prop in React).
 ```typescript
 const itemComponents = items.pipe(
-  mapToComponents(Item, item => item.name),
+  mapToComponents(item => item.name, Item),
 );
 ```
 
@@ -139,4 +140,6 @@ The resulting component array observable can be passed directly as a component c
 ```typescript
 const ComponentArraysExample = Div(itemComponents);
 ```
+<!-- TODO: Say that this will use existing elements for updates etc. -->
+
 ---

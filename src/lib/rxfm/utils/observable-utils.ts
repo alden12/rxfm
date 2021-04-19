@@ -1,5 +1,5 @@
 import { Observable } from "rxjs";
-import { distinctUntilChanged, map, shareReplay, switchMap } from "rxjs/operators";
+import { distinctUntilChanged, shareReplay, switchMap } from "rxjs/operators";
 import { coerceToObservable, selectFrom, watchFrom } from "./utils";
 
 export type DestructuredObservable<T> = {

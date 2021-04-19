@@ -6,7 +6,7 @@ import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
 import { elementMetadataService } from '../metadata-service';
 
-export type ChildComponent =
+export type ComponentChild =
   | StringLike
   | NullLike
   | Observable<
@@ -24,7 +24,7 @@ export type CoercedChildComponent = ChildElement[];
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
-function coerceChildComponent(childComponent: ChildComponent): Observable<CoercedChildComponent | null> {
+function coerceChildComponent(childComponent: ComponentChild): Observable<CoercedChildComponent | null> {
   if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
     let node: Text; // Create outer reference to text node if it is needed.
     return (typeof childComponent === 'function' ? childComponent() : childComponent).pipe( // Create observable if applicable.
@@ -87,7 +87,7 @@ function updateElementChildren<T extends ElementType>(
   return element;
 }
 
-function startOrEndChildren<T extends ElementType>(childComponents: ChildComponent[], end: boolean): ComponentOperator<T> {
+function startOrEndChildren<T extends ElementType>(childComponents: ComponentChild[], end: boolean): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
     const symbol = Symbol('Children Operator');
@@ -113,10 +113,10 @@ function startOrEndChildren<T extends ElementType>(childComponents: ChildCompone
 //  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
 //  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
 //  */
-export function children<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, false);
 }
 
-export function lastChildren<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+export function lastChildren<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, true);
 }

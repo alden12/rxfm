@@ -1,24 +1,9 @@
-import {
-  attribute,
-  Button,
-  ChildComponent,
-  Div,
-  event,
-  H1,
-  H3,
-  styles,
-  classes,
-  Input,
-  attributes,
-  mapToComponents,
-  selectFrom,
-  B,
-  conditional,
-} from 'rxfm';
+import { attribute, Button, ComponentChild, Div, event, H1, H3, styles, classes, Input, attributes, mapToComponents, B } from 'rxfm';
 import { BehaviorSubject, Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { TodoList } from './todo-example';
 import './styles.css';
+import { SnakeExample } from './snake-example';
 
 const HelloWorld = Div('Hello World');
 
@@ -105,13 +90,13 @@ const ComponentArraysExample = () => {
   );
 
   const itemComponents = items.pipe(
-    mapToComponents(Item, item => item.name),
+    mapToComponents(item => item.name, Item),
   );
 
   return Div(itemComponents);
 };
 
-const Example = (title: string, ...children: ChildComponent[]) => Div(
+const Example = (title: string, ...children: ComponentChild[]) => Div(
   H3(title).pipe(styles({ margin: '10px 0' })),
   ...children,
 ).pipe(
@@ -131,6 +116,7 @@ const Examples = Div(
   Example('Conditional Components', ConditionalComponentsExample),
   Example('Component Arrays', ComponentArraysExample),
   Example('Todo List Example', TodoList),
+  Example('Snake Example', SnakeExample),
 ).pipe(
   classes('examples'),
 );
