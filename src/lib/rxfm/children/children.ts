@@ -1,5 +1,5 @@
 import { combineLatest, Observable, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
 import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-metadata';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
@@ -40,6 +40,10 @@ function coerceChildComponent(childComponent: ComponentChild): Observable<Coerce
           return [node]; // Return component in an array.
         }
         return null // Otherwise return null to indicate empty.
+      }),
+      catchError(err => {
+        console.warn(`Error thrown in component child: ${err}`,)
+        return of(null);
       }),
     );
   } else if (childComponent !== undefined && childComponent !== null && childComponent !== false) { // If string like.

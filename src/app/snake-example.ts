@@ -4,7 +4,7 @@ import { filter, map, retry, scan, startWith, withLatestFrom } from "rxjs/operat
 
 type SnakeCell = 'empty' | 'trail' | 'food';
 type SnakeBoard = SnakeCell[][];
-type Vector = [number, number];
+type Vector = [number, number]; // [x, y]
 type Direction = 'up' | 'down' | 'left' | 'right';
 
 const BOARD_WIDTH = 20;
@@ -12,7 +12,7 @@ const BOARD_HEIGHT = 10;
 
 const TICK_PERIOD = 300; // ms
 
-const STARTING_COORDS: [Vector, ...Vector[]] = [[8, 4], [9, 4]];
+const STARTING_SNAKE_COORDS: [Vector, ...Vector[]] = [[8, 4], [9, 4]];
 
 const vectorsAreEqual = ([x1, y1]: Vector, [x2, y2]: Vector) => x1 === x2 && y1 === y2;
 
@@ -77,19 +77,19 @@ class SnakeTrail {
   }
 }
 
-const getBoard = (trail: Vector[], food?: Vector): SnakeBoard => {
-  const board = Array(BOARD_WIDTH).fill(undefined).map(() => Array(BOARD_HEIGHT).fill('empty'));
-  trail.forEach(([x, y]) => board[x][y] = 'trail');
-  if (food) board[food[0]][food[1]] = 'food';
-  return board;
-};
-
-const getInitialTrail = () => new SnakeTrail(new SnakeNode(...STARTING_COORDS));
+const getInitialTrail = () => new SnakeTrail(new SnakeNode(...STARTING_SNAKE_COORDS));
 
 const checkTrailCollision = (coords: Vector[]): boolean => {
   const [x, y] = coords[coords.length - 1];
   const collidesSelf = coords.slice(0, -1).some(coord => vectorsAreEqual(coord, [x, y]));
   return collidesSelf || x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT;
+};
+
+const getBoard = (trail: Vector[], food?: Vector): SnakeBoard => {
+  const board = Array(BOARD_WIDTH).fill(undefined).map(() => Array(BOARD_HEIGHT).fill('empty'));
+  trail.forEach(([x, y]) => board[x][y] = 'trail');
+  if (food) board[food[0]][food[1]] = 'food';
+  return board;
 };
 
 const placeRandomFood = (trail: Vector[]): Vector => {
@@ -112,27 +112,25 @@ const snakeGame = timer(0, TICK_PERIOD).pipe(
     startWith('right' as Direction),
   )),
   scan(({ trail, food, score }, [_, direction]) => {
-    let newTrail = trail.grow(direction);
-    let newFood = food;
-    let newScore = score;
-    if (vectorsAreEqual(newTrail.headCoordinates, food)) {
-      newFood = placeRandomFood(newTrail.coordinates);
-      newScore = score + 10;
+    const newState: SnakeState = { trail: trail.grow(direction), food, score };
+    if (vectorsAreEqual(newState.trail.headCoordinates, food)) {
+      newState.food = placeRandomFood(newState.trail.coordinates);
+      newState.score = score + 10;
     } else {
-      newTrail = newTrail.shrink();
+      newState.trail = newState.trail.shrink();
     }
-    if (checkTrailCollision(newTrail.coordinates)) throw new Error();
-    return { trail: newTrail, food: newFood, score: newScore };
-  }, { trail: getInitialTrail(), food: placeRandomFood(STARTING_COORDS), score: 0 } as SnakeState),
+    if (checkTrailCollision(newState.trail.coordinates)) throw new Error('Game Over!');
+    return newState;
+  }, { trail: getInitialTrail(), food: placeRandomFood(STARTING_SNAKE_COORDS), score: 0 } as SnakeState),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
 );
 
-const Cell = (state: Observable<SnakeCell>) => Div().pipe(
+const Cell = (cellType: Observable<SnakeCell>) => Div().pipe(
   styles({
     height: '10px',
     width: '10px',
-    backgroundColor: using(state, state => CELL_COLOR_MAP[state]),
+    backgroundColor: using(cellType, cellType => CELL_COLOR_MAP[cellType]),
   }),
 );
 
