@@ -41,7 +41,7 @@ function coerceChildComponent(childComponent: ComponentChild): Observable<Coerce
         }
         return null // Otherwise return null to indicate empty.
       }),
-      catchError(err => {
+      catchError(err => { // If component child throws an error, remove it and display a warning in the console.
         console.warn(`Error thrown in component child: ${err}`,)
         return of(null);
       }),

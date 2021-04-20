@@ -1,16 +1,15 @@
-import { destructure, Div, flatten, mapToComponents, reuse, styles, using } from "rxfm";
-import { fromEvent, Observable, timer } from "rxjs";
-import { filter, map, retry, scan, startWith, withLatestFrom } from "rxjs/operators";
+import { Button, destructure, Div, event, flatten, mapToComponents, reuse, styles, using } from "rxfm";
+import { BehaviorSubject, fromEvent, Observable, timer } from "rxjs";
+import { filter, map, retry, scan, startWith, switchMap, withLatestFrom } from "rxjs/operators";
 
 type SnakeCell = 'empty' | 'trail' | 'food';
 type SnakeBoard = SnakeCell[][];
 type Vector = [number, number]; // [x, y]
 type Direction = 'up' | 'down' | 'left' | 'right';
+type Difficulty = 'easy' | 'medium' | 'hard';
 
 const BOARD_WIDTH = 20;
 const BOARD_HEIGHT = 10;
-
-const TICK_PERIOD = 300; // ms
 
 const STARTING_SNAKE_COORDS: [Vector, ...Vector[]] = [[8, 4], [9, 4]];
 
@@ -38,6 +37,18 @@ const KEY_MAP: Record<string, Direction> = {
   ArrowDown: 'down',
   ArrowLeft: 'left',
   ArrowRight: 'right',
+}
+
+const DIFFICULTY_TICK_PERIOD_MAP: Record<Difficulty, number> = {
+  easy: 250, // ms
+  medium: 200, // ms
+  hard: 150, // ms
+}
+
+const DIFFICULTY_SCORE_MAP: Record<Difficulty, number> = {
+  easy: 10,
+  medium: 15,
+  hard: 20,
 }
 
 class SnakeNode {
@@ -105,17 +116,21 @@ interface SnakeState {
   score: number;
 }
 
-const snakeGame = timer(0, TICK_PERIOD).pipe(
-  withLatestFrom(fromEvent(document, 'keydown').pipe(
-    filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
-    map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
-    startWith('right' as Direction),
-  )),
-  scan(({ trail, food, score }, [_, direction]) => {
+const snakeGame = (difficulty: Observable<Difficulty>) => difficulty.pipe(
+  switchMap(difficulty => timer(0, DIFFICULTY_TICK_PERIOD_MAP[difficulty])),
+  withLatestFrom(
+    fromEvent(document, 'keydown').pipe(
+      filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
+      map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
+      startWith('right' as Direction),
+    ),
+    difficulty,
+  ),
+  scan(({ trail, food, score }, [_, direction, difficulty]) => {
     const newState: SnakeState = { trail: trail.grow(direction), food, score };
     if (vectorsAreEqual(newState.trail.headCoordinates, food)) {
       newState.food = placeRandomFood(newState.trail.coordinates);
-      newState.score = score + 10;
+      newState.score = score + DIFFICULTY_SCORE_MAP[difficulty];
     } else {
       newState.trail = newState.trail.shrink();
     }
@@ -134,18 +149,36 @@ const Cell = (cellType: Observable<SnakeCell>) => Div().pipe(
   }),
 );
 
+const DifficultyButton = (label: string, onClick: () => void) => Button(label).pipe(
+  event('click', onClick),
+);
+
 export const SnakeExample = () => {
-  const { board, score } = destructure(reuse(snakeGame));
+  const difficulty = new BehaviorSubject<Difficulty>('easy');
+
+  const { board, score } = destructure(reuse(snakeGame(difficulty)));
+
+  const highScore = score.pipe(
+    scan((highScore, score) => score > highScore ? score : highScore, 0),
+  );
 
   return Div(
     board.pipe(
       map(flatten),
       mapToComponents((_, i) => i, Cell),
     ),
-    Div('Score: ', score).pipe(
+    Div(
+      Div('Score: ', score),
+      Div('High Score: ', highScore),
+      DifficultyButton('Easy', () => difficulty.next('easy')),
+      DifficultyButton('Medium', () => difficulty.next('medium')),
+      DifficultyButton('Hard', () => difficulty.next('hard')),
+    ).pipe(
       styles({
         gridRow: '1/-1',
         paddingLeft: '10px',
+        display: 'grid',
+        alignContent: 'space-between',
       })
     ),
   ).pipe(
