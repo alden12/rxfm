@@ -2,11 +2,15 @@ import { Button, destructure, Div, event, flatten, mapToComponents, reuse, style
 import { BehaviorSubject, fromEvent, Observable, timer } from "rxjs";
 import { filter, map, retry, scan, startWith, switchMap, withLatestFrom } from "rxjs/operators";
 
+// Types:
+
 type SnakeCell = 'empty' | 'trail' | 'food';
 type SnakeBoard = SnakeCell[][];
 type Vector = [number, number]; // [x, y]
 type Direction = 'up' | 'down' | 'left' | 'right';
 type Difficulty = 'easy' | 'medium' | 'hard';
+
+// Constants:
 
 const BOARD_WIDTH = 20;
 const BOARD_HEIGHT = 10;
@@ -50,6 +54,8 @@ const DIFFICULTY_SCORE_MAP: Record<Difficulty, number> = {
   medium: 15,
   hard: 20,
 }
+
+// Game logic:
 
 class SnakeNode {
   public next?: SnakeNode;
@@ -116,16 +122,21 @@ interface SnakeState {
   score: number;
 }
 
+const getInitialSnakeState = (): SnakeState => ({
+  trail: getInitialTrail(),
+  food: placeRandomFood(STARTING_SNAKE_COORDS),
+  score: 0,
+});
+
+const keyDirection = fromEvent(document, 'keydown').pipe(
+  filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
+  map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
+  startWith('right' as Direction),
+);
+
 const snakeGame = (difficulty: Observable<Difficulty>) => difficulty.pipe(
   switchMap(difficulty => timer(0, DIFFICULTY_TICK_PERIOD_MAP[difficulty])),
-  withLatestFrom(
-    fromEvent(document, 'keydown').pipe(
-      filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
-      map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
-      startWith('right' as Direction),
-    ),
-    difficulty,
-  ),
+  withLatestFrom(keyDirection, difficulty),
   scan(({ trail, food, score }, [_, direction, difficulty]) => {
     const newState: SnakeState = { trail: trail.grow(direction), food, score };
     if (vectorsAreEqual(newState.trail.headCoordinates, food)) {
@@ -136,10 +147,12 @@ const snakeGame = (difficulty: Observable<Difficulty>) => difficulty.pipe(
     }
     if (checkTrailCollision(newState.trail.coordinates)) throw new Error('Game Over!');
     return newState;
-  }, { trail: getInitialTrail(), food: placeRandomFood(STARTING_SNAKE_COORDS), score: 0 } as SnakeState),
+  }, getInitialSnakeState()),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
 );
+
+// Display logic:
 
 const Cell = (cellType: Observable<SnakeCell>) => Div().pipe(
   styles({
@@ -149,45 +162,59 @@ const Cell = (cellType: Observable<SnakeCell>) => Div().pipe(
   }),
 );
 
-const DifficultyButton = (label: string, onClick: () => void) => Button(label).pipe(
-  event('click', onClick),
+const GameBoard = (board: Observable<SnakeBoard>) => Div(
+  board.pipe(
+    map(flatten),
+    mapToComponents((_, i) => i, Cell),
+  ),
+).pipe(
+  styles({
+    display: 'grid',
+    gridAutoFlow: 'column',
+    gridAutoColumns: 'max-content',
+    gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)`,
+    gridGap: '2px',
+  }),
 );
 
-export const SnakeExample = () => {
-  const difficulty = new BehaviorSubject<Difficulty>('easy');
+const DifficultyButton = (label: string, onClick: () => void) => Button(label).pipe(
+  event('click', onClick),
+  styles({ width: '90px' }),
+);
 
-  const { board, score } = destructure(reuse(snakeGame(difficulty)));
+const DifficultyButtons = (onDifficultyChange: (difficulty: Difficulty) => void) => [
+  DifficultyButton('Easy', () => onDifficultyChange('easy')),
+  DifficultyButton('Medium', () => onDifficultyChange('medium')),
+  DifficultyButton('Hard', () => onDifficultyChange('hard')),
+];
 
+const ScoreBoard = (score: Observable<number>, onDifficultyChange: (difficulty: Difficulty) => void) => {
   const highScore = score.pipe(
     scan((highScore, score) => score > highScore ? score : highScore, 0),
   );
 
   return Div(
-    board.pipe(
-      map(flatten),
-      mapToComponents((_, i) => i, Cell),
-    ),
-    Div(
-      Div('Score: ', score),
-      Div('High Score: ', highScore),
-      DifficultyButton('Easy', () => difficulty.next('easy')),
-      DifficultyButton('Medium', () => difficulty.next('medium')),
-      DifficultyButton('Hard', () => difficulty.next('hard')),
-    ).pipe(
-      styles({
-        gridRow: '1/-1',
-        paddingLeft: '10px',
-        display: 'grid',
-        alignContent: 'space-between',
-      })
-    ),
+    Div('Score: ', score),
+    Div('High Score: ', highScore),
+    ...DifficultyButtons(onDifficultyChange),
   ).pipe(
     styles({
-      display: 'grid',
-      gridAutoFlow: 'column',
-      gridAutoColumns: 'max-content',
-      gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)`,
-      gridGap: '2px',
-    }),
+      paddingLeft: '10px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+    })
+  );
+}
+
+export const SnakeExample = () => {
+  const difficulty = new BehaviorSubject<Difficulty>('easy');
+  const { board, score } = destructure(reuse(snakeGame(difficulty)));
+
+  return Div(
+    GameBoard(board),
+    ScoreBoard(score, newDifficulty => difficulty.next(newDifficulty)),
+  ).pipe(
+    styles({ display: 'flex' }),
   );
 };
