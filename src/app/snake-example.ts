@@ -97,7 +97,7 @@ class SnakeTrail {
 const getInitialTrail = () => new SnakeTrail(new SnakeNode(...STARTING_SNAKE_COORDS));
 
 const checkTrailCollision = (coords: Vector[]): boolean => {
-  const [x, y] = coords[coords.length - 1];
+  const [x, y] = coords[coords.length - 1]; // Head coordinates
   const collidesSelf = coords.slice(0, -1).some(coord => vectorsAreEqual(coord, [x, y]));
   return collidesSelf || x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT;
 };
@@ -128,6 +128,18 @@ const getInitialSnakeState = (): SnakeState => ({
   score: 0,
 });
 
+const getNewSnakeState = (previousState: SnakeState, direction: Direction, difficulty: Difficulty): SnakeState => {
+  const newState: SnakeState = { ...previousState, trail: previousState.trail.grow(direction) };
+  if (vectorsAreEqual(newState.trail.headCoordinates, previousState.food)) {
+    newState.food = placeRandomFood(newState.trail.coordinates);
+    newState.score = previousState.score + DIFFICULTY_SCORE_MAP[difficulty];
+  } else {
+    newState.trail = newState.trail.shrink();
+  }
+  if (checkTrailCollision(newState.trail.coordinates)) throw new Error('Game Over!');
+  return newState;
+};
+
 const keyDirection = fromEvent(document, 'keydown').pipe(
   filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
   map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
@@ -137,17 +149,7 @@ const keyDirection = fromEvent(document, 'keydown').pipe(
 const snakeGame = (difficulty: Observable<Difficulty>) => difficulty.pipe(
   switchMap(difficulty => timer(0, DIFFICULTY_TICK_PERIOD_MAP[difficulty])),
   withLatestFrom(keyDirection, difficulty),
-  scan(({ trail, food, score }, [_, direction, difficulty]) => {
-    const newState: SnakeState = { trail: trail.grow(direction), food, score };
-    if (vectorsAreEqual(newState.trail.headCoordinates, food)) {
-      newState.food = placeRandomFood(newState.trail.coordinates);
-      newState.score = score + DIFFICULTY_SCORE_MAP[difficulty];
-    } else {
-      newState.trail = newState.trail.shrink();
-    }
-    if (checkTrailCollision(newState.trail.coordinates)) throw new Error('Game Over!');
-    return newState;
-  }, getInitialSnakeState()),
+  scan((state, [_, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
 );
@@ -190,7 +192,7 @@ const DifficultyButtons = (onDifficultyChange: (difficulty: Difficulty) => void)
 
 const ScoreBoard = (score: Observable<number>, onDifficultyChange: (difficulty: Difficulty) => void) => {
   const highScore = score.pipe(
-    scan((highScore, score) => score > highScore ? score : highScore, 0),
+    scan((highScore, score) => Math.max(highScore, score), 0),
   );
 
   return Div(
