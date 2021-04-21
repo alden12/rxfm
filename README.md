@@ -102,7 +102,7 @@ const ConditionalComponentsExample = Div(
 );
 ```
 
-You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits.The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
+You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
 
 ## Dynamic Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
@@ -131,14 +131,14 @@ const Item = (item: Observable<TodoItem>) => Div(
 
 Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. Here the first argument is a function taking an item and returning its unique id (similar to the 'key' prop in React).
 ```typescript
-const itemComponents = items.pipe(
+const ItemComponents = items.pipe(
   mapToComponents(item => item.name, Item),
 );
 ```
 
 The resulting component array observable can be passed directly as a component child:
 ```typescript
-const ComponentArraysExample = Div(itemComponents);
+const ComponentArraysExample = Div(ItemComponents);
 ```
 
 If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 

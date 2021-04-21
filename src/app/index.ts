@@ -89,11 +89,11 @@ const ComponentArraysExample = () => {
     ),
   );
 
-  const itemComponents = items.pipe(
+  const ItemComponents = items.pipe(
     mapToComponents(item => item.name, Item),
   );
 
-  return Div(itemComponents);
+  return Div(ItemComponents);
 };
 
 const Example = (title: string, ...children: ComponentChild[]) => Div(
