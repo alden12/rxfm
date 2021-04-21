@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/alden12/rxfm.git"
   },
-  "homepage": "https://https://github.com/alden12/rxfm",
+  "homepage": "https://github.com/alden12/rxfm",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
