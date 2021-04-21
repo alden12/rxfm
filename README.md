@@ -30,7 +30,7 @@ The root component can be added to the DOM by subscribing to it and adding its e
 ```typescript
 HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
-<!-- TODO: Say to only subscribe once in the application, say that root element should be a -->
+The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
 ## State & Events:
 State can be held in `BehaviorSubjects` and used in a similar way to hooks in React. The `event` operator function lets us handle element events.
@@ -102,9 +102,9 @@ const ConditionalComponentsExample = Div(
 );
 ```
 
-You may also be tempted to use `switchMap` to create an array of components (similar to using Array.map in React), but `mapToComponents` should be used instead in this case (see the next section).
+You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits.The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
 
-## Component Arrays
+## Dynamic Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
 
 We'll start with an observable emitting an array of items:
@@ -140,6 +140,7 @@ The resulting component array observable can be passed directly as a component c
 ```typescript
 const ComponentArraysExample = Div(itemComponents);
 ```
-<!-- TODO: Say that this will use existing elements for updates etc. -->
+
+If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 
 
 ---

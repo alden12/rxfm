@@ -8,7 +8,7 @@ type SnakeCell = 'empty' | 'trail' | 'food';
 type SnakeBoard = SnakeCell[][];
 type Vector = [number, number]; // [x, y]
 type Direction = 'up' | 'down' | 'left' | 'right';
-type Difficulty = 'easy' | 'medium' | 'hard';
+type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
 // Constants:
 
@@ -44,15 +44,15 @@ const KEY_MAP: Record<string, Direction> = {
 }
 
 const DIFFICULTY_TICK_PERIOD_MAP: Record<Difficulty, number> = {
-  easy: 250, // ms
-  medium: 200, // ms
-  hard: 150, // ms
+  Easy: 250, // ms
+  Medium: 200, // ms
+  Hard: 150, // ms
 }
 
 const DIFFICULTY_SCORE_MAP: Record<Difficulty, number> = {
-  easy: 10,
-  medium: 15,
-  hard: 20,
+  Easy: 10,
+  Medium: 15,
+  Hard: 20,
 }
 
 // Game logic:
@@ -179,18 +179,14 @@ const GameBoard = (board: Observable<SnakeBoard>) => Div(
   }),
 );
 
-const DifficultyButton = (label: string, onClick: () => void) => Button(label).pipe(
-  event('click', onClick),
+const DifficultyButton = (difficulty: Difficulty, setDifficulty: (difficulty: Difficulty) => void) => Button(difficulty).pipe(
+  event('click', () => setDifficulty(difficulty)),
   styles({ width: '90px' }),
 );
 
-const DifficultyButtons = (onDifficultyChange: (difficulty: Difficulty) => void) => [
-  DifficultyButton('Easy', () => onDifficultyChange('easy')),
-  DifficultyButton('Medium', () => onDifficultyChange('medium')),
-  DifficultyButton('Hard', () => onDifficultyChange('hard')),
-];
+const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
-const ScoreBoard = (score: Observable<number>, onDifficultyChange: (difficulty: Difficulty) => void) => {
+const ScoreBoard = (score: Observable<number>, setDifficulty: (difficulty: Difficulty) => void) => {
   const highScore = score.pipe(
     scan((highScore, score) => Math.max(highScore, score), 0),
   );
@@ -198,7 +194,7 @@ const ScoreBoard = (score: Observable<number>, onDifficultyChange: (difficulty: 
   return Div(
     Div('Score: ', score),
     Div('High Score: ', highScore),
-    ...DifficultyButtons(onDifficultyChange),
+    ...difficulties.map(difficulty => DifficultyButton(difficulty, setDifficulty)),
   ).pipe(
     styles({
       paddingLeft: '10px',
@@ -210,7 +206,7 @@ const ScoreBoard = (score: Observable<number>, onDifficultyChange: (difficulty: 
 }
 
 export const SnakeExample = () => {
-  const difficulty = new BehaviorSubject<Difficulty>('easy');
+  const difficulty = new BehaviorSubject<Difficulty>('Easy');
   const { board, score } = destructure(reuse(snakeGame(difficulty)));
 
   return Div(
