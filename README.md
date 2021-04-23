@@ -9,13 +9,13 @@ Aside from native RxJS integration, RxFM has several advantages over existing fr
 I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
 
 <!-- * Read the example app code in the [GitHub repo](). -->
-* Check out the [live demo here]().
+* Check out the [live demo here](https://alden12.github.io/rxfm/).
 * Find [RxFM on npm](https://www.npmjs.com/package/rxfm).
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ## Installation:
-You can clone the [sample app]() to get started right away, or install `rxfm` into and existing project using:
+You can clone the [sample app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into and existing project using:
 ```sh
 npm install rxfm
 ```
@@ -105,7 +105,7 @@ const ConditionalComponentsExample = Div(
   flipFlop.pipe(
     switchMap(visible => visible ? Div('Now you see me!') : of(null)),
   ),
-  // Or more simply as conditional(flipFlop, Div('Now you see me!'))
+  // Or more simply as: conditional(flipFlop, Div('Now you see me!')), using the 'conditional' helper function from rxfm.
 );
 ```
 
