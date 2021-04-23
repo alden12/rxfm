@@ -11,12 +11,20 @@ interface ItemDiff<T> {
   itemMap: Map<Id, T>;
 }
 
-function itemDiffer<T>(idFunction: (item: T) => Id): OperatorFunction<T[], ItemDiff<T>> {
+function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunction<T[], ItemDiff<T>> {
   return (items$: Observable<T[]>) => {
     let previousItemMap = new Map<Id, T>();
     return items$.pipe(
       map(items => {
-        const itemsAndIds = items.map(item => [idFunction(item), item] as const);
+        const itemsAndIds = items.map((item, i) => {
+          const id = idFunction(item, i);
+          if (typeof id !== 'string' && typeof id !== 'number') {
+            throw new TypeError(
+              `Invalid id function passed to mapToComponents, must return string or number, got: ${typeof id}.`,
+            );
+          }
+          return [id, item] as const
+        });
         const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id)
         const itemMap = new Map(itemsAndIds);
@@ -116,26 +124,26 @@ function simpleComponentDiffer<I, T extends ElementType>(
 //  * regeneration of components when the array is updated.
 //  */
 export function mapToComponents<I, T extends ElementType>(
-  creationFunction: (item: I) => Component<T>,
-): OperatorFunction<I[], ElementType[]>
-export function mapToComponents<I, T extends ElementType>(
+  idFunction: (item: I, index: number) => Id,
   creationFunction: (item: Observable<I>) => Component<T>,
-  idFunction: (item: I) => Id,
 ): OperatorFunction<I[], ElementType[]>
 export function mapToComponents<I, T extends ElementType>(
-  creationFunction: (item: I | Observable<I>) => Component<T>,
-  idFunction?: (item: I) => Id,
+  staticCreationFunction: (item: I) => Component<T>,
+): OperatorFunction<I[], ElementType[]>
+export function mapToComponents<I, T extends ElementType>(
+  idOrCreationFunction: ((item: I, index: number) => Id) | ((item: I) => Component<T>),
+  creationFunction?: (item: Observable<I>) => Component<T>,
 ): OperatorFunction<I[], ElementType[]> {
-  if (idFunction) {
+  if (creationFunction) {
     return (items: Observable<I[]>) => items.pipe(
-      itemDiffer(idFunction),
-      createComponents(creationFunction as (item: Observable<I>) => Component<T>),
+      itemDiffer(idOrCreationFunction as (item: I, index: number) => Id),
+      createComponents(creationFunction),
       combineComponents(),
       startWith([]),
     );
   }
   return (items: Observable<I[]>) => items.pipe(
-    simpleComponentDiffer(creationFunction as (item: I) => Component<T>),
+    simpleComponentDiffer(idOrCreationFunction as (item: I) => Component<T>),
     combineComponents(),
     startWith([]),
   );

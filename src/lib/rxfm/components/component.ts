@@ -1,13 +1,13 @@
 import { MonoTypeOperatorFunction, Observable } from "rxjs";
-import { switchMap, startWith, mapTo, distinctUntilChanged } from "rxjs/operators";
-import { ChildComponent } from "../children/children";
+import { switchMap, startWith, mapTo, distinctUntilChanged, tap } from "rxjs/operators";
+import { ComponentChild } from "../children/children";
 
 export type ElementType = HTMLElement | SVGElement;
 
 export type Component<T extends ElementType = ElementType> = Observable<T>;
 
 export type ComponentFunction<T extends ElementType = ElementType> =
-  (...childComponents: ChildComponent[]) => Component<T>;
+  (...childComponents: ComponentChild[]) => Component<T>;
 
 export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T>;
 
@@ -26,4 +26,20 @@ export function componentOperator<T extends ElementType, U>(
     )),
     distinctUntilChanged(),
   );
+}
+
+/**
+ * Add an observable into the component stream.
+ * @param observable The observable to add into the component stream.
+ * @param effect An optional effect to execute when the observable emits, this is equivalent to using 'tap' on the observable.
+ * @returns A component operator function.
+ */
+export function sideEffect<T extends ElementType, U, V>(
+  observable: Observable<U>,
+  effect?: (value: U) => V,
+): ComponentOperator<T> {
+  if (effect) {
+    return componentOperator(() => observable.pipe(tap(effect)));
+  }
+  return componentOperator(() => observable);
 }

@@ -1,6 +1,6 @@
 {
   "name": "rxfm",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.4",
   "author": "Alden Laslett",
   "description": "A beautifully minimal framework to natively code the internet in observable streams.",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/alden12/rxfm.git"
   },
-  "homepage": "https://https://github.com/alden12/rxfm",
+  "homepage": "https://github.com/alden12/rxfm",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "webpack --config webpack.prod.js",
-    "build::app": "webpack --config webpack.app.js",
+    "build:app": "webpack --config webpack.app.js",
     "start": "webpack-dev-server --config webpack.dev.js",
     "test": "jest",
     "test:watch": "jest --watch"
