@@ -4,6 +4,8 @@ export interface Dictionary<T> {
 }
 export declare type NullLike = null | undefined | false;
 export declare type StringLike = string | number;
+export declare type TypeOrObservable<T> = T | Observable<T>;
+export declare type PartialRecord<K extends string | number | symbol, T> = Partial<Record<K, T>>;
 /**
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.
@@ -67,4 +69,4 @@ export declare function ternary<T, OT, OF>(input: Observable<T>, trueValue: OT, 
 export declare function filterObject<T extends object>(object: T, filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean): Partial<T>;
 export declare function coerceToObservable<T>(value: T | Observable<T>): Observable<T>;
 export declare function coerceToArray<T>(value: T | T[]): T[];
-export declare function flatten<T>(notFlat: (T | T[])[]): T[];
+export declare function flatten<T>(nested: (T | T[])[]): T[];
