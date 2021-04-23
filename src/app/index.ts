@@ -14,6 +14,7 @@ import {
 } from './basic-examples';
 import { TodoList } from './todo-example';
 import { SnakeExample } from './snake-example';
+import { MinesweeperExample } from './minesweeper-example';
 
 import './styles.css';
 
@@ -38,6 +39,7 @@ const Examples = Div(
   Example('Component Arrays', ComponentArraysExample),
   Example('Todo List Example', TodoList),
   Example('Snake Example', SnakeExample),
+  Example('Minesweeper Example', MinesweeperExample),
 ).pipe(
   classes('examples'),
 );
