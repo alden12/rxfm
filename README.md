@@ -15,7 +15,7 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ## Installation:
-You can clone the [sample app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into and existing project using:
+You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into an existing project using:
 ```sh
 npm install rxfm
 ```
