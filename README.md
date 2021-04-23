@@ -1,19 +1,25 @@
 # RxFM - A Web Framework Built on RxJS
 
-<!-- TODO: Refactor below to say experimental, no vDOM, no strange render and hook behavior. -->
-Express your apps using nothing else but the awesome power of [RxJS](https://github.com/ReactiveX/rxjs). A beautifully minimal framework to natively code the internet in observable streams. The cleanest reactive framework out there.
+RxFM *(working title)* is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
-RxJS lets us express data as a stream rather than as single values. This framework extends that philosophy to HTML elements, allowing the internet to be expressed as a stream of time changing elements, instantly reflected in the browser.
+I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether it would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
 
-<!-- TODO: Add live example and starter project links back in. Use gh-pages as live example and app as code? -->
-Find [RxFM on npm](https://www.npmjs.com/package/rxfm). Works best with [TypeScript](https://www.typescriptlang.org/).
+Aside from native RxJS integration, RxFM has several advantages over existing frameworks like React. Firstly, we don't need to worry about managing a virtual DOM because elements can be added directly to their parents as observable streams. Second, we don't have to worry about any strange render logic, as components do not need to be re-rendered, they are reactive simply by virtue of being observables.
+
+I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
+
+<!-- * Read the example app code in the [GitHub repo](). -->
+* Check out the [live demo here]().
+* Find [RxFM on npm](https://www.npmjs.com/package/rxfm).
+
+Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ## Installation:
+You can clone the [sample app]() to get started right away, or install `rxfm` into and existing project using:
 ```sh
 npm install rxfm
 ```
-<!-- TODO: Find out what needs to be installed for RxJS. -->
-If you have `rxjs` installed, make sure it is the same version as RxFM is using, eg: `npm install rxjs@6.5.2`
+If you have `rxjs` installed already, make sure it is using the same version as RxFM, eg: `npm install rxjs@6.5.2`
 
 ## Hello World:
 Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `Elements`. Component names are written in PascalCase with the first letter capitalized.
@@ -33,7 +39,7 @@ HelloWorld.subscribe(el => document.body.appendChild(el));
 The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
 ## State & Events:
-State can be held in `BehaviorSubjects` and used in a similar way to hooks in React. The `event` operator function lets us handle element events.
+State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
 ```typescript
 import { Button, event } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
@@ -48,6 +54,7 @@ const ClickCounter = () => {
   );
 };
 ```
+Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing it's element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
 
 ## Attributes & Styling:
 Element attributes and styling can be set using operator functions imported from `rxfm`. Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
