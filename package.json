@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "webpack --config webpack.prod.js",
-    "build::app": "webpack --config webpack.app.js",
+    "build:app": "webpack --config webpack.app.js",
     "start": "webpack-dev-server --config webpack.dev.js",
     "test": "jest",
     "test:watch": "jest --watch"

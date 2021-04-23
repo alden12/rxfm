@@ -2,7 +2,7 @@ import { Button, Div, event, styles, classes, Input, attributes, mapToComponents
 import { BehaviorSubject, Observable, of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
-export const HelloWorld = Div('Hello World');
+export const HelloWorld = Div('Hello, World!');
 
 export const ChildrenExample = Div(
   'Children can be strings, ',
