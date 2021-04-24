@@ -1,6 +1,6 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
 import { ElementType, Component } from './components';
-import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, share, tap } from 'rxjs/operators';
+import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
 import { selectFrom } from './utils';
 
 type Id = string | number;
@@ -11,7 +11,6 @@ interface ItemAndIndex<T> {
 }
 
 interface ItemDiff<T> {
-  updated: Map<Id, ItemAndIndex<T>>;
   added: Id[];
   removed: Set<Id>;
   itemMap: Map<Id, ItemAndIndex<T>>;
@@ -31,14 +30,13 @@ function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunc
           }
           return [id, { item, index }] as const
         });
-        const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id)
         const itemMap = new Map(itemsAndIds);
         const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
         previousItemMap = itemMap;
-        return { updated, added, removed, itemMap };
+        return { added, removed, itemMap };
       }),
-      share(),
+      shareReplay({ refCount: true, bufferSize: 1 }),
     );
   }
 }
@@ -57,9 +55,8 @@ function createComponents<I, T extends ElementType>(
 
       const newComponents = added.map(id => {
         const itemAndIndexUpdates = changes.pipe(
-          filter(({ updated }) => updated.has(id)),
-          map(({updated}) => updated.get(id)!),
-          startWith(itemMap.get(id)!),
+          filter(({ itemMap }) => itemMap.has(id)),
+          map(({ itemMap }) => itemMap.get(id)!),
           distinctUntilChanged(),
         );
         const componentObservable = creationFunction(
