@@ -37,7 +37,7 @@ HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
 The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
-Have a look at the components example code [here](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/components.ts).
+[Full components example code](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/components.ts)
 
 ## State & Events:
 State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
@@ -59,7 +59,7 @@ Here the `event` operator is what I've called a "component operator". These are 
 
 Using Subjects to store state like this gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
 
-Have a look at the state and events example code [here](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/state-and-events.ts).
+[Full state and events example code](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/state-and-events.ts)
 
 ## Attributes & Styling:
 Element attributes and styling can be set using operator functions imported from `rxfm`. Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
@@ -88,7 +88,7 @@ const AttributesExample = Input().pipe(
 );
 ```
 
-Have a look at the attributes, classes and styling example code [here](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/attributes-and-styling.ts).
+[Full attributes, classes and styling example code](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/attributes-and-styling.ts)
 
 ## Conditionally Displaying Components
 We can conditionally add a component using the `switchMap` operator function from `RxJS`.
@@ -118,7 +118,7 @@ const ConditionalComponentsExample = Div(
 
 You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
 
-Have a look at the conditional components example code [here](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/conditional-components.ts).
+[Full conditional components example code](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/conditional-components.ts)
 
 ## Dynamic Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
@@ -159,7 +159,7 @@ const ComponentArraysExample = Div(ItemComponents);
 
 If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 
 
-Have a look at the dynamic component array example code [here](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/dynamic-component-arrays.ts).
+[Full dynamic component array example code](https://github.com/alden12/rxfm/blob/split-up-examples/src/app/basic-examples/dynamic-component-arrays.ts)
 
 
 ## Advanced Examples
