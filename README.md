@@ -55,7 +55,7 @@ const ClickCounter = () => {
   );
 };
 ```
-Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing it's element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
+Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
 
 Using Subjects to store state like this gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
 
