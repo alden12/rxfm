@@ -2,14 +2,13 @@
 
 RxFM *(working title)* is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
-I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether it would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
+I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
 
 Aside from native RxJS integration, RxFM has several advantages over existing frameworks like React. Firstly, we don't need to worry about managing a virtual DOM because elements can be added directly to their parents as observable streams. Second, we don't have to worry about any strange render logic, as components do not need to be re-rendered, they are reactive simply by virtue of being observables.
 
 I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
 
-* Read the example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app).
-* Check out the [live demo here](https://alden12.github.io/rxfm/).
+* Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Find [RxFM on npm](https://www.npmjs.com/package/rxfm).
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
@@ -55,6 +54,8 @@ const ClickCounter = () => {
 };
 ```
 Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing it's element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
+
+Using Subjects to store state like this gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
 
 ## Attributes & Styling:
 Element attributes and styling can be set using operator functions imported from `rxfm`. Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
