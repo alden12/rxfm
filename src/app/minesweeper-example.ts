@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 
 // Types:
 
-type MinesweeperCellType = 'empty' | 'undiscovered' | 'marked' | 'mine' | 'exploded';
+type MinesweeperCellType = 'cleared' | 'undiscovered' | 'marked' | 'mine' | 'exploded';
 type MinesweeperCell = { type: MinesweeperCellType, neighbors: number | null };
 type MinesweeperBoard = MinesweeperCell[][];
 type Vector = [number, number]; // [x, y]
@@ -15,7 +15,7 @@ const BOARD_WIDTH = 14;
 const BOARD_HEIGHT = 7;
 
 const CELL_COLOR_MAP: Record<MinesweeperCellType, string> = {
-  empty: 'grey',
+  cleared: 'grey',
   undiscovered: 'lightgrey',
   marked: 'teal',
   mine: 'black',
@@ -33,7 +33,7 @@ const getBoard = (): MinesweeperBoard => {
 
 // Display Logic:
 
-const MinesweeperGameCell = (
+const MinesweeperCell = (
   cell: Observable<MinesweeperCell>,
   index: Observable<number>,
   discoverCell: (index: number) => void,
@@ -54,25 +54,20 @@ const MinesweeperGameCell = (
   );
 };
 
-export const GameBoard = (board: Observable<MinesweeperBoard>, discoverCell: (index: number) => void) => {
-  const GameCell = (cellType: Observable<MinesweeperCell>, index: Observable<number>) =>
-    MinesweeperGameCell(cellType, index, discoverCell);
-
-  return Div(
-    board.pipe(
-      map(flatten),
-      mapToComponents((_, i) => i, GameCell),
-    ),
-  ).pipe(
-    styles({
-      display: 'grid',
-      gridAutoFlow: 'column',
-      gridAutoColumns: 'max-content',
-      gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)`,
-      gridGap: '2px',
-    }),
-  );
-}
+export const GameBoard = (board: Observable<MinesweeperBoard>, discoverCell: (index: number) => void) => Div(
+  board.pipe(
+    map(flatten),
+    mapToComponents((_, i) => i, (cell, i) => MinesweeperCell(cell, i, discoverCell)),
+  ),
+).pipe(
+  styles({
+    display: 'grid',
+    gridAutoFlow: 'column',
+    gridAutoColumns: 'max-content',
+    gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)`,
+    gridGap: '2px',
+  }),
+);
 
 export const MinesweeperExample = () => {
   const discover = new Subject<Vector>();
