@@ -23,6 +23,7 @@ class SnakeNode {
 }
 
 const getSnakeHead = (node: SnakeNode) => node.next ? getSnakeHead(node.next) : node;
+
 const getSnakeCoords = ({ coordinates, next }: SnakeNode): Vector[] => [coordinates, ...(next ? getSnakeCoords(next) : [])];
 
 class SnakeTrail {

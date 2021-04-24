@@ -1,2 +1,2 @@
-export * from './todo-list';
-export * from './snake-game';
+export * from './todo-list/todo-list';
+export * from './snake-game/snake-game';

@@ -22,14 +22,16 @@ const GameBoard = (board: Observable<SnakeBoard>) => Div(
   styles({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` }),
 );
 
-const DifficultyButton = (difficulty: Difficulty, setDifficulty: (difficulty: Difficulty) => void) => Button(difficulty).pipe(
+type SetDifficulty = (difficulty: Difficulty) => void;
+
+const DifficultyButton = (difficulty: Difficulty, setDifficulty: SetDifficulty) => Button(difficulty).pipe(
   event('click', () => setDifficulty(difficulty)),
   classes('difficulty-button'),
 );
 
 const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
-const ScoreBoard = (score: Observable<number>, setDifficulty: (difficulty: Difficulty) => void) => {
+const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => {
   const highScore = score.pipe(
     scan((highScore, score) => Math.max(highScore, score), 0),
   );
