@@ -1,4 +1,4 @@
-import { attribute, ComponentChild, Div, H1, H3, styles, classes } from 'rxfm';
+import { attribute, ComponentChild, Div, H1, H3, classes } from 'rxfm';
 import {
   HelloWorld,
   ChildrenExample,
@@ -12,14 +12,12 @@ import {
   ConditionalComponentsExample,
   ComponentArraysExample,
 } from './basic-examples';
-import { TodoList } from './todo-example';
-import { SnakeExample } from './snake-example';
-import { MinesweeperExample } from './minesweeper-example';
+import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
 import './styles.css';
 
 const Example = (title: string, ...children: ComponentChild[]) => Div(
-  H3(title).pipe(styles({ margin: '10px 0' })),
+  H3(title).pipe(classes('example-title')),
   ...children,
 ).pipe(
   classes('example'),
@@ -38,8 +36,8 @@ const Examples = Div(
   Example('Conditional Components', ConditionalComponentsExample),
   Example('Component Arrays', ComponentArraysExample),
   Example('Todo List Example', TodoList),
-  Example('Snake Example', SnakeExample),
-  Example('Minesweeper Example', MinesweeperExample),
+  Example('Snake Example', SnakeGame),
+  Example('Minesweeper Example', Minesweeper),
 ).pipe(
   classes('examples'),
 );

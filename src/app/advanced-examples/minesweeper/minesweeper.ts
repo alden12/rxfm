@@ -69,7 +69,7 @@ export const GameBoard = (board: Observable<MinesweeperBoard>, discoverCell: (in
   }),
 );
 
-export const MinesweeperExample = () => {
+export const Minesweeper = () => {
   const discover = new Subject<Vector>();
   const discoverCell = (index: number) => discover.next([Math.floor(index / BOARD_HEIGHT), index % BOARD_HEIGHT]);
 

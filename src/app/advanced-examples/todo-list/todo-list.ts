@@ -1,6 +1,8 @@
 import { attributes, classes, Div, event, mapToComponents, Input, using, destructure } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs"
 
+import './todo-list-styles.css';
+
 interface TodoItem {
   name: string;
   done: boolean;

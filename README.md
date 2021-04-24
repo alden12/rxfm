@@ -2,20 +2,19 @@
 
 RxFM *(working title)* is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
-I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether it would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
+I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
 
 Aside from native RxJS integration, RxFM has several advantages over existing frameworks like React. Firstly, we don't need to worry about managing a virtual DOM because elements can be added directly to their parents as observable streams. Second, we don't have to worry about any strange render logic, as components do not need to be re-rendered, they are reactive simply by virtue of being observables.
 
 I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
 
-* Read the example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app).
-* Check out the [live demo here](https://alden12.github.io/rxfm/).
+* Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Find [RxFM on npm](https://www.npmjs.com/package/rxfm).
 
 Works best with [TypeScript](https://www.typescriptlang.org/).
 
 ## Installation:
-You can clone the [sample app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into and existing project using:
+You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into an existing project using:
 ```sh
 npm install rxfm
 ```
@@ -38,6 +37,8 @@ HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
 The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
+[Full components example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts)
+
 ## State & Events:
 State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
 ```typescript
@@ -54,7 +55,11 @@ const ClickCounter = () => {
   );
 };
 ```
-Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing it's element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
+Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
+
+Using Subjects to store state like this gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
+
+[Full state and events example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/state-and-events.ts)
 
 ## Attributes & Styling:
 Element attributes and styling can be set using operator functions imported from `rxfm`. Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
@@ -83,6 +88,8 @@ const AttributesExample = Input().pipe(
 );
 ```
 
+[Full attributes, classes and styling example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts)
+
 ## Conditionally Displaying Components
 We can conditionally add a component using the `switchMap` operator function from `RxJS`.
 
@@ -110,6 +117,8 @@ const ConditionalComponentsExample = Div(
 ```
 
 You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
+
+[Full conditional components example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts)
 
 ## Dynamic Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
@@ -149,5 +158,15 @@ const ComponentArraysExample = Div(ItemComponents);
 ```
 
 If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 
+
+[Full dynamic component arrays example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/dynamic-component-arrays.ts)
+
+
+## Advanced Examples
+
+You can check out a few more complex RxFM examples at the links below to see how it might be used in a larger app.
+
+* [Todo List Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/todo-list)
+* [Snake Game Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/snake-game)
 
 ---
