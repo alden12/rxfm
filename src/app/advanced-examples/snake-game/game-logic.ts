@@ -1,6 +1,6 @@
 import { flatten } from "rxfm";
 import { fromEvent, Observable, timer } from "rxjs";
-import { filter, map, startWith, switchMap, withLatestFrom, scan, retry } from "rxjs/operators";
+import { filter, map, startWith, switchMap, withLatestFrom, scan, retry, shareReplay } from "rxjs/operators";
 import {
   DIRECTION_MAP,
   STARTING_SNAKE_COORDS,
@@ -110,4 +110,5 @@ export const snakeGameLoop = (difficulty: Observable<Difficulty>) => difficulty.
   scan((state, [_, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
+  shareReplay({ refCount: true, bufferSize: 1 }),
 );

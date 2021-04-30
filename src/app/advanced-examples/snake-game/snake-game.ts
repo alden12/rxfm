@@ -47,7 +47,7 @@ const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => 
 
 export const SnakeGame = () => {
   const difficulty = new BehaviorSubject<Difficulty>('Easy');
-  const { board, score } = destructure(reuse(snakeGameLoop(difficulty)));
+  const { board, score } = destructure(snakeGameLoop(difficulty));
 
   return Div(
     GameBoard(board),

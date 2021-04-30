@@ -1,6 +1,6 @@
 import { destructure, Div, event, flatten, mapToComponents, styles, using } from 'rxfm';
-import { Observable, of, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { map, scan, startWith } from 'rxjs/operators';
 
 // Types:
 
@@ -8,6 +8,13 @@ type MinesweeperCellType = 'cleared' | 'undiscovered' | 'marked' | 'mine' | 'exp
 type MinesweeperCell = { type: MinesweeperCellType, neighbors: number | null };
 type MinesweeperBoard = MinesweeperCell[][];
 type Vector = [number, number]; // [x, y]
+
+type CellActionType = 'discover' | 'mark';
+
+interface CellAction {
+  type: CellActionType;
+  cell: Vector;
+}
 
 // Constants:
 
@@ -24,21 +31,38 @@ const CELL_COLOR_MAP: Record<MinesweeperCellType, string> = {
 
 // Game Logic:
 
-const getBoard = (): MinesweeperBoard => {
-  const board: MinesweeperCell[][] = Array(BOARD_WIDTH)
-    .fill(undefined)
-    .map(() => Array(BOARD_HEIGHT).fill({ type: 'undiscovered', neighbors: null }));
-  return board;
+const getEmptyBoard = (): MinesweeperBoard => Array(BOARD_WIDTH)
+  .fill(undefined)
+  .map(() => Array(BOARD_HEIGHT).fill({ type: 'undiscovered', neighbors: null }));
+
+const updateBoard = (board: MinesweeperBoard, action?: CellAction) => {
+  if (!action) return board;
+  const { type, cell: [x, y] } = action;
+  const newBoard = [...board];
+  const newCell: MinesweeperCellType = type === 'discover' ? 'cleared' : 'marked';
+  newBoard[x] = [...newBoard[x]];
+  newBoard[x][y] = { type: newCell, neighbors: newBoard[x][y].neighbors };
+  return newBoard;
 };
 
-// Display Logic:
+const minesweeperGameLoop = (action: Observable<CellAction>) => action.pipe(
+  startWith(undefined),
+  scan(updateBoard, getEmptyBoard()),
+)
 
-const MinesweeperCell = (
+// Display Logic
+
+const GameCell = (
   cell: Observable<MinesweeperCell>,
   index: Observable<number>,
-  discoverCell: (index: number) => void,
+  onCellAction: (action: CellAction) => void,
 ) => {
   const { type, neighbors } = destructure(cell);
+
+  const handleCellAction = (type: CellActionType) => using(index, index => () => onCellAction({
+    type,
+    cell: [Math.floor(index / BOARD_HEIGHT), index % BOARD_HEIGHT],
+  }))
 
   return Div(neighbors).pipe(
     styles({
@@ -49,15 +73,20 @@ const MinesweeperCell = (
       alignItems: 'center',
       justifyContent: 'center',
       cursor: 'pointer',
+      border: '1px solid white',
     }),
-    event('click', using(index, index => () => discoverCell(index))),
+    event('click', handleCellAction('discover')),
+    event('contextmenu', handleCellAction('mark')),
   );
 };
 
-export const GameBoard = (board: Observable<MinesweeperBoard>, discoverCell: (index: number) => void) => Div(
+export const GameBoard = (board: Observable<MinesweeperBoard>, onCellAction: (action: CellAction) => void) => Div(
   board.pipe(
     map(flatten),
-    mapToComponents((_, i) => i, (cell, i) => MinesweeperCell(cell, i, discoverCell)),
+    mapToComponents(
+      (_, i) => i,
+      (cell, i) => GameCell(cell, i, onCellAction),
+    ),
   ),
 ).pipe(
   styles({
@@ -65,18 +94,17 @@ export const GameBoard = (board: Observable<MinesweeperBoard>, discoverCell: (in
     gridAutoFlow: 'column',
     gridAutoColumns: 'max-content',
     gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)`,
-    gridGap: '2px',
   }),
+  event('contextmenu', ev => ev.preventDefault()),
 );
 
 export const Minesweeper = () => {
-  const discover = new Subject<Vector>();
-  const discoverCell = (index: number) => discover.next([Math.floor(index / BOARD_HEIGHT), index % BOARD_HEIGHT]);
+  const cellAction = new Subject<{ type: 'discover' | 'mark', cell: Vector }>();
 
   return Div(
     GameBoard(
-      of(getBoard()),
-      discoverCell,
+      minesweeperGameLoop(cellAction),
+      action => cellAction.next(action),
     ),
   );
-}
+};
