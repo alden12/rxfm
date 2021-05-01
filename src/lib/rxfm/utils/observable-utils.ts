@@ -1,5 +1,5 @@
-import { Observable } from "rxjs";
-import { distinctUntilChanged, shareReplay, switchMap } from "rxjs/operators";
+import { combineLatest, Observable } from "rxjs";
+import { distinctUntilChanged, map, shareReplay, switchMap } from "rxjs/operators";
 import { coerceToObservable, selectFrom, watchFrom } from "./utils";
 
 export type DestructuredObservable<T> = {
@@ -61,5 +61,19 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
   return source.pipe(
     distinctUntilChanged(),
     shareReplay({ bufferSize: 1, refCount: true }),
+  );
+}
+
+export function andGate(...sources: Observable<boolean>[]): Observable<boolean> {
+  return combineLatest(sources).pipe(
+    map(values => values.every(value => value)),
+    distinctUntilChanged(),
+  );
+}
+
+export function orGate(...sources: Observable<boolean>[]): Observable<boolean> {
+  return combineLatest(sources).pipe(
+    map(values => values.some(value => value)),
+    distinctUntilChanged(),
   );
 }

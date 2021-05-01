@@ -1,11 +1,9 @@
-import { destructure, Div, event, flatten, mapToComponents, styles, using } from 'rxfm';
+import { andGate, conditional, destructure, Div, event, flatten, mapToComponents, styles, using } from 'rxfm';
 import { Observable, Subject } from 'rxjs';
 import { map, retry, scan, startWith } from 'rxjs/operators';
 
 // Types:
 
-type MinesweeperCellType = 'cleared' | 'undiscoveredEmpty' | 'undiscoveredMine' | 'markedMine' | 'markedEmpty' | 'exploded';
-type MinesweeperCell = { type: MinesweeperCellType, neighbors: number | null };
 type MinesweeperBoard = MinesweeperCell[][];
 type Vector = [number, number]; // [x, y]
 
@@ -16,6 +14,14 @@ interface CellAction {
   cell: Vector;
 }
 
+interface MinesweeperCellProperties {
+  isMine?: boolean;
+  isMarked?: boolean;
+  isDiscovered?: boolean;
+  isExploded?: boolean;
+  neighbors?: number;
+}
+
 // Constants:
 
 const BOARD_WIDTH = 14;
@@ -23,16 +29,48 @@ const BOARD_HEIGHT = 7;
 
 const MINE_COUNT = 10;
 
-const CELL_COLOR_MAP: Record<MinesweeperCellType, string> = {
-  cleared: 'grey',
-  undiscoveredEmpty: 'lightgrey',
-  undiscoveredMine: 'black', // TODO: Set to same color as undiscoveredEmpty.
-  markedMine: 'teal',
-  markedEmpty: 'teal',
-  exploded: 'red',
-};
-
 // Game Logic:
+
+class MinesweeperCell {
+  public isMine = false;
+  public isDiscovered = false;
+  public isMarked = false;
+  public isExploded = false;
+  public neighbors = 0;
+
+  constructor({ isMine, isDiscovered, isMarked, isExploded, neighbors }: MinesweeperCellProperties = {}) {
+    this.isMine = isMine ?? this.isMine;
+    this.isDiscovered = isDiscovered ?? this.isDiscovered;
+    this.isMarked = isMarked ?? this.isMine;
+    this.isExploded = isExploded ?? this.isExploded;
+    this.neighbors = neighbors ?? this.neighbors;
+  }
+
+  public get isUndiscoveredEmpty(): boolean {
+    return !this.isDiscovered && !this.isMine;
+  }
+
+  public get hasNeighbors(): boolean {
+    return this.neighbors > 0;
+  }
+
+  public update(newProperties: MinesweeperCellProperties): MinesweeperCell {
+    return new MinesweeperCell({ ...this, ...newProperties });
+  }
+
+  public get color(): string {
+    if (this.isExploded) {
+      return 'red';
+    } else if (this.isDiscovered) {
+      return 'grey';
+    } else if (this.isMine) {
+      return 'black'; // TODO: remove this.
+    } else if (this.isMarked) {
+      return 'teal';
+    }
+    return 'lightgrey'; // Undiscovered empty.
+  }
+}
 
 const indexToVector = (index: number): Vector => [Math.floor(index / BOARD_HEIGHT), index % BOARD_HEIGHT];
 
@@ -46,42 +84,49 @@ const placeRandomMines = (count: number): Vector[] => {
   return Array.from(mineIndices).map(indexToVector);
 };
 
-const getEmptyBoard = (mines?: Vector[]): MinesweeperBoard => {
-  const board = Array(BOARD_WIDTH)
-    .fill(undefined)
-    .map(() => Array(BOARD_HEIGHT).fill({ type: 'undiscoveredEmpty', neighbors: null }));
-  mines?.forEach(([x, y]) => board[x][y] = { type: 'undiscoveredMine', neighbors: null });
+const calculateCellNeighbors = (board: MinesweeperBoard, cell: Vector): MinesweeperBoard => {
   return board;
 }
 
-const isMine = ({ type }: MinesweeperCell) => type === 'undiscoveredMine' || type === 'markedMine';
-const isMarked = ({ type }: MinesweeperCell) => type === 'markedEmpty' || type === 'markedMine';
+const getBoard = (mines?: Vector[]): MinesweeperBoard => {
+  const board = Array(BOARD_WIDTH)
+    .fill(undefined)
+    .map(() => Array(BOARD_HEIGHT).fill(new MinesweeperCell()));
+  mines?.forEach(([x, y]) => board[x][y] = new MinesweeperCell({ isMine: true }));
+  // TODO: Set cell neighbors if mines provided, only show when discovered.
+  return board;
+}
 
-const clearCells = (board: MinesweeperBoard, [x, y]: Vector) => {
+const updateBoardCell = (board: MinesweeperBoard, [x, y]: Vector, newCell: MinesweeperCell): MinesweeperBoard => {
+  const newBoard = [...board];
+  newBoard[x] = [...newBoard[x]];
+  newBoard[x][y] = newCell;
+  return newBoard;
+};
+
+const clearCells = (board: MinesweeperBoard, [x, y]: Vector): MinesweeperBoard => {
   const previousCell = board[x][y];
-  if (previousCell.type === 'undiscoveredEmpty') {
+  if (previousCell.isMine) {
+    throw new Error('Game Over!');
+  } else if (previousCell.isUndiscoveredEmpty) {
     const newBoard = [...board];
     newBoard[x] = [...newBoard[x]];
-    newBoard[x][y] = { type: 'cleared', neighbors: board[x][y].neighbors };
+    newBoard[x][y] = previousCell.update({ isDiscovered: true });
     // TODO: clear surrounding area.
     return newBoard;
-  } else if (isMine(previousCell)) {
-    throw new Error('Game Over!');
   }
   return board;
 }
 
-const markCell = (board: MinesweeperBoard, [x, y]: Vector) => {
+const markCell = (board: MinesweeperBoard, [x, y]: Vector): MinesweeperBoard => {
   const previousCell = board[x][y];
-  if (isMarked(previousCell)) return board;
-  const newBoard = [...board];
-  const newCellType: MinesweeperCellType = isMine(previousCell) ? 'markedMine' : 'markedEmpty';
-  newBoard[x] = [...newBoard[x]];
-  newBoard[x][y] = { type: newCellType, neighbors: board[x][y].neighbors };
-  return newBoard;
+  if (!previousCell.isDiscovered) {
+    return updateBoardCell(board, [x, y], previousCell.update({ isMarked: !previousCell.isMarked }))
+  }
+  return board;
 };
 
-const getNewBoard = (board: MinesweeperBoard, action: CellAction) => {
+const getNewBoard = (board: MinesweeperBoard, action: CellAction): MinesweeperBoard => {
   const { type, cell } = action;
   if (type === 'discover') {
     return clearCells(board, cell);
@@ -92,8 +137,9 @@ const getNewBoard = (board: MinesweeperBoard, action: CellAction) => {
 };
 
 const minesweeperGameLoop = (action: Observable<CellAction>) => action.pipe(
-  scan(getNewBoard, getEmptyBoard(placeRandomMines(MINE_COUNT))),
-  startWith(getEmptyBoard()),
+  // TODO: Generate new random mines on retry.
+  scan(getNewBoard, getBoard(placeRandomMines(MINE_COUNT))),
+  startWith(getBoard()),
   retry(),
 )
 
@@ -104,18 +150,20 @@ const GameCell = (
   index: Observable<number>,
   onCellAction: (action: CellAction) => void,
 ) => {
-  const { type, neighbors } = destructure(cell);
+  const { neighbors, isDiscovered, hasNeighbors } = destructure(cell);
 
   const handleCellAction = (type: CellActionType) => using(index, index => () => onCellAction({
     type,
     cell: indexToVector(index),
   }))
 
-  return Div(neighbors).pipe(
+  return Div(
+    conditional(andGate(isDiscovered, hasNeighbors), neighbors),
+  ).pipe(
     styles({
       height: '20px',
       width: '20px',
-      backgroundColor: using(type, type => CELL_COLOR_MAP[type]),
+      backgroundColor: using(cell, ({ color }) => color),
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
