@@ -29,6 +29,20 @@ const BOARD_HEIGHT = 7;
 
 const MINE_COUNT = 10;
 
+const DIRECT_NEIGHBOR_VECTORS: Vector[] = [
+  [0, -1],
+  [0, 1],
+  [-1, 0],
+  [1, 0],
+];
+const ALL_NEIGHBOR_VECTORS: Vector[] = [
+  ...DIRECT_NEIGHBOR_VECTORS,
+  [-1, -1],
+  [1, 1],
+  [-1, 1],
+  [1, -1],
+];
+
 // Game Logic:
 
 class MinesweeperCell {
@@ -54,10 +68,6 @@ class MinesweeperCell {
     return this.neighbors > 0;
   }
 
-  public update(newProperties: MinesweeperCellProperties): MinesweeperCell {
-    return new MinesweeperCell({ ...this, ...newProperties });
-  }
-
   public get color(): string {
     if (this.isExploded) {
       return 'red';
@@ -69,6 +79,10 @@ class MinesweeperCell {
       return 'teal';
     }
     return 'lightgrey'; // Undiscovered empty.
+  }
+
+  public update(newProperties: MinesweeperCellProperties): MinesweeperCell {
+    return new MinesweeperCell({ ...this, ...newProperties });
   }
 }
 
@@ -84,8 +98,14 @@ const placeRandomMines = (count: number): Vector[] => {
   return Array.from(mineIndices).map(indexToVector);
 };
 
-const calculateCellNeighbors = (board: MinesweeperBoard, cell: Vector): MinesweeperBoard => {
-  return board;
+const getOffsetCell = (board: MinesweeperBoard, cell: Vector, offset: Vector): MinesweeperCell | undefined => {
+  return board[cell[0] + offset[0]] ? board[cell[0] + offset[0]][cell[1] + offset[1]] : undefined;
+}
+
+const setCellNeighbors = (board: MinesweeperBoard, [x, y]: Vector) => {
+  const neighboringCells = ALL_NEIGHBOR_VECTORS.map(vector => getOffsetCell(board, [x, y], vector));
+  const neighbors = neighboringCells.reduce((count, cell) => cell ? count + Number(Boolean(cell.isMine)) : count, 0);
+  board[x][y] = board[x][y].update({ neighbors });
 }
 
 const getBoard = (mines?: Vector[]): MinesweeperBoard => {
@@ -93,7 +113,9 @@ const getBoard = (mines?: Vector[]): MinesweeperBoard => {
     .fill(undefined)
     .map(() => Array(BOARD_HEIGHT).fill(new MinesweeperCell()));
   mines?.forEach(([x, y]) => board[x][y] = new MinesweeperCell({ isMine: true }));
-  // TODO: Set cell neighbors if mines provided, only show when discovered.
+  if (mines && mines.length) {
+    board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])))
+  }
   return board;
 }
 
@@ -109,11 +131,9 @@ const clearCells = (board: MinesweeperBoard, [x, y]: Vector): MinesweeperBoard =
   if (previousCell.isMine) {
     throw new Error('Game Over!');
   } else if (previousCell.isUndiscoveredEmpty) {
-    const newBoard = [...board];
-    newBoard[x] = [...newBoard[x]];
-    newBoard[x][y] = previousCell.update({ isDiscovered: true });
+
     // TODO: clear surrounding area.
-    return newBoard;
+    return updateBoardCell(board, [x, y], previousCell.update({ isDiscovered: true }));
   }
   return board;
 }
