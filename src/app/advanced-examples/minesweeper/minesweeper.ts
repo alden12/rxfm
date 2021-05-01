@@ -1,10 +1,10 @@
 import { destructure, Div, event, flatten, mapToComponents, styles, using } from 'rxfm';
 import { Observable, Subject } from 'rxjs';
-import { map, scan, startWith } from 'rxjs/operators';
+import { map, retry, scan, startWith } from 'rxjs/operators';
 
 // Types:
 
-type MinesweeperCellType = 'cleared' | 'undiscovered' | 'marked' | 'mine' | 'exploded';
+type MinesweeperCellType = 'cleared' | 'undiscoveredEmpty' | 'undiscoveredMine' | 'markedMine' | 'markedEmpty' | 'exploded';
 type MinesweeperCell = { type: MinesweeperCellType, neighbors: number | null };
 type MinesweeperBoard = MinesweeperCell[][];
 type Vector = [number, number]; // [x, y]
@@ -21,33 +21,80 @@ interface CellAction {
 const BOARD_WIDTH = 14;
 const BOARD_HEIGHT = 7;
 
+const MINE_COUNT = 10;
+
 const CELL_COLOR_MAP: Record<MinesweeperCellType, string> = {
   cleared: 'grey',
-  undiscovered: 'lightgrey',
-  marked: 'teal',
-  mine: 'black',
-  exploded: 'red'
+  undiscoveredEmpty: 'lightgrey',
+  undiscoveredMine: 'black', // TODO: Set to same color as undiscoveredEmpty.
+  markedMine: 'teal',
+  markedEmpty: 'teal',
+  exploded: 'red',
 };
 
 // Game Logic:
 
-const getEmptyBoard = (): MinesweeperBoard => Array(BOARD_WIDTH)
-  .fill(undefined)
-  .map(() => Array(BOARD_HEIGHT).fill({ type: 'undiscovered', neighbors: null }));
+const indexToVector = (index: number): Vector => [Math.floor(index / BOARD_HEIGHT), index % BOARD_HEIGHT];
 
-const updateBoard = (board: MinesweeperBoard, action?: CellAction) => {
-  if (!action) return board;
-  const { type, cell: [x, y] } = action;
+// TODO: Take initial click coord and exclude this from possible mines.
+const placeRandomMines = (count: number): Vector[] => {
+  const boardSize = BOARD_WIDTH * BOARD_HEIGHT;
+  const mineIndices = new Set<number>();
+  while (mineIndices.size < count) {
+    mineIndices.add(Math.floor(Math.random() * boardSize));
+  }
+  return Array.from(mineIndices).map(indexToVector);
+};
+
+const getEmptyBoard = (mines?: Vector[]): MinesweeperBoard => {
+  const board = Array(BOARD_WIDTH)
+    .fill(undefined)
+    .map(() => Array(BOARD_HEIGHT).fill({ type: 'undiscoveredEmpty', neighbors: null }));
+  mines?.forEach(([x, y]) => board[x][y] = { type: 'undiscoveredMine', neighbors: null });
+  return board;
+}
+
+const isMine = ({ type }: MinesweeperCell) => type === 'undiscoveredMine' || type === 'markedMine';
+const isMarked = ({ type }: MinesweeperCell) => type === 'markedEmpty' || type === 'markedMine';
+
+const clearCells = (board: MinesweeperBoard, [x, y]: Vector) => {
+  const previousCell = board[x][y];
+  if (previousCell.type === 'undiscoveredEmpty') {
+    const newBoard = [...board];
+    newBoard[x] = [...newBoard[x]];
+    newBoard[x][y] = { type: 'cleared', neighbors: board[x][y].neighbors };
+    // TODO: clear surrounding area.
+    return newBoard;
+  } else if (isMine(previousCell)) {
+    throw new Error('Game Over!');
+  }
+  return board;
+}
+
+const markCell = (board: MinesweeperBoard, [x, y]: Vector) => {
+  const previousCell = board[x][y];
+  if (isMarked(previousCell)) return board;
   const newBoard = [...board];
-  const newCell: MinesweeperCellType = type === 'discover' ? 'cleared' : 'marked';
+  const newCellType: MinesweeperCellType = isMine(previousCell) ? 'markedMine' : 'markedEmpty';
   newBoard[x] = [...newBoard[x]];
-  newBoard[x][y] = { type: newCell, neighbors: newBoard[x][y].neighbors };
+  newBoard[x][y] = { type: newCellType, neighbors: board[x][y].neighbors };
   return newBoard;
 };
 
+const getNewBoard = (board: MinesweeperBoard, action: CellAction) => {
+  const { type, cell } = action;
+  if (type === 'discover') {
+    return clearCells(board, cell);
+  } else if (type === 'mark') {
+    return markCell(board, cell);
+  }
+  return board;
+};
+
 const minesweeperGameLoop = (action: Observable<CellAction>) => action.pipe(
-  startWith(undefined),
-  scan(updateBoard, getEmptyBoard()),
+  scan(getNewBoard, getEmptyBoard(placeRandomMines(MINE_COUNT))),
+  startWith(getEmptyBoard()),
+  retry(),
 )
 
 // Display Logic
@@ -61,7 +108,7 @@ const GameCell = (
 
   const handleCellAction = (type: CellActionType) => using(index, index => () => onCellAction({
     type,
-    cell: [Math.floor(index / BOARD_HEIGHT), index % BOARD_HEIGHT],
+    cell: indexToVector(index),
   }))
 
   return Div(neighbors).pipe(
