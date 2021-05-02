@@ -20,12 +20,13 @@ interface CellAction {
 const BOARD_WIDTH = 14;
 const BOARD_HEIGHT = 7;
 
-const MINE_COUNT = 10;
+const MINE_COUNT = 20;
 
 const CELL_COLOR_MAP: Record<MinesweeperCellType, string> = {
-  cleared: 'grey',
-  undiscoveredEmpty: 'lightgrey',
-  undiscoveredMine: 'black', // TODO: Set to same color as undiscoveredEmpty.
+  cleared: 'darkgrey',
+  undiscoveredEmpty: 'grey',
+  undiscoveredMine: 'grey',
+  // undiscoveredMine: 'black', // TODO: Set to same color as undiscoveredEmpty.
   markedMine: 'teal',
   markedEmpty: 'teal',
   explodedMine: 'red',
@@ -81,6 +82,10 @@ class MinesweeperCell {
     return new MinesweeperCell(this.type, neighbors);
   }
 
+  public clear() {
+    return new MinesweeperCell('cleared', this.neighbors);
+  }
+
   public toggleMarked(): MinesweeperCell {
     switch(this.type) {
       case ('undiscoveredEmpty'):
@@ -127,8 +132,19 @@ const getEmptyBoard = (): MinesweeperBoard => Array(BOARD_WIDTH)
   .fill(undefined)
   .map(() => Array(BOARD_HEIGHT).fill(new MinesweeperCell()));
 
-const clearEmptyCells = (board: MinesweeperBoard, cell: Vector): MinesweeperBoard => {
+const cloneBoard = (board: MinesweeperBoard) => board.map(column => [...column]);
 
+const clearEmptyCells = (board: MinesweeperBoard, [x, y]: Vector): MinesweeperBoard => {
+  const cell = board[x][y];
+  if (cell.isUndiscoveredEmpty) {
+    board[x][y] = cell.clear();
+    if (cell.neighbors <= 1) {
+      DIRECT_NEIGHBOR_VECTORS.forEach(vector => {
+        const offsetCell = getOffsetCell(board, [x, y], vector);
+        if (offsetCell && offsetCell.isUndiscoveredEmpty) clearEmptyCells(board, [x + vector[0], y + vector[1]]);
+      });
+    }
+  }
   return board;
 }
 
@@ -142,7 +158,7 @@ class MinesweeperGame {
     if (type === 'discover') {
       return this.clearCells(cell);
     } else if (type === 'mark') {
-      return this.markCell(cell);
+      return this.toggleMarked(cell);
     }
     return this;
   }
@@ -150,10 +166,8 @@ class MinesweeperGame {
   public static placeMines() {
     const board = getEmptyBoard();
     const mines = placeRandomMines(MINE_COUNT);
-    mines?.forEach(([x, y]) => board[x][y] = new MinesweeperCell('undiscoveredMine'));
-    if (mines && mines.length) {
-      board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])))
-    }
+    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('undiscoveredMine'));
+    board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])))
     return new MinesweeperGame(board);
   }
 
@@ -169,13 +183,14 @@ class MinesweeperGame {
     if (previousCell.isMine) {
       throw new Error('Game Over!');
     } else if (previousCell.isUndiscoveredEmpty) {
-      // TODO: clear surrounding area.
-      return this.updateCell([x, y], previousCell.updateType('cleared'));
+      const newBoard = cloneBoard(this.board);
+      clearEmptyCells(newBoard, [x, y]);
+      return new MinesweeperGame(newBoard);
     }
     return this;
   }
 
-  private markCell([x, y]: Vector) {
+  private toggleMarked([x, y]: Vector) {
     const previousCell = this.board[x][y];
     if (!previousCell.isDiscovered) {
       return this.updateCell([x, y], previousCell.toggleMarked())
