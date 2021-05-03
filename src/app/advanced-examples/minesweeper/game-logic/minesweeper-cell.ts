@@ -11,12 +11,20 @@ export class MinesweeperCell {
     return isOneOf<MinesweeperCellType>(this.type, ['undiscoveredMine', 'markedMine']);
   }
 
+  public get isMarked(): boolean {
+    return isOneOf<MinesweeperCellType>(this.type, ['markedEmpty', 'markedMine']);
+  }
+
   public get isDiscovered(): boolean {
     return this.type === 'cleared';
   }
 
   public get isUndiscoveredEmpty(): boolean {
     return this.type === 'undiscoveredEmpty';
+  }
+
+  public get isUndiscoveredMine(): boolean {
+    return this.type === 'undiscoveredMine';
   }
 
   public get hasNeighbors(): boolean {

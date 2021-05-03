@@ -1,7 +1,7 @@
 import { Observable } from "rxjs";
 import { tap, map, scan, startWith, retry } from "rxjs/operators";
 import { BOARD_HEIGHT, BOARD_WIDTH, indexToVector, isOneOf, MINE_COUNT, vectorToIndex } from "../constants";
-import { MinesweeperBoard, getEmptyBoard, setCellNeighbors, revealMines, cloneBoard, clearEmptyCells, allCleared } from "./minesweeper-board";
+import { MinesweeperBoard, getEmptyBoard, setCellNeighbors, revealMines, clearEmptyCells, allCleared, clearNeighbors } from "./minesweeper-board";
 import { MinesweeperCell } from "./minesweeper-cell";
 import { Vector, CellActionType, GameStage, CellAction } from "../types";
 
@@ -17,13 +17,13 @@ const placeRandomMines = (count: number, startingCell: Vector): Vector[] => {
 };
 
 class MinesweeperGame {
+  public endTime: number | undefined = undefined;
+
   private actionMap: Record<CellActionType, (cell: Vector) => MinesweeperGame> = {
     discover: (cell: Vector) => this.clearCells(cell),
     mark: (cell: Vector) => this.toggleMarked(cell),
     start: (cell: Vector) => this.placeMines(cell),
   };
-
-  public endTime: number | undefined = undefined;
 
   constructor(
     public board: MinesweeperBoard,
@@ -50,12 +50,16 @@ class MinesweeperGame {
   private clearCells([x, y]: Vector) {
     const previousCell = this.board[x][y];
     if (previousCell.isMine) {
-      return new MinesweeperGame(revealMines(this.board, true), undefined, 'gameOver');
+      return this.gameOver();
     } else if (previousCell.isUndiscoveredEmpty) {
-      const newBoard = cloneBoard(this.board);
-      clearEmptyCells(newBoard, [x, y]);
-      if (allCleared(newBoard)) return new MinesweeperGame(revealMines(newBoard, false), this.startTime, 'win');
-      return new MinesweeperGame(newBoard, this.startTime, 'playing');
+      const newBoard = clearEmptyCells(this.board, [x, y]);
+      if (allCleared(newBoard)) return this.win(newBoard);
+      return this.updateBoard(newBoard);
+    } else if (previousCell.hasNeighbors && previousCell.isDiscovered) {
+      const newBoard = clearNeighbors(this.board, [x, y]);
+      if (newBoard === null) return this.gameOver();
+      if (allCleared(newBoard)) return this.win(newBoard);
+      return this.updateBoard(newBoard);
     }
     return this;
   }
@@ -72,7 +76,19 @@ class MinesweeperGame {
     const newBoard = [...this.board];
     newBoard[x] = [...newBoard[x]];
     newBoard[x][y] = newCell;
+    return this.updateBoard(newBoard);
+  }
+
+  private updateBoard(newBoard: MinesweeperBoard) {
     return new MinesweeperGame(newBoard, this.startTime, 'playing');
+  }
+
+  private gameOver() {
+    return new MinesweeperGame(revealMines(this.board, true), undefined, 'gameOver');
+  }
+
+  private win(newBoard: MinesweeperBoard) {
+    return new MinesweeperGame(revealMines(newBoard, false), this.startTime, 'win');
   }
 }
 
