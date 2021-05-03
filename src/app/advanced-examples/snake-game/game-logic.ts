@@ -110,5 +110,4 @@ export const snakeGameLoop = (difficulty: Observable<Difficulty>) => difficulty.
   scan((state, [_, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
-  shareReplay({ refCount: true, bufferSize: 1 }),
 );

@@ -9,11 +9,14 @@ export type DestructuredObservable<T> = {
 /**
  * Destructure properties from the source observable in a similar way to destructuring an object in normal JavaScript code.
  * @param source An observable emitting an object of type T.
+ * @param share Whether or not the source observable should be shared before destructuring to prevent resubscribing the source,
+ * default is true.
  * @returns An object where keys are observables emitting the corresponding property from the source observables object emissions.
  */
-export function destructure<T> (source: Observable<T>): DestructuredObservable<T> {
+export function destructure<T> (source: Observable<T>, share = true): DestructuredObservable<T> {
+  const sharedSource = share ? reuse(source) : source;
   const handler = {
-    get: (_: DestructuredObservable<T>, prop: string | symbol) => selectFrom(source, prop as keyof T),
+    get: (_: DestructuredObservable<T>, prop: string | symbol) => selectFrom(sharedSource, prop as keyof T),
   };
   return new Proxy({} as DestructuredObservable<T>, handler);
 }
@@ -64,16 +67,30 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
   );
 }
 
-export function andGate(...sources: Observable<boolean>[]): Observable<boolean> {
+export function andGate(...sources: Observable<any>[]): Observable<boolean> {
   return combineLatest(sources).pipe(
-    map(values => values.every(value => value)),
+    map(values => values.every(value => Boolean(value))),
     distinctUntilChanged(),
   );
 }
 
-export function orGate(...sources: Observable<boolean>[]): Observable<boolean> {
+export function orGate(...sources: Observable<any>[]): Observable<boolean> {
   return combineLatest(sources).pipe(
-    map(values => values.some(value => value)),
+    map(values => values.some(value => Boolean(value))),
     distinctUntilChanged(),
+  );
+}
+
+export function notGate(source: Observable<any>): Observable<boolean> {
+  return source.pipe(
+    distinctUntilChanged(),
+    map(val => !val),
+  );
+}
+
+export function equals<T>(source: Observable<T>, value: T): Observable<boolean> {
+  return source.pipe(
+    distinctUntilChanged(),
+    map(current => current === value),
   );
 }
