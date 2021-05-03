@@ -7,26 +7,26 @@ export const MINE_COUNT = 12;
 
 export const CELL_COLOR_MAP: Record<MinesweeperCellType, string> = {
   cleared: 'darkgrey',
-  undiscoveredEmpty: 'grey',
-  undiscoveredMine: 'grey',
-  markedMine: 'grey',
-  markedEmpty: 'grey',
-  explodedMine: 'red',
   mine: 'darkgrey',
+  explodedMine: 'red',
+  unflaggedEmpty: 'grey',
+  unflaggedMine: 'grey',
+  flaggedMine: 'grey',
+  flaggedEmpty: 'grey',
 };
 
 export const CELL_SYMBOL_MAP: Partial<Record<MinesweeperCellType, string>> = {
   mine: '💣',
-  markedEmpty: '🚩',
-  markedMine: '🚩',
+  flaggedEmpty: '🚩',
+  flaggedMine: '🚩',
   explodedMine: '💥',
 };
 
-export const CELL_MARKING_MAP: Partial<Record<MinesweeperCellType, MinesweeperCellType>> = {
-  undiscoveredEmpty: 'markedEmpty',
-  markedEmpty: 'undiscoveredEmpty',
-  undiscoveredMine: 'markedMine',
-  markedMine: 'undiscoveredMine',
+export const CELL_FLAG_TOGGLE_MAP: Partial<Record<MinesweeperCellType, MinesweeperCellType>> = {
+  unflaggedEmpty: 'flaggedEmpty',
+  flaggedEmpty: 'unflaggedEmpty',
+  unflaggedMine: 'flaggedMine',
+  flaggedMine: 'unflaggedMine',
 };
 
 export const NEIGHBORS_COLOR_MAP: Record<number, string> = {

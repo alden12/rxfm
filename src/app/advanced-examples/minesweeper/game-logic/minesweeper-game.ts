@@ -21,8 +21,8 @@ class MinesweeperGame {
 
   private actionMap: Record<CellActionType, (cell: Vector) => MinesweeperGame> = {
     discover: (cell: Vector) => this.clearCells(cell),
-    mark: (cell: Vector) => this.toggleMarked(cell),
-    start: (cell: Vector) => this.placeMines(cell),
+    flag: (cell: Vector) => this.toggleFlagged(cell),
+    start: (cell: Vector) => this.startGame(cell),
   };
 
   constructor(
@@ -33,16 +33,16 @@ class MinesweeperGame {
     if (gameStage === 'win') this.endTime = Date.now();
   }
 
-  public update(action: CellAction) {
+  public dispatch(action: CellAction) {
     if (isOneOf<GameStage>(this.gameStage, ['win', 'gameOver'])) return this;
     const { type, cell } = action;
     return this.actionMap[type](cell);
   }
 
-  private placeMines(startingCell: Vector) {
+  private startGame(startingCell: Vector) {
     const board = getEmptyBoard();
     const mines = placeRandomMines(MINE_COUNT, startingCell);
-    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('undiscoveredMine'));
+    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('unflaggedMine'));
     board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])))
     return new MinesweeperGame(board, Date.now(), 'playing').clearCells(startingCell);
   }
@@ -50,15 +50,15 @@ class MinesweeperGame {
   private clearCells([x, y]: Vector) {
     const cell = this.board[x][y];
     if (cell.isMine) return this.gameOver();
-    else if (cell.isUndiscoveredEmpty) return this.clearEmpty([x, y]);
-    else if (cell.isDiscovered && cell.hasNeighbors) this.clearNeighbors([x, y]);
-    return this;
+    else if (cell.isUnflaggedEmpty) return this.clearEmpty([x, y]);
+    else if (cell.isCleared && cell.hasNeighbors) return this.clearNeighbors([x, y]);
+    else return this;
   }
 
-  private toggleMarked([x, y]: Vector) {
+  private toggleFlagged([x, y]: Vector) {
     const previousCell = this.board[x][y];
-    if (!previousCell.isDiscovered) {
-      return this.updateCell([x, y], previousCell.toggleMarked())
+    if (!previousCell.isCleared) {
+      return this.updateCell([x, y], previousCell.toggleFlagged())
     }
     return this;
   }
@@ -115,8 +115,8 @@ export const minesweeperGameLoop = (action: Observable<CellAction>): Observable<
     if (type === 'start') throw new Error('Restart Game');
   }),
   map((action, i) => i === 0 ? { type: 'start' as const, cell: action.cell } : action),
-  scan((board, action) => board.update(action), new MinesweeperGame(getEmptyBoard(), undefined, 'pregame')),
+  scan((board, action) => board.dispatch(action), new MinesweeperGame(getEmptyBoard(), undefined, 'pregame')),
   map(({ board, startTime, endTime, gameStage }) => ({ board, startTime, endTime, gameStage })),
   startWith(getStartingState()),
   retry(),
-)
+);

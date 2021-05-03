@@ -35,11 +35,11 @@ const cloneBoard = (board: MinesweeperBoard) => board.map(column => [...column])
 export const clearEmptyCells = (board: MinesweeperBoard, [x, y]: Vector, clone = true): MinesweeperBoard => {
   const newBoard = clone ? cloneBoard(board) : board;
   const cell = newBoard[x][y];
-  if (cell.isUndiscoveredEmpty) {
+  if (cell.isUnflaggedEmpty) {
     newBoard[x][y] = cell.clear();
     if (cell.neighbors === 0) {
       getNeighboringCells(newBoard, [x, y]).forEach(({ cell, coords }) => {
-        if (cell.isUndiscoveredEmpty) clearEmptyCells(newBoard, coords, false);
+        if (cell.isUnflaggedEmpty) clearEmptyCells(newBoard, coords, false);
       });
     }
   }
@@ -49,9 +49,9 @@ export const clearEmptyCells = (board: MinesweeperBoard, [x, y]: Vector, clone =
 export const clearNeighbors = (board: MinesweeperBoard, [x, y]: Vector): MinesweeperBoard | null => {
   const cell = board[x][y];
   const neighbors = getNeighboringCells(board, [x, y]);
-  const flaggedCount = neighbors.reduce((count, { cell }) => count + Number(Boolean(cell.isMarked)), 0);
+  const flaggedCount = neighbors.reduce((count, { cell }) => count + Number(Boolean(cell.isFlagged)), 0);
   if (cell.neighbors === flaggedCount) {
-    if (neighbors.some(({ cell }) => cell.isUndiscoveredMine)) return null;
+    if (neighbors.some(({ cell }) => cell.isUnflaggedMine)) return null;
     const newBoard = cloneBoard(board);
     neighbors.forEach(({ coords }) => clearEmptyCells(newBoard, coords, false));
     return newBoard;
@@ -68,5 +68,5 @@ export const revealMines = (board: MinesweeperBoard, exploded: boolean): Mineswe
 };
 
 export const allCleared = (board: MinesweeperBoard): boolean => board.every(
-  column => column.every(cell => cell.isMine || cell.isDiscovered),
+  column => column.every(cell => cell.isMine || cell.isCleared),
 );
