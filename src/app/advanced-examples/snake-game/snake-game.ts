@@ -1,4 +1,4 @@
-import { Div, event, styles, using, flatten, mapToComponents, Button, destructure, reuse, classes } from "rxfm";
+import { Div, event, styles, using, flatten, mapToComponents, Button, destructure, classes } from "rxfm";
 import { Observable, BehaviorSubject } from "rxjs";
 import { map, scan } from "rxjs/operators";
 import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";
@@ -47,7 +47,7 @@ const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => 
 
 export const SnakeGame = () => {
   const difficulty = new BehaviorSubject<Difficulty>('Easy');
-  const { board, score } = destructure(reuse(snakeGameLoop(difficulty)));
+  const { board, score } = destructure(snakeGameLoop(difficulty));
 
   return Div(
     GameBoard(board),

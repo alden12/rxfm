@@ -21,7 +21,7 @@ npm install rxfm
 If you have `rxjs` installed already, make sure it is using the same version as RxFM, eg: `npm install rxjs@6.5.2`
 
 ## Hello World:
-Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `Elements`. Component names are written in PascalCase with the first letter capitalized.
+Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
 
 Basic component creators can be imported from `rxfm`:
 ```typescript
@@ -191,5 +191,6 @@ You can check out a few more complex RxFM examples at the links below to see how
 
 * [Todo List Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/todo-list)
 * [Snake Game Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/snake-game)
+* [Minesweeper Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/minesweeper)
 
 ---

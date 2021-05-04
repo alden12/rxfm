@@ -1,5 +1,5 @@
 import { defer, MonoTypeOperatorFunction, Observable, of } from "rxjs";
-import { switchMap, startWith, mapTo, distinctUntilChanged, tap } from "rxjs/operators";
+import { switchMap, startWith, distinctUntilChanged, tap, ignoreElements } from "rxjs/operators";
 import { children, ComponentChild } from "../children/children";
 import { flatten } from "../utils";
 
@@ -48,7 +48,7 @@ export function componentOperator<T extends ElementType, U>(
   return (component: Component<T>) => component.pipe(
     distinctUntilChanged(),
     switchMap(element => effect(element).pipe(
-      mapTo(element),
+      ignoreElements(),
       startWith(element),
     )),
     distinctUntilChanged(),

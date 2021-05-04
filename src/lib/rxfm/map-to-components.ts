@@ -1,38 +1,42 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
 import { ElementType, Component } from './components';
-import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, share, tap } from 'rxjs/operators';
+import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
+import { selectFrom } from './utils';
 
 type Id = string | number;
 
+interface ItemAndIndex<T> {
+  item: T;
+  index: number;
+}
+
 interface ItemDiff<T> {
-  updated: Map<Id, T>;
   added: Id[];
   removed: Set<Id>;
-  itemMap: Map<Id, T>;
+  itemMap: Map<Id, ItemAndIndex<T>>;
 }
 
 function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunction<T[], ItemDiff<T>> {
   return (items$: Observable<T[]>) => {
-    let previousItemMap = new Map<Id, T>();
+    let previousItemMap = new Map<Id, ItemAndIndex<T>>();
     return items$.pipe(
       map(items => {
-        const itemsAndIds = items.map((item, i) => {
-          const id = idFunction(item, i);
+        const itemsAndIds = items.map((item, index) => {
+          const id = idFunction(item, index);
           if (typeof id !== 'string' && typeof id !== 'number') {
             throw new TypeError(
               `Invalid id function passed to mapToComponents, must return string or number, got: ${typeof id}.`,
             );
           }
-          return [id, item] as const
+          return [id, { item, index }] as const
         });
-        const updated = new Map(itemsAndIds.filter(([id]) => previousItemMap.has(id)));
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id)
         const itemMap = new Map(itemsAndIds);
         const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
         previousItemMap = itemMap;
-        return { updated, added, removed, itemMap };
+        return { added, removed, itemMap };
       }),
-      share(),
+      shareReplay({ refCount: true, bufferSize: 1 }),
     );
   }
 }
@@ -44,19 +48,21 @@ interface ComponentDiff<I, T extends ElementType> {
 }
 
 function createComponents<I, T extends ElementType>(
-  creationFunction: (item: Observable<I>) => Component<T>,
+  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
 ): OperatorFunction<ItemDiff<I>, ComponentDiff<Id, T>> {
   return (changes: Observable<ItemDiff<I>>) => changes.pipe(
     map(({ added, removed, itemMap }) => {
 
       const newComponents = added.map(id => {
-        const updates = changes.pipe(
-          filter(({ updated }) => updated.has(id)),
-          map(({updated}) => updated.get(id) as I),
-          startWith(itemMap.get(id)!),
+        const itemAndIndexUpdates = changes.pipe(
+          filter(({ itemMap }) => itemMap.has(id)),
+          map(({ itemMap }) => itemMap.get(id)!),
           distinctUntilChanged(),
         );
-        const componentObservable = creationFunction(updates).pipe(
+        const componentObservable = creationFunction(
+          selectFrom(itemAndIndexUpdates, 'item'),
+          selectFrom(itemAndIndexUpdates, 'index'),
+        ).pipe(
           takeUntil(changes.pipe(
             filter(diff => diff.removed.has(id)),
           )),
@@ -125,14 +131,14 @@ function simpleComponentDiffer<I, T extends ElementType>(
 //  */
 export function mapToComponents<I, T extends ElementType>(
   idFunction: (item: I, index: number) => Id,
-  creationFunction: (item: Observable<I>) => Component<T>,
+  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
 ): OperatorFunction<I[], ElementType[]>
 export function mapToComponents<I, T extends ElementType>(
   staticCreationFunction: (item: I) => Component<T>,
 ): OperatorFunction<I[], ElementType[]>
 export function mapToComponents<I, T extends ElementType>(
   idOrCreationFunction: ((item: I, index: number) => Id) | ((item: I) => Component<T>),
-  creationFunction?: (item: Observable<I>) => Component<T>,
+  creationFunction?: (item: Observable<I>, index: Observable<number>) => Component<T>,
 ): OperatorFunction<I[], ElementType[]> {
   if (creationFunction) {
     return (items: Observable<I[]>) => items.pipe(

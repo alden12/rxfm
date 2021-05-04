@@ -41,10 +41,6 @@ function coerceChildComponent(childComponent: ComponentChild): Observable<Coerce
         }
         return null // Otherwise return null to indicate empty.
       }),
-      catchError(err => { // If component child throws an error, remove it and display a warning in the console.
-        console.warn(`Error thrown in component child: ${err}`,)
-        return of(null);
-      }),
     );
   } else if (childComponent !== undefined && childComponent !== null && childComponent !== false) { // If string like.
     const node = document.createTextNode(childComponent.toString()); // Coerce to string and create text node with string value.

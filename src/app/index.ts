@@ -13,7 +13,7 @@ import {
   ComponentArraysExample,
   TaggedTemplateExample,
 } from './basic-examples';
-import { TodoList, SnakeGame } from './advanced-examples';
+import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
 import './styles.css';
 
@@ -39,6 +39,7 @@ const Examples = Div(
   Example('Component Arrays', ComponentArraysExample),
   Example('Todo List Example', TodoList),
   Example('Snake Example', SnakeGame),
+  Example('Minesweeper Example', Minesweeper),
 ).pipe(
   classes('examples'),
 );

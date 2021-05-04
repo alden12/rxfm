@@ -7,6 +7,7 @@
     "no-console": false,
     "max-classes-per-file": false,
     "no-string-literal": false,
-    "no-shadowed-variable": false
+    "no-shadowed-variable": false,
+    "no-empty": false
   }
 }

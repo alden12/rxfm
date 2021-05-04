@@ -1,0 +1,37 @@
+.minesweeper-cell {
+  height: 16px;
+  width: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid dimgrey;
+}
+
+.minesweeper-cell.raised {
+  border: 2px solid lightgrey;
+  border-bottom-color: dimgrey;
+  border-right-color: dimgrey;
+  height: 14px;
+  width: 14px;
+}
+
+.minesweeper-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+}
+
+.minesweeper-controls {
+  padding-left: 10px;
+  display: grid;
+  align-items: start;
+  justify-items: start;
+  align-content: start;
+  grid-gap: 10px;
+}
+
+.minesweeper {
+  display: flex;
+}
