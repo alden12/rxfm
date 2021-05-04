@@ -11,3 +11,5 @@ export const ChildrenExample = Div(
   timer(0, 1000),
   's elapsed.',
 );
+
+export const TaggedTemplateExample = Div`We can also pass children as a ${B`tagged template!`}`;

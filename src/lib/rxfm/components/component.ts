@@ -7,6 +7,8 @@ export type ElementType = HTMLElement | SVGElement;
 
 export type Component<T extends ElementType = ElementType> = Observable<T>;
 
+export type ComponentFunction<T extends ElementType> = (...childComponents: ComponentChild[]) => Component<T>;
+
 export type ComponentCreator<T extends ElementType = ElementType> = {
   (...childComponents: ComponentChild[]): Component<T>;
   (templateStrings: TemplateStringsArray, ...componentChildren: ComponentChild[]): Component<T>;
@@ -14,15 +16,17 @@ export type ComponentCreator<T extends ElementType = ElementType> = {
 
 export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T>;
 
-export function componentCreator<T extends ElementType>(createElement: () => T): ComponentCreator<T> {
-  const simpleCreator = (...childComponents: ComponentChild[]) => defer(() => of(createElement())).pipe(
+export function componentFunction<T extends ElementType>(createElement: () => T): ComponentFunction<T> {
+  return (...childComponents: ComponentChild[]) => defer(() => of(createElement())).pipe(
     children(...childComponents),
   );
+}
 
+export function componentCreator<T extends ElementType>(componentFunction: ComponentFunction<T>): ComponentCreator<T> {
   return (stringsOrFirstChild: TemplateStringsArray | ComponentChild, ...componentChildren: ComponentChild[]) => {
     if (Array.isArray(stringsOrFirstChild)) {
       if (stringsOrFirstChild.every(val => typeof val === 'string')) {
-        return simpleCreator(
+        return componentFunction(
           ...flatten((stringsOrFirstChild as TemplateStringsArray)
             .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null]),
           ),
@@ -30,7 +34,7 @@ export function componentCreator<T extends ElementType>(createElement: () => T):
       }
       throw new TypeError('Arrays may only be passed as component children when using the tagged templates form eg: "div`hello world`".');
     }
-    return simpleCreator(stringsOrFirstChild as ComponentChild, ... componentChildren);
+    return componentFunction(stringsOrFirstChild as ComponentChild, ... componentChildren);
   };
 }
 

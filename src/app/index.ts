@@ -11,6 +11,7 @@ import {
   ClickCounter,
   ConditionalComponentsExample,
   ComponentArraysExample,
+  TaggedTemplateExample,
 } from './basic-examples';
 import { TodoList, SnakeGame } from './advanced-examples';
 
@@ -26,6 +27,7 @@ const Example = (title: string, ...children: ComponentChild[]) => Div(
 const Examples = Div(
   Example('Hello World', HelloWorld),
   Example('Children', ChildrenExample),
+  Example('Tagged Templates', TaggedTemplateExample),
   Example('Styles', StylesExample),
   Example('Dynamic Styles', DynamicStyles),
   Example('CSS Classes', ClassExample),

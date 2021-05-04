@@ -37,8 +37,8 @@ const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => 
   );
 
   return Div(
-    Div('Score: ', score),
-    Div('High Score: ', highScore),
+    Div`Score: ${score}`,
+    Div`High Score: ${highScore}`,
     ...difficulties.map(difficulty => DifficultyButton(difficulty, setDifficulty)),
   ).pipe(
     classes('score-board'),
