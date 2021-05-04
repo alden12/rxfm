@@ -34,7 +34,7 @@ export function componentCreator<T extends ElementType>(componentFunction: Compo
       }
       throw new TypeError('Arrays may only be passed as component children when using the tagged templates form eg: "div`hello world`".');
     }
-    return componentFunction(stringsOrFirstChild as ComponentChild, ... componentChildren);
+    return componentFunction(stringsOrFirstChild as ComponentChild, ...componentChildren);
   };
 }
 
