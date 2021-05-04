@@ -16,8 +16,8 @@ const getOffsetCell = (board: MinesweeperBoard, cellCoords: Vector, offset: Vect
   return { cell, coords };
 }
 
-const getNeighboringCells = (board: MinesweeperBoard, [x, y]: Vector): OffsetCell[] => NEIGHBOR_VECTORS
-  .map(vector => getOffsetCell(board, [x, y], vector))
+const getNeighboringCells = (board: MinesweeperBoard, cellCoords: Vector): OffsetCell[] => NEIGHBOR_VECTORS
+  .map(vector => getOffsetCell(board, cellCoords, vector))
   .filter(cell => cell !== undefined) as OffsetCell[];
 
 export const setCellNeighbors = (board: MinesweeperBoard, [x, y]: Vector) => {

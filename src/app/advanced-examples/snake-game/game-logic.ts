@@ -1,6 +1,6 @@
 import { flatten } from "rxfm";
 import { fromEvent, Observable, timer } from "rxjs";
-import { filter, map, startWith, switchMap, withLatestFrom, scan, retry, shareReplay } from "rxjs/operators";
+import { filter, map, startWith, switchMap, withLatestFrom, scan, retry } from "rxjs/operators";
 import {
   DIRECTION_MAP,
   STARTING_SNAKE_COORDS,

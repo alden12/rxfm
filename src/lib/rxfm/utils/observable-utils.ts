@@ -88,9 +88,13 @@ export function notGate(source: Observable<any>): Observable<boolean> {
   );
 }
 
-export function equals<T>(source: Observable<T>, value: T): Observable<boolean> {
-  return source.pipe(
+export function equals<T>(...sources: (T | Observable<T>)[]): Observable<boolean> {
+  return combineLatest(
+    sources.map(
+      source => coerceToObservable(source).pipe(distinctUntilChanged()),
+    ),
+  ).pipe(
+    map(values => values.every(val => val === values[0])),
     distinctUntilChanged(),
-    map(current => current === value),
   );
 }
