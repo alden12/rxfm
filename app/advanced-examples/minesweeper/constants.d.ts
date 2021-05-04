@@ -1,0 +1,12 @@
+import { MinesweeperCellType, Vector } from "./types";
+export declare const BOARD_WIDTH = 15;
+export declare const BOARD_HEIGHT = 8;
+export declare const MINE_COUNT = 12;
+export declare const CELL_COLOR_MAP: Record<MinesweeperCellType, string>;
+export declare const CELL_SYMBOL_MAP: Partial<Record<MinesweeperCellType, string>>;
+export declare const CELL_FLAG_TOGGLE_MAP: Partial<Record<MinesweeperCellType, MinesweeperCellType>>;
+export declare const NEIGHBORS_COLOR_MAP: Record<number, string>;
+export declare const NEIGHBOR_VECTORS: Vector[];
+export declare const isOneOf: <T>(testValue: T, values: T[]) => boolean;
+export declare const indexToVector: (index: number) => Vector;
+export declare const vectorToIndex: (vector: Vector) => number;
