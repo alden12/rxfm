@@ -44,7 +44,7 @@ const Examples = Div(
 );
 
 const App = Div(
-  H1('RxFM Examples'),
+  H1`RxFM Examples`,
   Examples,
 ).pipe(
   attribute('id', 'app'),

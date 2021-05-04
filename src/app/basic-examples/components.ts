@@ -12,4 +12,4 @@ export const ChildrenExample = Div(
   's elapsed.',
 );
 
-export const TaggedTemplateExample = Div`We can also pass children as a ${B`tagged template!`}`;
+export const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
