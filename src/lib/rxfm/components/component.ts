@@ -1,15 +1,42 @@
-import { MonoTypeOperatorFunction, Observable } from "rxjs";
+import { defer, MonoTypeOperatorFunction, Observable, of } from "rxjs";
 import { switchMap, startWith, mapTo, distinctUntilChanged, tap } from "rxjs/operators";
-import { ComponentChild } from "../children/children";
+import { children, ComponentChild } from "../children/children";
+import { flatten } from "../utils";
 
 export type ElementType = HTMLElement | SVGElement;
 
 export type Component<T extends ElementType = ElementType> = Observable<T>;
 
-export type ComponentFunction<T extends ElementType = ElementType> =
-  (...childComponents: ComponentChild[]) => Component<T>;
+export type ComponentFunction<T extends ElementType> = (...childComponents: ComponentChild[]) => Component<T>;
+
+export type ComponentCreator<T extends ElementType = ElementType> = {
+  (...childComponents: ComponentChild[]): Component<T>;
+  (templateStrings: TemplateStringsArray, ...componentChildren: ComponentChild[]): Component<T>;
+};
 
 export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T>;
+
+export function componentFunction<T extends ElementType>(createElement: () => T): ComponentFunction<T> {
+  return (...childComponents: ComponentChild[]) => defer(() => of(createElement())).pipe(
+    children(...childComponents),
+  );
+}
+
+export function componentCreator<T extends ElementType>(componentFunction: ComponentFunction<T>): ComponentCreator<T> {
+  return (stringsOrFirstChild: TemplateStringsArray | ComponentChild, ...componentChildren: ComponentChild[]) => {
+    if (Array.isArray(stringsOrFirstChild)) {
+      if (stringsOrFirstChild.every(val => typeof val === 'string')) {
+        return componentFunction(
+          ...flatten((stringsOrFirstChild as TemplateStringsArray)
+            .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null]),
+          ),
+        );
+      }
+      throw new TypeError('Arrays may only be passed as component children when using the tagged templates form eg: "div`hello world`".');
+    }
+    return componentFunction(stringsOrFirstChild as ComponentChild, ...componentChildren);
+  };
+}
 
 /**
  * A function to create a component operator.
