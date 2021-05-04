@@ -1,6 +1,6 @@
 import { Div, Button, classes, event } from "rxfm";
 import { Observable, combineLatest, of, timer } from "rxjs";
-import { switchMap, filter, map, scan, startWith } from "rxjs/operators";
+import { switchMap, filter, map, scan, startWith, distinctUntilChanged } from "rxjs/operators";
 import { GameStage, CellAction } from "../types";
 
 export const Controls = (
@@ -9,13 +9,12 @@ export const Controls = (
   gameStage: Observable<GameStage>,
   dispatch: (action: CellAction) => void,
 ) => {
-  const GameTime = combineLatest([startTime, endTime]).pipe(
+  const gameTime = combineLatest([startTime, endTime]).pipe(
     switchMap(([start, end]) => {
       if (!start) return of(0);
       else if (!end) return timer(0, 1000);
       return of(Math.round((end - start) / 1000));
     }),
-    switchMap(time => Div('Time: ', time, 's')),
   );
 
   const HighScore = combineLatest([startTime, endTime]).pipe(
@@ -23,22 +22,23 @@ export const Controls = (
     map(([start, end]) => Math.round((end! - start!) / 1000)),
     scan((lowestTime, time) => Math.min(lowestTime, time), Infinity),
     startWith(undefined),
-    switchMap(highScore => highScore ? Div('Highscore: ', highScore, 's') : of(null)),
+    distinctUntilChanged(),
+    switchMap(highScore => highScore ? Div`Highscore: ${highScore}s` : of(null)),
   );
 
   const WinLoseMessage = gameStage.pipe(
     switchMap(stage => {
-      if (stage === 'win') return Div('You Win!');
-      if (stage === 'gameOver') return Div('Game Over!');
+      if (stage === 'win') return Div`You Win!`;
+      if (stage === 'gameOver') return Div`Game Over!`;
       return of(null);
     }),
   );
 
   return Div(
-    Button('Restart').pipe(
+    Button`Restart`.pipe(
       event('click', () => dispatch({ type: 'start', cell: [0, 0] }))
     ),
-    GameTime,
+    Div`Time: ${gameTime}s`,
     HighScore,
     WinLoseMessage,
   ).pipe(

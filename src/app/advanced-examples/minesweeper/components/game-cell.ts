@@ -10,7 +10,7 @@ export const GameCell = (
   index: Observable<number>,
   onCellAction: (action: CellAction) => void,
 ) => {
-  const { neighbors, isCleared: isDiscovered, symbol, hasNeighbors, color } = destructure(cell);
+  const { neighbors, hasNeighbors, symbol, color, isCleared, isUndiscovered } = destructure(cell);
 
   const handleCellAction = (type: CellActionType) => index.pipe(
     map(i => () => onCellAction({ type, cell: indexToVector(i) }))
@@ -18,7 +18,7 @@ export const GameCell = (
 
   return Div(
     conditional(
-      andGate(isDiscovered, hasNeighbors),
+      andGate(isCleared, hasNeighbors),
       neighbors,
       symbol,
     ),
@@ -30,6 +30,9 @@ export const GameCell = (
       color: using(neighbors, neighbors => NEIGHBORS_COLOR_MAP[neighbors]),
       fontSize: using(symbol, symbol => symbol ? '12px' : '14px'),
     }),
-    classes('minesweeper-cell'),
+    classes(
+      'minesweeper-cell',
+      conditional(isUndiscovered, 'raised'),
+    ),
   );
 };

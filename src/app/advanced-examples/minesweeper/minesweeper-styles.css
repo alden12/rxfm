@@ -6,7 +6,15 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 1px solid white;
+  border: 1px solid dimgrey;
+}
+
+.minesweeper-cell.raised {
+  border: 2px solid lightgrey;
+  border-bottom-color: dimgrey;
+  border-right-color: dimgrey;
+  height: 14px;
+  width: 14px;
 }
 
 .minesweeper-board {

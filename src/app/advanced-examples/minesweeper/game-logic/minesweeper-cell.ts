@@ -27,6 +27,10 @@ export class MinesweeperCell {
     return this.type === 'unflaggedMine';
   }
 
+  public get isUndiscovered(): boolean {
+    return isOneOf<MinesweeperCellType>(this.type, ['flaggedEmpty', 'unflaggedEmpty', 'flaggedMine', 'unflaggedMine']);
+  }
+
   public get hasNeighbors(): boolean {
     return this.neighbors > 0;
   }
