@@ -8,10 +8,10 @@ const flipFlop = timer(0, 1000).pipe(
 
 export const ConditionalComponentsExample = Div(
   flipFlop.pipe(
-    switchMap(visible => visible ? Div('Now you see me!') : of(null)),
+    switchMap(visible => visible ? Div`Now you see me!` : of(null)),
   ),
 );
 
 export const ConditionalComponentsSimplifiedExample = Div(
-  conditional(flipFlop, Div('Now you see me!'))
+  conditional(flipFlop, Div`Now you see me!`)
 );

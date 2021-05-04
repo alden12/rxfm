@@ -4,24 +4,24 @@ import { map } from 'rxjs/operators';
 
 import './example-styles.css';
 
-export const StylesExample = Div('We can add styles').pipe(
+export const StylesExample = Div`We can add styles`.pipe(
   styles({
     color: 'blue',
     fontStyle: 'italic',
   })
 );
 
-export const DynamicStyles = Div('Styles can be dynamic').pipe(
+export const DynamicStyles = Div`Styles can be dynamic`.pipe(
   styles({
     color: timer(0, 1000).pipe(map(i => i % 2 ? 'red' : 'blue')),
   }),
 );
 
-export const ClassExample = Div('We can add CSS classes').pipe(
+export const ClassExample = Div`We can add CSS classes`.pipe(
   classes('example-class'),
 );
 
-export const DynamicClasses = Div('Classes can be dynamic').pipe(
+export const DynamicClasses = Div`Classes can be dynamic`.pipe(
   classes(
     'example-class',
     timer(0, 1000).pipe(map(i => i % 2 ? 'another-class' : null)),

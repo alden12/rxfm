@@ -37,7 +37,28 @@ HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
 The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
-[Full components example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts)
+[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+
+### Component Children:
+
+We can pass lots of different kinds of things as component children:
+```typescript
+const ChildrenExample = Div(
+  'Children can be strings, ',
+  B('child components, '),
+  () => Span('functions returning components, '),
+  'or observables: ',
+  timer(0, 1000),
+  's elapsed.',
+);
+```
+
+We can also use the tagged template syntax:
+```typescript
+const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
+```
+
+[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## State & Events:
 State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
@@ -49,7 +70,7 @@ const ClickCounter = () => {
   // Behavior Subjects can be used to hold state
   const clicks = new BehaviorSubject(0);
 
-  return Button('clicks: ', clicks).pipe(
+  return Button`Clicks: ${clicks}`.pipe(
     // Events are handled using the event operator function
     event('click', () => clicks.next(clicks.value + 1)),
   );
@@ -59,15 +80,15 @@ Here the `event` operator is what I've called a "component operator". These are 
 
 Using Subjects to store state like this gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
 
-[Full state and events example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/state-and-events.ts)
+[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/state-and-events.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## Attributes & Styling:
-Element attributes and styling can be set using operator functions imported from `rxfm`. Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
+Element attributes and styling can be set using operator functions imported from `rxfm`:
 ```typescript
 import { styles, classes, attributes, Div } from 'rxfm';
 ```
 ```typescript
-const StylesExample = Div('We can add styles').pipe(
+const StylesExample = Div`We can add styles`.pipe(
   styles({
     color: 'blue',
     fontStyle: 'italic',
@@ -75,7 +96,7 @@ const StylesExample = Div('We can add styles').pipe(
 );
 ```
 ```typescript
-const ClassExample = Div('We can add CSS classes').pipe(
+const ClassExample = Div`We can add CSS classes`.pipe(
   classes('example-class'),
 );
 ```
@@ -88,7 +109,9 @@ const AttributesExample = Input().pipe(
 );
 ```
 
-[Full attributes, classes and styling example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts)
+Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
+
+[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## Conditionally Displaying Components
 We can conditionally add a component using the `switchMap` operator function from `RxJS`.
@@ -118,7 +141,7 @@ const ConditionalComponentsExample = Div(
 
 You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
 
-[Full conditional components example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts)
+[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## Dynamic Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
@@ -159,7 +182,7 @@ const ComponentArraysExample = Div(ItemComponents);
 
 If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 
 
-[Full dynamic component arrays example code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/dynamic-component-arrays.ts)
+[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/dynamic-component-arrays.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 
 ## Advanced Examples
