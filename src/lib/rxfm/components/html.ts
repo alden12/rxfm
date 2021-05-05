@@ -1,190 +1,132 @@
-import { of } from "rxjs";
-import { map } from "rxjs/operators";
-import { children } from "../children/children";
-import { Component, ComponentFunction } from "./component";
+import { componentCreator, ComponentCreator, componentFunction } from "./component";
 
 /**
- * A dictionary of HTML element tag names.
+ * A function to return a component creator for an HTML element with the given tag name.
  */
-type HTMLElementTypes = {
-  [K in keyof HTMLElementTagNameMap]: K;
-};
-
-const HTMLElements: HTMLElementTypes = {
-  a: 'a',
-  abbr: 'abbr',
-  address: 'address',
-  applet: 'applet',
-  area: 'area',
-  article: 'article',
-  aside: 'aside',
-  audio: 'audio',
-  b: 'b',
-  base: 'base',
-  basefont: 'basefont',
-  bdi: 'bdi',
-  bdo: 'bdo',
-  blockquote: 'blockquote',
-  body: 'body',
-  br: 'br',
-  button: 'button',
-  canvas: 'canvas',
-  caption: 'caption',
-  cite: 'cite',
-  code: 'code',
-  col: 'col',
-  colgroup: 'colgroup',
-  data: 'data',
-  datalist: 'datalist',
-  dd: 'dd',
-  del: 'del',
-  details: 'details',
-  dfn: 'dfn',
-  dialog: 'dialog',
-  dir: 'dir',
-  div: 'div',
-  dl: 'dl',
-  dt: 'dt',
-  em: 'em',
-  embed: 'embed',
-  fieldset: 'fieldset',
-  figcaption: 'figcaption',
-  figure: 'figure',
-  font: 'font',
-  footer: 'footer',
-  form: 'form',
-  frame: 'frame',
-  frameset: 'frameset',
-  h1: 'h1',
-  h2: 'h2',
-  h3: 'h3',
-  h4: 'h4',
-  h5: 'h5',
-  h6: 'h6',
-  head: 'head',
-  header: 'header',
-  hgroup: 'hgroup',
-  hr: 'hr',
-  html: 'html',
-  i: 'i',
-  iframe: 'iframe',
-  img: 'img',
-  input: 'input',
-  ins: 'ins',
-  kbd: 'kbd',
-  label: 'label',
-  legend: 'legend',
-  li: 'li',
-  link: 'link',
-  main: 'main',
-  map: 'map',
-  mark: 'mark',
-  marquee: 'marquee',
-  menu: 'menu',
-  meta: 'meta',
-  meter: 'meter',
-  nav: 'nav',
-  noscript: 'noscript',
-  object: 'object',
-  ol: 'ol',
-  optgroup: 'optgroup',
-  option: 'option',
-  output: 'output',
-  p: 'p',
-  param: 'param',
-  picture: 'picture',
-  pre: 'pre',
-  progress: 'progress',
-  q: 'q',
-  rp: 'rp',
-  rt: 'rt',
-  ruby: 'ruby',
-  s: 's',
-  samp: 'samp',
-  script: 'script',
-  section: 'section',
-  select: 'select',
-  slot: 'slot',
-  small: 'small',
-  source: 'source',
-  span: 'span',
-  strong: 'strong',
-  style: 'style',
-  sub: 'sub',
-  summary: 'summary',
-  sup: 'sup',
-  table: 'table',
-  tbody: 'tbody',
-  td: 'td',
-  template: 'template',
-  textarea: 'textarea',
-  tfoot: 'tfoot',
-  th: 'th',
-  thead: 'thead',
-  time: 'time',
-  title: 'title',
-  tr: 'tr',
-  track: 'track',
-  u: 'u',
-  ul: 'ul',
-  var: 'var',
-  video: 'video',
-  wbr: 'wbr',
-};
-
-/**
- * Get a component creator function for an HTML element with the given tagName.
- */
-function getHTMLComponentFunction<K extends keyof HTMLElementTagNameMap>(
+function htmlComponentCreator<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): ComponentFunction<HTMLElementTagNameMap[K]> {
-  return (...childElements) => of(tagName).pipe(
-    map(tag => document.createElement(tag)),
-    children(...childElements),
+): ComponentCreator<HTMLElementTagNameMap[K]> {
+  return componentCreator(
+    componentFunction(() => document.createElement(tagName)),
   );
 }
 
-/**
- * A type mapping HTML element tag names to RxFM component creator functions.
- */
-export type HTMLComponentCreators = {
-  [K in keyof HTMLElementTagNameMap]: ComponentFunction<HTMLElementTagNameMap[K]>;
-};
-
-/**
- * A object mapping HTML element tag names to RxFM component creator functions.
- */
-export const HTML: HTMLComponentCreators = Object.keys(HTMLElements).reduce(
-  (components: HTMLComponentCreators, tagName: keyof HTMLElementTagNameMap) => {
-    components[tagName] = getHTMLComponentFunction(tagName) as () => Component<any>;
-    return components;
-  }, {} as HTMLComponentCreators
-);
-
-export const div = HTML.div;
-export const span = HTML.span;
-export const input = HTML.input;
-export const button = HTML.button;
-export const h1 = HTML.h1;
-export const h2 = HTML.h2;
-export const h3 = HTML.h3;
-export const h4 = HTML.h4;
-export const h5 = HTML.h5;
-export const h6 = HTML.h6;
-export const hr = HTML.hr;
-export const img = HTML.img;
-export const p = HTML.p;
-export const a = HTML.a;
-export const b = HTML.b;
-export const ul = HTML.ul;
-export const ol = HTML.ol;
-export const li = HTML.li;
-export const i = HTML.i;
-export const iframe = HTML.iframe;
-export const link = HTML.link;
-export const table = HTML.table;
-export const td = HTML.td;
-export const tr = HTML.tr;
-export const textarea = HTML.textarea;
-// TODO: Add more default elements.
-// TODO: Make all default elements capitalized to prevent conflicts?
+export const A = htmlComponentCreator('a');
+export const Abbr = htmlComponentCreator('abbr');
+export const Address = htmlComponentCreator('address');
+export const Applet = htmlComponentCreator('applet');
+export const Area = htmlComponentCreator('area');
+export const Article = htmlComponentCreator('article');
+export const Aside = htmlComponentCreator('aside');
+export const Audio = htmlComponentCreator('audio');
+export const B = htmlComponentCreator('b');
+export const Base = htmlComponentCreator('base');
+export const Basefont = htmlComponentCreator('basefont');
+export const Bdi = htmlComponentCreator('bdi');
+export const Bdo = htmlComponentCreator('bdo');
+export const Blockquote = htmlComponentCreator('blockquote');
+export const Body = htmlComponentCreator('body');
+export const Br = htmlComponentCreator('br');
+export const Button = htmlComponentCreator('button');
+export const Canvas = htmlComponentCreator('canvas');
+export const Caption = htmlComponentCreator('caption');
+export const Cite = htmlComponentCreator('cite');
+export const Code = htmlComponentCreator('code');
+export const Col = htmlComponentCreator('col');
+export const Colgroup = htmlComponentCreator('colgroup');
+export const Data = htmlComponentCreator('data');
+export const Datalist = htmlComponentCreator('datalist');
+export const Dd = htmlComponentCreator('dd');
+export const Del = htmlComponentCreator('del');
+export const Details = htmlComponentCreator('details');
+export const Dfn = htmlComponentCreator('dfn');
+export const Dialog = htmlComponentCreator('dialog');
+export const Dir = htmlComponentCreator('dir');
+export const Div = htmlComponentCreator('div');
+export const Dl = htmlComponentCreator('dl');
+export const Dt = htmlComponentCreator('dt');
+export const Em = htmlComponentCreator('em');
+export const Embed = htmlComponentCreator('embed');
+export const Fieldset = htmlComponentCreator('fieldset');
+export const Figcaption = htmlComponentCreator('figcaption');
+export const Figure = htmlComponentCreator('figure');
+export const Font = htmlComponentCreator('font');
+export const Footer = htmlComponentCreator('footer');
+export const Form = htmlComponentCreator('form');
+export const Frame = htmlComponentCreator('frame');
+export const Frameset = htmlComponentCreator('frameset');
+export const H1 = htmlComponentCreator('h1');
+export const H2 = htmlComponentCreator('h2');
+export const H3 = htmlComponentCreator('h3');
+export const H4 = htmlComponentCreator('h4');
+export const H5 = htmlComponentCreator('h5');
+export const H6 = htmlComponentCreator('h6');
+export const Head = htmlComponentCreator('head');
+export const Header = htmlComponentCreator('header');
+export const Hgroup = htmlComponentCreator('hgroup');
+export const Hr = htmlComponentCreator('hr');
+export const Html = htmlComponentCreator('html');
+export const I = htmlComponentCreator('i');
+export const Iframe = htmlComponentCreator('iframe');
+export const Img = htmlComponentCreator('img');
+export const Input = htmlComponentCreator('input');
+export const Ins = htmlComponentCreator('ins');
+export const Kbd = htmlComponentCreator('kbd');
+export const Label = htmlComponentCreator('label');
+export const Legend = htmlComponentCreator('legend');
+export const Li = htmlComponentCreator('li');
+export const Link = htmlComponentCreator('link');
+export const Main = htmlComponentCreator('main');
+export const Map = htmlComponentCreator('map');
+export const Mark = htmlComponentCreator('mark');
+export const Marquee = htmlComponentCreator('marquee');
+export const Menu = htmlComponentCreator('menu');
+export const Meta = htmlComponentCreator('meta');
+export const Meter = htmlComponentCreator('meter');
+export const Nav = htmlComponentCreator('nav');
+export const Noscript = htmlComponentCreator('noscript');
+export const HtmlObject = htmlComponentCreator('object');
+export const Ol = htmlComponentCreator('ol');
+export const Optgroup = htmlComponentCreator('optgroup');
+export const Option = htmlComponentCreator('option');
+export const Output = htmlComponentCreator('output');
+export const P = htmlComponentCreator('p');
+export const Param = htmlComponentCreator('param');
+export const Picture = htmlComponentCreator('picture');
+export const Pre = htmlComponentCreator('pre');
+export const Progress = htmlComponentCreator('progress');
+export const Q = htmlComponentCreator('q');
+export const Rp = htmlComponentCreator('rp');
+export const Rt = htmlComponentCreator('rt');
+export const Ruby = htmlComponentCreator('ruby');
+export const S = htmlComponentCreator('s');
+export const Samp = htmlComponentCreator('samp');
+export const Script = htmlComponentCreator('script');
+export const Section = htmlComponentCreator('section');
+export const Select = htmlComponentCreator('select');
+export const Slot = htmlComponentCreator('slot');
+export const Small = htmlComponentCreator('small');
+export const Source = htmlComponentCreator('source');
+export const Span = htmlComponentCreator('span');
+export const Strong = htmlComponentCreator('strong');
+export const Style = htmlComponentCreator('style');
+export const Sub = htmlComponentCreator('sub');
+export const Summary = htmlComponentCreator('summary');
+export const Sup = htmlComponentCreator('sup');
+export const Table = htmlComponentCreator('table');
+export const Tbody = htmlComponentCreator('tbody');
+export const Td = htmlComponentCreator('td');
+export const Template = htmlComponentCreator('template');
+export const Textarea = htmlComponentCreator('textarea');
+export const Tfoot = htmlComponentCreator('tfoot');
+export const Th = htmlComponentCreator('th');
+export const Thead = htmlComponentCreator('thead');
+export const Time = htmlComponentCreator('time');
+export const Title = htmlComponentCreator('title');
+export const Tr = htmlComponentCreator('tr');
+export const Track = htmlComponentCreator('track');
+export const U = htmlComponentCreator('u');
+export const Ul = htmlComponentCreator('ul');
+export const Var = htmlComponentCreator('var');
+export const Video = htmlComponentCreator('video');
+export const Wbr = htmlComponentCreator('wbr');

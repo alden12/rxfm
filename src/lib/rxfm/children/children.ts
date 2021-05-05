@@ -9,7 +9,16 @@ import { elementMetadataService } from '../metadata-service';
 /**
  * The possible types which may be passed as a component child.
  */
-export type ChildComponent = StringLike | NullLike | Observable<StringLike | NullLike | ElementType | ElementType[]>;
+export type ComponentChild =
+  | StringLike
+  | NullLike
+  | Observable<
+    | StringLike
+    | NullLike
+    | ElementType
+    | ElementType[]
+  >
+  | (() => Observable<ElementType>);
 
 /**
  * The possible types which may be used as a child element.
@@ -21,10 +30,10 @@ type CoercedChildComponent = ChildElement[];
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
-function coerceChildComponent(childComponent: ChildComponent): Observable<CoercedChildComponent | null> {
-  if (childComponent instanceof Observable) { // If observable.
+function coerceChildComponent(childComponent: ComponentChild): Observable<CoercedChildComponent | null> {
+  if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
     let node: Text; // Create outer reference to text node if it is needed.
-    return childComponent.pipe(
+    return (typeof childComponent === 'function' ? childComponent() : childComponent).pipe( // Create observable if applicable.
       startWith(null),
       distinctUntilChanged(),
       map(child => {
@@ -91,7 +100,7 @@ function updateElementChildren<T extends ElementType>(
  * @param end Whether the children should be start or end aligned. These will be placed after any existing start aligned children
  * or before any existing end aligned children.
  */
-function startOrEndChildren<T extends ElementType>(childComponents: ChildComponent[], end: boolean): ComponentOperator<T> {
+function startOrEndChildren<T extends ElementType>(childComponents: ComponentChild[], end: boolean): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
     const symbol = Symbol('Children Operator');
@@ -118,7 +127,7 @@ function startOrEndChildren<T extends ElementType>(childComponents: ChildCompone
  * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
  * arrays of components (see the 'generate' operator).
  */
-export function children<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, false);
 }
 
@@ -131,6 +140,6 @@ export function children<T extends ElementType>(...childComponents: ChildCompone
  * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
  * arrays of components (see the 'generate' operator).
  */
-export function lastChildren<T extends ElementType>(...childComponents: ChildComponent[]): ComponentOperator<T> {
+export function lastChildren<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, true);
 }

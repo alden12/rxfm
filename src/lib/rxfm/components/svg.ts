@@ -1,106 +1,72 @@
-import { of } from "rxjs";
-import { map } from "rxjs/operators";
-import { children } from "../children/children";
-import { Component, ComponentFunction } from "./component";
-
-/**
- * A dictionary of SVG element tag names.
- */
-type SVGElementTypes = {
-  [K in keyof SVGElementTagNameMap]: K;
-};
-
-const SVGElements: SVGElementTypes = {
-  a: 'a',
-  circle: 'circle',
-  clipPath: 'clipPath',
-  defs: 'defs',
-  desc: 'desc',
-  ellipse: 'ellipse',
-  feBlend: 'feBlend',
-  feColorMatrix: 'feColorMatrix',
-  feComponentTransfer: 'feComponentTransfer',
-  feComposite: 'feComposite',
-  feConvolveMatrix: 'feConvolveMatrix',
-  feDiffuseLighting: 'feDiffuseLighting',
-  feDisplacementMap: 'feDisplacementMap',
-  feDistantLight: 'feDistantLight',
-  feFlood: 'feFlood',
-  feFuncA: 'feFuncA',
-  feFuncB: 'feFuncB',
-  feFuncG: 'feFuncG',
-  feFuncR: 'feFuncR',
-  feGaussianBlur: 'feGaussianBlur',
-  feImage: 'feImage',
-  feMerge: 'feMerge',
-  feMergeNode: 'feMergeNode',
-  feMorphology: 'feMorphology',
-  feOffset: 'feOffset',
-  fePointLight: 'fePointLight',
-  feSpecularLighting: 'feSpecularLighting',
-  feSpotLight: 'feSpotLight',
-  feTile: 'feTile',
-  feTurbulence: 'feTurbulence',
-  filter: 'filter',
-  foreignObject: 'foreignObject',
-  g: 'g',
-  image: 'image',
-  line: 'line',
-  linearGradient: 'linearGradient',
-  marker: 'marker',
-  mask: 'mask',
-  metadata: 'metadata',
-  path: 'path',
-  pattern: 'pattern',
-  polygon: 'polygon',
-  polyline: 'polyline',
-  radialGradient: 'radialGradient',
-  rect: 'rect',
-  script: 'script',
-  stop: 'stop',
-  style: 'style',
-  svg: 'svg',
-  switch: 'switch',
-  symbol: 'symbol',
-  text: 'text',
-  textPath: 'textPath',
-  title: 'title',
-  tspan: 'tspan',
-  use: 'use',
-  view: 'view',
-};
+import { componentCreator, ComponentCreator, componentFunction } from "./component";
 
 const SVGNamespace = 'http://www.w3.org/2000/svg';
 
 /**
- * Get a component creator function for an SVG element with the given tagName.
+ * A function to return a component creator for an SVG element with the given tag name.
  */
-function getSVGComponentFunction<K extends keyof SVGElementTagNameMap>(
+function svgComponentCreator<K extends keyof SVGElementTagNameMap>(
   tagName: K,
-): ComponentFunction<SVGElementTagNameMap[K]> {
-  return (...childElements) => of(tagName).pipe(
-    map(tag => document.createElementNS(SVGNamespace, tag)),
-    children(...childElements),
+): ComponentCreator<SVGElementTagNameMap[K]> {
+  return componentCreator(
+    componentFunction(() => document.createElementNS(SVGNamespace, tagName)),
   );
 }
 
-/**
- * A type mapping SVG element tag names to RxFM component creator functions.
- */
-export type SVGComponentCreators = {
-  [K in keyof SVGElementTagNameMap]: ComponentFunction<SVGElementTagNameMap[K]>;
-};
-
-/**
- * A object mapping SVG element tag names to RxFM component creator functions.
- */
-export const SVG: SVGComponentCreators = Object.keys(SVGElements).reduce(
-  (components: SVGComponentCreators, tagName: keyof SVGElementTagNameMap) => {
-    components[tagName] = getSVGComponentFunction(tagName) as () => Component<any>;
-    return components;
-  }, {} as SVGComponentCreators
-);
-
-export const svg = SVG.svg;
-export const g = SVG.g;
-// TODO: Add more default element types.
+export const SvgA = svgComponentCreator('a');
+export const Circle = svgComponentCreator('circle');
+export const ClipPath = svgComponentCreator('clipPath');
+export const Defs = svgComponentCreator('defs');
+export const Desc = svgComponentCreator('desc');
+export const Ellipse = svgComponentCreator('ellipse');
+export const FeBlend = svgComponentCreator('feBlend');
+export const FeColorMatrix = svgComponentCreator('feColorMatrix');
+export const FeComponentTransfer = svgComponentCreator('feComponentTransfer');
+export const FeComposite = svgComponentCreator('feComposite');
+export const FeConvolveMatrix = svgComponentCreator('feConvolveMatrix');
+export const FeDiffuseLighting = svgComponentCreator('feDiffuseLighting');
+export const FeDisplacementMap = svgComponentCreator('feDisplacementMap');
+export const FeDistantLight = svgComponentCreator('feDistantLight');
+export const FeFlood = svgComponentCreator('feFlood');
+export const FeFuncA = svgComponentCreator('feFuncA');
+export const FeFuncB = svgComponentCreator('feFuncB');
+export const FeFuncG = svgComponentCreator('feFuncG');
+export const FeFuncR = svgComponentCreator('feFuncR');
+export const FeGaussianBlur = svgComponentCreator('feGaussianBlur');
+export const FeImage = svgComponentCreator('feImage');
+export const FeMerge = svgComponentCreator('feMerge');
+export const FeMergeNode = svgComponentCreator('feMergeNode');
+export const FeMorphology = svgComponentCreator('feMorphology');
+export const FeOffset = svgComponentCreator('feOffset');
+export const FePointLight = svgComponentCreator('fePointLight');
+export const FeSpecularLighting = svgComponentCreator('feSpecularLighting');
+export const FeSpotLight = svgComponentCreator('feSpotLight');
+export const FeTile = svgComponentCreator('feTile');
+export const FeTurbulence = svgComponentCreator('feTurbulence');
+export const Filter = svgComponentCreator('filter');
+export const ForeignObject = svgComponentCreator('foreignObject');
+export const G = svgComponentCreator('g');
+export const Image = svgComponentCreator('image');
+export const Line = svgComponentCreator('line');
+export const LinearGradient = svgComponentCreator('linearGradient');
+export const Marker = svgComponentCreator('marker');
+export const Mask = svgComponentCreator('mask');
+export const Metadata = svgComponentCreator('metadata');
+export const Path = svgComponentCreator('path');
+export const Pattern = svgComponentCreator('pattern');
+export const Polygon = svgComponentCreator('polygon');
+export const Polyline = svgComponentCreator('polyline');
+export const RadialGradient = svgComponentCreator('radialGradient');
+export const Rect = svgComponentCreator('rect');
+export const SvgScript = svgComponentCreator('script');
+export const Stop = svgComponentCreator('stop');
+export const SvgStyle = svgComponentCreator('style');
+export const Svg = svgComponentCreator('svg');
+export const Switch = svgComponentCreator('switch');
+export const Symbol = svgComponentCreator('symbol');
+export const Text = svgComponentCreator('text');
+export const TextPath = svgComponentCreator('textPath');
+export const SvgTitle = svgComponentCreator('title');
+export const Tspan = svgComponentCreator('tspan');
+export const Use = svgComponentCreator('use');
+export const View = svgComponentCreator('view');

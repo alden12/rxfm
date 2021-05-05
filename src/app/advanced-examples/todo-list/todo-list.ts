@@ -1,26 +1,28 @@
-import { attributes, classes, div, event, mapToComponents, input, using, destructure } from "rxfm";
+import { attributes, classes, Div, event, mapToComponents, Input, using, destructure, conditional } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs"
+
+import './todo-list-styles.css';
 
 interface TodoItem {
   name: string;
   done: boolean;
 }
 
-const checkbox = (checked: Observable<boolean>) => input().pipe(
+const Checkbox = (checked: Observable<boolean>) => Input().pipe(
   attributes({ type: 'checkbox', checked }),
 );
 
-const todoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) => {
+const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) => {
   const { name, done } = destructure(item);
   const toggle = using(name, name => () => onToggle(name));
 
-  return div(name, checkbox(done)).pipe(
+  return Div(name, Checkbox(done)).pipe(
     event('click', toggle),
-    classes('todo-item'),
+    classes('todo-item', conditional(done, 'done')),
   );
 }
 
-const itemInput = (onChange: (value: string) => void) => input().pipe(
+const ItemInput = (onChange: (value: string) => void) => Input().pipe(
   attributes({
     type: 'text',
     placeholder: 'Add Item',
@@ -34,7 +36,7 @@ const initialItems: TodoItem[] = [
   { name: 'Start a new project', done: false },
 ];
 
-export const todoList = () => {
+export const TodoList = () => {
   const items = new BehaviorSubject<TodoItem[]>(initialItems);
 
   const addItem = (name: string) => items.next(
@@ -45,15 +47,15 @@ export const todoList = () => {
     items.value.map(item => item.name === name ? { ...item, done: !item.done } : item),
   );
 
-  const todoItems = items.pipe(
+  const TodoItems = items.pipe(
     mapToComponents(
-      item => todoItem(item, toggleItem),
       ({ name }) => name,
+      item => TodoItem(item, toggleItem),
     ),
   );
 
-  return div(
-    itemInput(addItem),
-    todoItems,
+  return Div(
+    ItemInput(addItem),
+    TodoItems,
   );
 };
