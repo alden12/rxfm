@@ -1,5 +1,5 @@
 import { combineLatest, Observable, of, OperatorFunction } from "rxjs";
-import { distinctUntilChanged, map, pluck, shareReplay, switchMap, tap } from "rxjs/operators";
+import { distinctUntilChanged, map, pluck, shareReplay, switchMap, tap, withLatestFrom } from "rxjs/operators";
 
 export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
   return value instanceof Observable ? value : of(value);
@@ -162,4 +162,123 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
       else if (typeof message === 'function') console.log(message(val));
     }),
   );
+}
+
+// Deprecated:
+
+/**
+ * @deprecated Deprecated in favour of `destructure`.
+ */
+// tslint:disable: max-line-length
+export function selectFrom<T, K extends keyof T>(input: Observable<T>, key: K): Observable<T[K]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>
+// tslint:enable: max-line-length
+export function selectFrom<T>(
+  input: Observable<T>,
+  ...keys: string[]
+): Observable<any> {
+  return input.pipe(
+    distinctUntilChanged(),
+    pluck(...keys),
+    distinctUntilChanged(),
+  );
+}
+
+/**
+ * @deprecated Deprecated in favour of `using`.
+ */
+export function watchFrom<T, U>(
+  input: Observable<T>,
+  watchingFunction: (item: T) => U,
+): Observable<U> {
+  return input.pipe(
+    watch(watchingFunction),
+  );
+}
+
+/**
+ * @deprecated Deprecated as unused.
+ */
+export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
+  return (source: Observable<T>) => source.pipe( // TODO: Also emit if prev and curr keys lengths have changed?
+    distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
+  );
+}
+
+/**
+ * @deprecated Deprecated as unused.
+ */
+ export function gate<T>(source: Observable<T>): OperatorFunction<boolean, T | undefined> {
+  return (gate$: Observable<boolean>) => gate$.pipe(
+    distinctUntilChanged(),
+    switchMap(gatePosition => gatePosition ? source : of(undefined)),
+  );
+}
+
+/**
+ * @deprecated Deprecated as unused.
+ */
+export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T, U> {
+  return (source: Observable<T>) => source.pipe(
+    withLatestFrom(latestFrom),
+    map(([_, latest]) => latest),
+  );
+}
+
+/**
+ * @deprecated Deprecated as unused.
+ */
+export function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | undefined> {
+  return (source: Observable<boolean>) => source.pipe(
+    map(src => src ? mapTo : undefined),
+  );
+}
+
+/**
+ * @deprecated Deprecated as unused.
+ */
+export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
+  return (source: Observable<T>) => source.pipe(
+    tap(ev => ev.stopPropagation()),
+  );
+}
+
+/**
+ * @deprecated Deprecated in favour of `conditional`.
+ */
+ export function ternary<T, OT>(
+  input: Observable<T>,
+  trueValue: OT,
+): Observable<OT | undefined>
+export function ternary<T, OT, OF>(
+  input: Observable<T>,
+  trueValue: OT,
+  falseValue: OF,
+): Observable<OT | OF>
+export function ternary<T, OT, OF>(
+  input: Observable<T>,
+  trueValue: OT,
+  falseValue?: OF,
+): Observable<OT | OF | undefined> {
+  return input.pipe(
+    distinctUntilChanged(),
+    map(ip => ip ? trueValue : falseValue)
+  );
+}
+
+/**
+ * @deprecated Deprecated as unused.
+ */
+export function filterObject<T extends object>(
+  object: T,
+  filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
+): Partial<T> {
+  return Object.keys(object).reduce((filtered, key) => {
+    if (filterFn(object[key], key as keyof T)) {
+      filtered[key] = object[key];
+    }
+    return filtered;
+  }, {} as Partial<T>)
 }
