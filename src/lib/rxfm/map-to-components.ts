@@ -1,7 +1,7 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
 import { ElementType, Component } from './components';
 import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
-import { selectFrom } from './utils';
+import { select } from './utils';
 
 type Id = string | number;
 
@@ -60,8 +60,8 @@ function createComponents<I, T extends ElementType>(
           distinctUntilChanged(),
         );
         const componentObservable = creationFunction(
-          selectFrom(itemAndIndexUpdates, 'item'),
-          selectFrom(itemAndIndexUpdates, 'index'),
+          itemAndIndexUpdates.pipe(select('item')),
+          itemAndIndexUpdates.pipe(select('index')),
         ).pipe(
           takeUntil(changes.pipe(
             filter(diff => diff.removed.has(id)),
