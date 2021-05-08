@@ -30,7 +30,7 @@ export function events<T extends ElementType>(handlers: EventHandlers<T>): Compo
     const handler = handlers[eventType];
     if (!handler) return result;
     return result.pipe(
-      event(eventType,handler),
+      event(eventType, handler),
     );
   }, source);
 }
