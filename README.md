@@ -1,5 +1,8 @@
 # RxFM - A Web Framework Built on RxJS
 
+![Node.js CI](https://github.com/alden12/rxfm/workflows/Node.js%20CI/badge.svg?branch=master)
+[![npm version](https://badge.fury.io/js/rxfm.svg)](https://badge.fury.io/js/rxfm)
+
 RxFM *(working title)* is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
 I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
