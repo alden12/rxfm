@@ -26,7 +26,11 @@ export type EventHandlers<T extends ElementType> = {
 };
 
 export function events<T extends ElementType>(handlers: EventHandlers<T>): ComponentOperator<T> {
-  return (source: Component<T>) => Object.keys(handlers).reduce((result, eventType: keyof ElementEventMap) => result.pipe(
-    event(eventType, handlers[eventType]!),
-  ), source);
+  return (source: Component<T>) => Object.keys(handlers).reduce((result, eventType: keyof ElementEventMap) => {
+    const handler = handlers[eventType];
+    if (!handler) return result;
+    return result.pipe(
+      event(eventType,handler),
+    );
+  }, source);
 }
