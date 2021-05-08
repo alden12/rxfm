@@ -1,6 +1,6 @@
 {
   "name": "rxfm",
-  "version": "1.0.0-alpha.7",
+  "version": "1.0.0-alpha.8",
   "author": "Alden Laslett",
   "description": "A Web Framework Built on RxJS",
   "license": "MIT",
@@ -9,6 +9,16 @@
     "url": "git+https://github.com/alden12/rxfm.git"
   },
   "homepage": "https://github.com/alden12/rxfm",
+  "keywords": [
+    "RxJS",
+    "Rx",
+    "observable",
+    "web",
+    "framework",
+    "reactive",
+    "functional",
+    "frontend"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -21,8 +31,8 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "dependencies": {
-    "rxjs": "6.5.2"
+  "peerDependencies": {
+    "rxjs": "^6.5.2"
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
