@@ -1,4 +1,4 @@
-import { destructure, Div, conditional, andGate, styles, using, classes, event } from "rxfm";
+import { destructure, Div, conditional, andGate, styles, using, classes, events } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { indexToVector, NEIGHBORS_COLOR_MAP } from "../constants";
@@ -23,8 +23,10 @@ export const GameCell = (
       symbol,
     ),
   ).pipe(
-    event('click', handleCellAction('discover')),
-    event('contextmenu', handleCellAction('flag')),
+    events({
+      click: handleCellAction('discover'),
+      contextmenu: handleCellAction('flag'),
+    }),
     styles({
       backgroundColor: color,
       color: using(neighbors, neighbors => NEIGHBORS_COLOR_MAP[neighbors]),
