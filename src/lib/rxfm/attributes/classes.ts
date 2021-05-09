@@ -67,7 +67,8 @@ export function classes<T extends ElementType>(
         element.classList.add(...added);
 
         const removed = currentClassSet ? Array.from(currentClassSet).filter(className => {
-          return !newClassSet.has(className) && canRemoveClass(symbol, className, operatorIsolationService.getClassesMap(element));
+          return !newClassSet.has(className) &&
+            canRemoveClass(symbol, className, operatorIsolationService.getClassesMap(element));
         }) : [];
         element.classList.remove(...removed);
 

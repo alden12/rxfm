@@ -3,7 +3,7 @@ import { distinctUntilChanged, startWith, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
 import { operatorIsolationService } from "../operator-isolation-service";
 import { coerceToObservable, PartialRecord, TypeOrObservable } from "../utils";
-import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-opeartor-isolation";
+import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-operator-isolation";
 import { ClassType } from "./classes";
 import { HTMLAttributes } from "./html";
 import { StyleObject, Styles } from "./styles";

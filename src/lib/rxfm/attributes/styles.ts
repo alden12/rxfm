@@ -3,7 +3,7 @@ import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
 import { operatorIsolationService } from "../operator-isolation-service";
 import { coerceToObservable, NullLike, TypeOrObservable } from "../utils";
-import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-opeartor-isolation";
+import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-operator-isolation";
 
 // TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
 export type StyleKeys = Exclude<
