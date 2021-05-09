@@ -1,10 +1,10 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
-import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-metadata';
+import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
-import { elementMetadataService } from '../metadata-service';
+import { operatorIsolationService } from '../operator-isolation-service';
 
 /**
  * The possible types which may be passed as a component child.
@@ -67,7 +67,7 @@ function updateElementChildren<T extends ElementType>(
 ): T {
   const { updated, removed } = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
-  const currentChildrenMetadata = elementMetadataService.getChildrenMetadata(element); // Get current metadata.
+  const currentChildrenMetadata = operatorIsolationService.getChildrenMetadata(element); // Get current metadata.
   let newChildrenMetadata = registerChildrenBlockMetadata(currentChildrenMetadata, blockSymbol, end); // Add block if not present.
 
   removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
@@ -89,7 +89,7 @@ function updateElementChildren<T extends ElementType>(
     return newMetadata;
   }, newChildrenMetadata);
 
-  elementMetadataService.setChildrenMetadata(element, newChildrenMetadata); // Set updated metadata.
+  operatorIsolationService.setChildrenMetadata(element, newChildrenMetadata); // Set updated metadata.
 
   return element;
 }

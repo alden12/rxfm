@@ -137,6 +137,9 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
   );
 }
 
+/**
+ * Take a spread array of observables and emit the logical AND value of all of their emissions whenever it changes.
+ */
 export function andGate(...sources: Observable<any>[]): Observable<boolean> {
   return combineLatest(sources).pipe(
     map(values => values.every(value => Boolean(value))),
@@ -144,6 +147,9 @@ export function andGate(...sources: Observable<any>[]): Observable<boolean> {
   );
 }
 
+/**
+ * Take a spread array of observables and emit the logical OR value of all of their emissions whenever it changes.
+ */
 export function orGate(...sources: Observable<any>[]): Observable<boolean> {
   return combineLatest(sources).pipe(
     map(values => values.some(value => Boolean(value))),
@@ -151,6 +157,9 @@ export function orGate(...sources: Observable<any>[]): Observable<boolean> {
   );
 }
 
+/**
+ * @returns An observable emitting the logical NOT value of the source observable's emissions.
+ */
 export function notGate(source: Observable<any>): Observable<boolean> {
   return source.pipe(
     distinctUntilChanged(),
@@ -158,6 +167,10 @@ export function notGate(source: Observable<any>): Observable<boolean> {
   );
 }
 
+/**
+ * @param sources A spread array of items or observables emitting items of type T.
+ * @returns An observable emitting whether all items are equal whenever they change.
+ */
 export function equals<T>(...sources: (T | Observable<T>)[]): Observable<boolean> {
   return combineLatest(
     sources.map(
@@ -169,6 +182,10 @@ export function equals<T>(...sources: (T | Observable<T>)[]): Observable<boolean
   );
 }
 
+/**
+ * An observable operator to console log the current value of an observable.
+ * @param message A string to place before the logged value, or a function taking the value an returning a string to log.
+ */
 export function log<T = unknown>(message?: string | ((val: T) => string)): OperatorFunction<T, T extends never ? never : T> {
   return (input: Observable<T>): Observable<T extends never ? never : T> => input.pipe(
     tap<T extends never ? never : T>(val => {

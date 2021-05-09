@@ -1,5 +1,5 @@
 import { AttributeDictionary, StyleDictionary } from "./attributes";
-import { ChildrenBlockMetadata } from "./children/children-metadata";
+import { ChildrenBlockMetadata } from "./children/children-operator-isolation";
 import { ElementType } from "./components";
 
 /**
@@ -30,7 +30,7 @@ class ElementMetadata {
 /**
  * A service class to handle the operator metadata for each RxFM DOM element.
  */
-class ElementMetadataService {
+class OperatorIsolationService {
   /**
    * A weak map of DOM elements to metadata objects, must be a weak map so that garbage collection is not prevented when elements
    * are removed from the DOM and go out of scope.
@@ -74,12 +74,12 @@ class ElementMetadataService {
 /**
  * The single instance of the element metadata service to be used around the application.
  */
-export const elementMetadataService = new ElementMetadataService();
+export const operatorIsolationService = new OperatorIsolationService();
 
 /**
  * Equivalent to the element metadata service class but with extra methods used for testing.
  */
-export class TestElementMetadataService extends ElementMetadataService {
+export class TestOperatorIsolationService extends OperatorIsolationService {
   public inspectMetadata(element: ElementType) {
     return this.elementMetadataMap.get(element);
   }

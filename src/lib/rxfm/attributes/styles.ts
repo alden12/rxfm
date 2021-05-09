@@ -1,9 +1,9 @@
 import { Observable } from "rxjs";
 import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
-import { elementMetadataService } from "../metadata-service";
+import { operatorIsolationService } from "../operator-isolation-service";
 import { coerceToObservable, NullLike, TypeOrObservable } from "../utils";
-import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-metadata";
+import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-opeartor-isolation";
 
 // TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
 export type StyleKeys = Exclude<
@@ -39,7 +39,7 @@ export function style<T extends ElementType, K extends StyleKeys>(
       distinctUntilChanged(),
       tap(val => setAttributes<StyleKeys, string | null>(
         setElementStyle,
-        elementMetadataService.getStylesMap(element),
+        operatorIsolationService.getStylesMap(element),
         symbol,
         { [name]: val },
       )),
@@ -71,7 +71,7 @@ export function styles<T extends ElementType>(
         tap(styleObject => {
           setAttributes(
             setElementStyle,
-            elementMetadataService.getStylesMap(element),
+            operatorIsolationService.getStylesMap(element),
             symbol,
             styleObject,
             previousStyleObject,

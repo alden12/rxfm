@@ -1,9 +1,9 @@
 import { Observable } from "rxjs";
 import { distinctUntilChanged, startWith, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
-import { elementMetadataService } from "../metadata-service";
+import { operatorIsolationService } from "../operator-isolation-service";
 import { coerceToObservable, PartialRecord, TypeOrObservable } from "../utils";
-import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-metadata";
+import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-opeartor-isolation";
 import { ClassType } from "./classes";
 import { HTMLAttributes } from "./html";
 import { StyleObject, Styles } from "./styles";
@@ -50,7 +50,7 @@ export function attribute<T extends ElementType>(
       distinctUntilChanged(),
       tap(val => setAttributes<string, AttributeType>(
         setElementAttribute,
-        elementMetadataService.getAttributesMap(element),
+        operatorIsolationService.getAttributesMap(element),
         symbol,
         { [type]: val },
       )),
@@ -91,7 +91,7 @@ export function attributes<T extends ElementType>(
         tap(attributeObject => {
           setAttributes(
             setElementAttribute,
-            elementMetadataService.getAttributesMap(element),
+            operatorIsolationService.getAttributesMap(element),
             symbol,
             attributeObject,
             previousAttributeObject,
