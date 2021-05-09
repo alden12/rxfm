@@ -37,6 +37,23 @@ export function select<T>(...keys: string[]): OperatorFunction<T, any> {
   );
 }
 
+// tslint:disable: max-line-length
+export function selectFrom<T, K extends keyof T>(input: Observable<T>, key: K): Observable<T[K]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>
+// tslint:enable: max-line-length
+export function selectFrom<T>(
+  input: Observable<T>,
+  ...keys: string[]
+): Observable<any> {
+  return input.pipe(
+    distinctUntilChanged(),
+    pluck(...keys),
+    distinctUntilChanged(),
+  );
+}
+
 export type DestructuredObservable<T> = {
   [K in keyof T]: Observable<T[K]>;
 };
@@ -51,9 +68,7 @@ export type DestructuredObservable<T> = {
 export function destructure<T> (source: Observable<T>, share = true): DestructuredObservable<T> {
   const sharedSource = share ? reuse(source) : source;
   const handler = {
-    get: (_: DestructuredObservable<T>, prop: string | symbol) => sharedSource.pipe(
-      select(prop as keyof T),
-    ),
+    get: (_: DestructuredObservable<T>, prop: string | symbol) => selectFrom(sharedSource, prop as keyof T),
   };
   return new Proxy({} as DestructuredObservable<T>, handler);
 }
@@ -164,27 +179,7 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
   );
 }
 
-// Deprecated:
-
-/**
- * @deprecated Deprecated in favour of `destructure`.
- */
-// tslint:disable: max-line-length
-export function selectFrom<T, K extends keyof T>(input: Observable<T>, key: K): Observable<T[K]>
-export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>
-export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>
-export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>
-// tslint:enable: max-line-length
-export function selectFrom<T>(
-  input: Observable<T>,
-  ...keys: string[]
-): Observable<any> {
-  return input.pipe(
-    distinctUntilChanged(),
-    pluck(...keys),
-    distinctUntilChanged(),
-  );
-}
+// ----------- Deprecated: -----------
 
 /**
  * @deprecated Deprecated in favour of `using`.

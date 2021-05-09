@@ -4,13 +4,19 @@ import { Component, componentOperator, ComponentOperator, ElementType } from "./
 import { coerceToObservable } from "./utils";
 
 /**
- * The possible event types for an RxFM element.
+ * A map of the possible event names to event types for an RxFM element.
  */
 export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
 
+/**
+ * The event type for a given rxfm element type and event name.
+ */
 export type EventType<T extends ElementType, E extends keyof ElementEventMap> =
   T extends HTMLInputElement ? ElementEventMap[E] & { target: HTMLInputElement } : ElementEventMap[E];
 
+/**
+ * A function to handle an element event in rxfm, or an observable emitting a handler function.
+ */
 export type EventHandler<T extends ElementType, E extends keyof ElementEventMap> =
   ((event: EventType<T, E>) => void) | Observable<(event: EventType<T, E>) => void>;
 
@@ -31,10 +37,18 @@ export function event<T extends ElementType, E extends keyof ElementEventMap>(
   ));
 }
 
+/**
+ * An object where keys are rxfm element event names and values are event handler functions.
+ */
 export type EventHandlers<T extends ElementType> = {
   [E in keyof ElementEventMap]?: EventHandler<T, E>;
 };
 
+/**
+ * Register a set of callback functions to element events.
+ * @param handlers An object where keys are event names and values are event handlers.
+ * @returns A component operator which will add the event handlers to the stream.
+ */
 export function events<T extends ElementType>(handlers: EventHandlers<T>): ComponentOperator<T> {
   return (source: Component<T>) => Object.keys(handlers).reduce((result, eventType: keyof ElementEventMap) => {
     const handler = handlers[eventType];
