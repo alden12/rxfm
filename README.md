@@ -190,7 +190,7 @@ If our `items` subject were to then emit a new array, this would be immediately 
 
 ## Advanced Examples
 
-You can check out a few more complex RxFM examples at the links below to see how it might be used in a larger app.
+You can check out a few more complex RxFM examples at the links below to see how it might be used in a larger app. [Live Demo](https://alden12.github.io/rxfm/)
 
 * [Todo List Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/todo-list)
 * [Snake Game Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/snake-game)
