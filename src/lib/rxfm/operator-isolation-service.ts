@@ -28,7 +28,8 @@ class ElementMetadata {
 }
 
 /**
- * A service class to handle the operator metadata for each RxFM DOM element.
+ * A service class to manage multiple component operators on a single element and ensure that they do not interfere
+ * with each-other.
  */
 class OperatorIsolationService {
   /**

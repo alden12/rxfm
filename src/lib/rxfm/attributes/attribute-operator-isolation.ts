@@ -1,12 +1,12 @@
 import { PartialRecord } from "../utils";
 
 /**
- * A dictionary of attribute names to attribute string values or null as they will be applied to an element.
+ * A dictionary of attribute (or style) names to attribute string values or null as they will be applied to an element.
  */
 export type AttributeMetadataDictionary<K extends string> = PartialRecord<K, string | null>;
 
 /**
- * A dictionary of attribute names to possible input attribute values, which will be converted to strings.
+ * A dictionary of attribute (or style) names to possible input attribute values, which will be converted to strings.
  */
 export type AttributeMetadataObject<K extends string, T> = PartialRecord<K, T>;
 
@@ -41,6 +41,7 @@ function getAttributeFromMetadata<K extends string>(
   attributesMetadata: Map<symbol, AttributeMetadataDictionary<K>>,
 ): string | null {
   // Find the dictionary for the operator with hightest priority containing the attribute name.
+  // NOTE: This will mean there is no way to enforce removal of an attribute if it is enabled on an operator with lower priority.
   const firstMatchingAttributeDict = Array.from(attributesMetadata.values()).find(attributeDict => typeof attributeDict[name] === 'string');
   return firstMatchingAttributeDict ? firstMatchingAttributeDict[name]! : null; // Return the attribute value or null.
 }

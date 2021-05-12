@@ -9,8 +9,14 @@ import { HTMLAttributes } from "./html";
 import { StyleObject, Styles } from "./styles";
 import { SVGAttributes } from "./svg";
 
+/**
+ * A map of the possible attribute types available on RxFM elements.
+ */
 export interface ElementAttributes extends HTMLAttributes, SVGAttributes {}
 
+/**
+ * The attribute type names available on RxFM elements.
+ */
 export type AttributeKeys = keyof ElementAttributes;
 
 /**
@@ -18,23 +24,38 @@ export type AttributeKeys = keyof ElementAttributes;
  */
 export type AttributeType = string | boolean | number | null;
 
+/**
+ * A dictionary of element attribute names to string values or null.
+ */
 export type AttributeDictionary = AttributeMetadataDictionary<string>;
 
+/**
+ * A dictionary of element attribute names to possible value types.
+ */
 export type AttributeObject = AttributeMetadataObject<string, AttributeType>;
 
+/**
+ * Set an attribute on an element.
+ */
 const setAttribute = (element: ElementType, key: string, val: string | null) => {
   if (key === 'value' && element instanceof HTMLInputElement) {
-    const stringValue = val || '';
+    const stringValue = val || ''; // Make sure 'value' attribute of input elements is always a string.
     if (element.value !== stringValue) {
       element.value = stringValue;
     }
   } else if (val !== null) {
     element.setAttribute(key, val);
-  } else {
+  } else { // Remove null attributes.
     element.removeAttribute(key);
   }
 };
 
+/**
+ * An observable operator to manage an attribute on an RxFM component.
+ * @param type The attribute type.
+ * @param value The attribute value or an observable emitting the value.
+ * @param externalSymbol Implementation detail so that this operator may be used as the basis for the attributes operator.
+ */
 export function attribute<T extends ElementType>(
   type: string,
   value: TypeOrObservable<AttributeType> = '',
@@ -58,24 +79,27 @@ export function attribute<T extends ElementType>(
   });
 }
 
+/**
+ * Element attributes which have a different interface to others.
+ */
 export interface SpecialAttributes {
   class?: ClassType | ClassType[];
   style?: Styles | Observable<StyleObject>
 }
 
-// /**
-//  * A dictionary of attributes or observable attributes to be used in the 'attributes' operator.
-//  */
+/**
+ * A dictionary of attributes or observable attributes to be used in the 'attributes' operator.
+ */
 export type Attributes =
   PartialRecord<AttributeKeys, TypeOrObservable<AttributeType>> &
   SpecialAttributes |
   PartialRecord<string, TypeOrObservable<AttributeType>>;
 
-// // /**
-// //  * An observable operator to update the attributes on an RxFM component.
-// //  * @param attributesOrObservableAttrs A dictionary (or observable emitting a dictionary) of attribute names to
-// //  * attribute values. Attribute values may be strings, numbers, or booleans, or observables emitting these types.
-// //  */
+/**
+ * An observable operator to update the attributes on an RxFM component.
+ * @param attributesOrObservableAttrs A dictionary (or observable emitting a dictionary) of attribute names to
+ * attribute values. Attribute values may be strings, numbers, or booleans, or observables emitting these types.
+ */
 export function attributes<T extends ElementType>(
   attributesDict: Attributes | Observable<AttributeObject>,
 ): ComponentOperator<T> {
