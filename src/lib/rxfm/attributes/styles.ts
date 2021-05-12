@@ -5,11 +5,10 @@ import { elementMetadataService } from "../metadata-service";
 import { coerceToObservable, NullLike, TypeOrObservable } from "../utils";
 import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-metadata";
 
-// TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
-export type StyleKeys = Exclude<
-  Extract<keyof CSSStyleDeclaration, string>,
-  'getPropertyPriority' | 'getPropertyValue' | 'item' | 'removeProperty' | 'setProperty' | 'parentRule' | 'length'
->;
+export type StyleKeys = Extract<
+  keyof { [K in keyof CSSStyleDeclaration as CSSStyleDeclaration[K] extends string ? K : never]: CSSStyleDeclaration[K] },
+  string
+>
 
 export type StyleType = string | NullLike;
 
