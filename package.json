@@ -33,7 +33,7 @@
     "lint": "eslint . --ext .ts"
   },
   "peerDependencies": {
-    "rxjs": "6.x"
+    "rxjs": "7.x"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",
@@ -44,7 +44,7 @@
     "eslint": "^7.26.0",
     "html-webpack-plugin": "^5.3.1",
     "jest": "^26.6.3",
-    "rxjs": "^6.5.2",
+    "rxjs": "^7.0.1",
     "style-loader": "^2.0.0",
     "ts-jest": "^26.5.6",
     "ts-loader": "^9.1.2",
