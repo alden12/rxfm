@@ -15,7 +15,7 @@ export type PartialRecord<K extends string | number | symbol, T> = Partial<Recor
  * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
  * are no subscribers.
  */
-export const REF_COUNT = { bufferSize: 1 as 1, refCount: true as true };
+export const REF_COUNT = { bufferSize: 1 as const, refCount: true as const };
 
 /**
  * An observable operator to watch a given part of a source observable defined by the watchingFunction.
@@ -108,7 +108,7 @@ export function gate<T>(source: Observable<T>): OperatorFunction<boolean, T | un
 export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T, U> {
   return (source: Observable<T>) => source.pipe(
     withLatestFrom(latestFrom),
-    map(([_, latest]) => latest),
+    map(([, latest]) => latest),
   );
 }
 
@@ -159,6 +159,7 @@ export function ternary<T, OT, OF>(
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export function filterObject<T extends object>(
   object: T,
   filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,

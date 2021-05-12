@@ -1,5 +1,5 @@
 import { combineLatest, Observable, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
 import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-metadata';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';

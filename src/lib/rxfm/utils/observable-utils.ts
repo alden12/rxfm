@@ -48,7 +48,7 @@ export function conditional<T, S, F = undefined>(
 ): Observable<S | F> {
   return source.pipe(
     distinctUntilChanged(),
-    switchMap(value => Boolean(value) ? coerceToObservable(successValue) : coerceToObservable(failValue as F)),
+    switchMap(value => value ? coerceToObservable(successValue) : coerceToObservable(failValue as F)),
     distinctUntilChanged(),
   );
 }

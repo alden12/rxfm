@@ -107,7 +107,7 @@ const keyDirection = fromEvent(document, 'keydown').pipe(
 export const snakeGameLoop = (difficulty: Observable<Difficulty>) => difficulty.pipe(
   switchMap(difficulty => timer(0, DIFFICULTY_TICK_PERIOD_MAP[difficulty])),
   withLatestFrom(keyDirection, difficulty),
-  scan((state, [_, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
+  scan((state, [, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
 );
