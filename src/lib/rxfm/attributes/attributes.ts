@@ -106,7 +106,7 @@ export function attributes<T extends ElementType>(
       const symbol = Symbol('Attributes Operator');
       return Object.keys(attributesDict).reduce((component, key) => {
         return component.pipe(
-          attribute(key, attributesDict[key], symbol),
+          attribute(key, attributesDict[key as AttributeKeys], symbol),
         );
       }, input);
     }

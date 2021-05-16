@@ -83,9 +83,9 @@ export function styles<T extends ElementType>(
 
     return (input: Component<T>) => {
       const symbol = Symbol('Styles Operator');
-      return Object.keys(stylesDict).reduce((component, key: StyleKeys) => {
+      return Object.keys(stylesDict).reduce((component, key) => {
         return component.pipe(
-          style(key, stylesDict[key], symbol),
+          style(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
         );
       }, input);
     }

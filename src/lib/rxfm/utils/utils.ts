@@ -82,7 +82,7 @@ export function selectFrom<T>(
  */
 export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
   return (source: Observable<T>) => source.pipe( // TODO: Also emit if prev and curr keys lengths have changed?
-    distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
+    distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key as keyof T] !== prev[key as keyof T])),
   )
 }
 
@@ -165,8 +165,8 @@ export function filterObject<T extends object>(
   filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
 ): Partial<T> {
   return Object.keys(object).reduce((filtered, key) => {
-    if (filterFn(object[key], key as keyof T)) {
-      filtered[key] = object[key];
+    if (filterFn(object[key as keyof T], key as keyof T)) {
+      filtered[key as keyof T] = object[key as keyof T];
     }
     return filtered;
   }, {} as Partial<T>)

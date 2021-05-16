@@ -96,7 +96,7 @@ function combineComponents<I, T extends ElementType>(
       }),
       mergeAll(),
       filter(elementOrIds => Array.isArray(elementOrIds)),
-      map((ids: I[]) => ids.map(id => elementMap.get(id)!)),
+      map((ids: T | I[]) => (ids as I[]).map(id => elementMap.get(id)!)),
     );
   }
 }

@@ -7,11 +7,13 @@ function addAttributesToMetadata<K extends string, T>(
   attributeObject: AttributeMetadataObject<K, T>,
   currentAttributeDictionary?: AttributeMetadataDictionary<K>,
 ): AttributeMetadataDictionary<K> {
-  const newAttributeDictionary = Object.keys(attributeObject).reduce((newAttributeDict, key) => {
-    const attributeValue: T = attributeObject[key];
-    newAttributeDict[key] = typeof attributeValue === 'boolean' ? attributeValue ? '' : null : attributeValue;
+  const newAttributeDictionary = Object.keys(attributeObject).reduce<AttributeMetadataDictionary<K>>((newAttributeDict, key) => {
+    const attributeValue = attributeObject[key as K];
+    newAttributeDict[key as K] = typeof attributeValue === 'boolean' ?
+      attributeValue ? '' : null :
+      attributeValue === null ? null : String(attributeValue);
     return newAttributeDict;
-  }, {}) as AttributeMetadataDictionary<K>;
+  }, {});
 
   return {  ...currentAttributeDictionary, ...newAttributeDictionary };
 }
@@ -38,7 +40,7 @@ export function setAttributes<K extends string, T>(
   if (previousAttributeObject) {
     const previousAttributeObjectNulled: Partial<Record<K, null>> =
       Object.keys(previousAttributeObject).reduce((prevAttributesEmpty, key) => {
-        prevAttributesEmpty[key] = null;
+        prevAttributesEmpty[key as K] = null;
         return prevAttributesEmpty;
       }, {} as Partial<Record<K, null>>)
 
@@ -48,8 +50,8 @@ export function setAttributes<K extends string, T>(
   const newAttributesDict = addAttributesToMetadata(attributeObjectWithDeletions, attributeDict);
   attributesMetadata.set(symbol, newAttributesDict);
 
-  Object.keys(attributeObjectWithDeletions).forEach((key: K) => {
-    const value = getAttributeFromMetadata(key, attributesMetadata);
-    setAttribute(key, value);
+  Object.keys(attributeObjectWithDeletions).forEach(key => {
+    const value = getAttributeFromMetadata(key as K, attributesMetadata);
+    setAttribute(key as K, value);
   });
 }

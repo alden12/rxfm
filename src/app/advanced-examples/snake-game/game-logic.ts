@@ -22,7 +22,7 @@ class SnakeNode {
   }
 }
 
-const getSnakeHead = (node: SnakeNode) => node.next ? getSnakeHead(node.next) : node;
+const getSnakeHead = (node: SnakeNode): SnakeNode => node.next ? getSnakeHead(node.next) : node;
 
 const getSnakeCoords = ({ coordinates, next }: SnakeNode): Vector[] => [coordinates, ...(next ? getSnakeCoords(next) : [])];
 
@@ -100,7 +100,7 @@ const getNewSnakeState = (previousState: SnakeState, direction: Direction, diffi
 
 const keyDirection = fromEvent(document, 'keydown').pipe(
   filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
-  map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
+  map(ev => KEY_MAP[(ev as KeyboardEvent).code]),
   startWith('right' as Direction),
 );
 
