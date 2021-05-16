@@ -33,7 +33,7 @@
     "lint": "eslint . --ext .ts"
   },
   "peerDependencies": {
-    "rxjs": "7.x"
+    "rxjs": "^7.0.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",
