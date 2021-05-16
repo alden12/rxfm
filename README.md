@@ -139,9 +139,9 @@ import { of } from 'rxjs';
 
 const ConditionalComponentsExample = Div(
   flipFlop.pipe(
-    switchMap(visible => visible ? Div('Now you see me!') : of(null)),
+    switchMap(visible => visible ? Div`Now you see me!` : of(null)),
   ),
-  // Or more simply as: conditional(flipFlop, Div('Now you see me!')), using the 'conditional' helper function from rxfm.
+  // Or more simply as: conditional(flipFlop, Div`Now you see me!`), using the 'conditional' helper function from rxfm.
 );
 ```
 
