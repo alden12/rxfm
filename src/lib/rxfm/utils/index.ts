@@ -1,2 +1,3 @@
 export * from './utils';
-export * from './observable-utils';
+export * from './types';
+export * from './destroySubject';

@@ -16,6 +16,15 @@ body {
   margin-left: 10px;
 }
 
+.app-title {
+  display: flex;
+  align-items: center;
+}
+
+.github-link {
+  padding-left: 10px;
+}
+
 .examples {
   display: flex;
   flex-wrap: wrap;

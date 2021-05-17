@@ -2,6 +2,9 @@ import { componentCreator, ComponentCreator, componentFunction } from "./compone
 
 const SVGNamespace = 'http://www.w3.org/2000/svg';
 
+/**
+ * A function to return a component creator for an SVG element with the given tag name.
+ */
 function svgComponentCreator<K extends keyof SVGElementTagNameMap>(
   tagName: K,
 ): ComponentCreator<SVGElementTagNameMap[K]> {

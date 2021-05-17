@@ -1,9 +1,12 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, debounceTime, startWith, tap } from 'rxjs/operators';
 import { ComponentOperator, ElementType, componentOperator } from '../components';
-import { elementMetadataService } from '../metadata-service';
+import { operatorIsolationService } from '../operator-isolation-service';
 import { NullLike, coerceToArray, flatten } from '../utils';
 
+/**
+ * A CSS class name string or null-like to signify removed.
+ */
 export type ClassSingle = string | NullLike;
 
 /**
@@ -26,6 +29,9 @@ function classTypesToSetObservable(classTypes: ClassType[]): Observable<Set<stri
   )
 }
 
+/**
+ * Determine whether or not an instance of the classes operator may remove a specific class name from an element.
+ */
 function canRemoveClass(
   symbol: symbol,
   className: string,
@@ -53,7 +59,7 @@ export function classes<T extends ElementType>(
     return classTypesToSetObservable(classNames).pipe(
       startWith(new Set<string>()),
       tap(newClassSet => {
-        const currentClassSet = elementMetadataService.getClassesMap(element).get(symbol);
+        const currentClassSet = operatorIsolationService.getClassesMap(element).get(symbol);
 
         const added = currentClassSet ?
           Array.from(newClassSet).filter(className => !currentClassSet.has(className)) :
@@ -61,11 +67,12 @@ export function classes<T extends ElementType>(
         element.classList.add(...added);
 
         const removed = currentClassSet ? Array.from(currentClassSet).filter(className => {
-          return !newClassSet.has(className) && canRemoveClass(symbol, className, elementMetadataService.getClassesMap(element));
+          return !newClassSet.has(className) &&
+            canRemoveClass(symbol, className, operatorIsolationService.getClassesMap(element));
         }) : [];
         element.classList.remove(...removed);
 
-        elementMetadataService.getClassesMap(element).set(symbol, newClassSet);
+        operatorIsolationService.getClassesMap(element).set(symbol, newClassSet);
       }),
     );
   });
