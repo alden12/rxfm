@@ -28,7 +28,7 @@ class ElementMetadata {
 }
 
 /**
- * A service class to manage multiple component operators on a single element and ensure that they do not interfere
+ * A service class to manage multiple component operators on single elements and ensure that they do not interfere
  * with each-other.
  */
 class OperatorIsolationService {
@@ -73,12 +73,12 @@ class OperatorIsolationService {
 }
 
 /**
- * The single instance of the element metadata service to be used around the application.
+ * The single instance of the operator isolation service to be used around the application.
  */
 export const operatorIsolationService = new OperatorIsolationService();
 
 /**
- * Equivalent to the element metadata service class but with extra methods used for testing.
+ * Equivalent to the operator isolation service class but with extra methods used for testing.
  */
 export class TestOperatorIsolationService extends OperatorIsolationService {
   public inspectMetadata(element: ElementType) {

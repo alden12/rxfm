@@ -37,7 +37,7 @@ export function registerChildrenBlockMetadata(
 /**
  * Add child elements to the children operators metadata of a component.
  * @param currentMetadata The current children metadata of the component.
- * @param blockSymbol The symbol representing the new children operator.
+ * @param blockSymbol The symbol representing the children operator.
  * @param end Whether or not the block should be end aligned.
  * @param childrenLength The number of child elements to be added, default is 1.
  * @returns The new metadata with the new children added to their appropriate block.
@@ -64,9 +64,9 @@ export function addChildrenToMetadata(
 }
 
 /**
- * Remove child elements to the children operators metadata of a component.
+ * Remove child elements from the children operators metadata of a component.
  * @param currentMetadata The current children metadata of the component.
- * @param blockSymbol The symbol representing the new children operator.
+ * @param blockSymbol The symbol representing the children operator.
  * @param childrenLength The number of child elements to be removed.
  * @returns The new metadata with the new children removed from their appropriate block.
  */

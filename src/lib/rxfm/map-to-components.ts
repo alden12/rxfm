@@ -41,7 +41,7 @@ function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunc
         // Find any added items which were not present in the previous item map.
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id);
         const itemMap = new Map(itemsAndIds);
-        // Create a set of removed items which were in the previous item map but are not present in the new item map.
+        // Create a set of removed item ids which were in the previous item map but are not present in the new item map.
         const removed = new Set(Array.from(previousItemMap.keys()).filter(id => !itemMap.has(id)));
         previousItemMap = itemMap; // Save the current item map for the next emission.
         return { added, removed, itemMap };
@@ -61,7 +61,7 @@ interface ComponentDiff<I, T extends ElementType> {
 }
 
 /**
- * An observable operator taking the diff of an item array and mapping it to a component array for each item.
+ * An observable operator taking the diff of an item array and mapping it to a component array corresponding to each item.
  * @param creationFunction A function taking an item of type T and returning a component.
  * @returns An operator function mapping a T array diff onto an array of components for each item.
  */

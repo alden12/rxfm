@@ -141,7 +141,9 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
  * Take a spread array of observables and emit the logical AND value of all of their emissions whenever it changes.
  */
 export function andGate(...sources: Observable<any>[]): Observable<boolean> {
-  return combineLatest(sources).pipe(
+  return combineLatest(
+    sources.map(source => source.pipe(distinctUntilChanged())),
+  ).pipe(
     map(values => values.every(value => Boolean(value))),
     distinctUntilChanged(),
   );
@@ -151,7 +153,9 @@ export function andGate(...sources: Observable<any>[]): Observable<boolean> {
  * Take a spread array of observables and emit the logical OR value of all of their emissions whenever it changes.
  */
 export function orGate(...sources: Observable<any>[]): Observable<boolean> {
-  return combineLatest(sources).pipe(
+  return combineLatest(
+    sources.map(source => source.pipe(distinctUntilChanged())),
+  ).pipe(
     map(values => values.some(value => Boolean(value))),
     distinctUntilChanged(),
   );
@@ -164,6 +168,7 @@ export function notGate(source: Observable<any>): Observable<boolean> {
   return source.pipe(
     distinctUntilChanged(),
     map(val => !val),
+    distinctUntilChanged(),
   );
 }
 
@@ -184,7 +189,7 @@ export function equals<T>(...sources: (T | Observable<T>)[]): Observable<boolean
 
 /**
  * An observable operator to console log the current value of an observable.
- * @param message A string to place before the logged value, or a function taking the value an returning a string to log.
+ * @param message A string to place before the logged value, or a function taking the value and returning a string to log.
  */
 export function log<T = unknown>(message?: string | ((val: T) => string)): OperatorFunction<T, T extends never ? never : T> {
   return (input: Observable<T>): Observable<T extends never ? never : T> => input.pipe(

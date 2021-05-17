@@ -125,7 +125,7 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
  * forms, the simplest of which are strings, numbers, booleans, or observables emitting any of these. Other components
  * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
- * arrays of components (see the 'generate' operator).
+ * arrays of components (see the 'mapToComponents' operator).
  */
 export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, false);
@@ -138,7 +138,7 @@ export function children<T extends ElementType>(...childComponents: ComponentChi
  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
  * forms, the simplest of which are strings, numbers, booleans, or observables emitting any of these. Other components
  * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
- * arrays of components (see the 'generate' operator).
+ * arrays of components (see the 'mapToComponents' operator).
  */
 export function lastChildren<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, true);

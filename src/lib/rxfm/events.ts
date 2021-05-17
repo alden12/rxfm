@@ -21,10 +21,10 @@ export type EventHandler<T extends ElementType, E extends keyof ElementEventMap>
   ((event: EventType<T, E>) => void) | Observable<(event: EventType<T, E>) => void>;
 
 /**
- * Register a callback to an event on the source component's element. Similar to the RxJS built-in fromEvent operator but maps
- * back to the source component.
+ * Register a callback to an event on the source component's element. Similar to the RxJS built-in `fromEvent` operator but
+ * operates on a component and maps back to the source component.
  * @param type The event type to listen to.
- * @param callback The function to execute when the event fires.
+ * @param callback The function, or observable emitting a function, to execute when the event fires.
  * @returns A component operator which will add the event listener into the stream.
  */
 export function event<T extends ElementType, E extends keyof ElementEventMap>(
@@ -45,8 +45,9 @@ export type EventHandlers<T extends ElementType> = {
 };
 
 /**
- * Register a set of callback functions to element events.
- * @param handlers An object where keys are event names and values are event handlers.
+ * Register a set of callback functions to the source component's element events.
+ * @param handlers An object where keys are event names and values are event handler functions or observables emitting handler
+ * functions.
  * @returns A component operator which will add the event handlers to the stream.
  */
 export function events<T extends ElementType>(handlers: EventHandlers<T>): ComponentOperator<T> {

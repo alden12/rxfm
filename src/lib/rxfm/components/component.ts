@@ -19,7 +19,7 @@ export type Component<T extends ElementType = ElementType> = Observable<T>;
 export type ComponentFunction<T extends ElementType> = (...childComponents: ComponentChild[]) => Component<T>;
 
 /**
- * A function taking any number of component children and return a component, or children as a tagged template.
+ * A function taking any number of component children, or children as a tagged template, and return a component.
  */
 export type ComponentCreator<T extends ElementType = ElementType> = {
   (...childComponents: ComponentChild[]): Component<T>;
