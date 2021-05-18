@@ -1,1 +1,1 @@
-export declare const ComponentArraysExample: () => import("../../lib/rxfm").Component<HTMLDivElement>;
+export declare const ComponentArraysExample: () => import("rxfm").Component<HTMLDivElement>;

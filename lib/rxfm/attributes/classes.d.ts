@@ -1,6 +1,9 @@
 import { Observable } from 'rxjs';
 import { ComponentOperator, ElementType } from '../components';
 import { NullLike } from '../utils';
+/**
+ * A CSS class name string or null-like to signify removed.
+ */
 export declare type ClassSingle = string | NullLike;
 /**
  * The possible types to pass as a CSS class name to the 'classes' operator.

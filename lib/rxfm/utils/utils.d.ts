@@ -1,28 +1,10 @@
-import { Observable, OperatorFunction } from 'rxjs';
-export interface Dictionary<T> {
-    [key: string]: T;
-}
-export declare type NullLike = null | undefined | false;
-export declare type StringLike = string | number;
-export declare type TypeOrObservable<T> = T | Observable<T>;
-export declare type PartialRecord<K extends string | number | symbol, T> = Partial<Record<K, T>>;
+import { Observable, OperatorFunction } from "rxjs";
+export declare function coerceToObservable<T>(value: T | Observable<T>): Observable<T>;
+export declare function coerceToArray<T>(value: T | T[]): T[];
+export declare function flatten<T>(nested: (T | T[])[]): T[];
 /**
- * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
- * are no subscribers.
- */
-export declare const REF_COUNT: {
-    bufferSize: 1;
-    refCount: true;
-};
-/**
- * An observable operator to watch a given part of a source observable defined by the watchingFunction.
- * @param watchingFunction A function mapping the source type (T) to the part of interest (U).
- * @returns An observable emitting the desired part of the source whenever it changes.
- */
-export declare function watch<T, U>(watchingFunction: (item: T) => U): OperatorFunction<T, U>;
-export declare function watchFrom<T, U>(input: Observable<T>, watchingFunction: (item: T) => U): Observable<U>;
-/**
- * An observable operator to select a given key from a source observable stream.
+ * An observable operator to select a given key/keys from a source observable stream.
+ * Equivalent to 'pluck' from RxJS operators but only emits distinct values.
  * @param key A key (K) belonging to the source type (T).
  * @returns An observable emitting the value of T[K] whenever it changes.
  */
@@ -34,39 +16,111 @@ export declare function selectFrom<T, K extends keyof T>(input: Observable<T>, k
 export declare function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>;
 export declare function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>;
 export declare function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>;
+export declare type DestructuredObservable<T> = {
+    [K in keyof T]: Observable<T[K]>;
+};
 /**
- * An observable operator to only emit from the source stream of type T, if some of its attributes have changed.
+ * Destructure properties from the source observable in a similar way to destructuring an object in normal JavaScript code.
+ * @param source An observable emitting an object of type T.
+ * @param share Whether or not the source observable should be shared before destructuring to prevent resubscribing the source,
+ * default is true.
+ * @returns An object where keys are observables emitting the corresponding property from the source observables object emissions.
+ */
+export declare function destructure<T>(source: Observable<T>, share?: boolean): DestructuredObservable<T>;
+/**
+ * An observable operator to watch a given part of a source observable defined by the watchingFunction.
+ * Equivalent to 'map' from RxJS operators but only emits distinct values.
+ * @param watchingFunction A function mapping the source type (T) to the part of interest (U).
+ * @returns An observable emitting the desired part of the source whenever it changes.
+ */
+export declare function watch<T, U>(watchingFunction: (item: T) => U): OperatorFunction<T, U>;
+/**
+ * Use an observable to perform an action and return the action result.
+ * This is equivalent to: `source.pipe(map(action))` but will only emit distinct values.
+ * @param source An observable emitting payloads of type T.
+ * @param action An action function taking the observables emissions and return a value of type U.
+ * @returns An observable emitting the result of the action function.
+ */
+export declare function using<T, U>(source: Observable<T>, action: (value: T) => U): Observable<U>;
+/**
+ * A function taking a source observable and either emitting the success value or the fail value depending on whether
+ * the source emits a truthy or falsy value.
+ * @param source An observable of type T.
+ * @param successValue The value of type S (or observable emitting type S) to return if T is truthy.
+ * @param failValue The value of type F (or observable emitting type F) to return if T is falsy.
+ * @returns Returns an observable emitting either the success value of type S or the fail value of type F depending on the
+ * source observable.
+ */
+export declare function conditional<T, S, F = undefined>(source: Observable<T>, successValue: S | Observable<S>, failValue?: F | Observable<F>): Observable<S | F>;
+/**
+ * A function taking an observable of type T and returning a shared observable of the same type which will be reused
+ * by any subscribers.
+ * This is equivalent to `source.pipe(shareReplay({ bufferSize: 1, refCount: true }))` but will only emit distinct values.
+ * @param source An observable of type T.
+ * @returns A multicast observable which will only be subscribed once, future subscriptions will receive the same values.
+ */
+export declare function reuse<T>(source: Observable<T>): Observable<T>;
+/**
+ * Take a spread array of observables and emit the logical AND value of all of their emissions whenever it changes.
+ */
+export declare function andGate(...sources: Observable<any>[]): Observable<boolean>;
+/**
+ * Take a spread array of observables and emit the logical OR value of all of their emissions whenever it changes.
+ */
+export declare function orGate(...sources: Observable<any>[]): Observable<boolean>;
+/**
+ * @returns An observable emitting the logical NOT value of the source observable's emissions.
+ */
+export declare function notGate(source: Observable<any>): Observable<boolean>;
+/**
+ * @param sources A spread array of items or observables emitting items of type T.
+ * @returns An observable emitting whether all items are equal whenever they change.
+ */
+export declare function equals<T>(...sources: (T | Observable<T>)[]): Observable<boolean>;
+/**
+ * An observable operator to console log the current value of an observable.
+ * @param message A string to place before the logged value, or a function taking the value and returning a string to log.
+ */
+export declare function log<T = unknown>(message?: string | ((val: T) => string)): OperatorFunction<T, T extends never ? never : T>;
+/**
+ * @deprecated Deprecated in favour of `using`.
+ */
+export declare function watchFrom<T, U>(input: Observable<T>, watchingFunction: (item: T) => U): Observable<U>;
+/**
+ * @deprecated Deprecated as unused.
  */
 export declare function distinctUntilKeysChanged<T>(): OperatorFunction<T, T>;
 /**
- * An observable operator taking a boolean stream, when the stream emits true the operator maps to the 'source' stream
- * provided as an argument, when false, emits undefined.
- * @param source The stream to emit when the gate is in the true position.
- * @returns An observable emitting the given stream when the source is true and undefined otherwise.
+ * @deprecated Deprecated as unused.
  */
 export declare function gate<T>(source: Observable<T>): OperatorFunction<boolean, T | undefined>;
 /**
- * An observable operator to map an emission from the source stream to the latest value emitted by the given
- * 'latestFrom' stream.
- * @param latestFrom The stream to emit the latest value from.
- * @returns An observable emitting the latest value from the given stream each time the source emits.
+ * @deprecated Deprecated as unused.
  */
 export declare function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T, U>;
 /**
- * An observable operator taking a boolean stream, when the stream emits true, emit the value provided in the 'mapTo'
- * argument, when the source is false, emit undefined.
- * @param mapTo The value to emit when the source stream is true.
- * @returns The value of 'mapTo' when the source stream is true and undefined otherwise.
+ * @deprecated Deprecated as unused.
  */
 export declare function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | undefined>;
 /**
- * An observable operator taking an Event object, stopping propagation on the event, and passing it through.
+ * @deprecated Deprecated as unused.
  */
 export declare function stopPropagation<T extends Event>(): OperatorFunction<T, T>;
-export declare function log<T = unknown>(message?: string): OperatorFunction<T, T extends never ? never : T>;
+/**
+ * @deprecated Deprecated in favour of `conditional`.
+ */
 export declare function ternary<T, OT>(input: Observable<T>, trueValue: OT): Observable<OT | undefined>;
 export declare function ternary<T, OT, OF>(input: Observable<T>, trueValue: OT, falseValue: OF): Observable<OT | OF>;
-export declare function filterObject<T extends object>(object: T, filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean): Partial<T>;
-export declare function coerceToObservable<T>(value: T | Observable<T>): Observable<T>;
-export declare function coerceToArray<T>(value: T | T[]): T[];
-export declare function flatten<T>(nested: (T | T[])[]): T[];
+/**
+ * @deprecated Deprecated as unused.
+ */
+export declare function filterObject<T>(object: T, filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean): Partial<T>;
+/**
+ * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
+ * are no subscribers.
+ * @deprecated Deprecated as unused.
+ */
+export declare const REF_COUNT: {
+    bufferSize: 1;
+    refCount: true;
+};
