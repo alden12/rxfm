@@ -1,11 +1,14 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { componentOperator, ComponentOperator, ElementType } from '../components';
-import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-metadata';
+import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
-import { elementMetadataService } from '../metadata-service';
+import { operatorIsolationService } from '../operator-isolation-service';
 
+/**
+ * The possible types which may be passed as a component child.
+ */
 export type ComponentChild =
   | StringLike
   | NullLike
@@ -17,9 +20,12 @@ export type ComponentChild =
   >
   | (() => Observable<ElementType>);
 
+/**
+ * The possible types which may be used as a child element.
+ */
 export type ChildElement = ElementType | Text;
 
-export type CoercedChildComponent = ChildElement[];
+type CoercedChildComponent = ChildElement[];
 
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
@@ -61,32 +67,39 @@ function updateElementChildren<T extends ElementType>(
 ): T {
   const { updated, removed } = childDiffer(previousChildren, newChildren); // Get the difference between the new and old state.
 
-  const currentChildrenMetadata = elementMetadataService.getChildrenMetadata(element);
-  let newChildrenMetadata = registerChildrenBlockMetadata(currentChildrenMetadata, blockSymbol, end);
+  const currentChildrenMetadata = operatorIsolationService.getChildrenMetadata(element); // Get current metadata.
+  let newChildrenMetadata = registerChildrenBlockMetadata(currentChildrenMetadata, blockSymbol, end); // Add block if not present.
 
   removed.forEach(node => element.removeChild(node)); // Remove all deleted nodes.
-  newChildrenMetadata = removeChildrenFromMetadata(
+  newChildrenMetadata = removeChildrenFromMetadata( // Remove deleted nodes from metadata.
     newChildrenMetadata,
     blockSymbol,
     removed.length,
   );
 
   newChildrenMetadata = updated.reduce((metadata, update) => {
+    // Add child to metadata and find index to insert it before in the parent elements child nodes.
     const { newMetadata, insertBeforeIndex } = addChildrenToMetadata(metadata, blockSymbol, end);
-    const insertBefore = update.insertBefore || element.childNodes[insertBeforeIndex];
-    if (insertBefore) {
+    const insertBefore = update.insertBefore || element.childNodes[insertBeforeIndex]; // Find node to insert before.
+    if (insertBefore) { // If insert before node found, add before this.
       element.insertBefore(update.node, insertBefore);
-    } else {
+    } else { // Otherwise add to the end.
       element.appendChild(update.node);
     }
     return newMetadata;
   }, newChildrenMetadata);
 
-  elementMetadataService.setChildrenMetadata(element, newChildrenMetadata);
+  operatorIsolationService.setChildrenMetadata(element, newChildrenMetadata); // Set updated metadata.
 
   return element;
 }
 
+/**
+ * A component operator to add children to either the start or the end of a component.
+ * @param childComponents The children to add.
+ * @param end Whether the children should be start or end aligned. These will be placed after any existing start aligned children
+ * or before any existing end aligned children.
+ */
 function startOrEndChildren<T extends ElementType>(childComponents: ComponentChild[], end: boolean): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
@@ -106,17 +119,27 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
   });
 }
 
-// /**
-//  * An observable operator to add children to a component.
-//  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
-//  * forms, the simplest of which are strings, numbers or booleans or observables emitting any of these. Other components
-//  * may also be passed (Observables emitting the IComponent interface). Finally Observables emitting IComponent arrays
-//  * may be passed, this is used for adding dynamic arrays of components (see the 'generate' operator).
-//  */
+/**
+ * A component operator to add children to a component. If other instances of the children operator exist on a given component,
+ * children will be added after those of the previous operators.
+ * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
+ * forms, the simplest of which are strings, numbers, booleans, or observables emitting any of these. Other components
+ * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
+ * arrays of components (see the 'mapToComponents' operator).
+ */
 export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, false);
 }
 
+/**
+ * A component operator to add children to the end of a component, after those added by the children operator.
+ * If other instances of the lastChildren operator exist on a given component, children will be added before those of the previous
+ * operators.
+ * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
+ * forms, the simplest of which are strings, numbers, booleans, or observables emitting any of these. Other components
+ * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
+ * arrays of components (see the 'mapToComponents' operator).
+ */
 export function lastChildren<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, true);
 }

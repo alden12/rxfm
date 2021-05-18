@@ -1,5 +1,8 @@
 import { componentCreator, ComponentCreator, componentFunction } from "./component";
 
+/**
+ * A function to return a component creator for an HTML element with the given tag name.
+ */
 function htmlComponentCreator<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): ComponentCreator<HTMLElementTagNameMap[K]> {
