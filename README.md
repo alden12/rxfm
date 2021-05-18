@@ -21,7 +21,10 @@ You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get 
 ```sh
 npm install rxfm
 ```
-If you have `rxjs` installed already, make sure it is using the same version as RxFM, eg: `npm install rxjs@6.5.2`
+```sh
+npm install rxjs@7.0.0
+```
+If you already have `rxjs` installed, make sure it is using the same version as `rxfm`.
 
 ## Hello World:
 Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
@@ -136,9 +139,9 @@ import { of } from 'rxjs';
 
 const ConditionalComponentsExample = Div(
   flipFlop.pipe(
-    switchMap(visible => visible ? Div('Now you see me!') : of(null)),
+    switchMap(visible => visible ? Div`Now you see me!` : of(null)),
   ),
-  // Or more simply as: conditional(flipFlop, Div('Now you see me!')), using the 'conditional' helper function from rxfm.
+  // Or more simply as: conditional(flipFlop, Div`Now you see me!`), using the 'conditional' helper function from rxfm.
 );
 ```
 

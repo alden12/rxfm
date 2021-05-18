@@ -51,11 +51,11 @@ export type EventHandlers<T extends ElementType> = {
  * @returns A component operator which will add the event handlers to the stream.
  */
 export function events<T extends ElementType>(handlers: EventHandlers<T>): ComponentOperator<T> {
-  return (source: Component<T>) => Object.keys(handlers).reduce((result, eventType: keyof ElementEventMap) => {
-    const handler = handlers[eventType];
+  return (source: Component<T>) => Object.keys(handlers).reduce((result, eventType) => {
+    const handler = handlers[eventType as keyof ElementEventMap] as EventHandler<T, keyof ElementEventMap>;
     if (!handler) return result;
     return result.pipe(
-      event(eventType, handler),
+      event<T, keyof ElementEventMap>(eventType as keyof ElementEventMap, handler),
     );
   }, source);
 }

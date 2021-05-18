@@ -20,12 +20,14 @@ function addAttributesToMetadata<K extends string, T>(
   attributeObject: AttributeMetadataObject<K, T>,
   currentAttributeDictionary?: AttributeMetadataDictionary<K>,
 ): AttributeMetadataDictionary<K> {
-  const newAttributeDictionary = Object.keys(attributeObject).reduce((newAttributeDict, key) => {
-    const attributeValue: T = attributeObject[key];
-    // Coerce boolean attributes to be either empty string or null.
-    newAttributeDict[key] = typeof attributeValue === 'boolean' ? attributeValue ? '' : null : attributeValue;
+  const newAttributeDictionary = Object.keys(attributeObject).reduce<AttributeMetadataDictionary<K>>((newAttributeDict, key) => {
+    const attributeValue = attributeObject[key as K];
+    // Coerce attributes to be either string or null.
+    newAttributeDict[key as K] = typeof attributeValue === 'boolean' ?
+      attributeValue ? '' : null :
+      attributeValue === null ? null : String(attributeValue);
     return newAttributeDict;
-  }, {} as AttributeMetadataDictionary<K>);
+  }, {});
 
   return {  ...currentAttributeDictionary, ...newAttributeDictionary };
 }
@@ -71,7 +73,7 @@ export function setAttributes<K extends string, T>(
   if (previousAttributeObject) {
     const previousAttributeObjectNulled: Partial<Record<K, null>> =
       Object.keys(previousAttributeObject).reduce((prevAttributesEmpty, key) => {
-        prevAttributesEmpty[key] = null;
+        prevAttributesEmpty[key as K] = null;
         return prevAttributesEmpty;
       }, {} as Partial<Record<K, null>>)
     // Merge the previous attributes object with null keys with the one, any removed keys will now have null values.
@@ -83,9 +85,9 @@ export function setAttributes<K extends string, T>(
   attributesMetadata.set(symbol, newAttributesDict);
 
   // Loop through attribute changes and set the new values for each attribute.
-  Object.keys(attributeObjectWithDeletions).forEach((key: K) => {
+  Object.keys(attributeObjectWithDeletions).forEach(key => {
     // Get the value for the attribute key with the highest priority.
-    const value = getAttributeFromMetadata(key, attributesMetadata);
-    setAttribute(key, value);
+    const value = getAttributeFromMetadata(key as K, attributesMetadata);
+    setAttribute(key as K, value);
   });
 }

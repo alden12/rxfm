@@ -118,7 +118,7 @@ export function conditional<T, S, F = undefined>(
 ): Observable<S | F> {
   return source.pipe(
     distinctUntilChanged(),
-    switchMap(value => Boolean(value) ? coerceToObservable(successValue) : coerceToObservable(failValue as F)),
+    switchMap(value => value ? coerceToObservable(successValue) : coerceToObservable(failValue as F)),
     distinctUntilChanged(),
   );
 }
@@ -220,8 +220,8 @@ export function watchFrom<T, U>(
  */
 export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
   return (source: Observable<T>) => source.pipe( // TODO: Also emit if prev and curr keys lengths have changed?
-    distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key] !== prev[key])),
-  );
+    distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key as keyof T] !== prev[key as keyof T])),
+  )
 }
 
 /**
@@ -240,7 +240,7 @@ export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
 export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T, U> {
   return (source: Observable<T>) => source.pipe(
     withLatestFrom(latestFrom),
-    map(([_, latest]) => latest),
+    map(([, latest]) => latest),
   );
 }
 
@@ -293,9 +293,16 @@ export function filterObject<T extends object>(
   filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
 ): Partial<T> {
   return Object.keys(object).reduce((filtered, key) => {
-    if (filterFn(object[key], key as keyof T)) {
-      filtered[key] = object[key];
+    if (filterFn(object[key as keyof T], key as keyof T)) {
+      filtered[key as keyof T] = object[key as keyof T];
     }
     return filtered;
   }, {} as Partial<T>)
 }
+
+/**
+ * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
+ * are no subscribers.
+ * @deprecated Deprecated as unused.
+ */
+ export const REF_COUNT = { bufferSize: 1 as const, refCount: true as const };

@@ -121,7 +121,7 @@ function combineComponents<I, T extends ElementType>(
       }),
       mergeAll(), // Merge all component and id array emissions.
       filter(elementOrIds => Array.isArray(elementOrIds)), // Only allow the id array emissions through.
-      map((ids: I[]) => ids.map(id => elementMap.get(id)!)), // Map the current id array to an array of their elements.
+      map(ids => (ids as I[]).map(id => elementMap.get(id)!)), // Map the current id array to an array of their elements.
     );
   }
 }

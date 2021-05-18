@@ -22,7 +22,7 @@ class SnakeNode {
   }
 }
 
-const getSnakeHead = (node: SnakeNode) => node.next ? getSnakeHead(node.next) : node;
+const getSnakeHead = (node: SnakeNode): SnakeNode => node.next ? getSnakeHead(node.next) : node;
 
 const getSnakeCoords = ({ coordinates, next }: SnakeNode): Vector[] => [coordinates, ...(next ? getSnakeCoords(next) : [])];
 
@@ -100,14 +100,14 @@ const getNewSnakeState = (previousState: SnakeState, direction: Direction, diffi
 
 const keyDirection = fromEvent(document, 'keydown').pipe(
   filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
-  map((ev: KeyboardEvent) => KEY_MAP[ev.code]),
+  map(ev => KEY_MAP[(ev as KeyboardEvent).code]),
   startWith('right' as Direction),
 );
 
 export const snakeGameLoop = (difficulty: Observable<Difficulty>) => difficulty.pipe(
   switchMap(difficulty => timer(0, DIFFICULTY_TICK_PERIOD_MAP[difficulty])),
   withLatestFrom(keyDirection, difficulty),
-  scan((state, [_, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
+  scan((state, [, direction, difficulty]) => getNewSnakeState(state, direction, difficulty), getInitialSnakeState()),
   map(({ trail, food, score }) => ({ board: getBoard(trail.coordinates, food), score })),
   retry(),
 );

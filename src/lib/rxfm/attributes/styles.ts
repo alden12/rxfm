@@ -5,14 +5,13 @@ import { operatorIsolationService } from "../operator-isolation-service";
 import { coerceToObservable, NullLike, TypeOrObservable } from "../utils";
 import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-operator-isolation";
 
-// TODO: Find a better way to exclude, perhaps { [K in keyof T as T[K] extends string ? K : never]: T[K] } in TS4.1
 /**
  * The style names which may be applied to an RxFM element.
  */
-export type StyleKeys = Exclude<
-  Extract<keyof CSSStyleDeclaration, string>,
-  'getPropertyPriority' | 'getPropertyValue' | 'item' | 'removeProperty' | 'setProperty' | 'parentRule' | 'length'
->;
+export type StyleKeys = Extract<
+  keyof { [K in keyof CSSStyleDeclaration as CSSStyleDeclaration[K] extends string ? K : never]: CSSStyleDeclaration[K] },
+  string
+>
 
 /**
  * The types which may be applied as a style.
@@ -108,9 +107,9 @@ export function styles<T extends ElementType>(
 
     return (input: Component<T>) => {
       const symbol = Symbol('Styles Operator');
-      return Object.keys(stylesDict).reduce((component, key: StyleKeys) => {
+      return Object.keys(stylesDict).reduce((component, key) => {
         return component.pipe(
-          style(key, stylesDict[key], symbol),
+          style(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
         );
       }, input);
     }
