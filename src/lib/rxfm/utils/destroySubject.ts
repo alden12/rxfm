@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject } from "rxjs";
+import { lastValueFrom, Observable, ReplaySubject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
 export class DestroySubject extends ReplaySubject<void> {
@@ -18,4 +18,6 @@ export class DestroySubject extends ReplaySubject<void> {
   public untilDestroy = <T>(source: Observable<T>) => source.pipe(
     takeUntil(this),
   );
+
+  public toPromise = (): Promise<void> => lastValueFrom(this);
 }
