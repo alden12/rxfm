@@ -3,9 +3,9 @@ import { Component, ElementType } from ".";
 import { Div, Span } from "./html";
 
 const testComponent = <T extends ElementType>(component: Component<T>) => {
-  let element: T;
+  let element: T | undefined = undefined;
   const subscription = component.subscribe(el => { element = el });
-  return { element, unsubscribe: () => subscription.unsubscribe() };
+  return { element: element!, unsubscribe: () => subscription.unsubscribe() };
 };
 
 describe('component', () => {
