@@ -14,7 +14,7 @@ describe('component', () => {
     expect(testComponent).toBeInstanceOf(Observable);
   });
 
-  it('should emit an HTMDivLElement when a Div component is subscribed', () => {
+  it('should emit an HTMLDivElement when a Div component is subscribed', () => {
     const component = Div();
     const { element, unsubscribe } = testComponent(component);
     expect(element).toBeInstanceOf(HTMLDivElement);
