@@ -1,6 +1,6 @@
 import { combineLatest, Observable, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
-import { componentOperator, ComponentOperator, ElementType } from '../components';
+import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
+import { componentOperator, ComponentOperator, ElementType } from '../components/component';
 import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
@@ -107,7 +107,6 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
 
     // Coerce all child nodes to be most generic type and combine.
     return combineLatest(childComponents.map(coerceChildComponent)).pipe(
-      debounceTime(0), // Prevent repeated emission for simultaneous changes.
       startWith([] as (CoercedChildComponent | null)[]),
       //  Remove empty children then flatten.
       map(childrenOrNull => flatten(childrenOrNull.filter(child => child !== null) as CoercedChildComponent[])),

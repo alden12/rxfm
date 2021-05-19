@@ -17,6 +17,8 @@ import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
 import './styles.css';
 
+document.title = 'RxFM Examples';
+
 const Example = (title: string, ...children: ComponentChild[]) => Div(
   H3(title).pipe(classes('example-title')),
   ...children,

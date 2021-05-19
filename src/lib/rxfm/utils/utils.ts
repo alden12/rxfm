@@ -288,7 +288,7 @@ export function ternary<T, OT, OF>(
 /**
  * @deprecated Deprecated as unused.
  */
-export function filterObject<T extends object>(
+export function filterObject<T>(
   object: T,
   filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
 ): Partial<T> {

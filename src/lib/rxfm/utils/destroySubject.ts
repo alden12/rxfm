@@ -1,12 +1,23 @@
-import { ReplaySubject } from "rxjs";
+import { lastValueFrom, Observable, ReplaySubject } from "rxjs";
+import { takeUntil } from "rxjs/operators";
 
 export class DestroySubject extends ReplaySubject<void> {
   constructor() {
     super(1);
   }
 
-  public emitAndComplete = () => {
-    this.next();
-    this.complete();
-  }
+  public next = () => super.next();
+
+  public complete = () => {
+    super.next();
+    super.complete();
+  };
+
+  public destroy = () => this.complete();
+
+  public untilDestroy = <T>(source: Observable<T>) => source.pipe(
+    takeUntil(this),
+  );
+
+  public toPromise = (): Promise<void> => lastValueFrom(this);
 }
