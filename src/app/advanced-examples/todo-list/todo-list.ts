@@ -20,7 +20,7 @@ const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) 
     event('click', toggle),
     classes('todo-item', conditional(done, 'done')),
   );
-}
+};
 
 const ItemInput = (onChange: (value: string) => void) => Input().pipe(
   attributes({

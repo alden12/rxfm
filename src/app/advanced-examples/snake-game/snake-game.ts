@@ -43,7 +43,7 @@ const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => 
   ).pipe(
     classes('score-board'),
   );
-}
+};
 
 export const SnakeGame = () => {
   const difficulty = new BehaviorSubject<Difficulty>('Easy');
