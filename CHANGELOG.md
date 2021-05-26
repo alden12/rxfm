@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-alpha.12] - 2021-05-19
+
+### Removed
+- Removed debounce from component child updates to make them synchronous at the cost of efficiency for simultaneous changes in component children.
+
 ## [1.0.0-alpha.11] - 2021-05-18
 
 ### Changed
