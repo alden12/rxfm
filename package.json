@@ -1,6 +1,6 @@
 {
   "name": "rxfm",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0-alpha.13",
   "author": "Alden Laslett",
   "description": "A Web Framework Built on RxJS",
   "license": "MIT",

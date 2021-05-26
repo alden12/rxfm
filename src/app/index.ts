@@ -12,6 +12,7 @@ import {
   ConditionalComponentsExample,
   ComponentArraysExample,
   TaggedTemplateExample,
+  ComponentIOExample,
 } from './basic-examples';
 import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
@@ -38,6 +39,7 @@ const Examples = Div(
   Example('Dynamic Attributes', DynamicAttributes),
   Example('State', ClickCounter),
   Example('Conditional Components', ConditionalComponentsExample),
+  Example('Component Inputs & Outputs', ComponentIOExample),
   Example('Component Arrays', ComponentArraysExample),
   Example('Todo List Example', TodoList),
   Example('Snake Example', SnakeGame),

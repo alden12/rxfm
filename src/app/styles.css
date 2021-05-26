@@ -41,6 +41,7 @@ body {
   padding: 10px;
   padding-top: 0;
   overflow: auto;
+  border-radius: 5px;
 }
 
 .example-title {
