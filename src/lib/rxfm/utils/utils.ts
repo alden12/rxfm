@@ -1,5 +1,5 @@
 import { combineLatest, Observable, of, OperatorFunction } from "rxjs";
-import { distinctUntilChanged, map, pluck, shareReplay, switchMap, tap, withLatestFrom } from "rxjs/operators";
+import { distinctUntilChanged, map, pluck, shareReplay, switchMap, tap } from "rxjs/operators";
 
 export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
   return value instanceof Observable ? value : of(value);
@@ -14,7 +14,7 @@ export function flatten<T>(nested: (T | T[])[]): T[] {
   return nested.reduce<T[]>((flat, array) => {
     flat.push(...coerceToArray(array));
     return flat;
-  }, [])
+  }, []);
 }
 
 /**
@@ -24,10 +24,10 @@ export function flatten<T>(nested: (T | T[])[]): T[] {
  * @returns An observable emitting the value of T[K] whenever it changes.
  */
 // tslint:disable: max-line-length
-export function select<T, K extends keyof T>(key: K): OperatorFunction<T, T[K]>
-export function select<T, K0 extends keyof T, K1 extends keyof T[K0]>(key0: K0, key1: K1): OperatorFunction<T, T[K0][K1]>
-export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(key0: K0, key1: K1, key2: K2): OperatorFunction<T, T[K0][K1][K2]>
-export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(key0: K0, key1: K1, key2: K2, key3: K3): OperatorFunction<T, T[K0][K1][K2][K3]>
+export function select<T, K extends keyof T>(key: K): OperatorFunction<T, T[K]>;
+export function select<T, K0 extends keyof T, K1 extends keyof T[K0]>(key0: K0, key1: K1): OperatorFunction<T, T[K0][K1]>;
+export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(key0: K0, key1: K1, key2: K2): OperatorFunction<T, T[K0][K1][K2]>;
+export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(key0: K0, key1: K1, key2: K2, key3: K3): OperatorFunction<T, T[K0][K1][K2][K3]>;
 // tslint:enable: max-line-length
 export function select<T>(...keys: string[]): OperatorFunction<T, any> {
   return (input: Observable<T>) => input.pipe(
@@ -38,10 +38,10 @@ export function select<T>(...keys: string[]): OperatorFunction<T, any> {
 }
 
 // tslint:disable: max-line-length
-export function selectFrom<T, K extends keyof T>(input: Observable<T>, key: K): Observable<T[K]>
-export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>
-export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>
-export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>
+export function selectFrom<T, K extends keyof T>(input: Observable<T>, key: K): Observable<T[K]>;
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0]>(input: Observable<T>, key0: K0, key1: K1): Observable<T[K0][K1]>;
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1]>(input: Observable<T>, key0: K0, key1: K1, key2: K2): Observable<T[K0][K1][K2]>;
+export function selectFrom<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends keyof T[K0][K1], K3 extends keyof T[K0][K1][K2]>(input: Observable<T>, key0: K0, key1: K1, key2: K2, key3: K3): Observable<T[K0][K1][K2][K3]>;
 // tslint:enable: max-line-length
 export function selectFrom<T>(
   input: Observable<T>,
@@ -200,109 +200,3 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
     }),
   );
 }
-
-// ----------- Deprecated: -----------
-
-/**
- * @deprecated Deprecated in favour of `using`.
- */
-export function watchFrom<T, U>(
-  input: Observable<T>,
-  watchingFunction: (item: T) => U,
-): Observable<U> {
-  return input.pipe(
-    watch(watchingFunction),
-  );
-}
-
-/**
- * @deprecated Deprecated as unused.
- */
-export function distinctUntilKeysChanged<T>(): OperatorFunction<T, T> {
-  return (source: Observable<T>) => source.pipe( // TODO: Also emit if prev and curr keys lengths have changed?
-    distinctUntilChanged((prev, curr) => !Object.keys(prev).some(key => curr[key as keyof T] !== prev[key as keyof T])),
-  )
-}
-
-/**
- * @deprecated Deprecated as unused.
- */
- export function gate<T>(source: Observable<T>): OperatorFunction<boolean, T | undefined> {
-  return (gate$: Observable<boolean>) => gate$.pipe(
-    distinctUntilChanged(),
-    switchMap(gatePosition => gatePosition ? source : of(undefined)),
-  );
-}
-
-/**
- * @deprecated Deprecated as unused.
- */
-export function mapToLatest<T, U>(latestFrom: Observable<U>): OperatorFunction<T, U> {
-  return (source: Observable<T>) => source.pipe(
-    withLatestFrom(latestFrom),
-    map(([, latest]) => latest),
-  );
-}
-
-/**
- * @deprecated Deprecated as unused.
- */
-export function conditionalMapTo<T>(mapTo: T): OperatorFunction<boolean, T | undefined> {
-  return (source: Observable<boolean>) => source.pipe(
-    map(src => src ? mapTo : undefined),
-  );
-}
-
-/**
- * @deprecated Deprecated as unused.
- */
-export function stopPropagation<T extends Event>(): OperatorFunction<T, T> {
-  return (source: Observable<T>) => source.pipe(
-    tap(ev => ev.stopPropagation()),
-  );
-}
-
-/**
- * @deprecated Deprecated in favour of `conditional`.
- */
- export function ternary<T, OT>(
-  input: Observable<T>,
-  trueValue: OT,
-): Observable<OT | undefined>
-export function ternary<T, OT, OF>(
-  input: Observable<T>,
-  trueValue: OT,
-  falseValue: OF,
-): Observable<OT | OF>
-export function ternary<T, OT, OF>(
-  input: Observable<T>,
-  trueValue: OT,
-  falseValue?: OF,
-): Observable<OT | OF | undefined> {
-  return input.pipe(
-    distinctUntilChanged(),
-    map(ip => ip ? trueValue : falseValue)
-  );
-}
-
-/**
- * @deprecated Deprecated as unused.
- */
-export function filterObject<T>(
-  object: T,
-  filterFn: <K extends keyof T = keyof T>(value: T[K], key: K) => boolean,
-): Partial<T> {
-  return Object.keys(object).reduce((filtered, key) => {
-    if (filterFn(object[key as keyof T], key as keyof T)) {
-      filtered[key as keyof T] = object[key as keyof T];
-    }
-    return filtered;
-  }, {} as Partial<T>)
-}
-
-/**
- * Default config for shareReplay operator. Buffer size of 1 and ref count enabled to unsubscribe source when there
- * are no subscribers.
- * @deprecated Deprecated as unused.
- */
- export const REF_COUNT = { bufferSize: 1 as const, refCount: true as const };
