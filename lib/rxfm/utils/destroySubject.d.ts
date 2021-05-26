@@ -1,5 +1,9 @@
-import { ReplaySubject } from "rxjs";
+import { Observable, ReplaySubject } from "rxjs";
 export declare class DestroySubject extends ReplaySubject<void> {
     constructor();
-    emitAndComplete: () => void;
+    next: () => void;
+    complete: () => void;
+    destroy: () => void;
+    untilDestroy: <T>(source: Observable<T>) => Observable<T>;
+    toPromise: () => Promise<void>;
 }

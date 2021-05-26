@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { ComponentOperator, ElementType } from '../components';
+import { ComponentOperator, ElementType } from '../components/component';
 import { StringLike, NullLike } from '../utils';
 /**
  * The possible types which may be passed as a component child.
