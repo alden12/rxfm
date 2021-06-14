@@ -5,6 +5,6 @@ export const ClickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
   return Button`Clicks: ${clicks}`.pipe(
-    event('click', () => clicks.next(clicks.value + 1)),
+    event.click(() => clicks.next(clicks.value + 1)),
   );
 };

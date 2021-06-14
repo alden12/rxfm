@@ -10,7 +10,7 @@ const Card = (...children: ComponentChild[]) => Div(
 
 const OptionButton = (option: string, setOption: (option: string) => void, active: Observable<boolean>) => {
   return Button(option).pipe(
-    event('click', () => setOption(option)),
+    event.click(() => setOption(option)),
     classes('option-button', conditional(active, 'active')),
   );
 };

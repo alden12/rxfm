@@ -36,7 +36,7 @@ export const Controls = (
 
   return Div(
     Button`Restart`.pipe(
-      event('click', () => dispatch({ type: 'start', cell: [0, 0] })),
+      event.click(() => dispatch({ type: 'start', cell: [0, 0] })),
     ),
     Div`Time: ${gameTime}s`,
     HighScore,
