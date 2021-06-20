@@ -117,6 +117,8 @@ const AttributesExample = Input().pipe(
 
 Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
 
+<!-- TODO: Add examples of tagged templates etc. -->
+
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## Conditionally Displaying Components
@@ -154,12 +156,16 @@ You may also be tempted to use `switchMap` to transform and array observable int
 Providing inputs to a component is as simple as passing them in as function arguments. Outputs can be provided by passing in callback functions to handle events inside the component.
 
 ```typescript
-const OptionButton = (option: string, setOption: (option: string) => void, active: Observable<boolean>) => {
-  return Button(option).pipe(
-    event('click', () => setOption(option)),
-    classes('option-button', conditional(active, 'active')),
-  );
-};
+interface OptionButtonProps {
+  option: string;
+  setOption: (option: string) => void;
+  active: Observable<boolean>;
+}
+
+const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
+  event('click', () => setOption(option)),
+  classes`option-button ${conditional(active, 'active')}`,
+);
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
@@ -167,13 +173,13 @@ const ComponentIOExample = () => {
   const selectedOption = new BehaviorSubject<string>('Option 1');
   const setOption = (option: string) => selectedOption.next(option);
 
-  return Div(
-    ...options.map(option => OptionButton(
-        option,
-        setOption,
-        selectedOption.pipe(map(op => op === option))
-      ),
-    ),
+  const Options = options.map(option => {
+    const active = selectedOption.pipe(map(op => op === option));
+    return OptionButton({ option, setOption, active });
+  });
+
+  return Card(
+    ...Options,
     Div`Current Value: ${selectedOption}`,
   );
 };
@@ -185,7 +191,7 @@ Component children can be passed in using the `ComponentChild` type. A variable 
 const Card = (...children: ComponentChild[]) => Div(
   ...children,
 ).pipe(
-  classes('card'),
+  classes`card`,
 );
 ```
 

@@ -32,9 +32,6 @@ export const GameCell = (
       color: using(neighbors, neighbors => NEIGHBORS_COLOR_MAP[neighbors]),
       fontSize: using(symbol, symbol => symbol ? '12px' : '14px'),
     }),
-    classes(
-      'minesweeper-cell',
-      conditional(isUndiscovered, 'raised'),
-    ),
+    classes`minesweeper-cell ${conditional(isUndiscovered, 'raised')}`,
   );
 };

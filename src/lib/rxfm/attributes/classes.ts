@@ -1,5 +1,5 @@
 import { Observable, of, combineLatest } from 'rxjs';
-import { map, debounceTime, startWith, tap } from 'rxjs/operators';
+import { map, startWith, tap } from 'rxjs/operators';
 import { ComponentOperator, ElementType, componentOperator } from '../components';
 import { operatorIsolationService } from '../operator-isolation-service';
 import { NullLike, coerceToArray, flatten } from '../utils';
@@ -19,14 +19,13 @@ export type ClassType = ClassSingle | Observable<ClassSingle | ClassSingle[]>;
  */
 function classTypesToSetObservable(classTypes: ClassType[]): Observable<Set<string>> {
   const classStringsObservables = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
-    map(coerceToArray),
-  ) : of([classType]));
+    map(classNames => coerceToArray(classNames).filter(Boolean) as string[]),
+    map(classNames => flatten(classNames.map(name => name.split(' ').filter(Boolean)))),
+  ) : of(classType ? classType.split(' ').filter(Boolean) : [classType]));
 
-  // TODO: Split on space in case multiple classes in one string?
   return combineLatest(classStringsObservables).pipe(
-    debounceTime(0),
-    map(stringArrayArray => new Set(flatten(stringArrayArray).filter(className => Boolean(className)) as string[])),
-  )
+    map(stringArrayArray => new Set(flatten(stringArrayArray).filter(Boolean) as string[])),
+  );
 }
 
 /**
@@ -50,11 +49,30 @@ function canRemoveClass(
  * @param classNames A spread array of class names. These may either be of type string, string observable or string
  * array observable. If the class name value is falsy (false, undefined, null , 0) The class will be removed.
  */
+// export function classes<T extends ElementType>(
+//   templateStrings: TemplateStringsArray,
+//   ...componentChildren: ClassType[]
+// ): ComponentOperator<T>;
+// export function classes<T extends ElementType>(
+//   ...classNames: ClassType[]
+// ): ComponentOperator<T>;
 export function classes<T extends ElementType>(
-  ...classNames: ClassType[]
+  stringsOrFirstClassName: TemplateStringsArray | ClassType, ...otherClassNames: ClassType[]
 ): ComponentOperator<T> {
   return componentOperator(element => {
     const symbol = Symbol('Classes Operator');
+
+    let classNames: ClassType[] = [];
+    if (Array.isArray(stringsOrFirstClassName)) {
+      classNames = (stringsOrFirstClassName as TemplateStringsArray)
+        .reduce<ClassType[]>((acc, str, i) => {
+          acc.push(str);
+          if (otherClassNames[i]) acc.push(otherClassNames[i]);
+          return acc;
+        }, []);
+    } else {
+      classNames = [stringsOrFirstClassName as ClassType, ...otherClassNames];
+    }
 
     return classTypesToSetObservable(classNames).pipe(
       startWith(new Set<string>()),

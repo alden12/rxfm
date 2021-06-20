@@ -21,10 +21,10 @@ import './styles.css';
 document.title = 'RxFM Examples';
 
 const Example = (title: string, ...children: ComponentChild[]) => Div(
-  H3(title).pipe(classes('example-title')),
+  H3(title).pipe(classes`example-title`),
   ...children,
 ).pipe(
-  classes('example'),
+  classes`example`,
 );
 
 const Examples = Div(
@@ -45,19 +45,19 @@ const Examples = Div(
   Example('Snake Example', SnakeGame),
   Example('Minesweeper Example', Minesweeper),
 ).pipe(
-  classes('examples'),
+  classes`examples`,
 );
 
 const GithubLink = A`(GitHub)`.pipe(
   attributes({ href: 'https://github.com/alden12/rxfm' }),
-  classes('github-link'),
+  classes`github-link`,
 );
 
 const Title = Span(
   H1`RxFM Examples`,
   GithubLink,
 ).pipe(
-  classes('app-title'),
+  classes`app-title`,
 );
 
 const App = Div(Title,  Examples).pipe(

@@ -11,7 +11,7 @@ import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } f
 export type StyleKeys = Extract<
   keyof { [K in keyof CSSStyleDeclaration as CSSStyleDeclaration[K] extends string ? K : never]: CSSStyleDeclaration[K] },
   string
->
+>;
 
 /**
  * The types which may be applied as a style.
@@ -37,6 +37,7 @@ const setStyle = (element: ElementType, key: StyleKeys, value: string | null) =>
   }
 };
 
+// TODO: Add option to pass style as: style.backgroundColor`red` or style.backgroundColor('blue').
 /**
  * An observable operator to manage a style on an RxFM component.
  * @param name The style name.
@@ -112,6 +113,6 @@ export function styles<T extends ElementType>(
           style(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
         );
       }, input);
-    }
+    };
   }
 }
