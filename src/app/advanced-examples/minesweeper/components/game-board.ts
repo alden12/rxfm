@@ -1,4 +1,4 @@
-import { Div, flatten, mapToComponents, styles, classes, event } from "rxfm";
+import { Div, flatten, mapToComponents, classes, event, style } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { BOARD_HEIGHT } from "../constants";
@@ -16,6 +16,6 @@ export const GameBoard = (board: Observable<MinesweeperBoard>, dispatch: (action
   ),
 ).pipe(
   event.contextmenu(ev => ev.preventDefault()),
-  styles({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` }),
+  style.gridTemplateRows`repeat(${BOARD_HEIGHT}, max-content)`,
   classes`minesweeper-board`,
 );

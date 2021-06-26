@@ -1,8 +1,8 @@
-import { Observable } from "rxjs";
+import { combineLatest, Observable, of } from "rxjs";
 import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
 import { Component, componentOperator, ComponentOperator, ElementType } from "../components";
 import { operatorIsolationService } from "../operator-isolation-service";
-import { coerceToObservable, NullLike, TypeOrObservable } from "../utils";
+import { coerceToObservable, NullLike, StringLike, TypeOrObservable } from "../utils";
 import { AttributeMetadataDictionary, AttributeMetadataObject, setAttributes } from "./attribute-operator-isolation";
 
 /**
@@ -65,21 +65,47 @@ type SimpleStyleOperator = {
   <T extends ElementType, K extends StyleKeys>(name: K, value: TypeOrObservable<StyleType>): ComponentOperator<T>;
 };
 
+type IndividualStyleOperator = {
+  <T extends ElementType>(value: TypeOrObservable<StyleType>): ComponentOperator<T>;
+  // TODO: Replace return type with ComponentOperator once TS tagged template operator type inference is fixed.
+  (templateStrings: TemplateStringsArray, ...expressions: TypeOrObservable<StringLike>[]):
+    <T extends ElementType>(component: Component<T>) => Component<T>;
+};
+
 type StyleOperators = {
-  [E in StyleKeys]: <T extends ElementType>(value: TypeOrObservable<StyleType>) => ComponentOperator<T>;
+  [E in StyleKeys]: IndividualStyleOperator;
 };
 
 export type StyleOperator = SimpleStyleOperator & StyleOperators;
 
+const getIndividualStyleOperator = (key: StyleKeys): IndividualStyleOperator => <T extends ElementType>(
+  valueOrTemplateStrings: TypeOrObservable<StyleType> | TemplateStringsArray,
+  ...expressions: TypeOrObservable<StringLike>[]
+): ComponentOperator<T> => {
+  if (!Array.isArray(valueOrTemplateStrings)) {
+    return simpleStyle(key, valueOrTemplateStrings as TypeOrObservable<StyleType>);
+  } else {
+    const styleObservables = (valueOrTemplateStrings as TemplateStringsArray)
+      .reduce<Observable<StringLike>[]>((acc, str, i) => {
+        acc.push(of(str));
+        if (expressions[i]) acc.push(coerceToObservable(expressions[i]));
+        return acc;
+      }, []);
+    const styleObservable = combineLatest(styleObservables).pipe(
+      map(strings => strings.join('')),
+    );
+    return simpleStyle(key, styleObservable);
+  }
+};
+
 function buildStyleOperator(): StyleOperator {
   const handler: ProxyHandler<StyleOperator> = {
     apply: (_, __, args: [StyleKeys, TypeOrObservable<StyleType>]) => simpleStyle(...args),
-    get: (_, prop: StyleKeys) => (value: TypeOrObservable<StyleType>) => simpleStyle(prop, value),
+    get: (_, prop: StyleKeys) => getIndividualStyleOperator(prop),
   };
   return new Proxy((() => {}) as any, handler);
 }
 
-// TODO: Add option to pass style as: style.backgroundColor`red`.
 /**
  * An observable operator to manage a style on an RxFM component.
  * Alternatively style operators for specific style types may be accessed directly as properties eg: `style.color('red')`.
