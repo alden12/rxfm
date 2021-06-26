@@ -50,7 +50,7 @@ function canRemoveClass(
  * These may either be of type string, string observable or string array observable.
  * If the class name value is falsy (false, undefined, null , 0) The class will be removed.
  */
- export function classes<T extends ElementType>(
+export function classes<T extends ElementType>(
   ...classNames: ClassType[]
 ): ComponentOperator<T>;
 // TODO: Replace return type with ComponentOperator once TS tagged template operator type inference is fixed.

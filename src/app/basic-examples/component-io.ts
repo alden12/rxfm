@@ -2,12 +2,9 @@ import { Button, classes, ComponentChild, conditional, Div, event } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-// const test = classes`card`;
-
 const Card = (...children: ComponentChild[]) => Div(
   ...children,
 ).pipe(
-  classes('card'),
   classes`card`,
 );
 
