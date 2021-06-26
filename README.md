@@ -82,6 +82,13 @@ const ClickCounter = () => {
 ```
 Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
 
+The `event` operator also has a second overload allowing each event type to be accessed as a property:
+```typescript
+Button`Clicks: ${clicks}`.pipe(
+  event.click(() => clicks.next(clicks.value + 1)),
+);
+```
+
 When components store state like this, they should be declared as functions as above so that instances of the component don't interfere with each-other.
 
 Using Subjects to store state gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
@@ -147,7 +154,7 @@ const ConditionalComponentsExample = Div(
 );
 ```
 
-You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
+You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the "Dynamic Component Arrays" section).
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
@@ -163,7 +170,7 @@ interface OptionButtonProps {
 }
 
 const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
-  event('click', () => setOption(option)),
+  event.click(() => setOption(option)),
   classes`option-button ${conditional(active, 'active')}`,
 );
 
@@ -188,9 +195,7 @@ const ComponentIOExample = () => {
 Component children can be passed in using the `ComponentChild` type. A variable number of component children can be passed in using a spread array:
 
 ```typescript
-const Card = (...children: ComponentChild[]) => Div(
-  ...children,
-).pipe(
+const Card = (...children: ComponentChild[]) => Div(...children).pipe(
   classes`card`,
 );
 ```

@@ -25,7 +25,7 @@ const GameBoard = (board: Observable<SnakeBoard>) => Div(
 type SetDifficulty = (difficulty: Difficulty) => void;
 
 const DifficultyButton = (difficulty: Difficulty, setDifficulty: SetDifficulty) => Button(difficulty).pipe(
-  event('click', () => setDifficulty(difficulty)),
+  event.click(() => setDifficulty(difficulty)),
   classes`difficulty-button`,
 );
 

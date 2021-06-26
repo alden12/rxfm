@@ -2,9 +2,7 @@ import { Button, classes, ComponentChild, conditional, Div, event } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-const Card = (...children: ComponentChild[]) => Div(
-  ...children,
-).pipe(
+const Card = (...children: ComponentChild[]) => Div(...children).pipe(
   classes`card`,
 );
 
@@ -15,7 +13,7 @@ interface OptionButtonProps {
 }
 
 const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
-  event('click', () => setOption(option)),
+  event.click(() => setOption(option)),
   classes('option-button', conditional(active, 'active')),
 );
 

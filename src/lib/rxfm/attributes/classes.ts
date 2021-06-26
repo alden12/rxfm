@@ -44,6 +44,7 @@ function canRemoveClass(
   });
 }
 
+// TODO: Add ability to pass class names as a tagged template.
 /**
  * An observable operator to manage the CSS classes on an RxFM component.
  * @param classNames A spread array of class names, or class names as a template strings array.

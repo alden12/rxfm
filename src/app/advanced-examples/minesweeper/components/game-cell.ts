@@ -8,12 +8,12 @@ import { CellAction, CellActionType } from "../types";
 export const GameCell = (
   cell: Observable<MinesweeperCell>,
   index: Observable<number>,
-  onCellAction: (action: CellAction) => void,
+  dispatch: (action: CellAction) => void,
 ) => {
   const { neighbors, hasNeighbors, symbol, color, isCleared, isUndiscovered } = destructure(cell);
 
   const handleCellAction = (type: CellActionType) => index.pipe(
-    map(i => () => onCellAction({ type, cell: indexToVector(i) }))
+    map(i => () => dispatch({ type, cell: indexToVector(i) }))
   );
 
   return Div(

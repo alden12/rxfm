@@ -67,8 +67,8 @@ export type DestructuredObservable<T> = {
  */
 export function destructure<T> (source: Observable<T>, share = true): DestructuredObservable<T> {
   const sharedSource = share ? reuse(source) : source;
-  const handler = {
-    get: (_: DestructuredObservable<T>, prop: string | symbol) => selectFrom(sharedSource, prop as keyof T),
+  const handler: ProxyHandler<DestructuredObservable<T>> = {
+    get: (_, prop) => selectFrom(sharedSource, prop as keyof T),
   };
   return new Proxy({} as DestructuredObservable<T>, handler);
 }
@@ -138,6 +138,17 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
 }
 
 /**
+ * @returns An observable emitting the logical NOT value of the source observable's emissions.
+ */
+ export function notGate(source: Observable<any>): Observable<boolean> {
+  return source.pipe(
+    distinctUntilChanged(),
+    map(val => !val),
+    distinctUntilChanged(),
+  );
+}
+
+/**
  * Take a spread array of observables and emit the logical AND value of all of their emissions whenever it changes.
  */
 export function andGate(...sources: Observable<any>[]): Observable<boolean> {
@@ -147,6 +158,13 @@ export function andGate(...sources: Observable<any>[]): Observable<boolean> {
     map(values => values.every(value => Boolean(value))),
     distinctUntilChanged(),
   );
+}
+
+/**
+ * Take a spread array of observables and emit the logical NAND value of all of their emissions whenever it changes.
+ */
+export function nandGate(...sources: Observable<any>[]): Observable<boolean> {
+  return notGate(andGate(...sources));
 }
 
 /**
@@ -162,14 +180,10 @@ export function orGate(...sources: Observable<any>[]): Observable<boolean> {
 }
 
 /**
- * @returns An observable emitting the logical NOT value of the source observable's emissions.
+ * Take a spread array of observables and emit the logical NOR value of all of their emissions whenever it changes.
  */
-export function notGate(source: Observable<any>): Observable<boolean> {
-  return source.pipe(
-    distinctUntilChanged(),
-    map(val => !val),
-    distinctUntilChanged(),
-  );
+export function norGate(...sources: Observable<any>[]): Observable<boolean> {
+  return notGate(orGate(...sources));
 }
 
 /**
