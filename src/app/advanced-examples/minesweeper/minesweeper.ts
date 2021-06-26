@@ -19,6 +19,6 @@ export const Minesweeper = () => {
     GameBoard(board, dispatch),
     Controls(startTime, endTime, gameStage, dispatch),
   ).pipe(
-    classes('minesweeper'),
+    classes`minesweeper`,
   );
 };

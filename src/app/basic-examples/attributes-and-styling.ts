@@ -21,6 +21,10 @@ export const ClassExample = Div`We can add CSS classes`.pipe(
   classes('example-class'),
 );
 
+export const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
+  classes`example-class`,
+);
+
 export const DynamicClasses = Div`Classes can be dynamic`.pipe(
   classes(
     'example-class',

@@ -50,6 +50,7 @@ const setAttribute = (element: ElementType, key: string, val: string | null) => 
   }
 };
 
+// TODO: Add option to pass attribute as: attribute.type`text` or attribute.checked(done).
 /**
  * An observable operator to manage an attribute on an RxFM component.
  * @param type The attribute type.
@@ -133,6 +134,6 @@ export function attributes<T extends ElementType>(
           attribute(key, attributesDict[key as AttributeKeys], symbol),
         );
       }, input);
-    }
+    };
   }
 }

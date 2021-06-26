@@ -17,5 +17,5 @@ export const GameBoard = (board: Observable<MinesweeperBoard>, dispatch: (action
 ).pipe(
   event.contextmenu(ev => ev.preventDefault()),
   styles({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` }),
-  classes('minesweeper-board'),
+  classes`minesweeper-board`,
 );

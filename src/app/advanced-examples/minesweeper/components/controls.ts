@@ -42,6 +42,6 @@ export const Controls = (
     HighScore,
     WinLoseMessage,
   ).pipe(
-    classes('minesweeper-controls'),
+    classes`minesweeper-controls`,
   );
 };
