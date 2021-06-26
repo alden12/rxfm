@@ -42,14 +42,6 @@ type EventOperators = {
 
 export type EventOperator = SimpleEventOperator & EventOperators;
 
-function buildEventOperator(): EventOperator {
-  const handler: ProxyHandler<EventOperator> = {
-    apply: (_, __, args: [keyof ElementEventMap, EventHandler<ElementType, keyof ElementEventMap>]) => simpleEvent(...args),
-    get: (_, prop: keyof ElementEventMap) => (callback: EventHandler<ElementType, keyof ElementEventMap>) => simpleEvent(prop, callback),
-  };
-  return new Proxy((() => {}) as any, handler);
-}
-
 /**
  * Register a callback to an event on the source component's element. Similar to the RxJS built-in `fromEvent` operator but
  * operates on a component and maps back to the source component.
@@ -58,7 +50,9 @@ function buildEventOperator(): EventOperator {
  * @param callback The function, or observable emitting a function, to execute when the event fires.
  * @returns A component operator which will add the event listener into the stream.
  */
-export const event = buildEventOperator();
+export const event = new Proxy(simpleEvent as EventOperator, {
+  get: (_, prop: keyof ElementEventMap) => (callback: EventHandler<ElementType, keyof ElementEventMap>) => simpleEvent(prop, callback),
+});
 
 /**
  * An object where keys are rxfm element event names and values are event handler functions.

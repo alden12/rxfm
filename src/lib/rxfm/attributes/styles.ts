@@ -98,14 +98,6 @@ const getIndividualStyleOperator = (key: StyleKeys): IndividualStyleOperator => 
   }
 };
 
-function buildStyleOperator(): StyleOperator {
-  const handler: ProxyHandler<StyleOperator> = {
-    apply: (_, __, args: [StyleKeys, TypeOrObservable<StyleType>]) => simpleStyle(...args),
-    get: (_, prop: StyleKeys) => getIndividualStyleOperator(prop),
-  };
-  return new Proxy((() => {}) as any, handler);
-}
-
 /**
  * An observable operator to manage a style on an RxFM component.
  * Alternatively style operators for specific style types may be accessed directly as properties eg: `style.color('red')`.
@@ -113,7 +105,9 @@ function buildStyleOperator(): StyleOperator {
  * @param value The style value or an observable emitting the value.
  * @param externalSymbol Implementation detail so that this operator may be used as the basis for the styles operator.
  */
-export const style = buildStyleOperator();
+export const style = new Proxy(simpleStyle as StyleOperator, {
+  get: (_, prop: StyleKeys) => getIndividualStyleOperator(prop),
+});
 
 /**
  * A dictionary of styles or observable styles to be used in the 'styles' operator.
