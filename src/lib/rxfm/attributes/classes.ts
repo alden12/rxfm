@@ -1,6 +1,6 @@
 import { Observable, of, combineLatest } from 'rxjs';
 import { map, startWith, tap } from 'rxjs/operators';
-import { ComponentOperator, ElementType, componentOperator } from '../components';
+import { ComponentOperator, ElementType, componentOperator, Component } from '../components';
 import { operatorIsolationService } from '../operator-isolation-service';
 import { NullLike, coerceToArray, flatten } from '../utils';
 
@@ -46,16 +46,18 @@ function canRemoveClass(
 
 /**
  * An observable operator to manage the CSS classes on an RxFM component.
- * @param classNames A spread array of class names. These may either be of type string, string observable or string
- * array observable. If the class name value is falsy (false, undefined, null , 0) The class will be removed.
+ * @param classNames A spread array of class names, or class names as a template strings array.
+ * These may either be of type string, string observable or string array observable.
+ * If the class name value is falsy (false, undefined, null , 0) The class will be removed.
  */
-// export function classes<T extends ElementType>(
-//   templateStrings: TemplateStringsArray,
-//   ...componentChildren: ClassType[]
-// ): ComponentOperator<T>;
-// export function classes<T extends ElementType>(
-//   ...classNames: ClassType[]
-// ): ComponentOperator<T>;
+ export function classes<T extends ElementType>(
+  ...classNames: ClassType[]
+): ComponentOperator<T>;
+// TODO: Replace return type with ComponentOperator once TS tagged template operator type inference is fixed.
+export function classes(
+  templateStrings: TemplateStringsArray,
+  ...componentChildren: ClassType[]
+): <T extends ElementType>(component: Component<T>) => Component<T>;
 export function classes<T extends ElementType>(
   stringsOrFirstClassName: TemplateStringsArray | ClassType, ...otherClassNames: ClassType[]
 ): ComponentOperator<T> {
