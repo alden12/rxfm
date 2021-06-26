@@ -1,4 +1,4 @@
-import { Div, event, using, flatten, mapToComponents, Button, destructure, classes, style } from "rxfm";
+import { Div, event, flatten, mapToComponents, Button, destructure, classes, style, access } from "rxfm";
 import { Observable, BehaviorSubject } from "rxjs";
 import { map, scan } from "rxjs/operators";
 import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";
@@ -9,7 +9,7 @@ import './snake-styles.css';
 
 const GameCell = (cellType: Observable<SnakeCell>) => Div().pipe(
   classes`snake-cell`,
-  style.backgroundColor(using(cellType, cellType => CELL_COLOR_MAP[cellType])),
+  style.backgroundColor(access(CELL_COLOR_MAP, cellType)),
 );
 
 const GameBoard = (board: Observable<SnakeBoard>) => Div(

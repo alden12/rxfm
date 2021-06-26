@@ -103,6 +103,21 @@ export function using<T, U>(source: Observable<T>, action: (value: T) => U): Obs
 }
 
 /**
+ * Access a property on an object using an observable emitting object keys.
+ * This is equivalent to: `key.pipe(map(k => value[k]))` but will only emit distinct values.
+ * @param value An object of type T.
+ * @param key A key of T (K) of observable.
+ * @returns An observable emitting T[K].
+ */
+export function access<T, K extends keyof T>(value: T, key: Observable<K>): Observable<T[K]> {
+  return key.pipe(
+    distinctUntilChanged(),
+    map(k => value[k]),
+    distinctUntilChanged(),
+  );
+}
+
+/**
  * A function taking a source observable and either emitting the success value or the fail value depending on whether
  * the source emits a truthy or falsy value.
  * @param source An observable of type T.

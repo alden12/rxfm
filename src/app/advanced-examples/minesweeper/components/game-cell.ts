@@ -1,4 +1,4 @@
-import { destructure, Div, conditional, andGate, styles, using, classes, events } from "rxfm";
+import { destructure, Div, conditional, andGate, styles, using, classes, events, access } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { indexToVector, NEIGHBORS_COLOR_MAP } from "../constants";
@@ -29,8 +29,8 @@ export const GameCell = (
     }),
     styles({
       backgroundColor: color,
-      color: using(neighbors, neighbors => NEIGHBORS_COLOR_MAP[neighbors]),
-      fontSize: using(symbol, symbol => symbol ? '12px' : '14px'),
+      color: access(NEIGHBORS_COLOR_MAP, neighbors),
+      fontSize: conditional(symbol, '12px', '14px'),
     }),
     classes`minesweeper-cell ${conditional(isUndiscovered, 'raised')}`,
   );
