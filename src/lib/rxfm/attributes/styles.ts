@@ -37,14 +37,7 @@ const setStyle = (element: ElementType, key: StyleKeys, value: string | null) =>
   }
 };
 
-// TODO: Add option to pass style as: style.backgroundColor`red` or style.backgroundColor('blue').
-/**
- * An observable operator to manage a style on an RxFM component.
- * @param name The style name.
- * @param value The style value or an observable emitting the value.
- * @param externalSymbol Implementation detail so that this operator may be used as the basis for the styles operator.
- */
-export function style<T extends ElementType, K extends StyleKeys>(
+function simpleStyle<T extends ElementType, K extends StyleKeys>(
   name: K,
   value: TypeOrObservable<StyleType>,
   externalSymbol?: symbol,
@@ -67,6 +60,34 @@ export function style<T extends ElementType, K extends StyleKeys>(
     );
   });
 }
+
+type SimpleStyleOperator = {
+  <T extends ElementType, K extends StyleKeys>(name: K, value: TypeOrObservable<StyleType>): ComponentOperator<T>;
+};
+
+type StyleOperators = {
+  [E in StyleKeys]: <T extends ElementType>(value: TypeOrObservable<StyleType>) => ComponentOperator<T>;
+};
+
+export type StyleOperator = SimpleStyleOperator & StyleOperators;
+
+function buildStyleOperator(): StyleOperator {
+  const handler: ProxyHandler<StyleOperator> = {
+    apply: (_, __, args: [StyleKeys, TypeOrObservable<StyleType>]) => simpleStyle(...args),
+    get: (_, prop: StyleKeys) => (value: TypeOrObservable<StyleType>) => simpleStyle(prop, value),
+  };
+  return new Proxy((() => {}) as any, handler);
+}
+
+// TODO: Add option to pass style as: style.backgroundColor`red`.
+/**
+ * An observable operator to manage a style on an RxFM component.
+ * Alternatively style operators for specific style types may be accessed directly as properties eg: `style.color('red')`.
+ * @param name The style name.
+ * @param value The style value or an observable emitting the value.
+ * @param externalSymbol Implementation detail so that this operator may be used as the basis for the styles operator.
+ */
+export const style = buildStyleOperator();
 
 /**
  * A dictionary of styles or observable styles to be used in the 'styles' operator.
@@ -110,7 +131,7 @@ export function styles<T extends ElementType>(
       const symbol = Symbol('Styles Operator');
       return Object.keys(stylesDict).reduce((component, key) => {
         return component.pipe(
-          style(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
+          simpleStyle(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
         );
       }, input);
     };
