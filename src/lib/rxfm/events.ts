@@ -51,7 +51,8 @@ export type EventOperator = BasicEventOperator & EventOperators;
  * @returns A component operator which will add the event listener into the stream.
  */
 export const event = new Proxy(basicEventOperator, {
-  get: (eventOperator, prop: keyof ElementEventMap) => (callback: EventHandler<ElementType, keyof ElementEventMap>) => eventOperator(prop, callback),
+  get: (eventOperator, prop: keyof ElementEventMap) =>
+    (callback: EventHandler<ElementType, keyof ElementEventMap>) => eventOperator(prop, callback),
 }) as EventOperator;
 
 /**

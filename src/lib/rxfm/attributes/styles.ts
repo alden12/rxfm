@@ -111,9 +111,7 @@ export type StyleOperator = BasicStyleOperator & StyleOperators;
  * @param name The style name.
  * @param value The style value or an observable emitting the value.
  */
-export const style = new Proxy(basicStyleOperator, {
-  get: (styleOperator, prop: StyleKeys) => getIndividualStyleOperator(styleOperator, prop),
-}) as StyleOperator;
+export const style = new Proxy(basicStyleOperator, { get: getIndividualStyleOperator }) as StyleOperator;
 
 /**
  * A dictionary of styles or observable styles to be used in the 'styles' operator.

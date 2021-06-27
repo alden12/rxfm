@@ -123,9 +123,7 @@ export type AttributeOperator = BasicAttributeOperator & AttributeOperators;
  * @param type The attribute type.
  * @param value The attribute value or an observable emitting the value.
  */
-export const attribute = new Proxy(basicAttributeOperator, {
-  get: (attributeOperator, prop: AttributeKeys) => getIndividualAttributeOperator(attributeOperator, prop),
-}) as AttributeOperator;
+export const attribute = new Proxy(basicAttributeOperator, { get: getIndividualAttributeOperator }) as AttributeOperator;
 
 /**
  * Element attributes which have a different interface to others.
