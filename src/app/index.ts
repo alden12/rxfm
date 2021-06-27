@@ -1,4 +1,4 @@
-import { attribute, ComponentChild, Div, H1, H3, classes, Span, A, attributes } from 'rxfm';
+import { attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'rxfm';
 import {
   HelloWorld,
   ChildrenExample,
@@ -49,7 +49,7 @@ const Examples = Div(
 );
 
 const GithubLink = A`(GitHub)`.pipe(
-  attributes({ href: 'https://github.com/alden12/rxfm' }),
+  attribute.href`https://github.com/alden12/rxfm`,
   classes`github-link`,
 );
 
@@ -61,7 +61,7 @@ const Title = Span(
 );
 
 const App = Div(Title,  Examples).pipe(
-  attribute('id', 'app'),
+  attribute.id`app`,
 );
 
 App.subscribe(element => document.body.appendChild(element));

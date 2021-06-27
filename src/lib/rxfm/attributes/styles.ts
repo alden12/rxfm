@@ -110,7 +110,6 @@ export type StyleOperator = BasicStyleOperator & StyleOperators;
  * Alternatively style operators for specific style types may be accessed directly as properties eg: `style.color('red')`.
  * @param name The style name.
  * @param value The style value or an observable emitting the value.
- * @param externalSymbol Implementation detail so that this operator may be used as the basis for the styles operator.
  */
 export const style = new Proxy(basicStyleOperator, {
   get: (styleOperator, prop: StyleKeys) => getIndividualStyleOperator(styleOperator, prop),
