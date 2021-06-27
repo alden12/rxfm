@@ -37,7 +37,11 @@ const setStyle = (element: ElementType, key: StyleKeys, value: string | null) =>
   }
 };
 
-function simpleStyle<T extends ElementType, K extends StyleKeys>(
+type BasicStyleOperator = {
+  <T extends ElementType, K extends StyleKeys>(name: K, value: TypeOrObservable<StyleType>): ComponentOperator<T>;
+};
+
+function basicStyleOperator<T extends ElementType, K extends StyleKeys>(
   name: K,
   value: TypeOrObservable<StyleType>,
   externalSymbol?: symbol,
@@ -61,10 +65,6 @@ function simpleStyle<T extends ElementType, K extends StyleKeys>(
   });
 }
 
-type SimpleStyleOperator = {
-  <T extends ElementType, K extends StyleKeys>(name: K, value: TypeOrObservable<StyleType>): ComponentOperator<T>;
-};
-
 type IndividualStyleOperator = {
   <T extends ElementType>(value: TypeOrObservable<StyleType>): ComponentOperator<T>;
   // TODO: Replace return type with ComponentOperator once TS tagged template operator type inference is fixed.
@@ -72,31 +72,38 @@ type IndividualStyleOperator = {
     <T extends ElementType>(component: Component<T>) => Component<T>;
 };
 
+/**
+ * Create a style operator for an individual style key.
+ * @param styleOperator The generic style operator.
+ * @param key The style type key.
+ */
+ function getIndividualStyleOperator(styleOperator: BasicStyleOperator, key: StyleKeys): IndividualStyleOperator {
+  return <T extends ElementType>(
+    valueOrTemplateStrings: TypeOrObservable<StyleType> | TemplateStringsArray,
+    ...expressions: TypeOrObservable<StringLike>[]
+  ): ComponentOperator<T> => {
+    if (!Array.isArray(valueOrTemplateStrings)) {
+      return styleOperator(key, valueOrTemplateStrings as TypeOrObservable<StyleType>);
+    } else {
+      const styleObservables = (valueOrTemplateStrings as TemplateStringsArray)
+        .reduce<Observable<StringLike>[]>((acc, str, i) => {
+          acc.push(of(str));
+          if (expressions[i]) acc.push(coerceToObservable(expressions[i]));
+          return acc;
+        }, []);
+      const styleObservable = combineLatest(styleObservables).pipe(
+        map(strings => strings.join('')),
+      );
+      return styleOperator(key, styleObservable);
+    }
+  };
+}
+
 type StyleOperators = {
   [E in StyleKeys]: IndividualStyleOperator;
 };
 
-export type StyleOperator = SimpleStyleOperator & StyleOperators;
-
-const getIndividualStyleOperator = (key: StyleKeys): IndividualStyleOperator => <T extends ElementType>(
-  valueOrTemplateStrings: TypeOrObservable<StyleType> | TemplateStringsArray,
-  ...expressions: TypeOrObservable<StringLike>[]
-): ComponentOperator<T> => {
-  if (!Array.isArray(valueOrTemplateStrings)) {
-    return simpleStyle(key, valueOrTemplateStrings as TypeOrObservable<StyleType>);
-  } else {
-    const styleObservables = (valueOrTemplateStrings as TemplateStringsArray)
-      .reduce<Observable<StringLike>[]>((acc, str, i) => {
-        acc.push(of(str));
-        if (expressions[i]) acc.push(coerceToObservable(expressions[i]));
-        return acc;
-      }, []);
-    const styleObservable = combineLatest(styleObservables).pipe(
-      map(strings => strings.join('')),
-    );
-    return simpleStyle(key, styleObservable);
-  }
-};
+export type StyleOperator = BasicStyleOperator & StyleOperators;
 
 /**
  * An observable operator to manage a style on an RxFM component.
@@ -105,9 +112,9 @@ const getIndividualStyleOperator = (key: StyleKeys): IndividualStyleOperator => 
  * @param value The style value or an observable emitting the value.
  * @param externalSymbol Implementation detail so that this operator may be used as the basis for the styles operator.
  */
-export const style = new Proxy(simpleStyle as StyleOperator, {
-  get: (_, prop: StyleKeys) => getIndividualStyleOperator(prop),
-});
+export const style = new Proxy(basicStyleOperator, {
+  get: (styleOperator, prop: StyleKeys) => getIndividualStyleOperator(styleOperator, prop),
+}) as StyleOperator;
 
 /**
  * A dictionary of styles or observable styles to be used in the 'styles' operator.
@@ -151,7 +158,7 @@ export function styles<T extends ElementType>(
       const symbol = Symbol('Styles Operator');
       return Object.keys(stylesDict).reduce((component, key) => {
         return component.pipe(
-          simpleStyle(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
+          basicStyleOperator(key as StyleKeys, stylesDict[key as StyleKeys], symbol),
         );
       }, input);
     };

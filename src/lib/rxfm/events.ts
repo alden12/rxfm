@@ -20,27 +20,27 @@ export type EventType<T extends ElementType, E extends keyof ElementEventMap> =
 export type EventHandler<T extends ElementType, E extends keyof ElementEventMap> =
   ((event: EventType<T, E>) => void) | Observable<(event: EventType<T, E>) => void>;
 
-function simpleEvent<T extends ElementType, E extends keyof ElementEventMap>(
+type BasicEventOperator = {
+  <T extends ElementType, E extends keyof ElementEventMap>(type: E, callback: EventHandler<T, E>): ComponentOperator<T>;
+};
+
+const basicEventOperator: BasicEventOperator = <T extends ElementType, E extends keyof ElementEventMap>(
   type: E,
   callback: EventHandler<T, E>,
-): ComponentOperator<T> {
+): ComponentOperator<T> => {
   const eventOperator: ComponentOperator<T> = componentOperator(element => fromEvent(element, type).pipe(
     withLatestFrom(coerceToObservable(callback)),
     tap(([ev, callbackFn]) => callbackFn(ev as EventType<T, E>)),
   ));
 
   return eventOperator;
-}
-
-type SimpleEventOperator = {
-  <T extends ElementType, E extends keyof ElementEventMap>(type: E, callback: EventHandler<T, E>): ComponentOperator<T>;
 };
 
 type EventOperators = {
   [E in keyof ElementEventMap]: <T extends ElementType>(callback: EventHandler<T, E>) => ComponentOperator<T>;
 };
 
-export type EventOperator = SimpleEventOperator & EventOperators;
+export type EventOperator = BasicEventOperator & EventOperators;
 
 /**
  * Register a callback to an event on the source component's element. Similar to the RxJS built-in `fromEvent` operator but
@@ -50,9 +50,9 @@ export type EventOperator = SimpleEventOperator & EventOperators;
  * @param callback The function, or observable emitting a function, to execute when the event fires.
  * @returns A component operator which will add the event listener into the stream.
  */
-export const event = new Proxy(simpleEvent as EventOperator, {
-  get: (_, prop: keyof ElementEventMap) => (callback: EventHandler<ElementType, keyof ElementEventMap>) => simpleEvent(prop, callback),
-});
+export const event = new Proxy(basicEventOperator, {
+  get: (eventOperator, prop: keyof ElementEventMap) => (callback: EventHandler<ElementType, keyof ElementEventMap>) => eventOperator(prop, callback),
+}) as EventOperator;
 
 /**
  * An object where keys are rxfm element event names and values are event handler functions.
@@ -72,7 +72,7 @@ export function events<T extends ElementType>(handlers: EventHandlers<T>): Compo
     const handler = handlers[eventType as keyof ElementEventMap] as EventHandler<T, keyof ElementEventMap>;
     if (!handler) return result;
     return result.pipe(
-      simpleEvent<T, keyof ElementEventMap>(eventType as keyof ElementEventMap, handler),
+      basicEventOperator<T, keyof ElementEventMap>(eventType as keyof ElementEventMap, handler),
     );
   }, source);
 }
