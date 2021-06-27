@@ -124,7 +124,23 @@ const AttributesExample = Input().pipe(
 
 Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
 
-<!-- TODO: Add examples of tagged templates etc. -->
+We can also access individual operators for styles and attributes as well as using the tagged template syntax:
+
+```typescript
+export const StyleExample = Div`We access styles as properties and use tagged templates`.pipe(
+  style.color`blue`,
+);
+```
+```typescript
+export const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
+  classes`example-class`,
+);
+```
+```typescript
+export const AttributeExample = Div`We access attributes as properties and use tagged templates`.pipe(
+  attribute.id`attribute-example`,
+);
+```
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 

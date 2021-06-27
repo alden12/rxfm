@@ -1,4 +1,4 @@
-import { Div, styles, classes, Input, attributes } from 'rxfm';
+import { Div, styles, classes, Input, attributes, style, attribute } from 'rxfm';
 import { timer } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -12,9 +12,11 @@ export const StylesExample = Div`We can add styles`.pipe(
 );
 
 export const DynamicStyles = Div`Styles can be dynamic`.pipe(
-  styles({
-    color: timer(0, 1000).pipe(map(i => i % 2 ? 'red' : 'blue')),
-  }),
+  style('color', timer(0, 1000).pipe(map(i => i % 2 ? 'red' : 'blue'))),
+);
+
+export const StyleExample = Div`We access styles as properties and use tagged templates`.pipe(
+  style.color`blue`,
 );
 
 export const ClassExample = Div`We can add CSS classes`.pipe(
@@ -42,6 +44,10 @@ export const AttributesExample = Input().pipe(
 export const DynamicAttributes = Input().pipe(
   attributes({
     type: 'checkbox',
-    checked: timer(0, 1000).pipe(map(i => i % 2 === 0))
+    checked: timer(0, 1000).pipe(map(i => i % 2 === 0)),
   })
+);
+
+export const AttributeExample = Div`We access attributes as properties and use tagged templates`.pipe(
+  attribute.id`attribute-example`,
 );
