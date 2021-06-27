@@ -201,7 +201,7 @@ const ComponentIOExample = () => {
     return OptionButton({ option, setOption, active });
   });
 
-  return Card(
+  return Div(
     ...Options,
     Div`Current Value: ${selectedOption}`,
   );
