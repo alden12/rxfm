@@ -144,7 +144,7 @@ export function conditional<T, S, F = undefined>(
   successValue?: S | Observable<S>,
   failValue?: F | Observable<F>,
 ): Observable<S | F> {
-  const { if: source, then: successVal, else: elseVal } = sourceOrOptions instanceof Observable ? {
+  const { if: source, then: thenVal, else: elseVal } = sourceOrOptions instanceof Observable ? {
     if: sourceOrOptions,
     then: successValue as S | Observable<S>,
     else: failValue,
@@ -152,7 +152,7 @@ export function conditional<T, S, F = undefined>(
 
   return source.pipe(
     distinctUntilChanged(),
-    switchMap(value => value ? coerceToObservable(successVal) : coerceToObservable(elseVal) as Observable<F>),
+    switchMap(value => coerceToObservable(value ? thenVal : elseVal as F | Observable<F>)),
     distinctUntilChanged(),
   );
 }
