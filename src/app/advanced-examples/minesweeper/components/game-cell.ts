@@ -1,28 +1,30 @@
-import { destructure, Div, conditional, andGate, styles, using, classes, events, access } from "rxfm";
+import { destructure, Div, conditional, andGate, styles, classes, events, access } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { indexToVector, NEIGHBORS_COLOR_MAP } from "../constants";
 import { MinesweeperCell } from "../game-logic/minesweeper-cell";
 import { CellAction, CellActionType } from "../types";
 
-export const GameCell = (
-  cell: Observable<MinesweeperCell>,
-  index: Observable<number>,
-  dispatch: (action: CellAction) => void,
-) => {
+interface GameCellProps {
+  cell: Observable<MinesweeperCell>;
+  index: Observable<number>;
+  dispatch: (action: CellAction) => void;
+}
+
+export const GameCell = ({ cell, index, dispatch }: GameCellProps) => {
   const { neighbors, hasNeighbors, symbol, color, isCleared, isUndiscovered } = destructure(cell);
 
   const handleCellAction = (type: CellActionType) => index.pipe(
     map(i => () => dispatch({ type, cell: indexToVector(i) }))
   );
 
-  return Div(
-    conditional(
-      andGate(isCleared, hasNeighbors),
-      neighbors,
-      symbol,
-    ),
-  ).pipe(
+  const cellText = conditional({
+    if: andGate(isCleared, hasNeighbors),
+    then: neighbors,
+    else: symbol,
+  });
+
+  return Div(cellText).pipe(
     events({
       click: handleCellAction('discover'),
       contextmenu: handleCellAction('flag'),

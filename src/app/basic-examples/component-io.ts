@@ -24,7 +24,7 @@ export const ComponentIOExample = () => {
   const setOption = (option: string) => selectedOption.next(option);
 
   const Options = options.map(option => {
-    const active = selectedOption.pipe(map(op => op === option));
+    const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
     return OptionButton({ option, setOption, active });
   });
 

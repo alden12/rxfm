@@ -27,14 +27,10 @@ type BasicEventOperator = {
 const basicEventOperator: BasicEventOperator = <T extends ElementType, E extends keyof ElementEventMap>(
   type: E,
   callback: EventHandler<T, E>,
-): ComponentOperator<T> => {
-  const eventOperator: ComponentOperator<T> = componentOperator(element => fromEvent(element, type).pipe(
-    withLatestFrom(coerceToObservable(callback)),
-    tap(([ev, callbackFn]) => callbackFn(ev as EventType<T, E>)),
-  ));
-
-  return eventOperator;
-};
+): ComponentOperator<T> => componentOperator(element => fromEvent(element, type).pipe(
+  withLatestFrom(coerceToObservable(callback)),
+  tap(([ev, callbackFn]) => callbackFn(ev as EventType<T, E>)),
+));
 
 type EventOperators = {
   [E in keyof ElementEventMap]: <T extends ElementType>(callback: EventHandler<T, E>) => ComponentOperator<T>;

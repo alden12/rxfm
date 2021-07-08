@@ -21,10 +21,10 @@ function classTypesToSetObservable(classTypes: ClassType[]): Observable<Set<stri
   const classStringsObservables = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
     map(classNames => coerceToArray(classNames).filter(Boolean) as string[]),
     map(classNames => flatten(classNames.map(name => name.split(' ').filter(Boolean)))),
-  ) : of(classType ? classType.split(' ').filter(Boolean) : [classType]));
+  ) : of(classType ? classType.split(' ').filter(Boolean) : []));
 
   return combineLatest(classStringsObservables).pipe(
-    map(stringArrayArray => new Set(flatten(stringArrayArray).filter(Boolean) as string[])),
+    map(stringArrayArray => new Set(flatten(stringArrayArray) as string[])),
   );
 }
 
@@ -44,7 +44,6 @@ function canRemoveClass(
   });
 }
 
-// TODO: Add ability to pass class names as a tagged template.
 /**
  * An observable operator to manage the CSS classes on an RxFM component.
  * @param classNames A spread array of class names, or class names as a template strings array.

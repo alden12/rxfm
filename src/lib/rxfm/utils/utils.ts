@@ -106,7 +106,7 @@ export function using<T, U>(source: Observable<T>, action: (value: T) => U): Obs
  * Access a property on an object using an observable emitting object keys.
  * This is equivalent to: `key.pipe(map(k => value[k]))` but will only emit distinct values.
  * @param value An object of type T.
- * @param key A key of T (K) of observable.
+ * @param key A key of T (K) observable.
  * @returns An observable emitting T[K].
  */
 export function access<T, K extends keyof T>(value: T, key: Observable<K>): Observable<T[K]> {
@@ -117,10 +117,17 @@ export function access<T, K extends keyof T>(value: T, key: Observable<K>): Obse
   );
 }
 
+export interface ConditionalOptions<T, S, F = undefined> {
+  if: Observable<T>,
+  then: S | Observable<S>,
+  else: F | Observable<F>,
+}
+
 /**
  * A function taking a source observable and either emitting the success value or the fail value depending on whether
  * the source emits a truthy or falsy value.
  * @param source An observable of type T.
+ * Alternatively this may be an object containing the three arguments as properties, using the keys `if`, `then`, and `else`.
  * @param successValue The value of type S (or observable emitting type S) to return if T is truthy.
  * @param failValue The value of type F (or observable emitting type F) to return if T is falsy.
  * @returns Returns an observable emitting either the success value of type S or the fail value of type F depending on the
@@ -130,10 +137,22 @@ export function conditional<T, S, F = undefined>(
   source: Observable<T>,
   successValue: S | Observable<S>,
   failValue?: F | Observable<F>,
+): Observable<S | F>;
+export function conditional<T, S, F = undefined>(options: ConditionalOptions<T, S, F>): Observable<S | F>;
+export function conditional<T, S, F = undefined>(
+  sourceOrOptions: Observable<T> | ConditionalOptions<T, S, F>,
+  successValue?: S | Observable<S>,
+  failValue?: F | Observable<F>,
 ): Observable<S | F> {
+  const { if: source, then: successVal, else: elseVal } = sourceOrOptions instanceof Observable ? {
+    if: sourceOrOptions,
+    then: successValue as S | Observable<S>,
+    else: failValue,
+  }: sourceOrOptions;
+
   return source.pipe(
     distinctUntilChanged(),
-    switchMap(value => value ? coerceToObservable(successValue) : coerceToObservable(failValue as F)),
+    switchMap(value => value ? coerceToObservable(successVal) : coerceToObservable(elseVal) as Observable<F>),
     distinctUntilChanged(),
   );
 }

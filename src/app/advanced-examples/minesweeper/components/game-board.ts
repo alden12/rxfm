@@ -6,12 +6,17 @@ import { MinesweeperBoard } from "../game-logic/minesweeper-board";
 import { CellAction } from "../types";
 import { GameCell } from "./game-cell";
 
-export const GameBoard = (board: Observable<MinesweeperBoard>, dispatch: (action: CellAction) => void) => Div(
+interface GameBoardProps {
+  board: Observable<MinesweeperBoard>;
+  dispatch: (action: CellAction) => void;
+}
+
+export const GameBoard = ({ board, dispatch }: GameBoardProps) => Div(
   board.pipe(
     map(flatten),
     mapToComponents(
-      (_, i) => i,
-      (cell, i) => GameCell(cell, i, dispatch),
+      (_, index) => index,
+      (cell, index) => GameCell({ cell, index, dispatch }),
     ),
   ),
 ).pipe(
