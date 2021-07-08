@@ -82,6 +82,13 @@ const ClickCounter = () => {
 ```
 Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
 
+The `event` operator also has a second overload allowing each event type to be accessed as a property:
+```typescript
+Button`Clicks: ${clicks}`.pipe(
+  event.click(() => clicks.next(clicks.value + 1)),
+);
+```
+
 When components store state like this, they should be declared as functions as above so that instances of the component don't interfere with each-other.
 
 Using Subjects to store state gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
@@ -117,6 +124,24 @@ const AttributesExample = Input().pipe(
 
 Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
 
+We can also access individual operators for styles and attributes as well as using the tagged template syntax:
+
+```typescript
+export const StyleExample = Div`We access styles as properties and use tagged templates`.pipe(
+  style.color`blue`,
+);
+```
+```typescript
+export const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
+  classes`example-class`,
+);
+```
+```typescript
+export const AttributeExample = Div`We access attributes as properties and use tagged templates`.pipe(
+  attribute.id`attribute-example`,
+);
+```
+
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## Conditionally Displaying Components
@@ -145,7 +170,7 @@ const ConditionalComponentsExample = Div(
 );
 ```
 
-You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the next section).
+You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the "Dynamic Component Arrays" section).
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
@@ -154,12 +179,16 @@ You may also be tempted to use `switchMap` to transform and array observable int
 Providing inputs to a component is as simple as passing them in as function arguments. Outputs can be provided by passing in callback functions to handle events inside the component.
 
 ```typescript
-const OptionButton = (option: string, setOption: (option: string) => void, active: Observable<boolean>) => {
-  return Button(option).pipe(
-    event('click', () => setOption(option)),
-    classes('option-button', conditional(active, 'active')),
-  );
-};
+interface OptionButtonProps {
+  option: string;
+  setOption: (option: string) => void;
+  active: Observable<boolean>;
+}
+
+const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
+  event.click(() => setOption(option)),
+  classes`option-button ${conditional(active, 'active')}`,
+);
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
@@ -167,13 +196,13 @@ const ComponentIOExample = () => {
   const selectedOption = new BehaviorSubject<string>('Option 1');
   const setOption = (option: string) => selectedOption.next(option);
 
+  const Options = options.map(option => {
+    const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
+    return OptionButton({ option, setOption, active });
+  });
+
   return Div(
-    ...options.map(option => OptionButton(
-        option,
-        setOption,
-        selectedOption.pipe(map(op => op === option))
-      ),
-    ),
+    ...Options,
     Div`Current Value: ${selectedOption}`,
   );
 };
@@ -182,10 +211,8 @@ const ComponentIOExample = () => {
 Component children can be passed in using the `ComponentChild` type. A variable number of component children can be passed in using a spread array:
 
 ```typescript
-const Card = (...children: ComponentChild[]) => Div(
-  ...children,
-).pipe(
-  classes('card'),
+const Card = (...children: ComponentChild[]) => Div(...children).pipe(
+  classes`card`,
 );
 ```
 

@@ -3,12 +3,14 @@ import { Observable, combineLatest, of, timer } from "rxjs";
 import { switchMap, filter, map, scan, startWith, distinctUntilChanged } from "rxjs/operators";
 import { GameStage, CellAction } from "../types";
 
-export const Controls = (
-  startTime: Observable<number | undefined>,
-  endTime: Observable<number | undefined>,
-  gameStage: Observable<GameStage>,
-  dispatch: (action: CellAction) => void,
-) => {
+interface ControlsProps {
+  startTime: Observable<number | undefined>;
+  endTime: Observable<number | undefined>;
+  gameStage: Observable<GameStage>;
+  dispatch: (action: CellAction) => void;
+}
+
+export const Controls = ({ startTime, endTime, gameStage, dispatch }: ControlsProps) => {
   const gameTime = combineLatest([startTime, endTime]).pipe(
     switchMap(([start, end]) => {
       if (!start) return of(0);
@@ -36,12 +38,12 @@ export const Controls = (
 
   return Div(
     Button`Restart`.pipe(
-      event('click', () => dispatch({ type: 'start', cell: [0, 0] })),
+      event.click(() => dispatch({ type: 'start', cell: [0, 0] })),
     ),
     Div`Time: ${gameTime}s`,
     HighScore,
     WinLoseMessage,
   ).pipe(
-    classes('minesweeper-controls'),
+    classes`minesweeper-controls`,
   );
 };

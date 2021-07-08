@@ -1,4 +1,4 @@
-import { Div, event, styles, using, flatten, mapToComponents, Button, destructure, classes } from "rxfm";
+import { Div, event, flatten, mapToComponents, Button, destructure, classes, style, access } from "rxfm";
 import { Observable, BehaviorSubject } from "rxjs";
 import { map, scan } from "rxjs/operators";
 import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";
@@ -8,8 +8,8 @@ import { SnakeCell, SnakeBoard, Difficulty } from "./types";
 import './snake-styles.css';
 
 const GameCell = (cellType: Observable<SnakeCell>) => Div().pipe(
-  classes('snake-cell'),
-  styles({ backgroundColor: using(cellType, cellType => CELL_COLOR_MAP[cellType]) }),
+  classes`snake-cell`,
+  style.backgroundColor(access(CELL_COLOR_MAP, cellType)),
 );
 
 const GameBoard = (board: Observable<SnakeBoard>) => Div(
@@ -18,15 +18,15 @@ const GameBoard = (board: Observable<SnakeBoard>) => Div(
     mapToComponents((_, i) => i, GameCell),
   ),
 ).pipe(
-  classes('snake-game-board'),
-  styles({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` }),
+  classes`snake-game-board`,
+  style.gridTemplateRows`repeat(${BOARD_HEIGHT}, max-content)`,
 );
 
 type SetDifficulty = (difficulty: Difficulty) => void;
 
 const DifficultyButton = (difficulty: Difficulty, setDifficulty: SetDifficulty) => Button(difficulty).pipe(
-  event('click', () => setDifficulty(difficulty)),
-  classes('difficulty-button'),
+  event.click(() => setDifficulty(difficulty)),
+  classes`difficulty-button`,
 );
 
 const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
@@ -41,7 +41,7 @@ const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => 
     Div`High Score: ${highScore}`,
     ...difficulties.map(difficulty => DifficultyButton(difficulty, setDifficulty)),
   ).pipe(
-    classes('score-board'),
+    classes`score-board`,
   );
 };
 
@@ -53,6 +53,6 @@ export const SnakeGame = () => {
     GameBoard(board),
     ScoreBoard(score, newDifficulty => difficulty.next(newDifficulty)),
   ).pipe(
-    classes('snake-game'),
+    classes`snake-game`,
   );
 };

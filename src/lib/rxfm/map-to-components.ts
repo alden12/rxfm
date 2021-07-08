@@ -36,7 +36,7 @@ function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunc
               `Invalid id function passed to mapToComponents, must return string or number, got: ${typeof id}.`,
             );
           }
-          return [id, { item, index }] as const
+          return [id, { item, index }] as const;
         });
         // Find any added items which were not present in the previous item map.
         const added = itemsAndIds.filter(([id]) => !previousItemMap.has(id)).map(([id]) => id);
@@ -48,7 +48,7 @@ function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunc
       }),
       shareReplay({ refCount: true, bufferSize: 1 }), // Share to prevent duplication, replay to allow fetching of current state.
     );
-  }
+  };
 }
 
 /**
@@ -123,7 +123,7 @@ function combineComponents<I, T extends ElementType>(
       filter(elementOrIds => Array.isArray(elementOrIds)), // Only allow the id array emissions through.
       map(ids => (ids as I[]).map(id => elementMap.get(id)!)), // Map the current id array to an array of their elements.
     );
-  }
+  };
 }
 
 /**
@@ -167,10 +167,10 @@ function simpleComponentDiffer<I, T extends ElementType>(
 export function mapToComponents<I, T extends ElementType>(
   idFunction: (item: I, index: number) => Id,
   creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
-): OperatorFunction<I[], ElementType[]>
+): OperatorFunction<I[], ElementType[]>;
 export function mapToComponents<I, T extends ElementType>(
   staticCreationFunction: (item: I) => Component<T>,
-): OperatorFunction<I[], ElementType[]>
+): OperatorFunction<I[], ElementType[]>;
 export function mapToComponents<I, T extends ElementType>(
   idOrCreationFunction: ((item: I, index: number) => Id) | ((item: I) => Component<T>),
   creationFunction?: (item: Observable<I>, index: Observable<number>) => Component<T>,

@@ -1,4 +1,4 @@
-import { Div, flatten, mapToComponents, styles, classes, event } from "rxfm";
+import { Div, flatten, mapToComponents, classes, event, style } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { BOARD_HEIGHT } from "../constants";
@@ -6,16 +6,21 @@ import { MinesweeperBoard } from "../game-logic/minesweeper-board";
 import { CellAction } from "../types";
 import { GameCell } from "./game-cell";
 
-export const GameBoard = (board: Observable<MinesweeperBoard>, dispatch: (action: CellAction) => void) => Div(
+interface GameBoardProps {
+  board: Observable<MinesweeperBoard>;
+  dispatch: (action: CellAction) => void;
+}
+
+export const GameBoard = ({ board, dispatch }: GameBoardProps) => Div(
   board.pipe(
     map(flatten),
     mapToComponents(
-      (_, i) => i,
-      (cell, i) => GameCell(cell, i, dispatch),
+      (_, index) => index,
+      (cell, index) => GameCell({ cell, index, dispatch }),
     ),
   ),
 ).pipe(
-  event('contextmenu', ev => ev.preventDefault()),
-  styles({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` }),
-  classes('minesweeper-board'),
+  event.contextmenu(ev => ev.preventDefault()),
+  style.gridTemplateRows`repeat(${BOARD_HEIGHT}, max-content)`,
+  classes`minesweeper-board`,
 );

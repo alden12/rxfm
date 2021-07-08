@@ -1,6 +1,6 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
-import { componentOperator, ComponentOperator, ElementType } from '../components/component';
+import { Component, componentOperator, ComponentOperator, ElementType } from '../components/component';
 import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
 import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
@@ -18,7 +18,7 @@ export type ComponentChild =
     | ElementType
     | ElementType[]
   >
-  | (() => Observable<ElementType>);
+  | (() => Component);
 
 /**
  * The possible types which may be used as a child element.
@@ -45,7 +45,7 @@ function coerceChildComponent(childComponent: ComponentChild): Observable<Coerce
           node.nodeValue = child.toString(); // Coerce to string and update text node value.
           return [node]; // Return component in an array.
         }
-        return null // Otherwise return null to indicate empty.
+        return null; // Otherwise return null to indicate empty.
       }),
     );
   } else if (childComponent !== undefined && childComponent !== null && childComponent !== false) { // If string like.

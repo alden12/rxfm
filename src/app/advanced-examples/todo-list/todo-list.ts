@@ -1,5 +1,5 @@
 import { attributes, classes, Div, event, mapToComponents, Input, using, destructure, conditional } from "rxfm";
-import { BehaviorSubject, Observable } from "rxjs"
+import { BehaviorSubject, Observable } from "rxjs";
 
 import './todo-list-styles.css';
 
@@ -17,8 +17,8 @@ const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) 
   const toggle = using(name, name => () => onToggle(name));
 
   return Div(name, Checkbox(done)).pipe(
-    event('click', toggle),
-    classes('todo-item', conditional(done, 'done')),
+    event.click(toggle),
+    classes`todo-item ${conditional(done, 'done')}`,
   );
 };
 
@@ -27,7 +27,7 @@ const ItemInput = (onChange: (value: string) => void) => Input().pipe(
     type: 'text',
     placeholder: 'Add Item',
   }),
-  event('change', ev => onChange(ev.target.value)),
+  event.change(ev => onChange(ev.target.value)),
 );
 
 const initialItems: TodoItem[] = [
