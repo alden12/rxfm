@@ -1,5 +1,6 @@
-import { attributes, classes, Div, event, mapToComponents, Input, using, destructure, conditional } from "rxfm";
+import { attributes, classes, Div, event, mapToComponents, Input, destructure, conditional, attribute } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
 import './todo-list-styles.css';
 
@@ -9,12 +10,14 @@ interface TodoItem {
 }
 
 const Checkbox = (checked: Observable<boolean>) => Input().pipe(
-  attributes({ type: 'checkbox', checked }),
+  attribute.type(checked),
 );
 
 const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) => {
   const { name, done } = destructure(item);
-  const toggle = using(name, name => () => onToggle(name));
+  const toggle = name.pipe(
+    map(name => () => onToggle(name))
+  );
 
   return Div(name, Checkbox(done)).pipe(
     event.click(toggle),

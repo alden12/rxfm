@@ -1,8 +1,8 @@
 import { combineLatest, Observable, of } from 'rxjs';
-import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
+import { distinctUntilChanged, finalize, ignoreElements, map, startWith, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { Component, componentOperator, ComponentOperator, ElementType } from '../components/component';
 import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
-import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
+import { StringLike, NullLike, flatten, coerceToArray, coerceToObservable } from '../utils';
 import { childDiffer } from './child-differ';
 import { operatorIsolationService } from '../operator-isolation-service';
 
@@ -118,6 +118,98 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
   });
 }
 
+function addComponentChild<T extends ElementType>(
+  element: T,
+  insertBefore: Observable<ChildElement | null>,
+  componentChild: ComponentChild,
+): Observable<ChildElement | null> {
+  let previousChildComponent: CoercedChildComponent | null;
+
+  return combineLatest([
+    coerceChildComponent(componentChild),
+    insertBefore,
+  ]).pipe(
+    distinctUntilChanged(([childA], [childB]) => childA === childB),
+    map(([currentChildComponent, insertBeforeElement]) => {
+      if (currentChildComponent && currentChildComponent.length > 1) {
+        // TODO: Handle element arrays.
+        return insertBeforeElement;
+      } else {
+        const [childElement] = currentChildComponent || [null];
+        const [previousChildElement] = previousChildComponent || [null];
+        if (childElement) element.insertBefore(childElement, insertBeforeElement);
+        else if (previousChildElement) element.removeChild(previousChildElement);
+      }
+
+      previousChildComponent = currentChildComponent;
+      return currentChildComponent?.find(Boolean) || insertBeforeElement;
+    }),
+    distinctUntilChanged(),
+  );
+}
+
+export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
+  return componentOperator(element => childComponents.reduceRight<Observable<ChildElement | null>>(
+    (insertBefore, componentChild) => addComponentChild(element, insertBefore, componentChild),
+    of(null),
+  ));
+}
+
+// function recursiveChildren<T extends ElementType>(
+//   element: T,
+//   childComponentArray: ComponentChild[],
+//   insertBefore: Observable<ChildElement | null> = of(null),
+// ): Observable<ChildElement | null> {
+//   if (childComponentArray.length === 0) return insertBefore;
+
+//   const nextInsertBefore = insertBefore.pipe(
+//     switchMap(insertBeforeElement => {
+//       let previousChildComponent: CoercedChildComponent | null;
+
+//       return coerceChildComponent(childComponentArray.slice(-1)[0]).pipe(
+//         map(childComponent => {
+//           if (childComponent) {
+//             if (childComponent.length > 1) {
+//               // TODO: diff arrays.
+//               return null;
+//             } else {
+//               const [childElement] = childComponent || [null];
+//               // console.log(childElement);
+  
+//               if (childElement) {
+//                 if (insertBeforeElement) { // If insert before node found, add before this.
+//                   element.insertBefore(childElement, insertBeforeElement);
+//                 } else { // Otherwise add to the end.
+//                   element.appendChild(childElement);
+//                 }
+//               } else if (previousChildComponent) {
+//                 element.removeChild(childElement);
+//               }
+//             }
+//           }
+
+//           previousChildComponent = childComponent;
+//           return childComponent?.slice(0, 1).find(Boolean) || null;
+//         }),
+//       );
+//     }),
+//     switchMap(insBefore => insBefore ? of(insBefore) : insertBefore),
+//   );
+
+//   return recursiveChildren(element, childComponentArray.slice(0, -1), nextInsertBefore);
+// }
+
+// of('world').pipe(
+//   switchMap(val => {
+//     // add val to element;
+//     return of(val);
+//   }),
+//   switchMap(val => {
+//     // add 'hello' to element before val;
+//     return of('hello');
+//   })
+// );
+
 /**
  * A component operator to add children to a component. If other instances of the children operator exist on a given component,
  * children will be added after those of the previous operators.
@@ -126,7 +218,7 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
  * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
  * arrays of components (see the 'mapToComponents' operator).
  */
-export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
+export function children_<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, false);
 }
 
