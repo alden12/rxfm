@@ -163,26 +163,15 @@ function coerceToDiff(
 
   if (isChildElement(currentElementInput)) {
     const append = [{ element: currentElementInput, insertBefore: null }];
-    if (isChildElement(previousElementInput)) {
-      // If element changes, remove the old and append the new element.
-      return { childElementDiff: { append, remove: [previousElementInput], first: currentElementInput } };
-    } else {
-      // If element input has changed from a diff to a single element, remove elements from element set and append new element.
-      return { childElementDiff: { append, remove: elementSet ? [...elementSet] : [], first: currentElementInput } };
-    }
+    const remove = isChildElement(previousElementInput) ? [previousElementInput] : elementSet ? [...elementSet] : [];
+    return { childElementDiff: { append, remove, first: currentElementInput } };
   } else { // Current element input is element diff:
     const newElementSet = elementSet || new Set<ChildElement>();
     updateElementSet(currentElementInput, newElementSet);
-    // Set the insert before element for any appended elements to the overall insert before element if not defined.
-    if (!isChildElement(previousElementInput)) {
-      // If current and previous were both element diffs, update element set with new elements and return current element diff.
-      return { childElementDiff: currentElementInput, newElementSet };
-    } else {
-      // If element input has changed from a single element to an element diff, add previous element to current element diff's removed,
-      // update element set, and return current element diff.
-      const childElementDiff = { ...currentElementInput, remove: [...currentElementInput.remove, previousElementInput] };
-      return { childElementDiff, newElementSet };
-    }
+    const childElementDiff = isChildElement(previousElementInput)
+      ? { ...currentElementInput, remove: [...currentElementInput.remove, previousElementInput] }
+      : currentElementInput;
+    return { childElementDiff, newElementSet }; 
   }
 }
 
@@ -193,27 +182,23 @@ function coerceToElementDiff(
     let previousElementInput: ElementInput = null;
     let elementSet: Set<ChildElement> | undefined = undefined;
     let textNode: Text; // Create outer reference to text node if it is needed.
+
     return (typeof componentChild === 'function' ? componentChild() : componentChild).pipe( // Create observable if applicable.
       startWith(null),
       distinctUntilChanged(),
       map(child => {
+        let currentElementInput: ElementInput = null;
+
         if (child && typeof child !== 'string' && typeof child !== 'number') {
-          // If child was already a component or component diff, coerce to component diff and return
-          const { childElementDiff, newElementSet } = coerceToDiff(child, previousElementInput, elementSet);
-          previousElementInput = child;
-          elementSet = newElementSet;
-          return childElementDiff;
+          currentElementInput = child;
         } else if (child !== undefined && child !== null && child !== false) { // Else if string like
           textNode = textNode || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
           textNode.nodeValue = child.toString(); // Coerce to string and update text node value.
-          const { childElementDiff, newElementSet } = coerceToDiff(textNode, previousElementInput, elementSet);
-          previousElementInput = textNode;
-          elementSet = newElementSet;
-          return childElementDiff;
+          currentElementInput = textNode;
         }
-        // TODO: remove previous child element.
-        const { childElementDiff, newElementSet } = coerceToDiff(null, previousElementInput, elementSet);
-        previousElementInput = null;
+
+        const { childElementDiff, newElementSet } = coerceToDiff(currentElementInput, previousElementInput, elementSet);
+        previousElementInput = currentElementInput;
         elementSet = newElementSet;
         return childElementDiff;
       }),
@@ -231,7 +216,6 @@ function addComponentChild<T extends ElementType>(
   componentChild: ComponentChild,
 ): Observable<ChildElement | null> {
   let previousElementDiff: ChildElementDiff | null = null;
-
   return combineLatest([
     coerceToElementDiff(componentChild),
     insertBefore,
