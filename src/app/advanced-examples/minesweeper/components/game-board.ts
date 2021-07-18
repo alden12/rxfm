@@ -12,13 +12,13 @@ interface GameBoardProps {
 }
 
 export const GameBoard = ({ board, dispatch }: GameBoardProps) => Div(
-  board.pipe(
-    map(flatten),
-    mapToComponents(
-      (_, index) => index,
-      (cell, index) => GameCell({ cell, index, dispatch }),
-    ),
-  ),
+  // board.pipe(
+  //   map(flatten),
+  //   mapToComponents(
+  //     (_, index) => index,
+  //     (cell, index) => GameCell({ cell, index, dispatch }),
+  //   ),
+  // ),
 ).pipe(
   event.contextmenu(ev => ev.preventDefault()),
   style.gridTemplateRows`repeat(${BOARD_HEIGHT}, max-content)`,

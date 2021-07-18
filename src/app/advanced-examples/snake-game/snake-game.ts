@@ -13,10 +13,10 @@ const GameCell = (cellType: Observable<SnakeCell>) => Div().pipe(
 );
 
 const GameBoard = (board: Observable<SnakeBoard>) => Div(
-  board.pipe(
-    map(flatten),
-    mapToComponents((_, i) => i, GameCell),
-  ),
+  // board.pipe(
+  //   map(flatten),
+  //   mapToComponents((_, i) => i, GameCell),
+  // ),
 ).pipe(
   classes`snake-game-board`,
   style.gridTemplateRows`repeat(${BOARD_HEIGHT}, max-content)`,

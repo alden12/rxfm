@@ -59,6 +59,6 @@ export const TodoList = () => {
 
   return Div(
     ItemInput(addItem),
-    TodoItems,
+    // TodoItems,
   );
 };
