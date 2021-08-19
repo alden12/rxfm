@@ -16,7 +16,7 @@ module.exports = [
       path: path.resolve(__dirname, 'dist'),
     },
     resolve: {
-      extensions: [".ts", ".js", ".json"],
+      extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
       alias: {
         "rxfm": path.resolve(__dirname, "./src/lib/rxfm/index")
       },
@@ -24,7 +24,7 @@ module.exports = [
     module: {
       rules: [
         {
-          test: /\.ts$/,
+          test: /\.ts(x)?$/,
           loader: "ts-loader",
           exclude: '/node_modules/'
         },
