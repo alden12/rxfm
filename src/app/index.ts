@@ -13,6 +13,7 @@ import {
   ComponentArraysExample,
   TaggedTemplateExample,
   ComponentIOExample,
+  JSXExample,
 } from './basic-examples';
 import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
@@ -28,6 +29,7 @@ const Example = (title: string, ...children: ComponentChild[]) => Div(
 );
 
 const Examples = Div(
+  Example('JSX', JSXExample),
   Example('Hello World', HelloWorld),
   Example('Children', ChildrenExample),
   Example('Tagged Templates', TaggedTemplateExample),
