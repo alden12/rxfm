@@ -3,7 +3,7 @@ import { componentCreator, ComponentCreator, componentFunction } from "./compone
 /**
  * A function to return a component creator for an HTML element with the given tag name.
  */
-function htmlComponentCreator<K extends keyof HTMLElementTagNameMap>(
+export function htmlComponentCreator<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
 ): ComponentCreator<HTMLElementTagNameMap[K]> {
   return componentCreator(
@@ -21,7 +21,6 @@ export const Aside = htmlComponentCreator('aside');
 export const Audio = htmlComponentCreator('audio');
 export const B = htmlComponentCreator('b');
 export const Base = htmlComponentCreator('base');
-export const Basefont = htmlComponentCreator('basefont');
 export const Bdi = htmlComponentCreator('bdi');
 export const Bdo = htmlComponentCreator('bdo');
 export const Blockquote = htmlComponentCreator('blockquote');

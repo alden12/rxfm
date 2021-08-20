@@ -1,11 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import RxFM, { Div, FC } from "rxfm";
+import RxFM, { FC } from "rxfm";
+import { timer } from "rxjs";
 
-const Foo = <foo bar="baz" />;
+const Greet: FC<{ name: string }> = ({ name }) => <span style={{ color: "blue" }}>Hello {name}!</span>;
 
-const HelloWorld: FC<{ hello: string }> = ({ hello }) => <foo bar="test">
-  test {Div} {hello}
-  {Foo}
-</foo>;
+const Timer = () => <span>Time Elapsed: {timer(0, 1000)}s</span>;
 
-export const JSXExample = <HelloWorld hello="world" class="test" style={{ color: "red" }}>test</HelloWorld>;
+export const JSXExample = <div>
+  <Greet name="JSX" />
+  <br />
+  <Timer />
+</div>;
