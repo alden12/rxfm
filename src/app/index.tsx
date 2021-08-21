@@ -36,7 +36,9 @@ const Examples = () => <div class="examples">
   <Example title="Dynamic CSS Classes">{DynamicClasses}</Example>
   <Example title="Attributes">{AttributesExample}</Example>
   <Example title="Dynamic Attributes">{DynamicAttributes}</Example>
-  <Example title="State">{ClickCounter}</Example>
+  <Example title="State">
+    <ClickCounter />
+  </Example>
   <Example title="Conditional Components">{ConditionalComponentsExample}</Example>
   <Example title="Component Inputs & Outputs">{ComponentIOExample}</Example>
   <Example title="Component Arrays">{ComponentArraysExample}</Example>
