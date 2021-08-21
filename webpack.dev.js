@@ -10,7 +10,7 @@ module.exports = [
       port: 3000,
       compress: true
     },
-    entry: './src/app/index.ts',
+    entry: './src/app/index.tsx',
     output: {
       filename: 'app.bundle.js',
       path: path.resolve(__dirname, 'dist'),
