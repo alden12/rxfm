@@ -60,4 +60,6 @@ const _svgTagNameMap = {
 
 export type SvgTagNames = keyof typeof _svgTagNameMap;
 
-export const svgTagNameMap: Record<SvgTagNames, keyof SVGElementTagNameMap> = _svgTagNameMap;
+export type SVGTagNameMap = Record<SvgTagNames, keyof SVGElementTagNameMap>;
+
+export const svgTagNameMap: SVGTagNameMap = _svgTagNameMap;

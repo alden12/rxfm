@@ -11,7 +11,6 @@ import {
   ClickCounter,
   ConditionalComponentsExample,
   ComponentArraysExample,
-  TaggedTemplateExample,
   ComponentIOExample,
   JSXExample,
 } from './basic-examples';
@@ -28,8 +27,9 @@ const Example: FC<{ title: string }> = ({ title, children }) => <div class="exam
 
 const Examples = () => <div class="examples">
   <Example title="Hello World">{HelloWorld}</Example>
-  <Example title="Children">{ChildrenExample}</Example>
-  <Example title="Tagged Templates">{TaggedTemplateExample}</Example>
+  <Example title="Children">
+    <ChildrenExample />
+  </Example>
   <Example title="Styles">{StylesExample}</Example>
   <Example title="Dynamic Styles">{DynamicStyles}</Example>
   <Example title="CSS Classes">{ClassExample}</Example>
