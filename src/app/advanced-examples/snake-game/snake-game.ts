@@ -15,7 +15,7 @@ const GameCell = (cellType: Observable<SnakeCell>) => Div().pipe(
 const GameBoard = (board: Observable<SnakeBoard>) => Div(
   board.pipe(
     map(flatten),
-    mapToComponents((_, i) => i, GameCell),
+    mapToComponents(GameCell),
   ),
 ).pipe(
   classes`snake-game-board`,

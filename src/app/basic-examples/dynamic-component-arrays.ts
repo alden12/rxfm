@@ -21,7 +21,7 @@ export const ComponentArraysExample = () => {
   );
 
   const ItemComponents = items.pipe(
-    mapToComponents(item => item.name, Item),
+    mapToComponents(Item, 'name'),
   );
 
   return Div(ItemComponents);

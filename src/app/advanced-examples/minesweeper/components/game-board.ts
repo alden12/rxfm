@@ -14,10 +14,7 @@ interface GameBoardProps {
 export const GameBoard = ({ board, dispatch }: GameBoardProps) => Div(
   board.pipe(
     map(flatten),
-    mapToComponents(
-      (_, index) => index,
-      (cell, index) => GameCell({ cell, index, dispatch }),
-    ),
+    mapToComponents((cell, index) => GameCell({ cell, index, dispatch })),
   ),
 ).pipe(
   event.contextmenu(ev => ev.preventDefault()),
