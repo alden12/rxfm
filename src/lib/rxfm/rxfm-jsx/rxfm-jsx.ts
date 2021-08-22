@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import { ComponentChild, Component, Styles, StyleObject, ClassType } from "rxfm";
 import { Observable } from "rxjs";
 import { AttributeObject, attributes, Attributes, AttributeType, classes, HTMLAttributes, styles, SVGAttributes } from "../attributes";
 import { ElementType, htmlComponentCreator, svgComponentCreator } from "../components";
-import { EventHandler, EventHandlers, events, ElementEventMap, EventType } from "../events";
+import { EventHandler, EventHandlers, events, ElementEventMap } from "../events";
 import { coerceToArray, flatten, PartialRecord, TypeOrObservable } from "../utils";
 import { ElementEventNameMap } from "./element-event-name-map";
 import { SVGTagNameMap, svgTagNameMap, SvgTagNames } from "./svg-tag-name-map";
