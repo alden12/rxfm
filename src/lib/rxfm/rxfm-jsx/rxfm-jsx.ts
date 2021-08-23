@@ -53,13 +53,16 @@ type StaticProps<T extends Record<string, any>> = {
   [K in keyof T]: T[K] extends Observable<infer U> ? U : T[K];
 };
 
-type UseProps<T extends Record<string, any>> = <U, D extends (keyof T)[]>(
-  mappingFunction: (props: Pick<StaticProps<T>, D[number]>) => U,
-  dependencies?: D,
-) => DestructuredObservable<U>;
+type UseProps<T extends Record<string, any>> = {
+  <U>(mappingFunction: (props: StaticProps<T>) => U): DestructuredObservable<U>;
+  <U, D extends (keyof T)[]>(
+    mappingFunction: (props: Pick<StaticProps<T>, D[number]>) => U,
+    dependencies?: D,
+  ): DestructuredObservable<U>;
+};
 
 function usePropsFor<T extends Record<string, any>>(props: T): UseProps<T> {
-  return <U, D extends (keyof T)[]>(mappingFunction: (props: Pick<StaticProps<T>, D[number]>) => U, deps?: D) => {
+  return <U>(mappingFunction: (props: Pick<StaticProps<T>, keyof T>) => U, deps?: (keyof T)[]) => {
     const observableEntries = Object.entries(props)
       .filter(([key]) => !deps || deps.includes(key))
       .map(([key, value]: [keyof T, T[keyof T]]) => coerceToObservable(value).pipe(
