@@ -1,5 +1,6 @@
-import RxFM, { mapToComponents, conditional, FC } from "rxfm";
+import RxFM, { mapToComponents, conditional, FC, destructure } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
+import { map } from "rxjs/operators";
 
 import './todo-list-styles.css';
 
@@ -15,10 +16,14 @@ interface TodoItemProps {
   onToggle: (name: string) => void;
 }
 
-const TodoItem: FC<TodoItemProps> = ({ onToggle }, useProps) => {
-  const { name, done, toggle } = useProps(({ item }) => ({ ...item, toggle: () => onToggle(item.name) }));
+const TodoItem: FC<TodoItemProps> = ({ item, onToggle }) => {
+  const { name, done } = destructure(item);
 
-  return <div class={['todo-item', conditional(done, 'done')]} onClick={toggle}>
+  const handleClick = name.pipe(
+    map(name => () => onToggle(name)),
+  );
+
+  return <div class={['todo-item', conditional(done, 'done')]} onClick={handleClick}>
     {name}
     <Checkbox checked={done} />
   </div>;
