@@ -60,7 +60,7 @@ const Title = Span(
   classes`app-title`,
 );
 
-const App = Div(Title,  Examples).pipe(
+const App = Div(Title, Examples).pipe(
   attribute.id`app`,
 );
 

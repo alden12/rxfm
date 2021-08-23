@@ -24,5 +24,5 @@ export const ComponentArraysExample = () => {
     mapToComponents(item => item.name, Item),
   );
 
-  return Div(ItemComponents);
+  return Div();
 };

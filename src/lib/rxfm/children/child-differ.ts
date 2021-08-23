@@ -1,4 +1,9 @@
-import { ChildElement } from "./children";
+import { ElementType } from "rxfm";
+
+/**
+ * The possible types which may be used as a child element.
+ */
+type ChildElement = ElementType | Text;
 
 /**
  * An interface to describe how a node should be added to a parent node.
