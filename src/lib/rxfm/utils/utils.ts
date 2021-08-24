@@ -17,6 +17,16 @@ export function flatten<T>(nested: (T | T[])[]): T[] {
   }, []);
 }
 
+type Nested<T> = T | Nested<T>[];
+
+export function recursiveFlatten<T>(nested: Nested<T>): T[] {
+  return coerceToArray(nested).reduce<T[]>((flat, element) => {
+    const flattenedElement = Array.isArray(element) ? recursiveFlatten(element) : [element];
+    flat.push(...flattenedElement);
+    return flat;
+  }, []);
+}
+
 /**
  * An observable operator to select a given key/keys from a source observable stream.
  * Equivalent to 'pluck' from RxJS operators but only emits distinct values.

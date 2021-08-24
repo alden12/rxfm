@@ -54,7 +54,9 @@ const Examples = () => <div class="examples">
   <Example title="Conditional Components">
     <ConditionalComponentsExample />
   </Example>
-  <Example title="Component Inputs & Outputs">{ComponentIOExample}</Example>
+  <Example title="Component Inputs & Outputs">
+    <ComponentIOExample />
+  </Example>
   <Example title="Component Arrays">{ComponentArraysExample}</Example>
   <Example title="Todo List Example">
     <TodoList />

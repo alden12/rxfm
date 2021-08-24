@@ -6,36 +6,40 @@ import { Observable } from "rxjs";
 import { AttributeObject, attributes, Attributes, AttributeType, classes, HTMLAttributes, styles, SVGAttributes } from "../attributes";
 import { ElementType, htmlComponentCreator, svgComponentCreator } from "../components";
 import { EventHandler, EventHandlers, events, ElementEventMap } from "../events";
-import { coerceToArray, flatten, PartialRecord, TypeOrObservable } from "../utils";
+import { coerceToArray, PartialRecord, recursiveFlatten, TypeOrObservable } from "../utils";
 import { ElementEventNameMap } from "./element-event-name-map";
-import { SVGTagNameMap, svgTagNameMap, SvgTagNames } from "./svg-tag-name-map";
+import { RxfmSVGElementTagNameMap, SVGTagNameMap, svgTagNameMap } from "./svg-tag-name-map";
+
+export type ElementChild = ComponentChild | ElementChild[];
 
 export interface DefaultProps<T extends ElementType = ElementType> {
-  children?: ComponentChild | (ComponentChild | ComponentChild[])[];
+  children?: ElementChild;
   style?: Styles | Observable<StyleObject>;
   class?: ClassType | ClassType[];
   attributes?: Attributes | Observable<AttributeObject>;
   events?: EventHandlers<T>;
 }
 
-type EventHandlerProps<T extends ElementType = ElementType> = {
+export type EventHandlerProps<T extends ElementType = ElementType> = {
   [K in keyof ElementEventNameMap]?: EventHandler<T, ElementEventNameMap[K]>;
 };
 
-type AttributesProps<K extends string> = PartialRecord<K, TypeOrObservable<AttributeType>>;
+export type AttributesProps<K extends string> = PartialRecord<K, TypeOrObservable<AttributeType>>;
+
+export type HTMLElementProps<K extends keyof HTMLElementTagNameMap> =
+  AttributesProps<keyof HTMLAttributes> &
+  EventHandlerProps<HTMLElementTagNameMap[K]>;
+
+export type SVGElementProps<K extends keyof SVGElementTagNameMap> =
+  AttributesProps<keyof SVGAttributes> &
+  EventHandlerProps<SVGElementTagNameMap[K]>;
 
 type IntrinsicHTMLElements = {
-  [K in keyof HTMLElementTagNameMap]:
-    DefaultProps<HTMLElementTagNameMap[K]> &
-    AttributesProps<keyof HTMLAttributes> &
-    EventHandlerProps<HTMLElementTagNameMap[K]>
+  [K in keyof HTMLElementTagNameMap]: HTMLElementProps<K> & DefaultProps<HTMLElementTagNameMap[K]>;
 };
 
 type IntrinsicSVGElements = {
-  [K in SvgTagNames]:
-    DefaultProps<SVGElementTagNameMap[SVGTagNameMap[K]]> &
-    AttributesProps<keyof SVGAttributes> &
-    EventHandlerProps<SVGElementTagNameMap[SVGTagNameMap[K]]>
+  [K in keyof RxfmSVGElementTagNameMap]: SVGElementProps<SVGTagNameMap[K]> & DefaultProps<RxfmSVGElementTagNameMap[K]>;
 };
 
 declare namespace RxFM {
@@ -49,33 +53,34 @@ declare namespace RxFM {
 }
 
 export type WithChildren<T> = T & {
-  children?: ComponentChild | ComponentChild[];
+  children?: ElementChild;
 };
 
-// TODO: Find a way to allow children type to be redefined? Can make this definition work with `keyof T extends 'children'`,
-// React seems to fix element children inference by allowing any child type.
+// TODO: Find a way to allow children type to be redefined? We can make the FV definition work with `keyof T extends 'children'`,
+// how do we allow this type to be used with the DefaultProps.children definition in an element?
 export type FC<T = {}> = (props: WithChildren<T>) => RxFM.JSX.Element;
 
 function createElement(
-  tagName: keyof HTMLElementTagNameMap | SvgTagNames,
-  props: DefaultProps & (IntrinsicHTMLElements[keyof HTMLElementTagNameMap] | IntrinsicSVGElements[SvgTagNames]),
-  ...children: (ComponentChild | ComponentChild[])[]
+  tagName: keyof HTMLElementTagNameMap | keyof RxfmSVGElementTagNameMap,
+  props: DefaultProps & (IntrinsicHTMLElements[keyof HTMLElementTagNameMap] | IntrinsicSVGElements[keyof RxfmSVGElementTagNameMap]),
+  ...children: ElementChild[]
 ): RxFM.JSX.Element;
 function createElement<T extends Record<string, any>>(
   functionComponent: FC<T>,
   props: DefaultProps & T,
-  ...children: (ComponentChild | ComponentChild[])[]
+  ...children: ElementChild[]
 ): RxFM.JSX.Element;
 function createElement<T extends Record<string, any>>(
-  tagOrFc: keyof HTMLElementTagNameMap | SvgTagNames | FC<T>,
+  tagOrFc: keyof HTMLElementTagNameMap | keyof RxfmSVGElementTagNameMap | FC<T>,
   props: DefaultProps & T,
-  ...childrenInput: (ComponentChild | ComponentChild[])[]
+  ...childrenInput: ElementChild[]
 ): RxFM.JSX.Element {
   let component: RxFM.JSX.Element;
 
-  const children = flatten<ComponentChild>(childrenInput);
+  const children = recursiveFlatten(childrenInput.length ? childrenInput : props?.children || []);
   
   const customProps = { ...props };
+  delete customProps.children;
   delete customProps.style;
   delete customProps.class;
   delete customProps.attributes;
@@ -99,7 +104,7 @@ function createElement<T extends Record<string, any>>(
     });
 
     component = Object.prototype.hasOwnProperty.call(svgTagNameMap, tagOrFc) ?
-      svgComponentCreator(svgTagNameMap[tagOrFc as SvgTagNames])(...children) :
+      svgComponentCreator(svgTagNameMap[tagOrFc as keyof RxfmSVGElementTagNameMap])(...children) :
       htmlComponentCreator(tagOrFc as keyof HTMLElementTagNameMap)(...children);
     
     component = component.pipe(

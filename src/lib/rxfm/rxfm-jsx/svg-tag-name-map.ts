@@ -1,4 +1,4 @@
-const _svgTagNameMap = {
+export const svgTagNameMap = {
   svgA: 'a' as const,
   circle: 'circle' as const,
   clipPath: 'clipPath' as const,
@@ -58,8 +58,9 @@ const _svgTagNameMap = {
   view: 'view' as const,
 };
 
-export type SvgTagNames = keyof typeof _svgTagNameMap;
+export type SVGTagNameMap = typeof svgTagNameMap;
 
-export type SVGTagNameMap = Record<SvgTagNames, keyof SVGElementTagNameMap>;
+export type RxfmSVGElementTagNameMap = {
+  [K in keyof SVGTagNameMap]: SVGElementTagNameMap[SVGTagNameMap[K]];
+};
 
-export const svgTagNameMap: SVGTagNameMap = _svgTagNameMap;
