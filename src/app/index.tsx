@@ -12,7 +12,6 @@ import {
   ConditionalComponentsExample,
   ComponentArraysExample,
   ComponentIOExample,
-  JSXExample,
 } from './basic-examples';
 import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
@@ -26,7 +25,9 @@ const Example: FC<{ title: string }> = ({ title, children }) => <div class="exam
 </div>;
 
 const Examples = () => <div class="examples">
-  <Example title="Hello World">{HelloWorld}</Example>
+  <Example title="Hello World">
+    {HelloWorld}
+  </Example>
   <Example title="Children">
     <ChildrenExample />
   </Example>
@@ -57,13 +58,18 @@ const Examples = () => <div class="examples">
   <Example title="Component Inputs & Outputs">
     <ComponentIOExample />
   </Example>
-  <Example title="Component Arrays">{ComponentArraysExample}</Example>
+  <Example title="Component Arrays">
+    <ComponentArraysExample />
+  </Example>
   <Example title="Todo List Example">
     <TodoList />
   </Example>
-  <Example title="Snake Example">{SnakeGame}</Example>
-  <Example title="Minesweeper Example">{Minesweeper}</Example>
-  <Example title="JSX">{JSXExample}</Example>
+  <Example title="Snake Example">
+    <SnakeGame />
+  </Example>
+  <Example title="Minesweeper Example">
+    <Minesweeper />
+  </Example>
 </div>;
 
 const GithubLink = () => <a href="https://github.com/alden12/rxfm" class="github-link">(GitHub)</a>;

@@ -2,7 +2,10 @@ import RxFM, { FC, HTMLElementProps } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-const Card: FC<HTMLElementProps<'div'>> = props => <div {...props} class="card" />;
+export const Card: FC = ({ children }) => <div class="card">{children}</div>;
+
+// We could also simply pass all props down to the parent element to create a wrapper component:
+export const CardWithDefaultProps: FC<HTMLElementProps<'div'>> = props => <div {...props} class="card" />;
 
 interface OptionButtonProps {
   option: string;

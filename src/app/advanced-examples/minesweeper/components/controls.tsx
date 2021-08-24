@@ -1,4 +1,4 @@
-import { Div, Button, classes, event } from "rxfm";
+import RxFM from "rxfm";
 import { Observable, combineLatest, of, timer } from "rxjs";
 import { switchMap, filter, map, scan, startWith, distinctUntilChanged } from "rxjs/operators";
 import { GameStage, CellAction } from "../types";
@@ -25,25 +25,21 @@ export const Controls = ({ startTime, endTime, gameStage, dispatch }: ControlsPr
     scan((lowestTime, time) => Math.min(lowestTime, time), Infinity),
     startWith(undefined),
     distinctUntilChanged(),
-    switchMap(highScore => highScore ? Div`Highscore: ${highScore}s` : of(null)),
+    switchMap(highScore => highScore ? <div>Highscore: {highScore}s</div> : of(null)),
   );
 
   const WinLoseMessage = gameStage.pipe(
     switchMap(stage => {
-      if (stage === 'win') return Div`You Win!`;
-      if (stage === 'gameOver') return Div`Game Over!`;
+      if (stage === 'win') return <div>You Win!</div>;
+      if (stage === 'gameOver') return <div>Game Over!</div>;
       return of(null);
     }),
   );
 
-  return Div(
-    Button`Restart`.pipe(
-      event.click(() => dispatch({ type: 'start', cell: [0, 0] })),
-    ),
-    Div`Time: ${gameTime}s`,
-    HighScore,
-    WinLoseMessage,
-  ).pipe(
-    classes`minesweeper-controls`,
-  );
+  return <div class="minesweeper-controls">
+    <button onClick={() => dispatch({ type: 'start', cell: [0, 0] })}>Restart</button>
+    <div>Time: {gameTime}s</div>
+    {HighScore}
+    {WinLoseMessage}
+  </div>;
 };

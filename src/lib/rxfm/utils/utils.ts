@@ -113,16 +113,18 @@ export function using<T, U>(source: Observable<T>, action: (value: T) => U): Obs
 }
 
 /**
- * Access a property on an object using an observable emitting object keys.
- * This is equivalent to: `key.pipe(map(k => value[k]))` but will only emit distinct values.
+ * Access a property on an object or object observable using an object key or observable emitting object keys.
+ * This is equivalent to: `key.pipe(map(k => value[k]))` or `value.pipe(map(val => val[key]))` but will only emit distinct values.
  * @param value An object of type T.
  * @param key A key of T (K) observable.
  * @returns An observable emitting T[K].
  */
-export function access<T, K extends keyof T>(value: T, key: Observable<K>): Observable<T[K]> {
-  return key.pipe(
-    distinctUntilChanged(),
-    map(k => value[k]),
+export function access<T, K extends keyof T>(value: T | Observable<T>, key: K | Observable<K>): Observable<T[K]> {
+  return combineLatest([
+    coerceToObservable(key).pipe(distinctUntilChanged()),
+    coerceToObservable(value).pipe(distinctUntilChanged()),
+  ]).pipe(
+    map(([k, val]) => val[k]),
     distinctUntilChanged(),
   );
 }
