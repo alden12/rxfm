@@ -31,11 +31,11 @@ Below we can see how to display a simple hello world. Components in RxFM are sim
 
 Basic component creators can be imported from `rxfm`:
 ```typescript
-import { Div } from 'rxfm';
+import RxFM from 'rxfm';
 ```
 These may take any number of children as arguments, including strings, observables and other components:
-```typescript
-const HelloWorld = Div('Hello, World!');
+```jsx
+const HelloWorld = <div>Hello, World!</div>;
 ```
 The root component can be added to the DOM by subscribing to it and adding its element to the document:
 ```typescript
@@ -48,46 +48,32 @@ The root component should be the only subscribed component in our application, a
 ### Component Children:
 
 We can pass lots of different kinds of things as component children:
-```typescript
-const ChildrenExample = Div(
-  'Children can be strings, ',
-  B('child components, '),
-  () => Span('functions returning components, '),
-  'or observables: ',
-  timer(0, 1000),
-  's elapsed.',
-);
-```
-
-We can also use the tagged template syntax:
-```typescript
-const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
+```jsx
+const ChildrenExample = () => <div>
+  Children can be strings, 
+  <b>child components, </b>
+  or observables: {timer(0, 1000)}s elapsed.
+</div>;
 ```
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ## State & Events:
 State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
-```typescript
-import { Button, event } from 'rxfm';
+```jsx
+import RxFM from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
-const ClickCounter = () => {
+export const ClickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
-  return Button`Clicks: ${clicks}`.pipe(
-    event('click', () => clicks.next(clicks.value + 1)),
-  );
+  return <button onClick={() => clicks.next(clicks.value + 1)}>
+    Clicks: {clicks}
+  </button>;
 };
 ```
-Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
 
-The `event` operator also has a second overload allowing each event type to be accessed as a property:
-```typescript
-Button`Clicks: ${clicks}`.pipe(
-  event.click(() => clicks.next(clicks.value + 1)),
-);
-```
+Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
 
 When components store state like this, they should be declared as functions as above so that instances of the component don't interfere with each-other.
 
@@ -97,50 +83,20 @@ Using Subjects to store state gives us an advantage over React in that we don't 
 
 ## Attributes & Styling:
 Element attributes and styling can be set using operator functions imported from `rxfm`:
-```typescript
-import { styles, classes, attributes, Div } from 'rxfm';
+
+```jsx
+const StylesExample = () => <div style={{ color: "blue", fontStyle: "italic" }}>
+  We can add styles
+</div>;
 ```
-```typescript
-const StylesExample = Div`We can add styles`.pipe(
-  styles({
-    color: 'blue',
-    fontStyle: 'italic',
-  })
-);
+```jsx
+const ClassExample = () => <div class="example-class">We can add CSS classes</div>;
 ```
-```typescript
-const ClassExample = Div`We can add CSS classes`.pipe(
-  classes('example-class'),
-);
-```
-```typescript
-const AttributesExample = Input().pipe(
-  attributes({
-    type: 'text',
-    placeholder: 'We can set element attributes'
-  }),
-);
+```jsx
+const AttributesExample = () => <input type="text" placeholder="We can set element attributes" />;
 ```
 
 Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
-
-We can also access individual operators for styles and attributes as well as using the tagged template syntax:
-
-```typescript
-export const StyleExample = Div`We access styles as properties and use tagged templates`.pipe(
-  style.color`blue`,
-);
-```
-```typescript
-export const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
-  classes`example-class`,
-);
-```
-```typescript
-export const AttributeExample = Div`We access attributes as properties and use tagged templates`.pipe(
-  attribute.id`attribute-example`,
-);
-```
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
@@ -162,13 +118,14 @@ With `switchMap` we can map an observable to a component observable depending on
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
-const ConditionalComponentsExample = Div(
-  flipFlop.pipe(
-    switchMap(visible => visible ? Div`Now you see me!` : of(null)),
-  ),
-  // Or more simply as: conditional(flipFlop, Div`Now you see me!`), using the 'conditional' helper function from rxfm.
-);
+const ConditionalComponentsExample = () => <div>
+  {flipFlop.pipe(
+    switchMap(visible => visible ? <div>Now you see me!</div> : of(null)),
+  )}
+</div>;
 ```
+
+This may also be written more simply as: `conditional(flipFlop, <div>Now you see me!</div>)` using the `conditional` helper function from rxfm.
 
 You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the "Dynamic Component Arrays" section).
 
@@ -184,12 +141,19 @@ interface OptionButtonProps {
   setOption: (option: string) => void;
   active: Observable<boolean>;
 }
+```
+```tsx
+const OptionButton: FC<OptionButtonProps> = ({ option, setOption, active }) => {
+  const classes = active.pipe(
+    map(active => ['option-button', active && 'active'])
+  );
+  
+  const handleClick = () => setOption(option);
 
-const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
-  event.click(() => setOption(option)),
-  classes`option-button ${conditional(active, 'active')}`,
-);
-
+  return <button class={classes} onClick={handleClick}>{option}</button>;
+};
+```
+```tsx
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
 const ComponentIOExample = () => {
@@ -198,22 +162,23 @@ const ComponentIOExample = () => {
 
   const Options = options.map(option => {
     const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
-    return OptionButton({ option, setOption, active });
+    return <OptionButton option={option} setOption={setOption} active={active} />;
   });
 
-  return Div(
-    ...Options,
-    Div`Current Value: ${selectedOption}`,
-  );
+  return <div>
+    {Options}
+    <div>Current Value: {selectedOption}</div>
+  </div>;
 };
 ```
 
 Component children can be passed in using the `ComponentChild` type. A variable number of component children can be passed in using a spread array:
 
-```typescript
-const Card = (...children: ComponentChild[]) => Div(...children).pipe(
-  classes`card`,
-);
+```tsx
+const Card: FC = ({ children }) => <div class="card">{children}</div>;
+
+// We could also simply pass all props down to the parent element to create a wrapper component:
+const CardWithDefaultProps: FC<HTMLElementProps<'div'>> = props => <div {...props} class="card" />;
 ```
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/component-io.ts) | [Live Demo](https://alden12.github.io/rxfm/)
@@ -235,24 +200,24 @@ const items = new BehaviorSubject<TodoItem[]>([
 ```
 
 We can then define a function to create a component from an individual item observable:
-```typescript
-const Item = (item: Observable<TodoItem>) => Div(
-  item.pipe(
+```tsx
+const Item: FC<{ item: Observable<TodoItem> }> = ({ item }) => <div>
+  {item.pipe(
     map(({ name, done }) => `${name} is ${done ? '' : 'not'} done!`),
-  ),
-);
+  )}
+</div>;
 ```
 
 Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. Here the first argument is a function taking an item and returning its unique id (similar to the 'key' prop in React).
-```typescript
+```tsx
 const ItemComponents = items.pipe(
-  mapToComponents(item => item.name, Item),
-);
+    mapToComponents(item => item.name, item => <Item item={item} />),
+  );
 ```
 
 The resulting component array observable can be passed directly as a component child:
 ```typescript
-const ComponentArraysExample = Div(ItemComponents);
+const ComponentArraysExample = <div>{ItemComponents}</div>;
 ```
 
 If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 

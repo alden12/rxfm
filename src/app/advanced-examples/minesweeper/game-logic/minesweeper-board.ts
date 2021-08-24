@@ -24,7 +24,7 @@ export const setCellNeighbors = (board: MinesweeperBoard, [x, y]: Vector) => {
   const neighboringCells = getNeighboringCells(board, [x, y]);
   const neighbors = neighboringCells.reduce((count, { cell }) => count + Number(Boolean(cell.isMine)), 0);
   board[x][y] = board[x][y].updateNeighbors(neighbors);
-}
+};
 
 export const getEmptyBoard = (): MinesweeperBoard => Array(BOARD_WIDTH)
   .fill(undefined)

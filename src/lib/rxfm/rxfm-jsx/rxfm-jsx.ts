@@ -56,7 +56,7 @@ export type WithChildren<T> = T & {
   children?: ElementChild;
 };
 
-// TODO: Find a way to allow children type to be redefined? We can make the FV definition work with `keyof T extends 'children'`,
+// TODO: Find a way to allow children type to be redefined? We can make the FC definition work with `keyof T extends 'children'`,
 // how do we allow this type to be used with the DefaultProps.children definition in an element?
 export type FC<T = {}> = (props: WithChildren<T>) => RxFM.JSX.Element;
 

@@ -4,7 +4,9 @@ import { map } from 'rxjs/operators';
 
 import './example-styles.css';
 
-export const StylesExample = () => <div style={{ color: "blue", fontStyle: "italic" }}>We can add styles</div>;
+export const StylesExample = () => <div style={{ color: "blue", fontStyle: "italic" }}>
+  We can add styles
+</div>;
 
 const color = timer(0, 1000).pipe(map(i => i % 2 ? 'red' : 'blue'));
 export const DynamicStyles = () => <div style={{ color }}>Styles can be dynamic</div>;
