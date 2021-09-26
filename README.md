@@ -12,9 +12,8 @@ Aside from native RxJS integration, RxFM has several advantages over existing fr
 I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
 
 * Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
-* Find [RxFM on npm](https://www.npmjs.com/package/rxfm).
-
-Works best with [TypeScript](https://www.typescriptlang.org/).
+* Works best with [TypeScript](https://www.typescriptlang.org/).
+* Full [JSX](https://reactjs.org/docs/introducing-jsx.html)/ [TSX](typescriptlang.org/docs/handbook/jsx.html) support.
 
 ## Installation:
 You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into an existing project using:
@@ -29,11 +28,11 @@ If you already have `rxjs` installed, make sure it is using the same version as 
 ## Hello World:
 Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
 
-Basic component creators can be imported from `rxfm`:
+To use RxFM with with JSX/TSX, we need to import `RxFM` in each file:
 ```typescript
 import RxFM from 'rxfm';
 ```
-These may take any number of children as arguments, including strings, observables and other components:
+Components are defined using JSX tags, children may be passed in between the opening and closing tags:
 ```jsx
 const HelloWorld = <div>Hello, World!</div>;
 ```
@@ -55,6 +54,7 @@ const ChildrenExample = () => <div>
   or observables: {timer(0, 1000)}s elapsed.
 </div>;
 ```
+We can write code inside our JSX tags by using curly braces.
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
@@ -64,7 +64,7 @@ State can be held in `BehaviorSubjects` and used in a similar way to the `useSta
 import RxFM from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
-export const ClickCounter = () => {
+const ClickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
   return <button onClick={() => clicks.next(clicks.value + 1)}>
@@ -114,7 +114,7 @@ const flipFlop = timer(0, 1000).pipe(
 ```
 
 With `switchMap` we can map an observable to a component observable depending on a condition, or to an observable emitting one of either: `null | undefined | false` to remove it from the DOM.
-```typescript
+```jsx
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 

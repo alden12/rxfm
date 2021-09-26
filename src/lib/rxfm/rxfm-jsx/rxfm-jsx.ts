@@ -60,6 +60,8 @@ export type WithChildren<T> = T & {
 // how do we allow this type to be used with the DefaultProps.children definition in an element?
 export type FC<T = {}> = (props: WithChildren<T>) => RxFM.JSX.Element;
 
+const noOp = <T>(src: T) => src;
+
 function createElement(
   tagName: keyof HTMLElementTagNameMap | keyof RxfmSVGElementTagNameMap,
   props: DefaultProps & (IntrinsicHTMLElements[keyof HTMLElementTagNameMap] | IntrinsicSVGElements[keyof RxfmSVGElementTagNameMap]),
@@ -108,18 +110,18 @@ function createElement<T extends Record<string, any>>(
       htmlComponentCreator(tagOrFc as keyof HTMLElementTagNameMap)(...children);
     
     component = component.pipe(
-      (Object.keys(attributeProps).length ? attributes(attributeProps) : src => src),
-      (Object.keys(eventProps).length ? events(eventProps) : src => src),
+      (Object.keys(attributeProps).length ? attributes(attributeProps) : noOp),
+      (Object.keys(eventProps).length ? events(eventProps) : noOp),
     );
   } else {
     throw new TypeError(`Invalid type passed as JSX tag. Expected string or FC, received: ${typeof tagOrFc}.`);
   }
 
   return component.pipe(
-    (props?.class ? classes(...coerceToArray(props.class)) : src => src),
-    (props?.style ? styles(props.style) : src => src),
-    (props?.attributes ? attributes(props.attributes) : src => src),
-    (props?.events ? events(props.events) : src => src),
+    (props?.class ? classes(...coerceToArray(props.class)) : noOp),
+    (props?.style ? styles(props.style) : noOp),
+    (props?.attributes ? attributes(props.attributes) : noOp),
+    (props?.events ? events(props.events) : noOp),
   );
 }
 

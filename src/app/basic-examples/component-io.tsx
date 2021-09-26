@@ -30,7 +30,10 @@ export const ComponentIOExample = () => {
   const setOption = (option: string) => selectedOption.next(option);
 
   const Options = options.map(option => {
-    const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
+    const active = selectedOption.pipe(
+      map(selectedOpt => selectedOpt === option),
+    );
+
     return <OptionButton option={option} setOption={setOption} active={active} />;
   });
 
