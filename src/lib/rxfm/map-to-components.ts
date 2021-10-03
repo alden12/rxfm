@@ -144,7 +144,7 @@ export function mapToComponents<I, T extends ElementType>(
 ): OperatorFunction<I[], ElementType[]>;
 export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
-  keyProp: KeysOfValue<I, Id>,
+  idProp: KeysOfValue<I, Id>,
 ): OperatorFunction<I[], ElementType[]>;
 export function mapToComponents<I, T extends ElementType>(
   creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,

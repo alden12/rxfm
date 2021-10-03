@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-alpha.0] - 2021-09-26
+### Added
+- 
+
+### Changed
+- Reversed order of mapToComponents arguments.
+
 ## [1.0.0-beta.1] - 2021-07-08
 ### Added
 - Added proxies to access individual style, attribute, and event operators as properties of their respective operators.
