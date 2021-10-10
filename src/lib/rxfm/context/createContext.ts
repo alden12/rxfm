@@ -22,11 +22,6 @@ const componentOperatorWithCleanup = <T extends ElementType, U>(
   finalize(cleanup),
 );
 
-const noProviderErrorMessage = (element: ElementType) => `No matching provider found for element: ${element}. ` +
-  `Ensure that a parent component has been piped though the context's provider operator, ` +
-  `and that the provider operator comes later in the chain than the parent element's children operator ` +
-  `(default behavior when using JSX syntax).`;
-
 export function createContext<T>(): ContextMethods<T> {
   const symbol = Symbol('Context Symbol');
   
@@ -51,7 +46,7 @@ export function createContext<T>(): ContextMethods<T> {
       element => of(null).pipe(
         tap(() => {
           const provider: Observable<T> | undefined = providersService.getProvider(symbol, element);
-          if (!provider) throw new Error(noProviderErrorMessage(element));
+          if (!provider) throw new Error(`No matching provider found for element: ${element}.`);
           valueSubject.next(provider.pipe(
             finalize(() => valueSubject.complete()),
           ));

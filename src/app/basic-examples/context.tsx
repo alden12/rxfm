@@ -19,9 +19,7 @@ const ThemeConsumer: FC = () => {
     })),
   );
 
-  return (<div style={styles}>Theme consumer</div>).pipe(
-    registerTheme(),
-  );
+  return <div style={styles} pipe={registerTheme()}>Theme consumer</div>;
 };
 
 export const CreateContextExample: FC = () => {
@@ -32,11 +30,9 @@ export const CreateContextExample: FC = () => {
 
   const toggleDarkMode = () => themeSubject.next({ ...themeSubject.value, darkMode: !themeSubject.value.darkMode });
 
-  return (<div>
+  return <div pipe={themeProvider(themeSubject)}>
     <h3>Theme Provider</h3>
     <button onClick={toggleDarkMode}>Toggle Dark Mode</button>
     <ThemeConsumer />
-  </div>).pipe(
-    themeProvider(themeSubject),
-  );
+  </div>;
 };

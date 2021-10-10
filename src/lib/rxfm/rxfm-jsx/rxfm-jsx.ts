@@ -4,7 +4,7 @@
 import { ComponentChild, Component, Styles, StyleObject, ClassType } from "rxfm";
 import { Observable } from "rxjs";
 import { AttributeObject, attributes, Attributes, AttributeType, classes, HTMLAttributes, styles, SVGAttributes } from "../attributes";
-import { ElementType, htmlComponentCreator, svgComponentCreator } from "../components";
+import { ComponentOperator, ElementType, htmlComponentCreator, svgComponentCreator } from "../components";
 import { EventHandler, EventHandlers, events, ElementEventMap } from "../events";
 import { coerceToArray, identity, PartialRecord, recursiveFlatten, TypeOrObservable } from "../utils";
 import { ElementEventNameMap } from "./element-event-name-map";
@@ -18,7 +18,7 @@ export interface DefaultProps<T extends ElementType = ElementType> {
   class?: ClassType | ClassType[];
   attributes?: Attributes | Observable<AttributeObject>;
   events?: EventHandlers<T>;
-  // TODO: Add pipe property for random component operators?
+  pipe?: ComponentOperator<T> | ComponentOperator<T>[];
 }
 
 export type EventHandlerProps<T extends ElementType = ElementType> = {
@@ -86,6 +86,7 @@ function createElement<T extends Record<string, any>>(
   delete customProps.class;
   delete customProps.attributes;
   delete customProps.events;
+  delete customProps.pipe;
 
   if (typeof tagOrFc === 'function') {
     component = tagOrFc({ ...customProps, children });
@@ -121,6 +122,7 @@ function createElement<T extends Record<string, any>>(
     (props?.style ? styles(props.style) : identity),
     (props?.attributes ? attributes(props.attributes) : identity),
     (props?.events ? events(props.events) : identity),
+    src => coerceToArray(props?.pipe || []).reduce((acc, op) => acc.pipe(op), src),
   );
 }
 
