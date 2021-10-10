@@ -82,7 +82,7 @@ export function componentOperator<T extends ElementType, U>(
       ignoreElements(), // Ignore the effect observable's emissions.
       startWith(element), // Return the original element as a single emission.
     )),
-    distinctUntilChanged(),
+    distinctUntilChanged(), // TODO: Is this redundant now that we are using ignoreElements?
   );
 }
 

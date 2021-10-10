@@ -1,4 +1,3 @@
-import { Observable } from "rxjs";
 import { AttributeDictionary, StyleDictionary } from "./attributes";
 import { ChildrenBlockMetadata } from "./children/children-operator-isolation";
 import { ElementType } from "./components";
@@ -39,9 +38,6 @@ class OperatorIsolationService {
    */
   protected elementMetadataMap = new WeakMap<ElementType, ElementMetadata>();
 
-  // TODO: Convert to weak map so we don't need to delete?
-  private providerMap = new Map<symbol, { element: ElementType, value: Observable<any> }[]>();
-
   public getStylesMap(element: ElementType): StylesMetadataMap {
     return this.getMetadata(element).styles;
   }
@@ -60,22 +56,6 @@ class OperatorIsolationService {
 
   public setChildrenMetadata(element: ElementType, metadata: ChildrenBlockMetadata[]) {
     this.getMetadata(element).children = metadata;
-  }
-
-  public getProvider(symbol: symbol, childElement: ElementType): Observable<any> | undefined {
-    // console.log(this.providerMap.get(symbol));
-    return this.providerMap.get(symbol)?.find(({ element }) => element.contains(childElement))?.value;
-  }
-
-  public setProvider(symbol: symbol, element: ElementType, value: Observable<any>) {
-    this.providerMap.set(symbol, [{ element, value }, ...(this.providerMap.get(symbol) || [])]);
-    // console.log(this.providerMap.get(symbol));
-  }
-
-  public deleteProvider(symbol: symbol, element: ElementType) {
-    const filteredProviders = this.providerMap.get(symbol)?.filter(({ element: el }) => element !== el);
-    if (!filteredProviders?.length) this.providerMap.delete(symbol);
-    else this.providerMap.set(symbol, filteredProviders);
   }
 
   /**
