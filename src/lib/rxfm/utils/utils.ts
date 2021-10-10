@@ -27,6 +27,8 @@ export function recursiveFlatten<T>(nested: Nested<T>): T[] {
   }, []);
 }
 
+export const identity = <T>(src: T) => src;
+
 /**
  * An observable operator to select a given key/keys from a source observable stream.
  * Equivalent to 'pluck' from RxJS operators but only emits distinct values.

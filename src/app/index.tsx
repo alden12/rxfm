@@ -12,6 +12,7 @@ import {
   ConditionalComponentsExample,
   ComponentArraysExample,
   ComponentIOExample,
+  CreateContextExample,
 } from './basic-examples';
 import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
@@ -60,6 +61,9 @@ const Examples = () => <div class="examples">
   </Example>
   <Example title="Component Arrays">
     <ComponentArraysExample />
+  </Example>
+  <Example title="Context">
+    <CreateContextExample />
   </Example>
   <Example title="Todo List Example">
     <TodoList />

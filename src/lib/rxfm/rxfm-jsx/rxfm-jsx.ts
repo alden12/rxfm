@@ -6,7 +6,7 @@ import { Observable } from "rxjs";
 import { AttributeObject, attributes, Attributes, AttributeType, classes, HTMLAttributes, styles, SVGAttributes } from "../attributes";
 import { ElementType, htmlComponentCreator, svgComponentCreator } from "../components";
 import { EventHandler, EventHandlers, events, ElementEventMap } from "../events";
-import { coerceToArray, PartialRecord, recursiveFlatten, TypeOrObservable } from "../utils";
+import { coerceToArray, identity, PartialRecord, recursiveFlatten, TypeOrObservable } from "../utils";
 import { ElementEventNameMap } from "./element-event-name-map";
 import { RxfmSVGElementTagNameMap, SVGTagNameMap, svgTagNameMap } from "./svg-tag-name-map";
 
@@ -18,6 +18,7 @@ export interface DefaultProps<T extends ElementType = ElementType> {
   class?: ClassType | ClassType[];
   attributes?: Attributes | Observable<AttributeObject>;
   events?: EventHandlers<T>;
+  // TODO: Add pipe property for random component operators?
 }
 
 export type EventHandlerProps<T extends ElementType = ElementType> = {
@@ -59,8 +60,6 @@ export type WithChildren<T> = T & {
 // TODO: Find a way to allow children type to be redefined? We can make the FC definition work with `keyof T extends 'children'`,
 // how do we allow this type to be used with the DefaultProps.children definition in an element?
 export type FC<T = {}> = (props: WithChildren<T>) => RxFM.JSX.Element;
-
-const noOp = <T>(src: T) => src;
 
 function createElement(
   tagName: keyof HTMLElementTagNameMap | keyof RxfmSVGElementTagNameMap,
@@ -110,18 +109,18 @@ function createElement<T extends Record<string, any>>(
       htmlComponentCreator(tagOrFc as keyof HTMLElementTagNameMap)(...children);
     
     component = component.pipe(
-      (Object.keys(attributeProps).length ? attributes(attributeProps) : noOp),
-      (Object.keys(eventProps).length ? events(eventProps) : noOp),
+      (Object.keys(attributeProps).length ? attributes(attributeProps) : identity),
+      (Object.keys(eventProps).length ? events(eventProps) : identity),
     );
   } else {
     throw new TypeError(`Invalid type passed as JSX tag. Expected string or FC, received: ${typeof tagOrFc}.`);
   }
 
   return component.pipe(
-    (props?.class ? classes(...coerceToArray(props.class)) : noOp),
-    (props?.style ? styles(props.style) : noOp),
-    (props?.attributes ? attributes(props.attributes) : noOp),
-    (props?.events ? events(props.events) : noOp),
+    (props?.class ? classes(...coerceToArray(props.class)) : identity),
+    (props?.style ? styles(props.style) : identity),
+    (props?.attributes ? attributes(props.attributes) : identity),
+    (props?.events ? events(props.events) : identity),
   );
 }
 
