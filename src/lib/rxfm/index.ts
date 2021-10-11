@@ -4,7 +4,7 @@ export * from './map-to-components';
 export * from './utils';
 export * from './components';
 export * from './events';
-export * from './context';
+export * from './create-context';
 
 import RxFM from './rxfm-jsx';
 export default RxFM;

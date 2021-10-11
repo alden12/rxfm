@@ -1,5 +1,5 @@
-import { combineLatest, Observable, of, OperatorFunction } from "rxjs";
-import { distinctUntilChanged, map, pluck, shareReplay, switchMap, tap } from "rxjs/operators";
+import { combineLatest, MonoTypeOperatorFunction, Observable, of, OperatorFunction } from "rxjs";
+import { distinctUntilChanged, finalize, map, pluck, shareReplay, switchMap, tap } from "rxjs/operators";
 
 export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
   return value instanceof Observable ? value : of(value);
@@ -260,5 +260,16 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
       else if (typeof message === 'string') console.log(message, val);
       else if (typeof message === 'function') console.log(message(val));
     }),
+  );
+}
+
+/**
+ * An observable operator similar to `finalize` but passes the last emitted value of the source (if it exists) to the cleanup function.
+ */
+ export function cleanup<T>(onCleanup: (value: T | undefined) => void): MonoTypeOperatorFunction<T> {
+  let lastElement: T | undefined = undefined;
+  return (source: Observable<T>) => source.pipe(
+    tap(val => lastElement = val),
+    finalize(() => onCleanup(lastElement))
   );
 }
