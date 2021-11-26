@@ -75,7 +75,7 @@ export function setAttributes<K extends string, T>(
       Object.keys(previousAttributeObject).reduce((prevAttributesEmpty, key) => {
         prevAttributesEmpty[key as K] = null;
         return prevAttributesEmpty;
-      }, {} as Partial<Record<K, null>>)
+      }, {} as Partial<Record<K, null>>);
     // Merge the previous attributes object with null keys with the one, any removed keys will now have null values.
     attributeObjectWithDeletions = { ...previousAttributeObjectNulled, ...attributeObject };
   }

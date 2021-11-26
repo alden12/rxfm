@@ -48,10 +48,7 @@ export const TodoList = () => {
   );
 
   const TodoItems = items.pipe(
-    mapToComponents(
-      ({ name }) => name,
-      item => TodoItem(item, toggleItem),
-    ),
+    mapToComponents(item => TodoItem(item, toggleItem), 'name'),
   );
 
   return Div(

@@ -1,7 +1,7 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
 import { ElementType, Component } from './components';
 import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
-import { selectFrom } from './utils';
+import { KeysOfValue, selectFrom } from './utils';
 
 type Id = string | number;
 
@@ -127,64 +127,38 @@ function combineComponents<I, T extends ElementType>(
 }
 
 /**
- * An observable operator taking an array of items and mapping them directly to a component diff. Items ids are not
- * checked and a new component will be created for each new item.
- * @param creationFunction A function taking an item of type I and returning a new component.
- */
-function simpleComponentDiffer<I, T extends ElementType>(
-  creationFunction: (item: I) => Component<T>,
-): OperatorFunction<I[], ComponentDiff<I, T>> {
-  return (items$: Observable<I[]>) => {
-    // Hold previous item map for future reference.
-    let previousComponentMap = new Map<I, Component<T>>();
-    return items$.pipe(
-      map(items => {
-        // Map items to an array of components, new components will be created for any items not in the item map.
-        const componentArray = items.map(item => [item, previousComponentMap.get(item) || creationFunction(item)] as const);
-        const componentMap = new Map(componentArray);
-        const newComponents = items // Create an array components which were not in the previous item map.
-          .filter(item => !previousComponentMap.has(item))
-          .map(item => [item, componentMap.get(item)!] as [I, Component<T>]);
-        // Create an array of ids which are no longer present in the new component map.
-        const removedIds = Array.from(previousComponentMap.keys()).filter(item => !componentMap.has(item));
-        previousComponentMap = componentMap; // Save the current component map for the next emission.
-        return { newComponents, removedIds, ids: items };
-      }),
-    );
-  };
-}
-
-/**
  * An observable operator to map an array of items of type I to an array of component elements.
  * Items with matching ids between emissions will be passed to existing components rather than
  * regenerating them to more efficiently render.
- * @param idFunction A function taking an item of type I and returning it's unique id.
- * (If the creation function is passed here instead then item values will be used as their ids directly and the creation
- * function will take a non-observable item.)
  * @param creationFunction A function taking an item observable (and current item index observable if needed)
+ * @param idFunction Either: a function taking an item of type I and returning it's unique id,
+ * A prop name of I in which it's unique id can be found, or if omitted then the item index will be used as the id.
  * and returning a new component for the item.
  */
 export function mapToComponents<I, T extends ElementType>(
-  idFunction: (item: I, index: number) => Id,
   creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
 ): OperatorFunction<I[], ElementType[]>;
 export function mapToComponents<I, T extends ElementType>(
-  staticCreationFunction: (item: I) => Component<T>,
+  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  idFunction: (item: I) => Id,
 ): OperatorFunction<I[], ElementType[]>;
 export function mapToComponents<I, T extends ElementType>(
-  idOrCreationFunction: ((item: I, index: number) => Id) | ((item: I) => Component<T>),
-  creationFunction?: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  idProp: KeysOfValue<I, Id>,
+): OperatorFunction<I[], ElementType[]>;
+export function mapToComponents<I, T extends ElementType>(
+  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  idPropOrFunction?: ((item: I, index: number) => Id) | KeysOfValue<I, Id>,
 ): OperatorFunction<I[], ElementType[]> {
-  if (creationFunction) {
-    return (items: Observable<I[]>) => items.pipe(
-      itemDiffer(idOrCreationFunction as (item: I, index: number) => Id),
-      createComponents(creationFunction),
-      combineComponents(),
-      startWith([]),
-    );
-  }
+  const idFunction: (item: I, index: number) => Id = idPropOrFunction ?
+    typeof idPropOrFunction === 'function' ?
+      idPropOrFunction as (item: I, index: number) => Id :
+      (item) => item[idPropOrFunction] as unknown as Id :
+    (_, i) => i;
+
   return (items: Observable<I[]>) => items.pipe(
-    simpleComponentDiffer(idOrCreationFunction as (item: I) => Component<T>),
+    itemDiffer(idFunction),
+    createComponents(creationFunction),
     combineComponents(),
     startWith([]),
   );
