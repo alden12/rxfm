@@ -174,7 +174,7 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
 /**
  * @returns An observable emitting the logical NOT value of the source observable's emissions.
  */
- export function notGate(source: Observable<any>): Observable<boolean> {
+ export function not(source: Observable<any>): Observable<boolean> {
   return source.pipe(
     distinctUntilChanged(),
     map(val => !val),
@@ -185,7 +185,7 @@ export function reuse<T>(source: Observable<T>): Observable<T> {
 /**
  * Take a spread array of observables and emit the logical AND value of all of their emissions whenever it changes.
  */
-export function andGate(...sources: Observable<any>[]): Observable<boolean> {
+export function and(...sources: Observable<any>[]): Observable<boolean> {
   return combineLatest(
     sources.map(source => source.pipe(distinctUntilChanged())),
   ).pipe(
@@ -197,14 +197,14 @@ export function andGate(...sources: Observable<any>[]): Observable<boolean> {
 /**
  * Take a spread array of observables and emit the logical NAND value of all of their emissions whenever it changes.
  */
-export function nandGate(...sources: Observable<any>[]): Observable<boolean> {
-  return notGate(andGate(...sources));
+export function nand(...sources: Observable<any>[]): Observable<boolean> {
+  return not(and(...sources));
 }
 
 /**
  * Take a spread array of observables and emit the logical OR value of all of their emissions whenever it changes.
  */
-export function orGate(...sources: Observable<any>[]): Observable<boolean> {
+export function or(...sources: Observable<any>[]): Observable<boolean> {
   return combineLatest(
     sources.map(source => source.pipe(distinctUntilChanged())),
   ).pipe(
@@ -216,8 +216,8 @@ export function orGate(...sources: Observable<any>[]): Observable<boolean> {
 /**
  * Take a spread array of observables and emit the logical NOR value of all of their emissions whenever it changes.
  */
-export function norGate(...sources: Observable<any>[]): Observable<boolean> {
-  return notGate(orGate(...sources));
+export function nor(...sources: Observable<any>[]): Observable<boolean> {
+  return not(or(...sources));
 }
 
 /**
