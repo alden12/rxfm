@@ -1,11 +1,6 @@
-import RxFM, { FC, HTMLElementProps } from "rxfm";
+import RxFM, { FC } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
-
-export const Card: FC = ({ children }) => <div class="card">{children}</div>;
-
-// We could also simply pass all props down to the parent element to create a wrapper component:
-export const CardWithDefaultProps: FC<HTMLElementProps<'div'>> = props => <div {...props} class="card" />;
 
 interface OptionButtonProps {
   option: string;
@@ -14,22 +9,24 @@ interface OptionButtonProps {
 }
 
 const OptionButton: FC<OptionButtonProps> = ({ option, setOption, active }) => {
-  const classes = active.pipe(
-    map(active => ['option-button', active && 'active'])
-  );
-  
   const handleClick = () => setOption(option);
 
-  return <button class={classes} onClick={handleClick}>{option}</button>;
+  const activeClassName = active.pipe(
+    map(active => active && 'active')
+  );
+
+  return <button onClick={handleClick} class={['option-button', activeClassName]}>
+    {option}
+  </button>;
 };
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
-export const ComponentIOExample = () => {
+export const ComponentOutputsExample = () => {
   const selectedOption = new BehaviorSubject<string>('Option 1');
   const setOption = (option: string) => selectedOption.next(option);
 
-  const Options = options.map(option => {
+  const optionButtons = options.map(option => {
     const active = selectedOption.pipe(
       map(selectedOpt => selectedOpt === option),
     );
@@ -37,8 +34,8 @@ export const ComponentIOExample = () => {
     return <OptionButton option={option} setOption={setOption} active={active} />;
   });
 
-  return <Card>
-    {Options}
+  return <div>
+    {optionButtons}
     <div>Current Value: {selectedOption}</div>
-  </Card>;
+  </div>;
 };

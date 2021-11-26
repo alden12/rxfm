@@ -11,7 +11,8 @@ import {
   ClickCounter,
   ConditionalComponentsExample,
   ComponentArraysExample,
-  ComponentIOExample,
+  ComponentOutputsExample,
+  PropsExample,
 } from './basic-examples';
 import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
@@ -30,6 +31,9 @@ const Examples = () => <div class="examples">
   </Example>
   <Example title="Children">
     <ChildrenExample />
+  </Example>
+  <Example title="Props">
+    <PropsExample />
   </Example>
   <Example title="Styles">
     <StylesExample />
@@ -55,8 +59,8 @@ const Examples = () => <div class="examples">
   <Example title="Conditional Components">
     <ConditionalComponentsExample />
   </Example>
-  <Example title="Component Inputs & Outputs">
-    <ComponentIOExample />
+  <Example title="Component Outputs">
+    <ComponentOutputsExample />
   </Example>
   <Example title="Component Arrays">
     <ComponentArraysExample />

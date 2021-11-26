@@ -15,53 +15,97 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 
 * Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Works best with [TypeScript](https://www.typescriptlang.org/).
-* Full [JSX](https://reactjs.org/docs/introducing-jsx.html)/ [TSX](typescriptlang.org/docs/handbook/jsx.html) support.
+* Full [JSX](https://reactjs.org/docs/introducing-jsx.html)/ [TSX](https://www.typescriptlang.org/docs/handbook/jsx.html) support.
 
-## Installation:
+---
+
+## Installation
 You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into an existing project using:
+
 ```sh
 npm install rxfm
 ```
+
 ```sh
 npm install rxjs@7.0.0
 ```
-If you already have `rxjs` installed, make sure it is using the same version as `rxfm`.
+If you already have `rxjs` installed, make sure it is using the same version as `rxfm`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
 
-## Hello World:
-Below we can see how to display a simple hello world. Components in RxFM are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
+---
+
+## Components
+
+Components in RxFM are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
+
+### Hello World:
+
+Below we can see how to display a simple hello world:
 
 To use RxFM with with JSX/TSX, we need to import `RxFM` in each file:
+
 ```typescript
 import RxFM from 'rxfm';
 ```
+
 Components are defined using JSX tags, children may be passed in between the opening and closing tags:
+
 ```jsx
 const HelloWorld = <div>Hello, World!</div>;
 ```
+
 The root component can be added to the DOM by subscribing to it and adding its element to the document:
+
 ```typescript
 HelloWorld.subscribe(el => document.body.appendChild(el));
 ```
-The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
 ### Component Children:
 
 We can pass lots of different kinds of things as component children:
+
 ```jsx
 const ChildrenExample = () => <div>
   Children can be strings, 
-  <b>child components, </b>
+  <b> child components, </b>
   or observables: {timer(0, 1000)}s elapsed.
 </div>;
 ```
+
 We can write code inside our JSX tags by using curly braces.
+
+### Custom JSX Elements
+
+In order to define components which can be used as JSX elements, they simply need to be declared as functions returning other JSX elements. For example we can use the `ChildrenExample` above as a JSX element. Elements with no children don't need to provide a closing tag.
+
+```jsx
+const CustomJsxElementExample = () => <ChildrenExample />;
+```
+
+Data can be passed into a JSX element using props, these props are then available as an object in the first argument of a component function. Component children can be accessed using the `children` prop which is implicitly available to all JSX elements. To use props with TypeScript, a component function can be assigned the `FC` (function component) type imported from RxFM. The interface passed to `FC` will define the props available on a component as shown below.
+
+```tsx
+import RxFM, { FC } from 'rxfm';
+
+const FunFacts: FC<{ name: string }> = ({ name, children }) => <div>
+  Fun facts about {name}: {children}
+</div>;
+
+const PropsExample = () => <FunFacts name="MC Hammer">
+  You can't touch this.
+</FunFacts>;
+```
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
-## State & Events:
-State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
+*To use RxFM without JSX, please refer to [the previous version of the RxFM documentation](https://github.com/alden12/rxfm/blob/v2.0.0/README.md).*
+
+---
+
+## State & Events
+State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. JSX elements allow us to pass event handlers to components using event name props prefixed with `on` such as `onClick` as shown below.
+
 ```jsx
 import RxFM from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
@@ -75,37 +119,44 @@ const ClickCounter = () => {
 };
 ```
 
-Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
-
-When components store state like this, they should be declared as functions as above so that instances of the component don't interfere with each-other.
+When components store state like this, make sure to declare the state variables within the component function as above so that instances of the component don't interfere with each-other.
 
 Using Subjects to store state gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/state-and-events.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
-## Attributes & Styling:
-Element attributes and styling can be set using operator functions imported from `rxfm`:
+---
+
+## Attributes & Styling
+
+Element attributes and styling can be passed to components as props as shown below.
+
+```jsx
+const ClassExample = () => <div class="example-class">We can add CSS classes</div>;
+```
 
 ```jsx
 const StylesExample = () => <div style={{ color: "blue", fontStyle: "italic" }}>
   We can add styles
 </div>;
 ```
-```jsx
-const ClassExample = () => <div class="example-class">We can add CSS classes</div>;
-```
+
 ```jsx
 const AttributesExample = () => <input type="text" placeholder="We can set element attributes" />;
 ```
 
-Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
+Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically. The `class` prop may also take an array to set multiple classes on a single element.
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
+---
+
 ## Conditionally Displaying Components
+
 We can conditionally add a component using the `switchMap` operator function from `RxJS`.
 
 For illustrative purposes, we can create an observable which emits true or false periodically every second:
+
 ```typescript
 import { timer } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -116,6 +167,7 @@ const flipFlop = timer(0, 1000).pipe(
 ```
 
 With `switchMap` we can map an observable to a component observable depending on a condition, or to an observable emitting one of either: `null | undefined | false` to remove it from the DOM.
+
 ```jsx
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -129,13 +181,15 @@ const ConditionalComponentsExample = () => <div>
 
 This may also be written more simply as: `conditional(flipFlop, <div>Now you see me!</div>)` using the `conditional` helper function from rxfm.
 
-You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the "Dynamic Component Arrays" section).
+You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the [Dynamic Component Arrays](#dynamic-component-arrays) section).
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
-## Component Inputs & Outputs
+---
 
-Providing inputs to a component is as simple as passing them in as function arguments. Outputs can be provided by passing in callback functions to handle events inside the component.
+## Component Outputs
+
+We've seen how to pass props to a component in the [Custom JSX Elements](#custom-jsx-elements) section. Outputs can be provided by passing in callback functions as props to handle events inside the component.
 
 ```typescript
 interface OptionButtonProps {
@@ -144,51 +198,49 @@ interface OptionButtonProps {
   active: Observable<boolean>;
 }
 ```
+
 ```tsx
 const OptionButton: FC<OptionButtonProps> = ({ option, setOption, active }) => {
-  const classes = active.pipe(
-    map(active => ['option-button', active && 'active'])
-  );
-  
   const handleClick = () => setOption(option);
 
-  return <button class={classes} onClick={handleClick}>{option}</button>;
+  const activeClassName = active.pipe(
+    map(active => active && 'active')
+  );
+
+  return <button onClick={handleClick} class={['option-button', activeClassName]}>
+    {option}
+  </button>;
 };
 ```
+
 ```tsx
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
-const ComponentIOExample = () => {
+const ComponentOutputsExample = () => {
   const selectedOption = new BehaviorSubject<string>('Option 1');
   const setOption = (option: string) => selectedOption.next(option);
 
-  const Options = options.map(option => {
+  const optionButtons = options.map(option => {
     const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
     return <OptionButton option={option} setOption={setOption} active={active} />;
   });
 
   return <div>
-    {Options}
+    {optionButtons}
     <div>Current Value: {selectedOption}</div>
   </div>;
 };
 ```
 
-Component children can be passed in using the `ComponentChild` type. A variable number of component children can be passed in using a spread array:
-
-```tsx
-const Card: FC = ({ children }) => <div class="card">{children}</div>;
-
-// We could also simply pass all props down to the parent element to create a wrapper component:
-const CardWithDefaultProps: FC<HTMLElementProps<'div'>> = props => <div {...props} class="card" />;
-```
-
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/component-io.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+
+---
 
 ## Dynamic Component Arrays
 We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
 
 We'll start with an observable emitting an array of items:
+
 ```typescript
 interface TodoItem {
   name: string;
@@ -201,7 +253,8 @@ const items = new BehaviorSubject<TodoItem[]>([
 ]);
 ```
 
-We can then define a function to create a component from an individual item observable:
+We can then define a component taking an individual item observable:
+
 ```tsx
 const Item: FC<{ item: Observable<TodoItem> }> = ({ item }) => <div>
   {item.pipe(
@@ -210,10 +263,11 @@ const Item: FC<{ item: Observable<TodoItem> }> = ({ item }) => <div>
 </div>;
 ```
 
-Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. Here the first argument is a function taking an item and returning its unique id (similar to the 'key' prop in React).
+Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. Here the second argument is either a function taking the item and returning its unique id (similar to the 'key' prop in React) or a property name on the item where its unique id can be found. If this argument is omitted then the item's index in the source array will be used as its id.
+
 ```tsx
 const ItemComponents = items.pipe(
-    mapToComponents(item => item.name, item => <Item item={item} />),
+    mapToComponents(item => <Item item={item} />, 'name'),
   );
 ```
 
@@ -226,6 +280,7 @@ If our `items` subject were to then emit a new array, this would be immediately 
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/dynamic-component-arrays.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
+---
 
 ## Advanced Examples
 
@@ -234,5 +289,3 @@ You can check out a few more complex RxFM examples at the links below to see how
 * [Todo List Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/todo-list)
 * [Snake Game Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/snake-game)
 * [Minesweeper Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/minesweeper)
-
----
