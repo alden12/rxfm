@@ -1,4 +1,4 @@
-import RxFM, { destructure, conditional, andGate, FC } from "rxfm";
+import RxFM, { destructure, conditional, FC, and } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { indexToVector, NEIGHBORS_COLOR_MAP } from "../constants";
@@ -19,7 +19,7 @@ export const GameCell: FC<GameCellProps> = ({ cell, index, dispatch }) => {
   );
 
   const cellText = conditional({
-    if: andGate(isCleared, hasNeighbors),
+    if: and(isCleared, hasNeighbors),
     then: neighbors,
     else: symbol,
   });

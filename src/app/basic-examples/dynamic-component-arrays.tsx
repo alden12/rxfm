@@ -21,7 +21,7 @@ export const ComponentArraysExample: FC = () => {
   </div>;
 
   const ItemComponents = items.pipe(
-    mapToComponents(item => item.name, item => <Item item={item} />),
+    mapToComponents(item => <Item item={item} />, 'name'),
   );
 
   return <div>{ItemComponents}</div>;

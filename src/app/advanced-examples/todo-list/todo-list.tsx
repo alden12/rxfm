@@ -53,10 +53,7 @@ export const TodoList = () => {
   );
 
   const TodoItems = items.pipe(
-    mapToComponents(
-      ({ name }) => name,
-      item => <TodoItem item={item} onToggle={toggleItem} />
-    ),
+    mapToComponents(item => <TodoItem item={item} onToggle={toggleItem} />, 'name'),
   );
 
   return <div>

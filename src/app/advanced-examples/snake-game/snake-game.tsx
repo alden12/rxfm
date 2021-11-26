@@ -17,7 +17,7 @@ const GameBoard: FC<{ board: Observable<SnakeBoard> }> = ({ board }) => <div
 >
   {board.pipe(
     map(flatten),
-    mapToComponents((_, i) => i, cellType => <GameCell cellType={cellType} />),
+    mapToComponents(cellType => <GameCell cellType={cellType} />),
   )}
 </div>;
 

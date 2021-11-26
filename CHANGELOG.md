@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2021-11-26
+
+### Added
+- Added generic `switchTap` operator to inject an observable side effect into the stream.
+
+### Changed
+- Reversed order of `mapToComponents` arguments. Made item index the default id if no id function is provided. Added ability to pass an item key name to derive id from.
+- Changed names of `notGate`, `andGate`, `nandGate`, `orGate` and `norGate` observable boolean logic functions to `not`, `and`, `nand`, `or` and `nor` respectively.
+
 ## [1.0.0-beta.1] - 2021-07-08
 ### Added
 - Added proxies to access individual style, attribute, and event operators as properties of their respective operators.

@@ -1,7 +1,7 @@
 import { defer, MonoTypeOperatorFunction, Observable, of } from "rxjs";
-import { switchMap, startWith, distinctUntilChanged, tap, ignoreElements } from "rxjs/operators";
+import { tap } from "rxjs/operators";
 import { children, ComponentChild } from "../children/children";
-import { flatten } from "../utils";
+import { flatten, switchTap } from "../utils";
 
 /**
  * The possible DOM element types which can be used in RxFM. These are HTML and SVG elements.
@@ -76,14 +76,7 @@ export function componentCreator<T extends ElementType>(componentFunction: Compo
 export function componentOperator<T extends ElementType, U>(
   effect: (element: T) => Observable<U>,
 ): ComponentOperator<T> {
-  return (component: Component<T>) => component.pipe(
-    distinctUntilChanged(),
-    switchMap(element => effect(element).pipe( // Add the effect observable into the stream.
-      ignoreElements(), // Ignore the effect observable's emissions.
-      startWith(element), // Return the original element as a single emission.
-    )),
-    distinctUntilChanged(),
-  );
+  return switchTap<T, U>(effect);
 }
 
 /**

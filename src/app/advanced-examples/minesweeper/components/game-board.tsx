@@ -15,7 +15,7 @@ export const GameBoard: FC<GameBoardProps> = ({ board, dispatch }) => (
   <div class="minesweeper-board" style={{ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` }} onContextMenu={ev => ev.preventDefault()}>
     {board.pipe(
       map(flatten),
-      mapToComponents((_, i) => i, (cell, index) => <GameCell cell={cell} index={index} dispatch={dispatch} />),
+      mapToComponents((cell, index) => <GameCell cell={cell} index={index} dispatch={dispatch} />),
     )}
   </div>
 );
