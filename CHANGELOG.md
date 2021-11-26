@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 2021-09-26
+## [2.0.0] - 2021-11-26
 
 ### Added
 - Added generic `switchTap` operator to inject an observable side effect into the stream.
