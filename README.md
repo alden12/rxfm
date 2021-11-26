@@ -1,7 +1,9 @@
 # RxFM - A Web Framework Built on RxJS
 
 ![Node.js CI](https://github.com/alden12/rxfm/workflows/Node.js%20CI/badge.svg?branch=master)
-[![npm version](https://badge.fury.io/js/rxfm.svg)](https://badge.fury.io/js/rxfm)
+[![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
+[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
+[![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
 RxFM *(working title)* is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
