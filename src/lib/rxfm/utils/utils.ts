@@ -262,10 +262,10 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
 }
 
 /**
- * A function taking an observable stream of type T and adding a side effect observable into the stream.
+ * An observable operator to add a side effect observable into the stream.
  * This is similar to the built in `tap` operator in RxJS except the side effect is an observable to be injected into the stream.
  * @param effect A function taking the emission of the source observable and returning an observable of any type.
- * @returns An observable mirroring the source observable.
+ * @returns An operator function mirroring the source observable.
  */
  export function switchTap<T, U>(
   effectObservable: (element: T) => Observable<U>,
