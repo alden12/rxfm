@@ -1,5 +1,5 @@
-import { combineLatest, Observable, of, OperatorFunction } from "rxjs";
-import { distinctUntilChanged, map, pluck, shareReplay, switchMap, tap } from "rxjs/operators";
+import { combineLatest, MonoTypeOperatorFunction, Observable, of, OperatorFunction } from "rxjs";
+import { distinctUntilChanged, ignoreElements, map, pluck, shareReplay, startWith, switchMap, tap } from "rxjs/operators";
 
 export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
   return value instanceof Observable ? value : of(value);
@@ -246,5 +246,24 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
       else if (typeof message === 'string') console.log(message, val);
       else if (typeof message === 'function') console.log(message(val));
     }),
+  );
+}
+
+/**
+ * A function taking an observable stream of type T and adding a side effect observable into the stream.
+ * This is similar to the built in `tap` operator in RxJS except the side effect is an observable to be injected into the stream.
+ * @param effect A function taking the emission of the source observable and returning an observable of any type.
+ * @returns An observable mirroring the source observable.
+ */
+ export function switchTap<T, U>(
+  effectObservable: (element: T) => Observable<U>,
+): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>) => source.pipe(
+    distinctUntilChanged(),
+    switchMap(element => effectObservable(element).pipe( // Add the effect observable into the stream.
+      ignoreElements(), // Ignore the effect observable's emissions.
+      startWith(element), // Return the original element as a single emission.
+    )),
+    distinctUntilChanged(),
   );
 }
