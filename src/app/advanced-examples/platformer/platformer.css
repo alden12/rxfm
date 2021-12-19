@@ -1,0 +1,11 @@
+.platform { 
+  fill: none;
+  stroke: black;
+  /* stroke-width: 3px; */
+}
+
+.player { 
+  fill: none;
+  stroke: blue;
+  /* stroke-width: 3px; */
+}

@@ -14,7 +14,7 @@ import {
   ComponentOutputsExample,
   PropsExample,
 } from './basic-examples';
-import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
+import { TodoList, SnakeGame, Minesweeper, PlatformerGame } from './advanced-examples';
 
 import './styles.css';
 
@@ -37,20 +37,14 @@ const Examples = () => <div class="examples">
   </Example>
   <Example title="Styles">
     <StylesExample />
-  </Example>
-  <Example title="Dynamic Styles">
     <DynamicStyles />
   </Example>
   <Example title="CSS Classes">
     <ClassExample />
-  </Example>
-  <Example title="Dynamic CSS Classes">
     <DynamicClasses />
   </Example>
   <Example title="Attributes">
     <AttributesExample />
-  </Example>
-  <Example title="Dynamic Attributes">
     <DynamicAttributes />
   </Example>
   <Example title="State">
@@ -73,6 +67,9 @@ const Examples = () => <div class="examples">
   </Example>
   <Example title="Minesweeper Example">
     <Minesweeper />
+  </Example>
+  <Example title="Platformer Example">
+    <PlatformerGame />
   </Example>
 </div>;
 
