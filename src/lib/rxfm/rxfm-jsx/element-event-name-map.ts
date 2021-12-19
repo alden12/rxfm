@@ -8,7 +8,7 @@ export interface ElementEventNameMap {
   onAuxClick: 'auxclick';
   onBeforeInput: 'beforeinput';
   onBlur: 'blur';
-  onCancel: 'cancel';
+  // onCancel: 'cancel'; // Deprecated?
   onCanplay: 'canplay';
   onCanPlayThrough: 'canplaythrough';
   onChange: 'change';
@@ -23,7 +23,7 @@ export interface ElementEventNameMap {
   onDrag: 'drag';
   onDragEnd: 'dragend';
   onDragEnter: 'dragenter';
-  onDragExit: 'dragexit';
+  // onDragExit: 'dragexit'; // Deprecated?
   onDragLeave: 'dragleave';
   onDragOver: 'dragover';
   onDragStart: 'dragstart';

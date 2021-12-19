@@ -27,16 +27,16 @@ export const KEY_MAP: Record<string, Direction> = {
   ArrowDown: 'down',
   ArrowLeft: 'left',
   ArrowRight: 'right',
-}
+};
 
 export const DIFFICULTY_TICK_PERIOD_MAP: Record<Difficulty, number> = {
   Easy: 250, // ms
   Medium: 200, // ms
   Hard: 150, // ms
-}
+};
 
 export const DIFFICULTY_SCORE_MAP: Record<Difficulty, number> = {
   Easy: 10,
   Medium: 15,
   Hard: 20,
-}
+};
