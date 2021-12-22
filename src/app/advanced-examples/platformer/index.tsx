@@ -1,21 +1,15 @@
 import RxFM, { FC, timeDelta } from "rxfm";
-import { BehaviorSubject, Observable, OperatorFunction, pipe, timer } from "rxjs";
-import { distinctUntilChanged, map, mapTo, scan, share, withLatestFrom } from "rxjs/operators";
-import { Vector } from "./types";
+import { BehaviorSubject, Observable, OperatorFunction, timer } from "rxjs";
+import { distinctUntilChanged, filter, map, mapTo, scan, share, startWith, withLatestFrom } from "rxjs/operators";
+import { PressedKeys, Spatial, Vector } from "./types";
+import { addVectors, multiplyVectors } from "./utils";
+import { PIXELS_PER_METER, ZERO, FRAME_TIME_MS, PLAYER_SPEED, WIDTH, HEIGHT, KEY_MAP } from "./constants";
 
 import './platformer.css';
-import { addVectors, multiplyVectors } from "./utils";
 
 interface Platform {
   coords: Vector[];
 }
-
-const PIXELS_PER_METER = 20;
-
-const WIDTH = PIXELS_PER_METER * 20;
-const HEIGHT = PIXELS_PER_METER * 7;
-
-const FRAME_TIME_MS = 20;
 
 const Platform: FC<Platform> = ({ coords }) => {
   const points = coords
@@ -63,47 +57,10 @@ const Player: FC<PlayerProps> = ({ position }) => {
   </g>;
 };
 
-type Direction = 'up' | 'down' | 'left' | 'right';
-
-const KEY_MAP: Record<string, Direction> = {
-  KeyW: 'up',
-  KeyS: 'down',
-  KeyA: 'left',
-  KeyD: 'right',
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
-};
-
-const GRAVITY = 9.81;
-
-// const gravity = (grounded: Observable<boolean>) => {
-//   let velocityMs = 0;
-//   return pipe(
-//     withLatestFrom(grounded),
-//     scan((previousVector, [, grounded]) => {
-//       const timeS = FRAME_TIME_MS / 1000;
-//       if (grounded) velocityMs = 0;
-//       velocityMs = velocityMs + timeS * GRAVITY;
-//       const displacementM = velocityMs * timeS;
-//       const displacementPx = displacementM * PIXELS_PER_METER;
-//       return addVectors(previousVector, [0, displacementPx]);
-//     }, [0, 0] as Vector),
-//   );
-// };
-
-interface Spatial {
-  position: Vector;
-  velocity: Vector;
-  acceleration: Vector;
-}
-
-const ZERO: Vector = [0, 0];
-
-const motion = (spatial: Observable<Partial<Spatial>>): OperatorFunction<number, Vector> => {
+const motion = (frameTimer: Observable<number>): OperatorFunction<Partial<Spatial>, Vector> => (spatial: Observable<Partial<Spatial>>) => {
   const definedSpatial = spatial.pipe(
     scan<Partial<Spatial>, Spatial>((previousSpatial, spatial) => ({
+      // TODO: Allow partial vectors?
       position: spatial.position ?? previousSpatial.position,
       velocity: spatial.velocity ?? previousSpatial.velocity,
       acceleration: spatial.acceleration ?? previousSpatial.acceleration,
@@ -114,7 +71,7 @@ const motion = (spatial: Observable<Partial<Spatial>>): OperatorFunction<number,
     })
   );
 
-  return (frameTimer: Observable<number>) => frameTimer.pipe(
+  return frameTimer.pipe(
     withLatestFrom(definedSpatial),
     map(([timeMs, spatial]) => {
       const timeS: Vector = [timeMs / 1000, timeMs / 1000];
@@ -132,47 +89,28 @@ export const PlatformerGame = () => {
     share(),
   );
 
-  // TODO: Allow multiple keys to be pressed at once.
-  const directionSubject = new BehaviorSubject<Direction | undefined>(undefined);
+  const pressedKeysSubject = new BehaviorSubject<PressedKeys>({});
   const handleKey = (event: Event) => {
     if (event instanceof KeyboardEvent && event.code in KEY_MAP) {
-      directionSubject.next(event.type === 'keydown' ? KEY_MAP[event.code] : undefined);
+      const direction = KEY_MAP[event.code];
+      pressedKeysSubject.next({ ...pressedKeysSubject.value, [direction]: event.type === 'keydown' });
     }
   };
 
-  const viewportOffset = frameTimer.pipe(
-    withLatestFrom(directionSubject),
-    scan((offset, [, direction]) => {
-      switch (direction) {
-        case 'left':
-          // TODO: Convert to movement speed.
-          return addVectors(offset, [1, 0]);
-        case 'right':
-          return addVectors(offset, [-1, 0]);
-        default:
-          return offset;
-      }
-    }, [0, 0] as Vector),
+  const viewportOffset = pressedKeysSubject.pipe(
+    map<PressedKeys, Partial<Spatial>>(({ right, left }) => {
+      if (right) return { velocity: [-PLAYER_SPEED, 0] };
+      if (left) return { velocity: [PLAYER_SPEED, 0] };
+      return { velocity: ZERO };
+    }),
+    motion(frameTimer),
   );
 
-  // const playerPosition = frameTimer.pipe(
-  //   withLatestFrom(directionSubject),
-  //   scan((offset, [, direction]) => {
-  //     switch (direction) {
-  //       case 'up':
-  //         return addVectors(offset, [0, -1]);
-  //       case 'down':
-  //         return addVectors(offset, [0, 1]);
-  //       default:
-  //         return offset;
-  //     }
-  //   }, [WIDTH / 2, HEIGHT / 2] as Vector),
-  //   // gravity(of(true)),
-  // );
-  const playerPosition = frameTimer.pipe(
-    motion(directionSubject.pipe(
-      mapTo({ acceleration: [0, 0], position: [WIDTH / 2, HEIGHT / 2] }),
-    ))
+  const playerPosition = pressedKeysSubject.pipe(
+    filter(({ up }) => Boolean(up)),
+    mapTo<Partial<Spatial>>({ velocity: [0, -8] }),
+    startWith<Partial<Spatial>>({ acceleration: ZERO, position: [WIDTH / 2, HEIGHT / 2] }),
+    motion(frameTimer),
   );
 
   return <svg width={WIDTH} height={HEIGHT} events={{ keydown: handleKey, keyup: handleKey }} tabindex="0">

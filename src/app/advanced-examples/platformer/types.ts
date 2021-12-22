@@ -1,1 +1,11 @@
 export type Vector = [x: number, y: number];
+
+export type Direction = 'up' | 'down' | 'left' | 'right';
+
+export type PressedKeys = { [K in Direction]?: boolean };
+
+export interface Spatial {
+  position: Vector;
+  velocity: Vector;
+  acceleration: Vector;
+}
