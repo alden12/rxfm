@@ -261,6 +261,20 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
   );
 }
 
+export function timeDelta(): OperatorFunction<any, number>;
+export function timeDelta<T, R>(mappingFunction: (delta: number, value: T) => R): OperatorFunction<T, R>;
+export function timeDelta<T>(
+  mappingFunction: (delta: number, value: T) => any = delta => delta,
+): OperatorFunction<T, any> {
+  let previousTime = Date.now();
+  return map<any, number>(value => {
+    const currentTime = Date.now();
+    const timeDelta = currentTime - previousTime;
+    previousTime = currentTime;
+    return mappingFunction(timeDelta, value);
+  });
+}
+
 /**
  * An observable operator to add a side effect observable into the stream.
  * This is similar to the built in `tap` operator in RxJS except the side effect is an observable to be injected into the stream.

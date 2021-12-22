@@ -26,8 +26,8 @@ export const GameCell: FC<GameCellProps> = ({ cell, index, dispatch }) => {
 
   const styles = {
     backgroundColor: color,
-    color: neighbors.pipe(
-      map(neighbors => NEIGHBORS_COLOR_MAP[neighbors]),
+    color: cell.pipe(
+      map(({ neighbors, symbol }) => symbol ? 'black' : NEIGHBORS_COLOR_MAP[neighbors]),
     ),
     fontSize: conditional(symbol, '12px', '14px'),
   };
