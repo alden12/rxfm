@@ -1,9 +1,10 @@
-import RxFM, { FC, timeDelta } from "rxfm";
-import { BehaviorSubject, Observable, of, timer } from "rxjs";
-import { distinctUntilChanged, map, pairwise, scan, share, startWith, withLatestFrom } from "rxjs/operators";
-import { BoundingBox, PressedKeys, Spatial, Vector, WithPrevious } from "./types";
-import { addVectors, metersToPixels, multiplyVectors, SpatialIndex } from "./utils";
-import { PIXELS_PER_METER, ZERO, FRAME_TIME_MS, PLAYER_SPEED, WIDTH, HEIGHT, KEY_MAP, GRAVITY } from "./constants";
+import RxFM, { FC } from "rxfm";
+import { BehaviorSubject, Observable } from "rxjs";
+import { distinctUntilChanged, finalize, map, pairwise, shareReplay, startWith } from "rxjs/operators";
+import { BoundingBox, PressedKeys, Vector } from "./types";
+import { addVectors, metersToPixels } from "./utils";
+import { ZERO, PLAYER_SPEED, WIDTH, HEIGHT, KEY_MAP, GRAVITY, PLAYER_INITIAL_X, PLAYER_INITIAL_Y } from "./constants";
+import { SpatialInput, rigidBody, collider } from "./rigid-body";
 
 import './platformer.css';
 
@@ -27,9 +28,13 @@ const GameMap: FC<GameMapProps> = ({ platforms, position }) => {
     map(position => `translate(${position[0]},${position[1]})`),
   );
 
-  return <g transform={transform}>
+  const removeCollider = collider(...platforms.map(({ boundingBox }) => metersToPixels(boundingBox)));
+
+  return (<g transform={transform}>
     {platforms.map(platform => <Platform {...platform} />)}
-  </g>;
+  </g>).pipe(
+    finalize(removeCollider),
+  );
 };
 
 interface PlayerProps {
@@ -48,44 +53,6 @@ const Player: FC<PlayerProps> = ({ position, boundingBox }) => {
   </g>;
 };
 
-type SpatialInput = Partial<WithPrevious<Partial<Spatial>>>;
-
-const rigidBody = (
-  frameTimer: Observable<number>,
-  detectCollision?: (position: Vector) => boolean,
-) => (spatialInput: Observable<SpatialInput>) => {
-  const spatial = spatialInput.pipe(
-    scan<SpatialInput, Spatial>((previousSpatial, spatial) => ({
-      position: (typeof spatial.position === 'function' ? spatial.position(previousSpatial.position) : spatial.position) ?? previousSpatial.position,
-      velocity: (typeof spatial.velocity === 'function' ? spatial.velocity(previousSpatial.velocity) : spatial.velocity) ?? previousSpatial.velocity,
-      acceleration: (typeof spatial.acceleration === 'function' ? spatial.acceleration(previousSpatial.acceleration) : spatial.acceleration) ?? previousSpatial.acceleration,
-    }), {
-      position: ZERO,
-      velocity: ZERO,
-      acceleration: ZERO,
-    })
-  );
-
-  return frameTimer.pipe(
-    withLatestFrom(spatial),
-    map(([timeMs, spatial]) => {
-      const timeS: Vector = [timeMs / 1000, timeMs / 1000];
-      spatial.velocity = addVectors(spatial.velocity, multiplyVectors(timeS, spatial.acceleration));
-      const displacementM = multiplyVectors(spatial.velocity, timeS);
-      const displacementPx = multiplyVectors(displacementM, [PIXELS_PER_METER, PIXELS_PER_METER]);
-      const position = addVectors(spatial.position, displacementPx);
-      
-      // TODO: Calculate proper resting position of object based on colliding objects, to rest on surface.
-      if (detectCollision && detectCollision(position)) {
-        spatial.velocity[1] = 0;
-        return spatial.position = [position[0], spatial.position[1]];
-      } else {
-        return spatial.position = position;
-      }
-    }),
-  );
-};
-
 const testPlatforms: Platform[] = [
   { boundingBox: [0, 6, 15, 7] },
   { boundingBox: [17, 5, 20, 6] },
@@ -94,11 +61,7 @@ const testPlatforms: Platform[] = [
 const playerBoundingBox: BoundingBox = [...ZERO, ...metersToPixels<Vector>([1, 2])];
 
 export const PlatformerGame = () => {
-  const frameTimer = timer(0, FRAME_TIME_MS).pipe(
-    timeDelta(),
-    share(),
-  );
-
+  // TODO: Only send through changes to key states as simple tuples?
   const pressedKeysSubject = new BehaviorSubject<PressedKeys>({});
   const handleKey = (event: Event) => {
     if (event instanceof KeyboardEvent && event.code in KEY_MAP) {
@@ -106,25 +69,6 @@ export const PlatformerGame = () => {
       pressedKeysSubject.next({ ...pressedKeysSubject.value, [direction]: event.type === 'keydown' });
     }
   };
-
-  // const viewportOffset = pressedKeysSubject.pipe(
-  //   map<PressedKeys, Partial<Spatial>>(({ right, left }) => {
-  //     if (right) return { velocity: [-PLAYER_SPEED, 0] };
-  //     if (left) return { velocity: [PLAYER_SPEED, 0] };
-  //     return { velocity: ZERO };
-  //   }),
-  //   physics(frameTimer),
-  // );
-
-  const spatialIndex = new SpatialIndex();
-  spatialIndex.load(testPlatforms.map(({ boundingBox }) => metersToPixels(boundingBox)));
-
-  const detectCollision = ([left, top, right, bottom]: BoundingBox) => ([x, y]: Vector) => spatialIndex.collides({
-    minX: x + left,
-    minY: y + top,
-    maxX: x + right,
-    maxY: y + bottom,
-  });
 
   const playerPosition = pressedKeysSubject.pipe(
     startWith<PressedKeys>({}),
@@ -142,12 +86,21 @@ export const PlatformerGame = () => {
       }
       return spatial;
     }),
-    startWith<SpatialInput>({ acceleration: [0, GRAVITY], position: [WIDTH / 2, HEIGHT / 2 - 20] }),
-    rigidBody(frameTimer, detectCollision(playerBoundingBox)),
+    startWith<SpatialInput>({ acceleration: [0, GRAVITY], position: [PLAYER_INITIAL_X, PLAYER_INITIAL_Y] }),
+    rigidBody(playerBoundingBox),
+    shareReplay({ refCount: true, bufferSize: 1 }),
   );
 
-  return <svg width={WIDTH} height={HEIGHT} events={{ keydown: handleKey, keyup: handleKey }} tabindex="0">
-    <GameMap platforms={testPlatforms} position={of(ZERO)} />
-    <Player position={playerPosition} boundingBox={playerBoundingBox} />
+  const playerApparentPosition = playerPosition.pipe(
+    map(position => [PLAYER_INITIAL_X, position[1]] as Vector),
+  );
+
+  const mapPosition = playerPosition.pipe(
+    map(position => [PLAYER_INITIAL_X - position[0], 0] as Vector),
+  );
+
+  return <svg width={WIDTH} height={HEIGHT} onKeyDown={handleKey} onKeyup={handleKey} tabindex="0">
+    <GameMap platforms={testPlatforms} position={mapPosition} />
+    <Player position={playerApparentPosition} boundingBox={playerBoundingBox} />
   </svg>;
 };
