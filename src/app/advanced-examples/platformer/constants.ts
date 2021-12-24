@@ -7,7 +7,7 @@ export const FRAME_TIME_MS = 20;
 export const GRAVITY = 9.81;
 
 export const WIDTH = PIXELS_PER_METER * 20;
-export const HEIGHT = PIXELS_PER_METER * 7;
+export const HEIGHT = PIXELS_PER_METER * 8;
 
 export const PLAYER_SPEED = 4; // m/s
 

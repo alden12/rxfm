@@ -9,3 +9,9 @@ export interface Spatial {
   velocity: Vector;
   acceleration: Vector;
 }
+
+export type WithPrevious<T> = {
+  [K in keyof T]: T[K] | ((previousValue: T[K]) => T[K]);
+};
+
+export type BoundingBox = [left: number, top: number, right: number, bottom: number];
