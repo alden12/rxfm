@@ -1,7 +1,7 @@
 import RxFM, { FC } from "rxfm";
-import { BehaviorSubject, Observable } from "rxjs";
-import { distinctUntilChanged, finalize, map, pairwise, shareReplay, startWith } from "rxjs/operators";
-import { BoundingBox, PressedKeys, Vector } from "./types";
+import { Observable, Subject } from "rxjs";
+import { distinctUntilChanged, filter, finalize, map, shareReplay, startWith, tap } from "rxjs/operators";
+import { BoundingBox, PressedKey, PressedKeys, Vector } from "./types";
 import { addVectors, metersToPixels } from "./utils";
 import { ZERO, PLAYER_SPEED, WIDTH, HEIGHT, KEY_MAP, GRAVITY, PLAYER_INITIAL_X, PLAYER_INITIAL_Y } from "./constants";
 import { SpatialInput, rigidBody, collider } from "./rigid-body";
@@ -61,30 +61,28 @@ const testPlatforms: Platform[] = [
 const playerBoundingBox: BoundingBox = [...ZERO, ...metersToPixels<Vector>([1, 2])];
 
 export const PlatformerGame = () => {
-  // TODO: Only send through changes to key states as simple tuples?
-  const pressedKeysSubject = new BehaviorSubject<PressedKeys>({});
+  const keyPressSubject = new Subject<PressedKey>();
   const handleKey = (event: Event) => {
     if (event instanceof KeyboardEvent && event.code in KEY_MAP) {
-      const direction = KEY_MAP[event.code];
-      pressedKeysSubject.next({ ...pressedKeysSubject.value, [direction]: event.type === 'keydown' });
+      keyPressSubject.next([KEY_MAP[event.code], event.type === 'keydown']);
     }
   };
 
-  const playerPosition = pressedKeysSubject.pipe(
-    startWith<PressedKeys>({}),
-    pairwise(),
-    map(([a, b]) => {
-      const spatial: SpatialInput = {};
-      if (a.right !== b.right) {
-        spatial.velocity = previous => addVectors(previous || ZERO, [b.right ? PLAYER_SPEED : -PLAYER_SPEED, 0]);
+  const pressedKeys: PressedKeys = {};
+  const playerPosition = keyPressSubject.pipe(
+    filter(([key, pressed]) => Boolean(pressedKeys[key]) !== pressed),
+    tap(([key, pressed]) => pressedKeys[key] = pressed),
+    map(([key, pressed]) => {
+      switch (key) {
+        case 'right':
+          return {velocity: previous => addVectors(previous || ZERO, [pressed ? PLAYER_SPEED : -PLAYER_SPEED, 0]) };
+        case 'left':
+          return { velocity: previous => addVectors(previous || ZERO, [pressed ? -PLAYER_SPEED : PLAYER_SPEED, 0]) };
+        case 'up':
+          return pressed ? { velocity: previous => addVectors(previous || ZERO, [0, -8]) } : {};
+        default:
+          return {};
       }
-      if (a.left !== b.left) {
-        spatial.velocity = previous => addVectors(previous || ZERO, [b.left ? -PLAYER_SPEED : PLAYER_SPEED, 0]);
-      }
-      if (b.up && a.up !== b.up) {
-        spatial.velocity = previous => addVectors(previous || ZERO, [0, -8]);
-      }
-      return spatial;
     }),
     startWith<SpatialInput>({ acceleration: [0, GRAVITY], position: [PLAYER_INITIAL_X, PLAYER_INITIAL_Y] }),
     rigidBody(playerBoundingBox),
