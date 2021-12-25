@@ -30,12 +30,15 @@ const detectCollision = ([x, y]: Vector, [left, top, right, bottom]: BoundingBox
   maxY: y + bottom,
 });
 
+const getVectorFromPrevious = (previous: Vector, vector?: Vector | ((previous: Vector) => Vector | undefined)) =>
+  (typeof vector === 'function' ? vector(previous) : vector) || previous;
+
 export const rigidBody = (boundingBox: BoundingBox) => (spatialInput: Observable<SpatialInput>) => {
   const spatial = spatialInput.pipe(
     scan<SpatialInput, Spatial>((previousSpatial, spatial) => ({
-      position: (typeof spatial.position === 'function' ? spatial.position(previousSpatial.position) : spatial.position) ?? previousSpatial.position,
-      velocity: (typeof spatial.velocity === 'function' ? spatial.velocity(previousSpatial.velocity) : spatial.velocity) ?? previousSpatial.velocity,
-      acceleration: (typeof spatial.acceleration === 'function' ? spatial.acceleration(previousSpatial.acceleration) : spatial.acceleration) ?? previousSpatial.acceleration,
+      position: getVectorFromPrevious(previousSpatial.position, spatial.position),
+      velocity: getVectorFromPrevious(previousSpatial.velocity, spatial.velocity),
+      acceleration: getVectorFromPrevious(previousSpatial.acceleration, spatial.acceleration),
     }), {
       position: ZERO,
       velocity: ZERO,
