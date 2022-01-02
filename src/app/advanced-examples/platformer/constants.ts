@@ -1,10 +1,9 @@
 import { timeDelta } from "rxfm";
 import { scheduled, of, animationFrameScheduler } from "rxjs";
 import { repeat, share } from "rxjs/operators";
-import { Direction, Vector } from "./types";
+import { Direction } from "./types";
 
 export const PIXELS_PER_METER = 20;
-export const ZERO: Vector = [0, 0];
 
 export const MAX_FRAME_TIME_MS = 100;
 

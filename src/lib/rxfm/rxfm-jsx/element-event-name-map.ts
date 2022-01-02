@@ -40,7 +40,7 @@ export interface ElementEventNameMap {
   onInvalid: 'invalid';
   onKeyDown: 'keydown';
   onKeyPress: 'keypress';
-  onKeyup: 'keyup';
+  onKeyUp: 'keyup';
   onLoad: 'load';
   onLoadedData: 'loadeddata';
   onLoadedMetaData: 'loadedmetadata';

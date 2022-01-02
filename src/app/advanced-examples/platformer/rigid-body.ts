@@ -1,11 +1,15 @@
 import RBush from "rbush";
 import { Observable } from "rxjs";
 import { scan, withLatestFrom, map } from "rxjs/operators";
-import { ZERO, PIXELS_PER_METER, frameTimer } from "./constants";
+import { PIXELS_PER_METER, frameTimer } from "./constants";
 import { WithPrevious, Spatial, Vector, BoundingBox } from "./types";
-import { addVectors, multiplyVectors } from "./utils";
+import { addVectors, multiplyVectors, zero } from "./utils";
 
-export type SpatialInput = Partial<WithPrevious<Partial<Spatial>>>;
+export type RigidBodyInput = Partial<WithPrevious<Partial<Spatial>>>;
+
+export interface RigidBodyOutput extends Spatial {
+  grounded: Vector;
+}
 
 class SpatialIndex extends RBush<BoundingBox> {
   public toBBox([minX, minY, maxX, maxY]: BoundingBox) {
@@ -30,19 +34,46 @@ const detectCollision = ([x, y]: Vector, [left, top, right, bottom]: BoundingBox
   maxY: y + bottom,
 });
 
+const detectCollision_ = (
+  position: Vector,
+  previousPosition: Vector,
+  velocity: Vector,
+  boundingBox: BoundingBox,
+): Pick<Spatial, 'position' | 'velocity'> | undefined => {
+  const [x, y] = position;
+  const [left, top, right, bottom] = boundingBox;
+  const boxes = spatialIndex.search({
+    minX: x + left,
+    minY: y + top,
+    maxX: x + right,
+    maxY: y + bottom,
+  });
+  if (boxes.length === 0) return undefined;
+  
+  // TODO: Find which axes collides and stop velocity on those (first colliding axis along movement vector).
+  // TODO: Find intersection point with colliding box along movement vector;
+  
+    const movementVector: Vector = [position[0] - previousPosition[0], position[1] - previousPosition[1]];
+    // If movement is positive, find min axis crossing for each axis, find which axis was crossed first along movement vector.
+    // Do this for all colliding boxes and use min axis crossing (or max if negative movement), this is the new positions coord in that axis.
+
+  return { position, velocity };
+};
+
 const getVectorFromPrevious = (previous: Vector, vector?: Vector | ((previous: Vector) => Vector | undefined)) =>
   (typeof vector === 'function' ? vector(previous) : vector) || previous;
 
-export const rigidBody = (boundingBox: BoundingBox) => (spatialInput: Observable<SpatialInput>) => {
-  const spatial = spatialInput.pipe(
-    scan<SpatialInput, Spatial>((previousSpatial, spatial) => ({
+  // TODO: Also return a grounded vector in spatial?
+export const rigidBody = (boundingBox: BoundingBox) => (rigidBodyInput: Observable<RigidBodyInput>): Observable<RigidBodyOutput> => {
+  const spatial = rigidBodyInput.pipe(
+    scan<RigidBodyInput, Spatial>((previousSpatial, spatial) => ({
       position: getVectorFromPrevious(previousSpatial.position, spatial.position),
       velocity: getVectorFromPrevious(previousSpatial.velocity, spatial.velocity),
       acceleration: getVectorFromPrevious(previousSpatial.acceleration, spatial.acceleration),
     }), {
-      position: ZERO,
-      velocity: ZERO,
-      acceleration: ZERO,
+      position: zero(),
+      velocity: zero(),
+      acceleration: zero(),
     })
   );
 
@@ -56,12 +87,16 @@ export const rigidBody = (boundingBox: BoundingBox) => (spatialInput: Observable
       const position = addVectors(spatial.position, displacementPx);
       
       // TODO: Calculate proper resting position of object based on colliding objects, to rest on surface.
+      const grounded = zero();
       if (detectCollision(position, boundingBox)) {
         spatial.velocity[1] = 0;
-        return spatial.position = [position[0], spatial.position[1]];
+        spatial.position = [position[0], spatial.position[1]];
+        grounded[1] = 1;
       } else {
-        return spatial.position = position;
+        spatial.position = position;
       }
+
+      return { ...spatial, grounded };
     }),
   );
 };
