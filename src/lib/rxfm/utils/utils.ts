@@ -150,6 +150,9 @@ export function conditional<T, S, F = undefined>(
   successValue: S | Observable<S>,
   failValue?: F | Observable<F>,
 ): Observable<S | F>;
+/**
+ * @deprecated
+ */
 export function conditional<T, S, F = undefined>(options: ConditionalOptions<T, S, F>): Observable<S | F>;
 export function conditional<T, S, F = undefined>(
   sourceOrOptions: Observable<T> | ConditionalOptions<T, S, F>,

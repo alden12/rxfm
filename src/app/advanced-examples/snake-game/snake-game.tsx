@@ -1,6 +1,6 @@
-import RxFM, { flatten, mapToComponents, destructure, access, FC } from "rxfm";
+import RxFM, { flatten, mapToComponents, FC } from "rxfm";
 import { Observable, BehaviorSubject } from "rxjs";
-import { map, scan } from "rxjs/operators";
+import { distinctUntilChanged, map, pluck, scan } from "rxjs/operators";
 import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";
 import { snakeGameLoop } from "./game-logic";
 import { SnakeCell, SnakeBoard, Difficulty } from "./types";
@@ -8,7 +8,7 @@ import { SnakeCell, SnakeBoard, Difficulty } from "./types";
 import './snake-styles.css';
 
 const GameCell: FC<{ cellType: Observable<SnakeCell> }> = ({ cellType }) =>(
-  <div class="snake-cell" style={{ backgroundColor: access(CELL_COLOR_MAP, cellType) }} />
+  <div class="snake-cell" style={{ backgroundColor: cellType.pipe(map(cellType => CELL_COLOR_MAP[cellType])) }} />
 );
 
 const GameBoard: FC<{ board: Observable<SnakeBoard> }> = ({ board }) => <div
@@ -43,6 +43,7 @@ interface ScoreBoardProps {
 
 const ScoreBoard: FC<ScoreBoardProps> = ({ score, setDifficulty }) => {
   const highScore = score.pipe(
+    distinctUntilChanged(),
     scan((highScore, score) => Math.max(highScore, score), 0),
   );
 
@@ -55,10 +56,10 @@ const ScoreBoard: FC<ScoreBoardProps> = ({ score, setDifficulty }) => {
 
 export const SnakeGame: FC = () => {
   const difficulty = new BehaviorSubject<Difficulty>('Easy');
-  const { board, score } = destructure(snakeGameLoop(difficulty));
+  const snakeGame = snakeGameLoop(difficulty);
 
   return <div class="snake-game">
-    <GameBoard board={board} />
-    <ScoreBoard score={score} setDifficulty={newDifficulty => difficulty.next(newDifficulty)} />
+    <GameBoard board={snakeGame.pipe(pluck('board'))} />
+    <ScoreBoard score={snakeGame.pipe(pluck('score'))} setDifficulty={newDifficulty => difficulty.next(newDifficulty)} />
   </div>;
 };

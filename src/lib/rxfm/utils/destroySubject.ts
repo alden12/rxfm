@@ -1,6 +1,9 @@
 import { lastValueFrom, Observable, ReplaySubject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
+/**
+ * @deprecated
+ */
 export class DestroySubject extends ReplaySubject<void> {
   constructor() {
     super(1);
