@@ -14,7 +14,6 @@ export function htmlComponentCreator<K extends keyof HTMLElementTagNameMap>(
 export const A = htmlComponentCreator('a');
 export const Abbr = htmlComponentCreator('abbr');
 export const Address = htmlComponentCreator('address');
-export const Applet = htmlComponentCreator('applet');
 export const Area = htmlComponentCreator('area');
 export const Article = htmlComponentCreator('article');
 export const Aside = htmlComponentCreator('aside');
