@@ -1,6 +1,6 @@
-import RxFM, { mapToComponents, conditional, FC, destructure } from "rxfm";
+import RxFM, { mapToComponents, FC } from "rxfm";
 import { BehaviorSubject, Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { map, pluck } from "rxjs/operators";
 
 import './todo-list-styles.css';
 
@@ -17,15 +17,17 @@ interface TodoItemProps {
 }
 
 const TodoItem: FC<TodoItemProps> = ({ item, onToggle }) => {
-  const { name, done } = destructure(item);
-
-  const handleClick = name.pipe(
-    map(name => () => onToggle(name)),
+  const doneClassName = item.pipe(
+    map(({ done }) => done && 'done'),
   );
 
-  return <div class={['todo-item', conditional(done, 'done')]} onClick={handleClick}>
-    {name}
-    <Checkbox checked={done} />
+  const handleClick = item.pipe(
+    map(({ name }) => () => onToggle(name)),
+  );
+
+  return <div class={['todo-item', doneClassName]} onClick={handleClick}>
+    {item.pipe(pluck('name'))}
+    <Checkbox checked={item.pipe(pluck('done'))} />
   </div>;
 };
 

@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.1.0] - 2021-11-26
+## [2.1.0] - 2022-01-02
 
 ### Added
 - Added JSX/TSX support to RxFM.

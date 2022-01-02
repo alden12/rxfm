@@ -5,7 +5,7 @@
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
 [![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
-RxFM *(working title)* is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
+RxFM is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
 I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
 
@@ -83,12 +83,16 @@ In order to define components which can be used as JSX elements, they simply nee
 const CustomJsxElementExample = () => <ChildrenExample />;
 ```
 
-Data can be passed into a JSX element using props, these props are then available as an object in the first argument of a component function. Component children can be accessed using the `children` prop which is implicitly available to all JSX elements. To use props with TypeScript, a component function can be assigned the `FC` (function component) type imported from RxFM. The interface passed to `FC` will define the props available on a component as shown below.
+Data can be passed into a JSX element using props, these props are then available as an object in the first argument of a component function. Component children can be accessed using the `children` prop which is implicitly available to all JSX elements. To use props with TypeScript, a component function can be assigned the `FC` (function component) type imported from RxFM. The generic type passed to `FC` will define the props available on a component as shown below.
 
 ```tsx
 import RxFM, { FC } from 'rxfm';
 
-const FunFacts: FC<{ name: string }> = ({ name, children }) => <div>
+interface FunFactsProps {
+  name: string;
+}
+
+const FunFacts: FC<FunFactsProps> = ({ name, children }) => <div>
   Fun facts about {name}: {children}
 </div>;
 
@@ -179,7 +183,11 @@ const ConditionalComponentsExample = () => <div>
 </div>;
 ```
 
-This may also be written more simply as: `conditional(flipFlop, <div>Now you see me!</div>)` using the `conditional` helper function from rxfm.
+This may also be written more simply as below using the `conditional` helper function from rxfm:
+
+```jsx
+conditional(flipFlop, <div>Now you see me!</div>)
+```
 
 You may also be tempted to use `switchMap` to transform and array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the [Dynamic Component Arrays](#dynamic-component-arrays) section).
 
@@ -199,30 +207,34 @@ interface OptionButtonProps {
 }
 ```
 
+Here each `OptionButton` component takes a `setOption` callback prop to set itself as the active option.
+
 ```tsx
 const OptionButton: FC<OptionButtonProps> = ({ option, setOption, active }) => {
-  const handleClick = () => setOption(option);
-
   const activeClassName = active.pipe(
     map(active => active && 'active')
   );
 
-  return <button onClick={handleClick} class={['option-button', activeClassName]}>
+  return <button onClick={() => setOption(option)} class={['option-button', activeClassName]}>
     {option}
   </button>;
 };
 ```
+
+We can then store the `selectedOption` state in the component wrapping the option buttons and pass in a callback to set the selected option to each `OptionButton` instance.
 
 ```tsx
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
 const ComponentOutputsExample = () => {
   const selectedOption = new BehaviorSubject<string>('Option 1');
-  const setOption = (option: string) => selectedOption.next(option);
 
   const optionButtons = options.map(option => {
-    const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
-    return <OptionButton option={option} setOption={setOption} active={active} />;
+    const active = selectedOption.pipe(
+      map(selectedOpt => selectedOpt === option),
+    );
+
+    return <OptionButton option={option} setOption={option => selectedOption.next(option)} active={active} />;
   });
 
   return <div>
@@ -276,7 +288,7 @@ The resulting component array observable can be passed directly as a component c
 const ComponentArraysExample = <div>{ItemComponents}</div>;
 ```
 
-If our `items` subject were to then emit a new array, this would be immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 
+If our `items` subject were to then emit a new array, this would immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements. 
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/dynamic-component-arrays.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 

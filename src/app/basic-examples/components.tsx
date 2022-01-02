@@ -11,7 +11,11 @@ export const ChildrenExample = () => <div>
 
 export const CustomJsxElementExample = () => <ChildrenExample />;
 
-const FunFacts: FC<{ name: string }> = ({ name, children }) => <div>
+interface FunFactsProps {
+  name: string;
+}
+
+const FunFacts: FC<FunFactsProps> = ({ name, children }) => <div>
   Fun facts about {name}: {children}
 </div>;
 
