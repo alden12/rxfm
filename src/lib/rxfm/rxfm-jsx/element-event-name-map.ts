@@ -8,8 +8,7 @@ export interface ElementEventNameMap {
   onAuxClick: 'auxclick';
   onBeforeInput: 'beforeinput';
   onBlur: 'blur';
-  // onCancel: 'cancel'; // Deprecated?
-  onCanplay: 'canplay';
+  onCanPlay: 'canplay';
   onCanPlayThrough: 'canplaythrough';
   onChange: 'change';
   onClick: 'click';
@@ -23,7 +22,6 @@ export interface ElementEventNameMap {
   onDrag: 'drag';
   onDragEnd: 'dragend';
   onDragEnter: 'dragenter';
-  // onDragExit: 'dragexit'; // Deprecated?
   onDragLeave: 'dragleave';
   onDragOver: 'dragover';
   onDragStart: 'dragstart';
@@ -33,19 +31,20 @@ export interface ElementEventNameMap {
   onEnded: 'ended';
   onError: 'error';
   onFocus: 'focus';
-  onFocusin: 'focusin';
-  onFocusout: 'focusout';
-  onGotpointerCapture: 'gotpointercapture';
+  onFocusIn: 'focusin';
+  onFocusOut: 'focusout';
+  onFormData: 'formdata';
+  onGotPointerCapture: 'gotpointercapture';
   onInput: 'input';
   onInvalid: 'invalid';
   onKeyDown: 'keydown';
   onKeyPress: 'keypress';
-  onKeyup: 'keyup';
+  onKeyUp: 'keyup';
   onLoad: 'load';
   onLoadedData: 'loadeddata';
-  onLoadedMetaData: 'loadedmetadata';
+  onLoadedMetadata: 'loadedmetadata';
   onLoadStart: 'loadstart';
-  onLostpointerCapture: 'lostpointercapture';
+  onLostPointerCapture: 'lostpointercapture';
   onMouseDown: 'mousedown';
   onMouseEnter: 'mouseenter';
   onMouseLeave: 'mouseleave';
@@ -90,6 +89,10 @@ export interface ElementEventNameMap {
   onTransitionStart: 'transitionstart';
   onVolumeChange: 'volumechange';
   onWaiting: 'waiting';
+  onWebkitAnimationEnd: 'webkitanimationend';
+  onWebkitAnimationIteration: 'webkitanimationiteration';
+  onWebkitAnimationStart: 'webkitanimationstart';
+  onWebkitTransitionEnd: 'webkittransitionend';
   onWheel: 'wheel';
   // DocumentAndElementEventHandlersEventMap:
   onCopy: 'copy';
