@@ -17,6 +17,16 @@ export function flatten<T>(nested: (T | T[])[]): T[] {
   }, []);
 }
 
+type Nested<T> = T | Nested<T>[];
+
+export function recursiveFlatten<T>(nested: Nested<T>): T[] {
+  return coerceToArray(nested).reduce<T[]>((flat, element) => {
+    const flattenedElement = Array.isArray(element) ? recursiveFlatten(element) : [element];
+    flat.push(...flattenedElement);
+    return flat;
+  }, []);
+}
+
 /**
  * An observable operator to select a given key/keys from a source observable stream.
  * Equivalent to 'pluck' from RxJS operators but only emits distinct values.
@@ -103,16 +113,18 @@ export function using<T, U>(source: Observable<T>, action: (value: T) => U): Obs
 }
 
 /**
- * Access a property on an object using an observable emitting object keys.
- * This is equivalent to: `key.pipe(map(k => value[k]))` but will only emit distinct values.
+ * Access a property on an object or object observable using an object key or observable emitting object keys.
+ * This is equivalent to: `key.pipe(map(k => value[k]))` or `value.pipe(map(val => val[key]))` but will only emit distinct values.
  * @param value An object of type T.
  * @param key A key of T (K) observable.
  * @returns An observable emitting T[K].
  */
-export function access<T, K extends keyof T>(value: T, key: Observable<K>): Observable<T[K]> {
-  return key.pipe(
-    distinctUntilChanged(),
-    map(k => value[k]),
+export function access<T, K extends keyof T>(value: T | Observable<T>, key: K | Observable<K>): Observable<T[K]> {
+  return combineLatest([
+    coerceToObservable(key).pipe(distinctUntilChanged()),
+    coerceToObservable(value).pipe(distinctUntilChanged()),
+  ]).pipe(
+    map(([k, val]) => val[k]),
     distinctUntilChanged(),
   );
 }
@@ -138,6 +150,9 @@ export function conditional<T, S, F = undefined>(
   successValue: S | Observable<S>,
   failValue?: F | Observable<F>,
 ): Observable<S | F>;
+/**
+ * @deprecated
+ */
 export function conditional<T, S, F = undefined>(options: ConditionalOptions<T, S, F>): Observable<S | F>;
 export function conditional<T, S, F = undefined>(
   sourceOrOptions: Observable<T> | ConditionalOptions<T, S, F>,
@@ -250,10 +265,10 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
 }
 
 /**
- * A function taking an observable stream of type T and adding a side effect observable into the stream.
+ * An observable operator to add a side effect observable into the stream.
  * This is similar to the built in `tap` operator in RxJS except the side effect is an observable to be injected into the stream.
  * @param effect A function taking the emission of the source observable and returning an observable of any type.
- * @returns An observable mirroring the source observable.
+ * @returns An operator function mirroring the source observable.
  */
  export function switchTap<T, U>(
   effectObservable: (element: T) => Observable<U>,

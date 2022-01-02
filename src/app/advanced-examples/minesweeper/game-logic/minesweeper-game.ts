@@ -1,5 +1,5 @@
 import { Observable } from "rxjs";
-import { tap, map, scan, startWith, retry } from "rxjs/operators";
+import { tap, map, scan, startWith, retry, shareReplay } from "rxjs/operators";
 import { BOARD_HEIGHT, BOARD_WIDTH, indexToVector, isOneOf, MINE_COUNT, vectorToIndex } from "../constants";
 import { MinesweeperBoard, getEmptyBoard, setCellNeighbors, revealMines, clearEmptyCells, allCleared, clearNeighbors } from "./minesweeper-board";
 import { MinesweeperCell } from "./minesweeper-cell";
@@ -43,7 +43,7 @@ class MinesweeperGame {
     const board = getEmptyBoard();
     const mines = placeRandomMines(MINE_COUNT, startingCell);
     mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('unflaggedMine'));
-    board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])))
+    board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])));
     return new MinesweeperGame(board, Date.now(), 'playing').clearCells(startingCell);
   }
 
@@ -58,7 +58,7 @@ class MinesweeperGame {
   private toggleFlagged([x, y]: Vector) {
     const previousCell = this.board[x][y];
     if (!previousCell.isCleared) {
-      return this.updateCell([x, y], previousCell.toggleFlagged())
+      return this.updateCell([x, y], previousCell.toggleFlagged());
     }
     return this;
   }
@@ -96,7 +96,7 @@ class MinesweeperGame {
   }
 }
 
-interface MinesweeperGameState {
+export interface MinesweeperGameState {
   board: MinesweeperBoard;
   startTime: number | undefined;
   endTime: number | undefined;
@@ -116,7 +116,7 @@ export const minesweeperGameLoop = (action: Observable<CellAction>): Observable<
   }),
   map((action, i) => i === 0 ? { type: 'start' as const, cell: action.cell } : action),
   scan((board, action) => board.dispatch(action), new MinesweeperGame(getEmptyBoard(), undefined, 'pregame')),
-  map(({ board, startTime, endTime, gameStage }) => ({ board, startTime, endTime, gameStage })),
   startWith(getStartingState()),
   retry(),
+  shareReplay({ refCount: true, bufferSize: 1 }),
 );

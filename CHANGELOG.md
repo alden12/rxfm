@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2022-01-02
+
+### Added
+- Added JSX/TSX support to RxFM.
+
+### Changed
+- Updated TypeScript version to ^4.5.4, removed deprecated `applet` html component creator.
+
+### Deprecated
+- Deprecated `DestroySubject`.
+- Deprecated `ConditionalOptions` overload in `conditional` operator.
+
 ## [2.0.0] - 2021-11-26
 
 ### Added

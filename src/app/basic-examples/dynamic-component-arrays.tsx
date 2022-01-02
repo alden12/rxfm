@@ -1,4 +1,4 @@
-import { Div, mapToComponents } from 'rxfm';
+import RxFM, { FC, mapToComponents } from 'rxfm';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -7,22 +7,22 @@ interface TodoItem {
   done: boolean;
 }
 
-export const ComponentArraysExample = () => {
+export const ComponentArraysExample: FC = () => {
   const items = new BehaviorSubject<TodoItem[]>([
     { name: 'Item 1', done: true, },
     { name: 'Item 2', done: false, },
     { name: 'Item 3', done: true, },
   ]);
 
-  const Item = (item: Observable<TodoItem>) => Div(
-    item.pipe(
+  const Item: FC<{ item: Observable<TodoItem> }> = ({ item }) => <div>
+    {item.pipe(
       map(({ name, done }) => `${name} is ${done ? '' : 'not'} done!`),
-    ),
-  );
+    )}
+  </div>;
 
   const ItemComponents = items.pipe(
-    mapToComponents(Item, 'name'),
+    mapToComponents(item => <Item item={item} />, 'name'),
   );
 
-  return Div(ItemComponents);
+  return <div>{ItemComponents}</div>;
 };

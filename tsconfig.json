@@ -12,7 +12,9 @@
         "baseUrl": ".",
         "paths": {
             "rxfm": ["src/lib/rxfm/index"],
-        }
+        },
+        "jsx": "react",
+        "jsxFactory": "RxFM.createElement"
     },
     "exclude": [
         "node_modules",
