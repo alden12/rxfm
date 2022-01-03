@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.1] - 2022-01-03
 
 ### Fixed
-- Fixed RxFM JSX root namespace export.
+- Fixed TypeScript JSX namespace detection by adding default RxFM root export.
 
 ## [2.1.0] - 2022-01-02
 
