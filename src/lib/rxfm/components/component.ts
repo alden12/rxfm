@@ -1,7 +1,7 @@
-import { defer, MonoTypeOperatorFunction, Observable, of } from "rxjs";
-import { tap } from "rxjs/operators";
+import { defer, MonoTypeOperatorFunction, Observable, of, pipe } from "rxjs";
+import { filter, tap } from "rxjs/operators";
 import { children, ComponentChild } from "../children/children";
-import { flatten, switchTap } from "../utils";
+import { flatten, NullLike, switchTap } from "../utils";
 
 /**
  * The possible DOM element types which can be used in RxFM. These are HTML and SVG elements.
@@ -11,7 +11,7 @@ export type ElementType = HTMLElement | SVGElement;
 /**
  * An observable emitting a DOM element. This is the fundamental type in RxFM.
  */
-export type Component<T extends ElementType = ElementType> = Observable<T>;
+export type Component<T extends ElementType = ElementType> = Observable<T | NullLike>;
 
 /**
  * A function taking any number of component children and returning a component.
@@ -30,7 +30,7 @@ export type ComponentCreator<T extends ElementType = ElementType> = {
  * An RxJS operator function which can be used for performing actions on RxFM components.
  * The operator may be used in the pipe method of a component and will not change the resulting component type.
  */
-export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T>;
+export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T | NullLike>;
 
 /**
  * A function to make a component function from an element function.
@@ -74,13 +74,17 @@ export function componentCreator<T extends ElementType>(componentFunction: Compo
  * @returns A component operator function taking a component and returning the same component.
  */
 export function componentOperator<T extends ElementType, U>(
-  effect: (element: T) => Observable<U>,
+  effect: (element: T) => Observable<U | NullLike>,
 ): ComponentOperator<T> {
-  return switchTap<T, U>(effect);
+  return pipe(
+    filter<T | NullLike>(Boolean),
+    switchTap<T, U | NullLike>(effect),
+  );
 }
 
 /**
  * Add an observable into the component stream.
+ * @deprecated Deprecated in favour of {@link switchTap}.
  * @param observable The observable to add into the component stream.
  * @param effect An optional effect to execute when the observable emits, this is equivalent to using 'tap' on the observable.
  * @returns A component operator function.

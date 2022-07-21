@@ -16,7 +16,7 @@ export type ComponentChild =
     | StringLike
     | NullLike
     | ElementType
-    | ElementType[]
+    | (ElementType | NullLike)[]
   >
   | (() => Component);
 
@@ -25,12 +25,12 @@ export type ComponentChild =
  */
 export type ChildElement = ElementType | Text;
 
-type CoercedChildComponent = ChildElement[];
+type CoercedChildComponent = (ChildElement | NullLike)[];
 
 /**
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
-function coerceChildComponent(childComponent: ComponentChild): Observable<CoercedChildComponent | null> {
+function coerceChildComponent(childComponent: ComponentChild): Observable<CoercedChildComponent> {
   if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
     let node: Text; // Create outer reference to text node if it is needed.
     return (typeof childComponent === 'function' ? childComponent() : childComponent).pipe( // Create observable if applicable.
@@ -45,16 +45,17 @@ function coerceChildComponent(childComponent: ComponentChild): Observable<Coerce
           node.nodeValue = child.toString(); // Coerce to string and update text node value.
           return [node]; // Return component in an array.
         }
-        return null; // Otherwise return null to indicate empty.
+        return [null]; // Otherwise return null array to indicate empty.
       }),
     );
   } else if (childComponent !== undefined && childComponent !== null && childComponent !== false) { // If string like.
     const node = document.createTextNode(childComponent.toString()); // Coerce to string and create text node with string value.
     return of([node]); // Return observable component in an array.
   }
-  return of(null); // Otherwise return null observable to indicate empty.
+  return of([null]); // Otherwise return null array observable to indicate empty.
 }
 
+// TODO: Queue updates and execute on a global frame timer?
 /**
  * Update the child nodes of an element given the new state and previous state of child nodes.
  */
@@ -107,9 +108,9 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
 
     // Coerce all child nodes to be most generic type and combine.
     return combineLatest(childComponents.map(coerceChildComponent)).pipe(
-      startWith([] as (CoercedChildComponent | null)[]),
+      startWith<CoercedChildComponent[]>([]),
       //  Remove empty children then flatten.
-      map(childrenOrNull => flatten(childrenOrNull.filter(child => child !== null) as CoercedChildComponent[])),
+      map(coercedChildren => flatten(coercedChildren).filter(Boolean) as ChildElement[]),
       tap(elements => {
         updateElementChildren(element, previousElements, elements, symbol, end); // Update the element child nodes.
         previousElements = elements; // Store nodes for reference.

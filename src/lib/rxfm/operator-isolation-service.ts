@@ -27,6 +27,7 @@ class ElementMetadata {
   public children: ChildrenBlockMetadata[] = [];
 }
 
+// TODO: Use a different map for each type of item and store in that file rather than having a service?
 /**
  * A service class to manage multiple component operators on single elements and ensure that they do not interfere
  * with each-other.

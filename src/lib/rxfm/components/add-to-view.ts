@@ -1,4 +1,5 @@
 import { distinctUntilChanged } from "rxjs/operators";
+import { NullLike } from "../utils";
 import { Component, ElementType } from "./component";
 
 /**
@@ -16,13 +17,15 @@ export function addToView(
   component: Component,
   host: ElementType = document.body,
 ): RemoveComponent {
-  let oldNode: ElementType; // The node already in the view, if it exists.
+  let oldNode: ElementType | NullLike; // The node already in the view, if it exists.
   const subscription = component.pipe(
     distinctUntilChanged(),
   ).subscribe(element => {
-    if (oldNode) { // Add node to host or replace existing node.
+    if (!element && oldNode) { // If removing the node.
+      host.removeChild(oldNode);
+    } else if (oldNode && element) { // If replacing existing node.
       host.replaceChild(element, oldNode);
-    } else {
+    } else if (element) { // If adding the node.
       host.appendChild(element);
     }
     oldNode = element;
@@ -30,6 +33,6 @@ export function addToView(
 
   return () => { // Return a function to remove the node and clean up subscription.
     subscription.unsubscribe();
-    host.removeChild(oldNode);
-  }
+    oldNode && host.removeChild(oldNode);
+  };
 }

@@ -1,4 +1,4 @@
-import RxFM, { FC } from 'rxfm';
+import RxFM, { addToView, FC } from 'rxfm';
 import {
   HelloWorld,
   ChildrenExample,
@@ -88,4 +88,5 @@ const App = <div id="app">
   <Examples />
 </div>;
 
-App.subscribe(element => document.body.appendChild(element));
+addToView(App, document.body);
+// App.subscribe(element => document.body.appendChild(element));

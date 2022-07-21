@@ -1,7 +1,7 @@
 import { Observable, OperatorFunction, from, of } from 'rxjs';
-import { ElementType, Component } from './components';
+import { Component, ElementType } from './components';
 import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
-import { KeysOfValue, selectFrom } from './utils';
+import { KeysOfValue, NullLike, selectFrom } from './utils';
 
 type Id = string | number;
 
@@ -61,12 +61,17 @@ interface ComponentDiff<I, T extends ElementType> {
 }
 
 /**
+ * A function taking an item observable (and current item index observable if needed) and returning a component or null-like.
+ */
+type CreationFunction<I, T extends ElementType> = (item: Observable<I>, index: Observable<number>) => Component<T>;
+
+/**
  * An observable operator taking the diff of an item array and mapping it to a component array corresponding to each item.
  * @param creationFunction A function taking an item of type T and returning a component.
  * @returns An operator function mapping a T array diff onto an array of components for each item.
  */
 function createComponents<I, T extends ElementType>(
-  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  creationFunction: CreationFunction<I, T>,
 ): OperatorFunction<ItemDiff<I>, ComponentDiff<Id, T>> {
   return (changes: Observable<ItemDiff<I>>) => changes.pipe(
     map(({ added, removed, itemMap }) => {
@@ -104,10 +109,10 @@ function createComponents<I, T extends ElementType>(
  * component.
  */
 function combineComponents<I, T extends ElementType>(
-): OperatorFunction<ComponentDiff<I, T>, ElementType[]> {
+): OperatorFunction<ComponentDiff<I, T>, (ElementType | NullLike)[]> {
   return (componentObservableChanges: Observable<ComponentDiff<I, T>>) => {
 
-    const elementMap = new Map<I, ElementType>(); // Create a map to keep track of each component's element.
+    const elementMap = new Map<I, ElementType | NullLike>(); // Create a map to keep track of each component's element.
     return componentObservableChanges.pipe(
       switchMap(({ newComponents, removedIds, ids }) => {
         removedIds.forEach(id => elementMap.delete(id)); // Delete any removed elements from the map.
@@ -130,26 +135,26 @@ function combineComponents<I, T extends ElementType>(
  * An observable operator to map an array of items of type I to an array of component elements.
  * Items with matching ids between emissions will be passed to existing components rather than
  * regenerating them to more efficiently render.
- * @param creationFunction A function taking an item observable (and current item index observable if needed)
+ * @param creationFunction A function taking an item observable (and current item index observable if needed) and returning a component or null-like.
  * @param idFunction Either: a function taking an item of type I and returning it's unique id,
  * A prop name of I in which it's unique id can be found, or if omitted then the item index will be used as the id.
  * and returning a new component for the item.
  */
 export function mapToComponents<I, T extends ElementType>(
-  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
-): OperatorFunction<I[], ElementType[]>;
+  creationFunction: CreationFunction<I, T>,
+): OperatorFunction<I[], (ElementType | NullLike)[]>;
 export function mapToComponents<I, T extends ElementType>(
-  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  creationFunction: CreationFunction<I, T>,
   idFunction: (item: I) => Id,
-): OperatorFunction<I[], ElementType[]>;
+): OperatorFunction<I[], (ElementType | NullLike)[]>;
 export function mapToComponents<I, T extends ElementType>(
-  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  creationFunction: CreationFunction<I, T>,
   idProp: KeysOfValue<I, Id>,
-): OperatorFunction<I[], ElementType[]>;
+): OperatorFunction<I[], (ElementType | NullLike)[]>;
 export function mapToComponents<I, T extends ElementType>(
-  creationFunction: (item: Observable<I>, index: Observable<number>) => Component<T>,
+  creationFunction: CreationFunction<I, T>,
   idPropOrFunction?: ((item: I, index: number) => Id) | KeysOfValue<I, Id>,
-): OperatorFunction<I[], ElementType[]> {
+): OperatorFunction<I[], (ElementType | NullLike)[]> {
   const idFunction: (item: I, index: number) => Id = idPropOrFunction ?
     typeof idPropOrFunction === 'function' ?
       idPropOrFunction as (item: I, index: number) => Id :

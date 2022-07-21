@@ -18,7 +18,7 @@ export type EventType<T extends ElementType, E extends keyof ElementEventMap> =
  * A function to handle an element event in rxfm, or an observable emitting a handler function.
  */
 export type EventHandler<T extends ElementType, E extends keyof ElementEventMap> =
-  ((event: EventType<T, E>) => void) | Observable<(event: EventType<T, E>) => void>;
+  ((event: EventType<T, E>, host: T) => void) | Observable<(event: EventType<T, E>) => void>;
 
 type BasicEventOperator = {
   <T extends ElementType, E extends keyof ElementEventMap>(type: E, callback: EventHandler<T, E>): ComponentOperator<T>;
@@ -29,7 +29,7 @@ const basicEventOperator: BasicEventOperator = <T extends ElementType, E extends
   callback: EventHandler<T, E>,
 ): ComponentOperator<T> => componentOperator(element => fromEvent(element, type).pipe(
   withLatestFrom(coerceToObservable(callback)),
-  tap(([ev, callbackFn]) => callbackFn(ev as EventType<T, E>)),
+  tap(([ev, callbackFn]) => callbackFn(ev as EventType<T, E>, element)),
 ));
 
 type EventOperators = {
