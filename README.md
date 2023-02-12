@@ -31,6 +31,8 @@ npm install rxjs@7.0.0
 ```
 If you already have `rxjs` installed, make sure it is using the same version as `rxfm`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
 
+An [alternative starter app](https://github.com/jcannon98188/rxfm-esbuild-starter) exists which uses ESBuilt, Prettier, ESLint, Typescript, and Tailwind CSS
+
 ---
 
 ## Components
