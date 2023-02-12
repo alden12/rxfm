@@ -30,7 +30,8 @@
     "start": "webpack serve --config webpack.dev.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "prepare": "npm run build"
   },
   "peerDependencies": {
     "rxjs": "^7.8.0"
