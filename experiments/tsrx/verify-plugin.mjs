@@ -80,7 +80,7 @@ for (const { name, srcOffset } of targets) {
   const info = genOffset == null ? null : ls.getQuickInfoAtPosition(genPath, genOffset);
   const type = info ? ts.displayPartsToString(info.displayParts) : '(no info)';
   console.log(`  hover ${name}  ⇒  ${type}`);
-  if (name === 'x' || name === 'w') ok = ok && /Observable<number>/.test(type);
+  if (['sum', 'called', 'applied', 'picked'].includes(name)) ok = ok && /RenderObservable</.test(type);
 }
 const genDiagnostics = [...ls.getSyntacticDiagnostics(genPath), ...ls.getSemanticDiagnostics(genPath)];
 console.log(`\ngenerated diagnostics: ${genDiagnostics.length}`);

@@ -1,11 +1,15 @@
 // A real .tsrx file — open this in the Extension Development Host and hover the
-// bindings. `y + z` would be a type error in plain TS; here it's inferred as an
-// Observable and lifts to combineLatest + map under the hood.
+// bindings. Imperative observable use that plain TS would reject, inferred and
+// lifted to RxJS RenderObservables under the hood.
 import { Observable } from 'rxjs';
 
 declare const y: Observable<number>;
+declare const cond: Observable<boolean>;
+declare const fn: Observable<(n: number) => string>;
 const z = 1;
+const double = (n: number) => n * 2;
 
-const x = y + z;       // hover ⇒ const x: Observable<number>
-const w = x + z;       // hover ⇒ const w: Observable<number>  (propagated)
-const doubled = x + x; // hover ⇒ const doubled: Observable<number>
+const sum = y + z;            // hover ⇒ RenderObservable<number>   (combineLatest + map)
+const called = double(y);     // hover ⇒ RenderObservable<number>   (plain fn over observable arg)
+const applied = fn(y);        // hover ⇒ RenderObservable<string>   (observable-of-function applied!)
+const picked = cond ? y : z;  // hover ⇒ RenderObservable<number>   (switchMap + shareReplay)

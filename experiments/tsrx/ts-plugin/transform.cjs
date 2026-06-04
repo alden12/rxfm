@@ -11,6 +11,16 @@
 'use strict';
 const path = require('node:path');
 
+// The runtime module the generated code imports `render` from. We emit a
+// relative specifier from each .tsrx file's directory so it resolves in both the
+// headless harness and the editor.
+const RUNTIME_PATH = path.join(__dirname, '..', 'runtime.ts');
+function relativeRuntimeSpecifier(baseDir) {
+  let rel = path.relative(baseDir, RUNTIME_PATH).replace(/\.ts$/, '').split(path.sep).join('/');
+  if (!rel.startsWith('.')) rel = `./${rel}`;
+  return rel;
+}
+
 function getCompilerOptions(ts) {
   return {
     target: ts.ScriptTarget.ES2020,
@@ -54,6 +64,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
   const observableBindings = new Set();
   const needed = { rxjs: new Set(), 'rxjs/operators': new Set() };
   const edits = [];
+  let usedRender = false;
 
   const isObservableType = type => {
     if (!type) return false;
@@ -64,6 +75,24 @@ function transformWithMappings(ts, sourceText, baseDir) {
     (ts.isIdentifier(node) && observableBindings.has(node.text)) ||
     isObservableType(checker.getTypeAtLocation(node));
 
+  // Generates unique, readable param names within a single lifted expression.
+  const freshNamer = () => {
+    const used = new Set();
+    return base => {
+      let name = base, n = 1;
+      while (used.has(name)) name = `${base}_${n++}`;
+      used.add(name);
+      return name;
+    };
+  };
+  // Coerce a (possibly non-observable) operand into an observable source for
+  // combineLatest / switchMap: leave observables as-is, wrap plain values in of().
+  const asStream = operand => {
+    if (operand.observable) return operand.text;
+    needed.rxjs.add('of');
+    return `of(${operand.text})`;
+  };
+
   function transformExpression(node) {
     if (ts.isParenthesizedExpression(node)) {
       const inner = transformExpression(node.expression);
@@ -71,6 +100,58 @@ function transformWithMappings(ts, sourceText, baseDir) {
         ? { text: inner.text, observable: true, lifted: true }
         : { text: node.getText(sf), observable: inner.observable, lifted: false };
     }
+    // Ternary: when the condition is observable, switchMap so only the taken
+    // branch is subscribed (lazy), and shareReplay so it behaves as a
+    // RenderObservable (replays its latest value to late subscribers).
+    if (ts.isConditionalExpression(node)) {
+      const cond = transformExpression(node.condition);
+      const whenTrue = transformExpression(node.whenTrue);
+      const whenFalse = transformExpression(node.whenFalse);
+      if (cond.observable) {
+        needed['rxjs/operators'].add('switchMap');
+        const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
+        // switchMap for laziness; the render() wrapper (added at the binding)
+        // provides the shareReplay, so we don't add it here.
+        const text =
+          `${cond.text}.pipe(` +
+          `switchMap(${param} => ${param} ? ${asStream(whenTrue)} : ${asStream(whenFalse)}))`;
+        return { text, observable: true, lifted: true };
+      }
+      // Static condition: an ordinary ternary picking between values/streams.
+      return { text: node.getText(sf), observable: isObservableExpr(node), lifted: false };
+    }
+
+    // Function call. Plain function over observable args → map. An observable
+    // *emitting a function* → combineLatest the fn stream with the arg streams
+    // and apply the emitted function to the emitted args.
+    if (ts.isCallExpression(node)) {
+      const callee = transformExpression(node.expression);
+      const args = node.arguments.map(transformExpression);
+      if (callee.observable || args.some(a => a.observable)) {
+        needed.rxjs.add('combineLatest');
+        needed['rxjs/operators'].add('map');
+        const fresh = freshNamer();
+        const argParam = (argNode, i) => fresh(ts.isIdentifier(argNode) ? argNode.text : `_a${i}`);
+
+        if (callee.observable) {
+          const fnParam = fresh(ts.isIdentifier(node.expression) ? node.expression.text : '_fn');
+          const argParams = node.arguments.map(argParam);
+          const sources = [callee.text, ...args.map(asStream)];
+          const params = [fnParam, ...argParams];
+          const text = `combineLatest([${sources.join(', ')}])` +
+            `.pipe(map(([${params.join(', ')}]) => ${fnParam}(${argParams.join(', ')})))`;
+          return { text, observable: true, lifted: true };
+        }
+
+        const argParams = node.arguments.map(argParam);
+        const sources = args.map(asStream);
+        const text = `combineLatest([${sources.join(', ')}])` +
+          `.pipe(map(([${argParams.join(', ')}]) => ${callee.text}(${argParams.join(', ')})))`;
+        return { text, observable: true, lifted: true };
+      }
+      return { text: node.getText(sf), observable: false, lifted: false };
+    }
+
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LIFTABLE) {
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
@@ -108,7 +189,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
       if (!decl.initializer) continue;
       const r = transformExpression(decl.initializer);
       if (r.observable && ts.isIdentifier(decl.name)) observableBindings.add(decl.name.text);
-      if (r.lifted) edits.push({ start: decl.initializer.getStart(sf), end: decl.initializer.getEnd(), replacement: r.text });
+      if (r.lifted) {
+        // Every imperative result is a RenderObservable: wrap the binding once.
+        usedRender = true;
+        edits.push({ start: decl.initializer.getStart(sf), end: decl.initializer.getEnd(), replacement: `render(${r.text})` });
+      }
     }
   }
 
@@ -129,6 +214,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
   };
   const newNames = (mod, set) => [...set].filter(n => !alreadyImported(mod).has(n));
   const importLines = [];
+  if (usedRender) importLines.push(`import { render } from "${relativeRuntimeSpecifier(baseDir)}";`);
   const rxjsNew = newNames('rxjs', needed.rxjs);
   if (rxjsNew.length) importLines.push(`import { ${rxjsNew.join(', ')} } from "rxjs";`);
   const opNew = newNames('rxjs/operators', needed['rxjs/operators']);
