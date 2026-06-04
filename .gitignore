@@ -1,6 +1,7 @@
 node_modules
 /dist/*
 /dist-demo/*
+/experiments/tsrx/dist-tsrx/
 *.tgz
 
 # Playwright
