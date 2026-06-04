@@ -39,6 +39,8 @@ const Showcase = () => {
   const line4 = `(count / 3).toFixed(2) = ${ratio}  ·  roles[0] = ${firstRole}  ·  roles[count % 3] = ${roleAt}`;
 
   return Div(
+    // Tagged-template children with imperative interpolations, lifted in place:
+    Div`Hello, ${user.name}! ${count > 5 ? 'High count.' : 'Keep counting.'}`,
     Div(line1),
     Div(line2),
     Div(line3),
@@ -46,7 +48,7 @@ const Showcase = () => {
     Button`count +1`.pipe(
       event.click(() => count.next(count.value + 1)),
     ),
-    Button`toggle nickname`.pipe(
+    Button`toggle nickname (${user.nickname ?? 'no nickname'})`.pipe(
       event.click(() => user.next({
         ...user.value,
         nickname: user.value.nickname ? undefined : 'Countess',

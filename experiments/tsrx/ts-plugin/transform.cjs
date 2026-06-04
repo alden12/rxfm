@@ -462,6 +462,28 @@ function transformWithMappings(ts, sourceText, baseDir) {
         return; // don't descend into an already-rewritten initializer
       }
     }
+    // Tagged template (RxFM's children syntax, e.g. Div`hi ${user.name}`): each
+    // ${…} interpolation is a child, and RxFM renders observables as reactive
+    // children — so lift each imperative interpolation *individually* (rather
+    // than combining into one string like the untagged template literal case),
+    // leaving the template structure intact for RxFM to handle.
+    if (ts.isTaggedTemplateExpression(node) && ts.isTemplateExpression(node.template)) {
+      visit(node.tag);
+      for (const span of node.template.templateSpans) {
+        const r = transformExpression(span.expression);
+        if (r.lifted) {
+          usedRender = true;
+          edits.push({
+            start: span.expression.getStart(sf),
+            end: span.expression.getEnd(),
+            pieces: ['render(', ...r.pieces, ')'],
+          });
+        } else {
+          visit(span.expression); // recurse — may hold nested tagged templates
+        }
+      }
+      return; // interpolations handled; don't re-descend
+    }
     ts.forEachChild(node, visit);
   };
   visit(sf);
