@@ -183,19 +183,23 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return { text: node.getText(sf), observable: isObservableExpr(node), lifted: false };
   }
 
-  for (const stmt of sf.statements) {
-    if (!ts.isVariableStatement(stmt)) continue;
-    for (const decl of stmt.declarationList.declarations) {
-      if (!decl.initializer) continue;
-      const r = transformExpression(decl.initializer);
-      if (r.observable && ts.isIdentifier(decl.name)) observableBindings.add(decl.name.text);
+  // Lift variable initializers anywhere — including inside function bodies, since
+  // a component is a function. Walk top-down so declarations are seen in source
+  // order (so a binding is known observable before later statements use it).
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && node.initializer) {
+      const r = transformExpression(node.initializer);
+      if (r.observable && ts.isIdentifier(node.name)) observableBindings.add(node.name.text);
       if (r.lifted) {
         // Every imperative result is a RenderObservable: wrap the binding once.
         usedRender = true;
-        edits.push({ start: decl.initializer.getStart(sf), end: decl.initializer.getEnd(), replacement: `render(${r.text})` });
+        edits.push({ start: node.initializer.getStart(sf), end: node.initializer.getEnd(), replacement: `render(${r.text})` });
+        return; // don't descend into an already-rewritten initializer
       }
     }
-  }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
 
   // Names already imported per module — so we don't import a name twice. We do
   // NOT modify the existing import statements: leaving them intact keeps full TS
