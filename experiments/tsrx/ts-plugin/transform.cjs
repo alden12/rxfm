@@ -48,11 +48,40 @@ function createProgramFromText(ts, fileName, text, options) {
 }
 
 function transformWithMappings(ts, sourceText, baseDir) {
+  // Binary operators we lift eagerly via combineLatest + map. All emit a
+  // primitive (number / boolean / string), so the result is never callable.
+  // NOTE: short-circuiting operators (&& || ??) are deliberately absent — they
+  // get lazy switchMap handling below, like the ternary.
   const LIFTABLE = {
     [ts.SyntaxKind.PlusToken]: '+',
     [ts.SyntaxKind.MinusToken]: '-',
     [ts.SyntaxKind.AsteriskToken]: '*',
     [ts.SyntaxKind.SlashToken]: '/',
+    [ts.SyntaxKind.PercentToken]: '%',
+    [ts.SyntaxKind.AsteriskAsteriskToken]: '**',
+    // Comparisons → boolean streams (these feed ternary/logical conditions).
+    [ts.SyntaxKind.LessThanToken]: '<',
+    [ts.SyntaxKind.GreaterThanToken]: '>',
+    [ts.SyntaxKind.LessThanEqualsToken]: '<=',
+    [ts.SyntaxKind.GreaterThanEqualsToken]: '>=',
+    [ts.SyntaxKind.EqualsEqualsEqualsToken]: '===',
+    [ts.SyntaxKind.ExclamationEqualsEqualsToken]: '!==',
+    [ts.SyntaxKind.EqualsEqualsToken]: '==',
+    [ts.SyntaxKind.ExclamationEqualsToken]: '!=',
+    // Bitwise → number streams.
+    [ts.SyntaxKind.AmpersandToken]: '&',
+    [ts.SyntaxKind.BarToken]: '|',
+    [ts.SyntaxKind.CaretToken]: '^',
+    [ts.SyntaxKind.LessThanLessThanToken]: '<<',
+    [ts.SyntaxKind.GreaterThanGreaterThanToken]: '>>',
+    [ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken]: '>>>',
+  };
+  // Prefix unary operators we lift via map. All emit a primitive.
+  const LIFTABLE_UNARY = {
+    [ts.SyntaxKind.ExclamationToken]: '!',
+    [ts.SyntaxKind.MinusToken]: '-',
+    [ts.SyntaxKind.PlusToken]: '+',
+    [ts.SyntaxKind.TildeToken]: '~',
   };
 
   const fileName = path.join(baseDir, '__tsrx_virtual__.ts');
@@ -224,6 +253,19 @@ function transformWithMappings(ts, sourceText, baseDir) {
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
+    // Prefix unary on a stream → map over it (single source, no combineLatest).
+    if (ts.isPrefixUnaryExpression(node) && node.operator in LIFTABLE_UNARY) {
+      const operand = transformExpression(node.operand);
+      if (operand.observable) {
+        needed['rxjs/operators'].add('map');
+        const param = ts.isIdentifier(node.operand) ? node.operand.text : '_v';
+        const op = LIFTABLE_UNARY[node.operator];
+        const pieces = [...operand.pieces, '.pipe(map(', param, ' => ', op, param, '))'];
+        return { pieces, observable: true, lifted: true, callable: false };
+      }
+      return { pieces: [V(node)], observable: false, lifted: false };
+    }
+
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LIFTABLE) {
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
@@ -245,7 +287,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
           'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
           params[0], ' ', op, ' ', params[1], '))',
         ];
-        // Arithmetic always emits a number — never callable.
+        // All these operators emit a primitive — never callable.
         return { pieces, observable: true, lifted: true, callable: false };
       }
       return { pieces: [V(node)], observable: false, lifted: false };
