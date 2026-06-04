@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import transformCjs from './ts-plugin/transform.cjs';
 
-const { transformWithMappings, getCompilerOptions } = transformCjs;
+const { transformWithMappings, mapSourceToGenerated, getCompilerOptions } = transformCjs;
 const here = dirname(fileURLToPath(import.meta.url));
 const COMPILER_OPTIONS = getCompilerOptions(ts);
 
@@ -25,7 +25,7 @@ const visible = items.filter(i => i.done).map(item => Div\`\${item.name}\`, 'id'
 const nested = Div(items.map(item => Div\`\${item.name}\`));
 `;
 
-const { code } = transformWithMappings(ts, SOURCE, here);
+const { code, segments } = transformWithMappings(ts, SOURCE, here);
 const genPath = join(here, 'arrays.generated.ts');
 const host = {
   getScriptFileNames: () => [genPath],
@@ -75,6 +75,13 @@ check('Div(items.map(...)) keeps Div, lifts inner',
 
 // mapToComponents is imported from rxfm.
 check('mapToComponents imported from rxfm', code.includes('import { mapToComponents } from "rxfm";'));
+
+// Hovering the `.map` token shows mapToComponents (remapped, not a dead spot).
+const mapOffset = SOURCE.indexOf('.map(') + 1;
+const genOffset = mapSourceToGenerated(segments, mapOffset);
+const info = genOffset == null ? null : ls.getQuickInfoAtPosition(genPath, genOffset);
+check('hover on `.map` resolves to mapToComponents',
+  !!info && ts.displayPartsToString(info.displayParts).includes('mapToComponents'));
 
 // Everything type-checks (ignoring the unresolved rxfm import in this harness).
 const real = ls.getSemanticDiagnostics(genPath)

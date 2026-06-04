@@ -515,8 +515,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Lift the receiver if it's itself an imperative expression (e.g. a filter).
     const objR = transformExpression(obj);
     if (objR.lifted) edits.push({ start: obj.getStart(sf), end: obj.getEnd(), pieces: objR.pieces });
-    // `.map` → `.pipe(mapToComponents` (the original `(` stays); final `)` → `))`.
-    edits.push({ start: obj.getEnd(), end: ex.getEnd(), pieces: ['.pipe(mapToComponents'] });
+    // `.map(` → `.pipe(mapToComponents(`, final `)` → `))`. The `map` token is
+    // *remapped* (not swallowed) to the generated `mapToComponents` identifier so
+    // hovering `.map` shows mapToComponents' signature/docs rather than nothing.
+    edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: ['.pipe('] });
+    edits.push({ start: ex.name.getStart(), end: ex.name.getEnd(), remap: 'mapToComponents' });
     edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ['))'] });
     // Lift the callback body with its params (item, index) treated as observables,
     // scoped so the marking doesn't leak past this callback.
@@ -621,6 +624,15 @@ function transformWithMappings(ts, sourceText, baseDir) {
       segments.push({ identity: true, srcStart: cursor, length: edit.start - cursor, genStart: code.length });
       code += sourceText.slice(cursor, edit.start);
     }
+    if (edit.remap !== undefined) {
+      // A source token mapped onto different generated text (e.g. `map` →
+      // `mapToComponents`). Navigable coarse mapping so hover/go-to-def land on
+      // the generated symbol; safe from smear since it's one token ↔ one token.
+      segments.push({ identity: false, navigable: true, srcStart: edit.start, srcLen: edit.end - edit.start, genStart: code.length, genLen: edit.remap.length });
+      code += edit.remap;
+      cursor = edit.end;
+      continue;
+    }
     // Emit the rewritten initializer piece-by-piece: verbatim source slices get
     // 1:1 identity segments (full language features); synthetic scaffolding is
     // appended as generated-only text with no mapping.
@@ -657,15 +669,18 @@ function mapSourceToGenerated(segments, srcOffset) {
 
 // Convert our segment table into Volar's CodeMapping[] format.
 //
-// Every mapped span is now an identity (1:1) segment — including the verbatim
-// source tokens that survive inside a rewritten expression — so all carry full
-// language features. Synthesized scaffolding is generated-only (no segment), so
-// it never maps back onto source characters: nothing to smear. The `coarse`
-// profile (whole-span ↔ whole-span, position-sensitive features off) remains as
-// a defensive fallback should a non-identity segment ever be emitted.
+// Identity (1:1) segments — including the verbatim source tokens that survive
+// inside a rewritten expression — carry full language features. Synthesized
+// scaffolding is generated-only (no segment), so it never maps onto source
+// characters: nothing to smear. Non-identity segments map a source span onto
+// different generated text: `navigable` ones (a single token → single token,
+// e.g. `map` → `mapToComponents`) keep navigation + semantic so hover/go-to-def
+// work; the plain `coarse` profile (position-sensitive features off) is a
+// defensive fallback for any whole-span remap.
 function segmentsToVolarMappings(segments) {
   const full = { completion: true, format: false, navigation: true, semantic: true, structure: true, verification: true };
   const coarse = { completion: false, format: false, navigation: false, semantic: false, structure: false, verification: true };
+  const navigable = { completion: false, format: false, navigation: true, semantic: true, structure: false, verification: true };
   const mappings = [];
   for (const seg of segments) {
     if (seg.identity) {
@@ -673,7 +688,7 @@ function segmentsToVolarMappings(segments) {
     } else {
       mappings.push({
         sourceOffsets: [seg.srcStart], generatedOffsets: [seg.genStart],
-        lengths: [seg.srcLen], generatedLengths: [seg.genLen], data: coarse,
+        lengths: [seg.srcLen], generatedLengths: [seg.genLen], data: seg.navigable ? navigable : coarse,
       });
     }
   }
