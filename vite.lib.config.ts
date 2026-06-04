@@ -19,8 +19,7 @@ export default defineConfig({
   },
   plugins: [
     dts({
-      // Roll the declaration tree up into a single dist/index.d.ts.
-      rollupTypes: true,
+      // Emit the declaration tree (dist/index.d.ts + dist/rxfm/**) mirroring src/lib.
       include: ['src/lib'],
     }),
   ],

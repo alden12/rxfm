@@ -34,18 +34,21 @@ State is just RxJS `BehaviorSubject`s declared inside component functions (so in
 
 ## Build & tooling
 
-- **Vite** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
+This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `^20.19 || >=22.12`.
+
+- **Vite 8** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
-- `npm run dev` — Vite dev server (port 3000) serving the demo from `src/app`. The demo's `rxfm`
+- `yarn dev` — Vite dev server (port 3000) serving the demo from `src/app`. The demo's `rxfm`
   import is aliased to live lib source (`src/lib/rxfm/index.ts`).
-- `npm run build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and a
-  rolled-up `index.d.ts` (via `vite-plugin-dts`). `rxjs` is externalised (`external: [/^rxjs/]`),
-  not bundled. This is what npm publishes (`files: ["dist"]`).
-- `npm run build:app` — builds the demo to **`dist-demo/`** (kept out of the published `dist/`). The
+- `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the
+  declaration tree (`index.d.ts` + `rxfm/**.d.ts`) via `vite-plugin-dts`. `rxjs` is externalised
+  (`external: [/^rxjs/]`), not bundled. This is what npm publishes (`files: ["dist"]`).
+- `yarn build:app` — builds the demo to **`dist-demo/`** (kept out of the published `dist/`). The
   GitHub Pages demo is deployed manually, so point the deploy at `dist-demo/`.
-- `npm run preview` — serve the built demo.
-- `npm test` / `npm run test:watch` — Jest 30 (ts-jest, jsdom). Config is [jest.config.cjs](jest.config.cjs) (`.cjs` because the package is `type: module`). Tests are sparse — main one is [components/component.test.ts](src/lib/rxfm/components/component.test.ts).
-- `npm run lint` — ESLint (8 + typescript-eslint 7) over `.ts`. Currently 0 errors, a few `semi` warnings.
+- `yarn preview` — serve the built demo.
+- `yarn test` / `yarn test:watch` — Jest 30 (ts-jest, jsdom), scoped to `src/`. Config is [jest.config.cjs](jest.config.cjs) (`.cjs` because the package is `type: module`). Main test: [components/component.test.ts](src/lib/rxfm/components/component.test.ts).
+- `yarn test:e2e` — Playwright end-to-end tests in [e2e/](e2e/), run against the Vite dev server (auto-started). Config: [playwright.config.ts](playwright.config.ts). Needs `yarn playwright install chromium` once.
+- `yarn lint` — ESLint (8 + typescript-eslint 7) over `.ts`. Currently 0 errors, a few `semi` warnings.
 
 ## Conventions & notes
 
@@ -55,4 +58,4 @@ State is just RxJS `BehaviorSubject`s declared inside component functions (so in
 - The `rxfm` import inside the lib resolves via tsconfig `paths` to `src/lib/rxfm/index`; in the demo it resolves via the Vite alias.
 - TS 5's DOM typings dropped some deprecated tags, so a few element creators were removed (`Dir`, `Font`, `Frame`, `Frameset`, `Marquee`, `Param`).
 - Code style: heavy JSDoc on exported functions, functional/observable-pipeline style. Match it when editing.
-- CHANGELOG.md follows Keep a Changelog; bump it on user-facing changes. CI ([.github/workflows/nodejs.yml](.github/workflows/nodejs.yml)) runs build + lint + test on Node 18/20/22 for push/PR to master.
+- CHANGELOG.md follows Keep a Changelog; bump it on user-facing changes. CI ([.github/workflows/nodejs.yml](.github/workflows/nodejs.yml)) runs build + lint + test on Node 20/22, plus a separate Playwright e2e job, for push/PR to master.

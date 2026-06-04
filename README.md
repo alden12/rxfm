@@ -22,14 +22,14 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 ---
 
 ## Installation
-You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` into an existing project using:
+You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` (along with its `rxjs` peer dependency) into an existing project using:
 
 ```sh
-npm install rxfm
+npm install rxfm rxjs@^7.0.0
 ```
 
 ```sh
-npm install rxjs@^7.0.0
+yarn add rxfm rxjs@^7.0.0
 ```
 If you already have `rxjs` installed, make sure it is using the same version as `rxfm`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
 
