@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run tsrx Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/experiments/tsrx/vscode-extension",
+        "${workspaceFolder}",
+        "${workspaceFolder}/experiments/tsrx/example.tsrx"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "tsrx-vscode",
+  "displayName": "tsrx (live types)",
+  "description": "Live TypeScript types for .tsrx files (imperative observables).",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.88.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./extension.cjs",
+  "activationEvents": [
+    "onLanguage:tsrx"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "tsrx",
+        "aliases": [
+          "TSRX"
+        ],
+        "extensions": [
+          ".tsrx"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tsrx",
+        "scopeName": "source.tsrx",
+        "path": "./tsrx.tmLanguage.json"
+      }
+    ],
+    "typescriptServerPlugins": [
+      {
+        "name": "tsrx-ts-plugin",
+        "enableForWorkspaceTypeScriptVersions": true,
+        "languages": [
+          "tsrx"
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "tsrx-ts-plugin": "file:../ts-plugin"
+  }
+}
