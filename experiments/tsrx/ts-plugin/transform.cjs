@@ -120,20 +120,31 @@ function transformWithMappings(ts, sourceText, baseDir) {
       return name;
     };
   };
+  // A transformed expression is a list of "pieces": either a synthetic string
+  // (generated scaffolding) or a verbatim slice of the original source
+  // { srcStart, srcEnd }. Carrying this provenance lets us map the source tokens
+  // that survive into the generated code (identifiers, literals) back 1:1 — so
+  // hover / go-to-def / semantic highlighting keep working on them — while the
+  // synthesized scaffolding stays generated-only (unmapped).
+  const V = node => ({ srcStart: node.getStart(sf), srcEnd: node.getEnd() });
+  const piecesText = pieces =>
+    pieces.map(p => (typeof p === 'string' ? p : sourceText.slice(p.srcStart, p.srcEnd))).join('');
+  // Join several piece-lists with a separator string.
+  const joinPieces = (groups, sep) => groups.flatMap((g, i) => (i === 0 ? g : [sep, ...g]));
   // Coerce a (possibly non-observable) operand into an observable source for
   // combineLatest / switchMap: leave observables as-is, wrap plain values in of().
   const asStream = operand => {
-    if (operand.observable) return operand.text;
+    if (operand.observable) return operand.pieces;
     needed.rxjs.add('of');
-    return `of(${operand.text})`;
+    return ['of(', ...operand.pieces, ')'];
   };
 
   function transformExpression(node) {
     if (ts.isParenthesizedExpression(node)) {
       const inner = transformExpression(node.expression);
       return inner.lifted
-        ? { text: inner.text, observable: true, lifted: true }
-        : { text: node.getText(sf), observable: inner.observable, lifted: false };
+        ? { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable }
+        : { pieces: [V(node)], observable: inner.observable, lifted: false };
     }
     // Ternary: when the condition is observable, switchMap so only the taken
     // branch is subscribed (lazy), and shareReplay so it behaves as a
@@ -147,13 +158,14 @@ function transformWithMappings(ts, sourceText, baseDir) {
         const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
         // switchMap for laziness; the render() wrapper (added at the binding)
         // provides the shareReplay, so we don't add it here.
-        const text =
-          `${cond.text}.pipe(` +
-          `switchMap(${param} => ${param} ? ${asStream(whenTrue)} : ${asStream(whenFalse)}))`;
-        return { text, observable: true, lifted: true };
+        const pieces = [
+          ...cond.pieces, '.pipe(switchMap(', param, ' => ', param, ' ? ',
+          ...asStream(whenTrue), ' : ', ...asStream(whenFalse), '))',
+        ];
+        return { pieces, observable: true, lifted: true };
       }
       // Static condition: an ordinary ternary picking between values/streams.
-      return { text: node.getText(sf), observable: isObservableExpr(node), lifted: false };
+      return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
     // Function call. Plain function over observable args → map. An observable
@@ -177,20 +189,24 @@ function transformWithMappings(ts, sourceText, baseDir) {
         if (calleeIsFnStream) {
           const fnParam = fresh(ts.isIdentifier(node.expression) ? node.expression.text : '_fn');
           const argParams = node.arguments.map(argParam);
-          const sources = [callee.text, ...args.map(asStream)];
+          const sources = joinPieces([callee.pieces, ...args.map(asStream)], ', ');
           const params = [fnParam, ...argParams];
-          const text = `combineLatest([${sources.join(', ')}])` +
-            `.pipe(map(([${params.join(', ')}]) => ${fnParam}(${argParams.join(', ')})))`;
-          return { text, observable: true, lifted: true };
+          const pieces = [
+            'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
+            fnParam, '(', argParams.join(', '), ')))',
+          ];
+          return { pieces, observable: true, lifted: true };
         }
 
         const argParams = node.arguments.map(argParam);
-        const sources = args.map(asStream);
-        const text = `combineLatest([${sources.join(', ')}])` +
-          `.pipe(map(([${argParams.join(', ')}]) => ${callee.text}(${argParams.join(', ')})))`;
-        return { text, observable: true, lifted: true };
+        const sources = joinPieces(args.map(asStream), ', ');
+        const pieces = [
+          'combineLatest([', ...sources, ']).pipe(map(([', argParams.join(', '), ']) => ',
+          ...callee.pieces, '(', argParams.join(', '), ')))',
+        ];
+        return { pieces, observable: true, lifted: true };
       }
-      return { text: node.getText(sf), observable: isObservableExpr(node), lifted: false };
+      return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LIFTABLE) {
@@ -208,21 +224,18 @@ function transformWithMappings(ts, sourceText, baseDir) {
           return name;
         };
         const params = [paramOf(node.left, 0), paramOf(node.right, 1)];
-        const sources = [left, right].map(o => {
-          if (o.observable) return o.text;
-          needed.rxjs.add('of');
-          return `of(${o.text})`;
-        });
+        const sources = joinPieces([left, right].map(asStream), ', ');
         const op = LIFTABLE[node.operatorToken.kind];
-        const text =
-          `combineLatest([${sources.join(', ')}])` +
-          `.pipe(map(([${params.join(', ')}]) => ${params[0]} ${op} ${params[1]}))`;
+        const pieces = [
+          'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
+          params[0], ' ', op, ' ', params[1], '))',
+        ];
         // Arithmetic always emits a number — never callable.
-        return { text, observable: true, lifted: true, callable: false };
+        return { pieces, observable: true, lifted: true, callable: false };
       }
-      return { text: node.getText(sf), observable: false, lifted: false };
+      return { pieces: [V(node)], observable: false, lifted: false };
     }
-    return { text: node.getText(sf), observable: isObservableExpr(node), lifted: false };
+    return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
   }
 
   // Lift variable initializers anywhere — including inside function bodies, since
@@ -238,7 +251,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
       if (r.lifted) {
         // Every imperative result is a RenderObservable: wrap the binding once.
         usedRender = true;
-        edits.push({ start: node.initializer.getStart(sf), end: node.initializer.getEnd(), replacement: `render(${r.text})` });
+        edits.push({
+          start: node.initializer.getStart(sf),
+          end: node.initializer.getEnd(),
+          pieces: ['render(', ...r.pieces, ')'],
+        });
         return; // don't descend into an already-rewritten initializer
       }
     }
@@ -279,8 +296,17 @@ function transformWithMappings(ts, sourceText, baseDir) {
       segments.push({ identity: true, srcStart: cursor, length: edit.start - cursor, genStart: code.length });
       code += sourceText.slice(cursor, edit.start);
     }
-    segments.push({ identity: false, srcStart: edit.start, srcLen: edit.end - edit.start, genStart: code.length, genLen: edit.replacement.length });
-    code += edit.replacement;
+    // Emit the rewritten initializer piece-by-piece: verbatim source slices get
+    // 1:1 identity segments (full language features); synthetic scaffolding is
+    // appended as generated-only text with no mapping.
+    for (const piece of edit.pieces) {
+      if (typeof piece === 'string') {
+        code += piece;
+      } else {
+        segments.push({ identity: true, srcStart: piece.srcStart, length: piece.srcEnd - piece.srcStart, genStart: code.length });
+        code += sourceText.slice(piece.srcStart, piece.srcEnd);
+      }
+    }
     cursor = edit.end;
   }
   if (cursor < sourceText.length) {
@@ -306,12 +332,12 @@ function mapSourceToGenerated(segments, srcOffset) {
 
 // Convert our segment table into Volar's CodeMapping[] format.
 //
-// Identity segments map 1:1, so they carry full language features. Rewritten
-// segments map coarsely (whole source span ↔ whole generated span), so per-offset
-// features would land on the wrong characters — most visibly, semantic-highlight
-// tokens smear across the source. We disable position-sensitive features there
-// (semantic/navigation/completion) and keep only verification, so genuine type
-// errors still surface; the TextMate grammar handles colouring those spans.
+// Every mapped span is now an identity (1:1) segment — including the verbatim
+// source tokens that survive inside a rewritten expression — so all carry full
+// language features. Synthesized scaffolding is generated-only (no segment), so
+// it never maps back onto source characters: nothing to smear. The `coarse`
+// profile (whole-span ↔ whole-span, position-sensitive features off) remains as
+// a defensive fallback should a non-identity segment ever be emitted.
 function segmentsToVolarMappings(segments) {
   const full = { completion: true, format: false, navigation: true, semantic: true, structure: true, verification: true };
   const coarse = { completion: false, format: false, navigation: false, semantic: false, structure: false, verification: true };
