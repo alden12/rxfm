@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-06-04
+
+### Removed
+- Removed JSX/TSX support: the `RxFM` default export (`RxFM.createElement`), the `FC` type, and
+  the `DefaultProps`/`ElementChild` JSX types. Components are written with the non-JSX API
+  (`Div`, `Span`, `Button`, … and the `attributes`/`events`/`classes`/`styles` operators), as in
+  v2.0.0. JSX support may be reintroduced in a redesigned form in a future release.
+- Removed deprecated HTML component creators no longer present in the DOM typings: `Dir`, `Font`,
+  `Frame`, `Frameset`, `Marquee`, `Param`.
+
+### Changed
+- Replaced webpack with Vite for both the library build and the demo app.
+- The published package now ships ES modules and CommonJS (`dist/index.mjs`, `dist/index.cjs`)
+  with an `exports` map and a single rolled-up `dist/index.d.ts`.
+- Modernised tooling: TypeScript ^5.6, Jest ^30, ESLint ^8, and a Node 18/20/22 CI matrix.
+- The demo example app was reverted to the non-JSX API.
+
 ## [2.1.1] - 2022-01-03
 
 ### Fixed
