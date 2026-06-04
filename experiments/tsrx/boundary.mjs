@@ -16,13 +16,16 @@ const here = dirname(fileURLToPath(import.meta.url));
 const COMPILER_OPTIONS = getCompilerOptions(ts);
 
 // `sum` becomes RenderObservable<number>; the following lines reach into it
-// imperatively (member access, indexing) — the boundary — plus one unrelated
-// type error that must NOT be rewritten.
+// imperatively (member access, indexing, calling) — the boundary — plus one
+// unrelated type error that must NOT be rewritten. The call case also guards a
+// transform fix: a non-callable stream must NOT be lifted as a function-stream,
+// so it lands as `RenderObservable<number> has no call signatures` here.
 const SOURCE = `import { Observable } from 'rxjs';
 declare const y: Observable<number>;
 const sum = y + 1;
 const a = sum.toFixed(2);
 const b = sum[0];
+const c = sum(1);
 const bad: string = 123;
 `;
 
@@ -75,6 +78,11 @@ check(
 const index = rewritten.find(r => r.headline.includes('indexing a reactive value'));
 check('indexing (sum[0]) → teaching message', !!index);
 check('  names the reactive type', !!index && index.headline.includes('RenderObservable<number>'));
+
+// Calling a non-callable stream isn't lifted (transform fix) → teaching message.
+const call = rewritten.find(r => r.headline.includes("calling a reactive value"));
+check('calling (sum(1)) → teaching message', !!call);
+check('  names the reactive type', !!call && call.headline.includes('RenderObservable<number>'));
 
 // Unrelated type error is untouched.
 const badUntouched = !diagnostics.some(

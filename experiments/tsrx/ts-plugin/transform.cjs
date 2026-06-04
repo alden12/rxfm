@@ -62,6 +62,13 @@ function transformWithMappings(ts, sourceText, baseDir) {
   const sf = program.getSourceFile(fileName);
 
   const observableBindings = new Set();
+  // Lifted bindings whose emitted value is definitely not callable (e.g. the
+  // result of an arithmetic lift). The checker can't tell us this — it analyses
+  // the original (pre-transform) source, where these bindings have an erroring/
+  // unrelated type — so we record it as we lift. Used to refuse the
+  // "observable-emitting-a-function" call lift for them, letting the imperative
+  // boundary surface instead (RenderObservable<number> has no call signatures).
+  const nonCallableBindings = new Set();
   const needed = { rxjs: new Set(), 'rxjs/operators': new Set() };
   const edits = [];
   let usedRender = false;
@@ -74,6 +81,34 @@ function transformWithMappings(ts, sourceText, baseDir) {
   const isObservableExpr = node =>
     (ts.isIdentifier(node) && observableBindings.has(node.text)) ||
     isObservableType(checker.getTypeAtLocation(node));
+
+  // The value type T of an Observable<T>/RenderObservable<T>, or undefined if the
+  // type isn't an observable. Reads the type's first type argument.
+  const observableValueType = type => {
+    if (!type) return undefined;
+    if (type.isUnion && type.isUnion()) {
+      for (const t of type.types) {
+        const v = observableValueType(t);
+        if (v) return v;
+      }
+      return undefined;
+    }
+    if (!isObservableType(type)) return undefined;
+    let args;
+    try { args = checker.getTypeArguments(type); } catch { args = type.typeArguments; }
+    return args && args.length ? args[0] : undefined;
+  };
+
+  // Would calling this expression be a boundary violation rather than a real
+  // "observable emitting a function"? True when the callee is a stream whose
+  // emitted value can't be called: a binding we lifted to a non-callable value,
+  // or a checker-visible observable whose T has no call signatures.
+  const calleeEmitsNonCallable = node => {
+    if (ts.isIdentifier(node) && nonCallableBindings.has(node.text)) return true;
+    const valueType = observableValueType(checker.getTypeAtLocation(node));
+    if (valueType) return checker.getSignaturesOfType(valueType, ts.SignatureKind.Call).length === 0;
+    return false;
+  };
 
   // Generates unique, readable param names within a single lifted expression.
   const freshNamer = () => {
@@ -127,13 +162,19 @@ function transformWithMappings(ts, sourceText, baseDir) {
     if (ts.isCallExpression(node)) {
       const callee = transformExpression(node.expression);
       const args = node.arguments.map(transformExpression);
-      if (callee.observable || args.some(a => a.observable)) {
+      // Only treat the callee as a function-emitting stream if its emission is
+      // actually callable. Calling a non-callable stream (e.g. a derived number)
+      // is a boundary violation — leave it verbatim so TS reports it against the
+      // stream type, which the teaching diagnostics then explain.
+      const calleeIsFnStream = callee.observable && !calleeEmitsNonCallable(node.expression);
+      const argsObservable = args.some(a => a.observable);
+      if (calleeIsFnStream || (!callee.observable && argsObservable)) {
         needed.rxjs.add('combineLatest');
         needed['rxjs/operators'].add('map');
         const fresh = freshNamer();
         const argParam = (argNode, i) => fresh(ts.isIdentifier(argNode) ? argNode.text : `_a${i}`);
 
-        if (callee.observable) {
+        if (calleeIsFnStream) {
           const fnParam = fresh(ts.isIdentifier(node.expression) ? node.expression.text : '_fn');
           const argParams = node.arguments.map(argParam);
           const sources = [callee.text, ...args.map(asStream)];
@@ -149,7 +190,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
           `.pipe(map(([${argParams.join(', ')}]) => ${callee.text}(${argParams.join(', ')})))`;
         return { text, observable: true, lifted: true };
       }
-      return { text: node.getText(sf), observable: false, lifted: false };
+      return { text: node.getText(sf), observable: isObservableExpr(node), lifted: false };
     }
 
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LIFTABLE) {
@@ -176,7 +217,8 @@ function transformWithMappings(ts, sourceText, baseDir) {
         const text =
           `combineLatest([${sources.join(', ')}])` +
           `.pipe(map(([${params.join(', ')}]) => ${params[0]} ${op} ${params[1]}))`;
-        return { text, observable: true, lifted: true };
+        // Arithmetic always emits a number — never callable.
+        return { text, observable: true, lifted: true, callable: false };
       }
       return { text: node.getText(sf), observable: false, lifted: false };
     }
@@ -189,7 +231,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
   const visit = node => {
     if (ts.isVariableDeclaration(node) && node.initializer) {
       const r = transformExpression(node.initializer);
-      if (r.observable && ts.isIdentifier(node.name)) observableBindings.add(node.name.text);
+      if (r.observable && ts.isIdentifier(node.name)) {
+        observableBindings.add(node.name.text);
+        if (r.callable === false) nonCallableBindings.add(node.name.text);
+      }
       if (r.lifted) {
         // Every imperative result is a RenderObservable: wrap the binding once.
         usedRender = true;
