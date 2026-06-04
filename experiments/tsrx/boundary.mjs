@@ -22,10 +22,13 @@ const COMPILER_OPTIONS = getCompilerOptions(ts);
 // so it lands as `RenderObservable<number> has no call signatures` here.
 const SOURCE = `import { Observable } from 'rxjs';
 declare const y: Observable<number>;
+const double = (n: number) => n * 2;
 const sum = y + 1;
 const a = sum.toFixed(2);
 const b = sum[0];
 const c = sum(1);
+const called = double(y);
+const d = called(1);
 const bad: string = 123;
 `;
 
@@ -80,9 +83,12 @@ check('indexing (sum[0]) → teaching message', !!index);
 check('  names the reactive type', !!index && index.headline.includes('RenderObservable<number>'));
 
 // Calling a non-callable stream isn't lifted (transform fix) → teaching message.
-const call = rewritten.find(r => r.headline.includes("calling a reactive value"));
-check('calling (sum(1)) → teaching message', !!call);
-check('  names the reactive type', !!call && call.headline.includes('RenderObservable<number>'));
+// Both an arithmetic-derived (sum) and a call-derived (called) binding qualify:
+// the emitted-type tracking must mark both non-callable.
+const calls = rewritten.filter(r => r.headline.includes("calling a reactive value"));
+check('calling (sum(1)) → teaching message', calls.length >= 1);
+check('  names the reactive type', calls.some(r => r.headline.includes('RenderObservable<number>')));
+check('calling a call-derived binding (called(1)) → teaching message', calls.length >= 2);
 
 // Unrelated type error is untouched.
 const badUntouched = !diagnostics.some(

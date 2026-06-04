@@ -110,6 +110,13 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return false;
   };
 
+  const typeIsCallable = type => Boolean(type) && checker.getSignaturesOfType(type, ts.SignatureKind.Call).length > 0;
+  // The return type of a callable type's first call signature, or undefined.
+  const returnTypeOf = type => {
+    const sigs = type ? checker.getSignaturesOfType(type, ts.SignatureKind.Call) : [];
+    return sigs.length ? sigs[0].getReturnType() : undefined;
+  };
+
   // Generates unique, readable param names within a single lifted expression.
   const freshNamer = () => {
     const used = new Set();
@@ -195,7 +202,12 @@ function transformWithMappings(ts, sourceText, baseDir) {
             'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
             fnParam, '(', argParams.join(', '), ')))',
           ];
-          return { pieces, observable: true, lifted: true };
+          // Emits the result of the emitted function. Only reliable when the
+          // callee is checker-visible as an observable (not a tracked binding,
+          // whose pre-transform type the checker can't see) — else leave unknown.
+          const fnType = observableValueType(checker.getTypeAtLocation(node.expression));
+          const callable = fnType ? typeIsCallable(returnTypeOf(fnType)) : undefined;
+          return { pieces, observable: true, lifted: true, callable };
         }
 
         const argParams = node.arguments.map(argParam);
@@ -204,7 +216,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
           'combineLatest([', ...sources, ']).pipe(map(([', argParams.join(', '), ']) => ',
           ...callee.pieces, '(', argParams.join(', '), ')))',
         ];
-        return { pieces, observable: true, lifted: true };
+        // Plain function over observable args: emits the function's return value.
+        // The callee is a real (non-observable) function, so its type is reliable.
+        const callable = typeIsCallable(returnTypeOf(checker.getTypeAtLocation(node.expression)));
+        return { pieces, observable: true, lifted: true, callable };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
