@@ -83,6 +83,13 @@ function transformWithMappings(ts, sourceText, baseDir) {
     [ts.SyntaxKind.PlusToken]: '+',
     [ts.SyntaxKind.TildeToken]: '~',
   };
+  // Short-circuiting operators: lifted lazily via switchMap (like the ternary) so
+  // the right-hand stream is only subscribed when the left actually selects it.
+  const LOGICAL = {
+    [ts.SyntaxKind.AmpersandAmpersandToken]: '&&',
+    [ts.SyntaxKind.BarBarToken]: '||',
+    [ts.SyntaxKind.QuestionQuestionToken]: '??',
+  };
 
   const fileName = path.join(baseDir, '__tsrx_virtual__.ts');
   const options = getCompilerOptions(ts);
@@ -204,6 +211,41 @@ function transformWithMappings(ts, sourceText, baseDir) {
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
+    // Template literal with an observable interpolation → combineLatest the
+    // observable parts and rebuild the string in map. The literal text tokens
+    // (head / middle / tail, including their backticks and ${}) are emitted
+    // verbatim, so escaping is preserved exactly; non-observable interpolations
+    // stay inline.
+    if (ts.isTemplateExpression(node)) {
+      const spans = node.templateSpans.map(s => ({ expr: transformExpression(s.expression), node: s.expression, literal: s.literal }));
+      if (spans.some(s => s.expr.observable)) {
+        needed.rxjs.add('combineLatest');
+        needed['rxjs/operators'].add('map');
+        const fresh = freshNamer();
+        const sources = [];
+        const params = [];
+        const subs = spans.map(s => {
+          if (!s.expr.observable) return { inline: s.expr.pieces };
+          const p = fresh(ts.isIdentifier(s.node) ? s.node.text : '_e');
+          sources.push(s.expr.pieces);
+          params.push(p);
+          return { param: p };
+        });
+        const body = [V(node.head)];
+        spans.forEach((s, i) => {
+          const sub = subs[i];
+          body.push(...(sub.param ? [sub.param] : sub.inline));
+          body.push(V(s.literal));
+        });
+        const pieces = [
+          'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
+          ...body, '))',
+        ];
+        return { pieces, observable: true, lifted: true, callable: false };
+      }
+      return { pieces: [V(node)], observable: false, lifted: false };
+    }
+
     // Function call. Plain function over observable args → map. An observable
     // *emitting a function* → combineLatest the fn stream with the arg streams
     // and apply the emitted function to the emitted args.
@@ -250,6 +292,31 @@ function transformWithMappings(ts, sourceText, baseDir) {
         const callable = typeIsCallable(returnTypeOf(checker.getTypeAtLocation(node.expression)));
         return { pieces, observable: true, lifted: true, callable };
       }
+      return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+    }
+
+    // Short-circuiting logical operator with an observable left → switchMap, so
+    // the right side is only subscribed when the left selects it.
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind in LOGICAL) {
+      const left = transformExpression(node.left);
+      const right = transformExpression(node.right);
+      if (left.observable) {
+        needed['rxjs/operators'].add('switchMap');
+        needed.rxjs.add('of');
+        const kind = LOGICAL[node.operatorToken.kind];
+        const p = ts.isIdentifier(node.left) ? node.left.text : '_l';
+        const keep = ['of(', p, ')']; // re-emit the left value
+        const other = asStream(right);
+        // && selects the right when left is truthy; || when falsy; ?? when nullish.
+        const cond = kind === '??' ? [p, ' != null'] : [p];
+        const [whenTrue, whenFalse] = kind === '&&' ? [other, keep] : [keep, other];
+        const pieces = [
+          ...left.pieces, '.pipe(switchMap(', p, ' => ', ...cond, ' ? ', ...whenTrue, ' : ', ...whenFalse, '))',
+        ];
+        // Branches may emit functions, so callability is left unknown.
+        return { pieces, observable: true, lifted: true };
+      }
+      // Left isn't a stream: a one-shot JS decision, not a lift. Leave verbatim.
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
