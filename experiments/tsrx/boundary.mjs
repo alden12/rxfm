@@ -15,17 +15,16 @@ const { rewriteBoundaryDiagnostic } = boundaryCjs;
 const here = dirname(fileURLToPath(import.meta.url));
 const COMPILER_OPTIONS = getCompilerOptions(ts);
 
-// `sum` becomes RenderObservable<number>; the following lines reach into it
-// imperatively (member access, indexing, calling) — the boundary — plus one
-// unrelated type error that must NOT be rewritten. The call case also guards a
-// transform fix: a non-callable stream must NOT be lifted as a function-stream,
-// so it lands as `RenderObservable<number> has no call signatures` here.
+// Member access / method calls / indexing now auto-lift (see members.mjs), so
+// the remaining boundary is *calling* a non-callable stream: it must NOT be
+// lifted as a function-stream, landing as `RenderObservable<number> has no call
+// signatures`, which we rewrite into a teaching message. Both an arithmetic-
+// derived (sum) and a call-derived (called) binding must be marked non-callable.
+// One unrelated type error guards that we don't rewrite things we shouldn't.
 const SOURCE = `import { Observable } from 'rxjs';
 declare const y: Observable<number>;
 const double = (n: number) => n * 2;
 const sum = y + 1;
-const a = sum.toFixed(2);
-const b = sum[0];
 const c = sum(1);
 const called = double(y);
 const d = called(1);
@@ -66,28 +65,14 @@ const check = (label, ok) => {
 
 console.log('=== boundary diagnostics ===');
 
-// Property access on a reactive value teaches "map over it".
-const prop = rewritten.find(r => r.headline.includes("'toFixed' isn't available"));
-check('property access (sum.toFixed) → teaching message', !!prop);
-check('  names the reactive type', !!prop && prop.headline.includes('RenderObservable<number>'));
-check('  suggests .pipe(map(...))', !!prop && prop.headline.includes('.pipe(map(v => v.toFixed))'));
-check(
-  '  keeps the original TS error nested',
-  !!prop && typeof prop.original.messageText !== 'undefined' &&
-    ts.flattenDiagnosticMessageText(prop.original.messageText, '\n').includes("Property 'toFixed' does not exist"),
-);
-
-// Indexing a reactive value teaches "map over it".
-const index = rewritten.find(r => r.headline.includes('indexing a reactive value'));
-check('indexing (sum[0]) → teaching message', !!index);
-check('  names the reactive type', !!index && index.headline.includes('RenderObservable<number>'));
-
 // Calling a non-callable stream isn't lifted (transform fix) → teaching message.
 // Both an arithmetic-derived (sum) and a call-derived (called) binding qualify:
 // the emitted-type tracking must mark both non-callable.
 const calls = rewritten.filter(r => r.headline.includes("calling a reactive value"));
 check('calling (sum(1)) → teaching message', calls.length >= 1);
 check('  names the reactive type', calls.some(r => r.headline.includes('RenderObservable<number>')));
+check('  keeps the original TS error nested', calls.some(r =>
+  ts.flattenDiagnosticMessageText(r.original.messageText, '\n').includes('has no call signatures')));
 check('calling a call-derived binding (called(1)) → teaching message', calls.length >= 2);
 
 // Unrelated type error is untouched.

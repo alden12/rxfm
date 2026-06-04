@@ -153,6 +153,27 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return sigs.length ? sigs[0].getReturnType() : undefined;
   };
 
+  // The RxJS Observable/Subject surface — members that operate on the STREAM
+  // itself, not the value it emits. Used only as a fallback for tracked bindings
+  // whose pre-transform type the checker can't see; checker-visible observables
+  // are asked directly. (A tracked binding emitting an object with a field named
+  // like one of these — e.g. `.value` — would be read as a stream op; rare.)
+  const STREAM_MEMBERS = new Set([
+    'subscribe', 'pipe', 'forEach', 'lift', 'toPromise', 'asObservable', 'source', 'operator',
+    'next', 'error', 'complete', 'value', 'getValue', 'closed', 'observed',
+    'hasError', 'thrownError', 'unsubscribe', 'observers',
+  ]);
+
+  // For `obj.member` where obj is a stream: does `member` target the emitted
+  // value (→ lift via map) rather than the stream API (→ leave, it's .pipe/.value
+  // etc.)? Ask the checker when obj is checker-visible as an observable; else
+  // fall back to the known RxJS surface.
+  const memberTargetsValue = (objNode, name) => {
+    const t = checker.getTypeAtLocation(objNode);
+    if (isObservableType(t)) return !t.getProperty(name);
+    return !STREAM_MEMBERS.has(name);
+  };
+
   // Generates unique, readable param names within a single lifted expression.
   const freshNamer = () => {
     const used = new Set();
@@ -250,6 +271,29 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // *emitting a function* → combineLatest the fn stream with the arg streams
     // and apply the emitted function to the emitted args.
     if (ts.isCallExpression(node)) {
+      // Method call on a stream: obj.method(args) where obj is observable and
+      // method targets the emitted value → call it ON the emitted value (so
+      // `this` is preserved), rather than extracting the method off the stream.
+      const ex = node.expression;
+      if (ts.isPropertyAccessExpression(ex)) {
+        const obj = transformExpression(ex.expression);
+        if (obj.observable && memberTargetsValue(ex.expression, ex.name.text)) {
+          needed.rxjs.add('combineLatest');
+          needed['rxjs/operators'].add('map');
+          const fresh = freshNamer();
+          const objParam = fresh(ts.isIdentifier(ex.expression) ? ex.expression.text : '_o');
+          const args = node.arguments.map(transformExpression);
+          const argParams = node.arguments.map((a, i) => fresh(ts.isIdentifier(a) ? a.text : `_a${i}`));
+          const sources = joinPieces([obj.pieces, ...args.map(asStream)], ', ');
+          const params = [objParam, ...argParams];
+          const pieces = [
+            'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
+            objParam, '.', V(ex.name), '(', argParams.join(', '), ')))',
+          ];
+          return { pieces, observable: true, lifted: true };
+        }
+      }
+
       const callee = transformExpression(node.expression);
       const args = node.arguments.map(transformExpression);
       // Only treat the callee as a function-emitting stream if its emission is
@@ -291,6 +335,41 @@ function transformWithMappings(ts, sourceText, baseDir) {
         // The callee is a real (non-observable) function, so its type is reliable.
         const callable = typeIsCallable(returnTypeOf(checker.getTypeAtLocation(node.expression)));
         return { pieces, observable: true, lifted: true, callable };
+      }
+      return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+    }
+
+    // Property access on a stream → map out the field (the RxFM "extract a field
+    // from an object observable" pattern), unless the member is a stream-API one.
+    if (ts.isPropertyAccessExpression(node)) {
+      const obj = transformExpression(node.expression);
+      if (obj.observable && memberTargetsValue(node.expression, node.name.text)) {
+        needed['rxjs/operators'].add('map');
+        const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
+        const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '.', V(node.name), '))'];
+        return { pieces, observable: true, lifted: true };
+      }
+      return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+    }
+
+    // Element access on a stream → map out the indexed value (index may itself
+    // be a stream, in which case combineLatest both).
+    if (ts.isElementAccessExpression(node)) {
+      const obj = transformExpression(node.expression);
+      if (obj.observable) {
+        needed['rxjs/operators'].add('map');
+        const index = transformExpression(node.argumentExpression);
+        const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
+        if (index.observable) {
+          needed.rxjs.add('combineLatest');
+          const pieces = [
+            'combineLatest([', ...joinPieces([obj.pieces, asStream(index)], ', '),
+            ']).pipe(map(([', p, ', _i]) => ', p, '[_i]))',
+          ];
+          return { pieces, observable: true, lifted: true };
+        }
+        const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '[', ...index.pieces, ']))'];
+        return { pieces, observable: true, lifted: true };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
