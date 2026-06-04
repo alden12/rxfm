@@ -23,7 +23,11 @@
         ],
         "extensions": [
           ".tsrx"
-        ]
+        ],
+        "icon": {
+          "light": "./icons/tsrx.svg",
+          "dark": "./icons/tsrx.svg"
+        }
       }
     ],
     "grammars": [
