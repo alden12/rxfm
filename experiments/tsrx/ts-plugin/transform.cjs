@@ -105,7 +105,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // "observable-emitting-a-function" call lift for them, letting the imperative
   // boundary surface instead (RenderObservable<number> has no call signatures).
   const nonCallableBindings = new Set();
-  const needed = { rxjs: new Set(), 'rxjs/operators': new Set() };
+  const needed = { rxjs: new Set(), 'rxjs/operators': new Set(), rxfm: new Set() };
   const edits = [];
   let usedRender = false;
 
@@ -172,6 +172,52 @@ function transformWithMappings(ts, sourceText, baseDir) {
     const t = checker.getTypeAtLocation(objNode);
     if (isObservableType(t)) return !t.getProperty(name);
     return !STREAM_MEMBERS.has(name);
+  };
+
+  // Structural test for a DOM element type — RxFM components emit these.
+  const isElementValueType = type =>
+    Boolean(type && type.getProperty && type.getProperty('nodeType') &&
+      (type.getProperty('tagName') || type.getProperty('nodeName')));
+
+  // Does this function expression return a component (an Observable of a DOM
+  // element)? Excludes `any` (which a value-mapping callback gets, since its item
+  // param is untyped once `.map` fails to resolve on Observable). Reliable because
+  // component creators (Div, …) are typed regardless of the item param.
+  const returnsComponent = fnNode => {
+    const sig = checker.getSignatureFromDeclaration(fnNode);
+    if (!sig) return false;
+    const ret = checker.getReturnTypeOfSignature(sig);
+    if (ret.flags & ts.TypeFlags.Any) return false;
+    return isElementValueType(observableValueType(ret));
+  };
+
+  // Side-effect-free observability for a member/method/index chain: true when the
+  // chain roots in an observable (so the whole thing lifts to stay observable).
+  // Lets `items.filter(...).map(...)` be recognised, where the checker can't type
+  // the derived receiver directly.
+  const isObservableChain = node => {
+    if (!node) return false;
+    if (isObservableExpr(node)) return true;
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+      return isObservableChain(node.expression.expression);
+    }
+    if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+      return isObservableChain(node.expression);
+    }
+    if (ts.isParenthesizedExpression(node)) return isObservableChain(node.expression);
+    return false;
+  };
+
+  // Is this `obj.map(cb, key?)` where obj is a stream and cb returns a component?
+  // Such a call is the imperative way to render a list — lift it to
+  // mapToComponents (keyed reconciliation) rather than a naive array map.
+  const isComponentMapCall = node => {
+    if (!ts.isCallExpression(node) || node.arguments.length < 1) return false;
+    const ex = node.expression;
+    if (!ts.isPropertyAccessExpression(ex) || ex.name.text !== 'map') return false;
+    const cb = node.arguments[0];
+    if (!ts.isArrowFunction(cb) && !ts.isFunctionExpression(cb)) return false;
+    return isObservableChain(ex.expression) && returnsComponent(cb);
   };
 
   // Generates unique, readable param names within a single lifted expression.
@@ -271,6 +317,12 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // *emitting a function* → combineLatest the fn stream with the arg streams
     // and apply the emitted function to the emitted args.
     if (ts.isCallExpression(node)) {
+      // A component call (Div(...), Span(...), …) is a structure, not a value to
+      // lift: its observable arguments are reactive children RxFM renders, and any
+      // nested component-map is handled by `visit`. Leave it verbatim.
+      if (isElementValueType(observableValueType(checker.getTypeAtLocation(node)))) {
+        return { pieces: [V(node)], observable: true, lifted: false };
+      }
       // Method call on a stream: obj.method(args) where obj is observable and
       // method targets the emitted value → call it ON the emitted value (so
       // `this` is preserved), rather than extracting the method off the stream.
@@ -282,13 +334,21 @@ function transformWithMappings(ts, sourceText, baseDir) {
           needed['rxjs/operators'].add('map');
           const fresh = freshNamer();
           const objParam = fresh(ts.isIdentifier(ex.expression) ? ex.expression.text : '_o');
-          const args = node.arguments.map(transformExpression);
-          const argParams = node.arguments.map((a, i) => fresh(ts.isIdentifier(a) ? a.text : `_a${i}`));
-          const sources = joinPieces([obj.pieces, ...args.map(asStream)], ', ');
-          const params = [objParam, ...argParams];
+          // Function-expression args are callbacks (arr.map/filter's fn): keep
+          // them inline so they stay contextually typed; only stream args become
+          // combineLatest sources.
+          const sources = [obj.pieces];
+          const params = [objParam];
+          const callArgs = node.arguments.map((argNode, i) => {
+            if (ts.isArrowFunction(argNode) || ts.isFunctionExpression(argNode)) return [V(argNode)];
+            const p = fresh(ts.isIdentifier(argNode) ? argNode.text : `_a${i}`);
+            sources.push(asStream(transformExpression(argNode)));
+            params.push(p);
+            return [p];
+          });
           const pieces = [
-            'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
-            objParam, '.', V(ex.name), '(', argParams.join(', '), ')))',
+            'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
+            objParam, '.', V(ex.name), '(', ...joinPieces(callArgs, ', '), ')))',
           ];
           return { pieces, observable: true, lifted: true };
         }
@@ -441,11 +501,49 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
   }
 
+  // Rewrite `obj.map(cb, key?)` → `obj.pipe(mapToComponents(cb, key?))`, keeping
+  // cb/key in place and lifting cb's body with its item/index params treated as
+  // observables. mapToComponents gives keyed reconciliation; the optional second
+  // arg (id prop name or id function) maps onto its idPropOrFunction, defaulting
+  // to index when omitted. Done with edge edits so it composes with the inner
+  // body edits without overlap.
+  const handleComponentMap = node => {
+    const ex = node.expression;     // obj.map
+    const obj = ex.expression;      // obj
+    const cb = node.arguments[0];   // arrow / function expression
+    needed.rxfm.add('mapToComponents');
+    // Lift the receiver if it's itself an imperative expression (e.g. a filter).
+    const objR = transformExpression(obj);
+    if (objR.lifted) edits.push({ start: obj.getStart(sf), end: obj.getEnd(), pieces: objR.pieces });
+    // `.map` → `.pipe(mapToComponents` (the original `(` stays); final `)` → `))`.
+    edits.push({ start: obj.getEnd(), end: ex.getEnd(), pieces: ['.pipe(mapToComponents'] });
+    edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ['))'] });
+    // Lift the callback body with its params (item, index) treated as observables,
+    // scoped so the marking doesn't leak past this callback.
+    const params = cb.parameters.map(p => p.name.getText(sf));
+    const added = params.filter(p => !observableBindings.has(p));
+    added.forEach(p => observableBindings.add(p));
+    visit(cb.body);
+    added.forEach(p => observableBindings.delete(p));
+    // The key arg (if any) operates on the plain item value — left verbatim.
+  };
+
   // Lift variable initializers anywhere — including inside function bodies, since
   // a component is a function. Walk top-down so declarations are seen in source
   // order (so a binding is known observable before later statements use it).
   const visit = node => {
+    // Component-list map in any expression position (e.g. a child argument).
+    if (isComponentMapCall(node)) {
+      handleComponentMap(node);
+      return;
+    }
     if (ts.isVariableDeclaration(node) && node.initializer) {
+      // `const list = items.map(item => <component>)` — a component array binding.
+      if (isComponentMapCall(node.initializer)) {
+        if (ts.isIdentifier(node.name)) observableBindings.add(node.name.text);
+        handleComponentMap(node.initializer);
+        return;
+      }
       const r = transformExpression(node.initializer);
       if (r.observable && ts.isIdentifier(node.name)) {
         observableBindings.add(node.name.text);
@@ -510,6 +608,8 @@ function transformWithMappings(ts, sourceText, baseDir) {
   if (rxjsNew.length) importLines.push(`import { ${rxjsNew.join(', ')} } from "rxjs";`);
   const opNew = newNames('rxjs/operators', needed['rxjs/operators']);
   if (opNew.length) importLines.push(`import { ${opNew.join(', ')} } from "rxjs/operators";`);
+  const rxfmNew = newNames('rxfm', needed.rxfm);
+  if (rxfmNew.length) importLines.push(`import { ${rxfmNew.join(', ')} } from "rxfm";`);
   const importBlock = importLines.length ? importLines.join('\n') + '\n' : '';
 
   edits.sort((a, b) => a.start - b.start);

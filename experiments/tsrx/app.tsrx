@@ -14,6 +14,10 @@ const Showcase = () => {
     name: 'Ada',
     roles: ['admin', 'editor', 'viewer'],
   });
+  const todos = new BehaviorSubject<{ id: number; text: string; done: boolean }[]>([
+    { id: 1, text: 'Learn tsrx', done: true },
+    { id: 2, text: 'Render a list', done: false },
+  ]);
 
   // ── Tier 1 — operators: arithmetic, comparison, unary ───────────────────
   const doubled = count * 2;       // arithmetic
@@ -45,8 +49,18 @@ const Showcase = () => {
     Div(line2),
     Div(line3),
     Div(line4),
+    // Array → list: `.map` lifts to mapToComponents (keyed by 'id'), and the
+    // callback's `todo` is treated as an observable so its fields lift.
+    Div`Todos:`,
+    todos.map(todo => Div`  ${todo.done ? '✓' : '○'} ${todo.text}`, 'id'),
     Button`count +1`.pipe(
       event.click(() => count.next(count.value + 1)),
+    ),
+    Button`add todo`.pipe(
+      event.click(() => todos.next([
+        ...todos.value,
+        { id: todos.value.length + 1, text: `Item ${todos.value.length + 1}`, done: false },
+      ])),
     ),
     Button`toggle nickname (${user.nickname ?? 'no nickname'})`.pipe(
       event.click(() => user.next({
