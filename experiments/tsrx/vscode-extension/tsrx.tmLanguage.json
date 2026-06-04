@@ -1,7 +1,0 @@
-{
-  "name": "TSRX",
-  "scopeName": "source.tsrx",
-  "patterns": [
-    { "include": "source.ts" }
-  ]
-}

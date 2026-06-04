@@ -30,7 +30,7 @@
       {
         "language": "tsrx",
         "scopeName": "source.tsrx",
-        "path": "./tsrx.tmLanguage.json"
+        "path": "./TypeScript.tmLanguage.json"
       }
     ],
     "typescriptServerPlugins": [

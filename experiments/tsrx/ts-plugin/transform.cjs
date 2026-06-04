@@ -260,17 +260,24 @@ function mapSourceToGenerated(segments, srcOffset) {
 }
 
 // Convert our segment table into Volar's CodeMapping[] format.
+//
+// Identity segments map 1:1, so they carry full language features. Rewritten
+// segments map coarsely (whole source span ↔ whole generated span), so per-offset
+// features would land on the wrong characters — most visibly, semantic-highlight
+// tokens smear across the source. We disable position-sensitive features there
+// (semantic/navigation/completion) and keep only verification, so genuine type
+// errors still surface; the TextMate grammar handles colouring those spans.
 function segmentsToVolarMappings(segments) {
-  const all = { completion: true, format: false, navigation: true, semantic: true, structure: true, verification: true };
+  const full = { completion: true, format: false, navigation: true, semantic: true, structure: true, verification: true };
+  const coarse = { completion: false, format: false, navigation: false, semantic: false, structure: false, verification: true };
   const mappings = [];
   for (const seg of segments) {
     if (seg.identity) {
-      mappings.push({ sourceOffsets: [seg.srcStart], generatedOffsets: [seg.genStart], lengths: [seg.length], data: all });
+      mappings.push({ sourceOffsets: [seg.srcStart], generatedOffsets: [seg.genStart], lengths: [seg.length], data: full });
     } else {
-      // Rewritten span: map the whole source span onto the whole generated span.
       mappings.push({
         sourceOffsets: [seg.srcStart], generatedOffsets: [seg.genStart],
-        lengths: [seg.srcLen], generatedLengths: [seg.genLen], data: all,
+        lengths: [seg.srcLen], generatedLengths: [seg.genLen], data: coarse,
       });
     }
   }
