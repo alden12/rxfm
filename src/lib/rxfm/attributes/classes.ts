@@ -64,17 +64,14 @@ export function classes<T extends ElementType>(
   return componentOperator(element => {
     const symbol = Symbol('Classes Operator');
 
-    let classNames: ClassType[] = [];
-    if (Array.isArray(stringsOrFirstClassName)) {
-      classNames = (stringsOrFirstClassName as TemplateStringsArray)
+    const classNames: ClassType[] = Array.isArray(stringsOrFirstClassName)
+      ? (stringsOrFirstClassName as TemplateStringsArray)
         .reduce<ClassType[]>((acc, str, i) => {
           acc.push(str);
           if (otherClassNames[i]) acc.push(otherClassNames[i]);
           return acc;
-        }, []);
-    } else {
-      classNames = [stringsOrFirstClassName as ClassType, ...otherClassNames];
-    }
+        }, [])
+      : [stringsOrFirstClassName as ClassType, ...otherClassNames];
 
     return classTypesToSetObservable(classNames).pipe(
       startWith(new Set<string>()),
