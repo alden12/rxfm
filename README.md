@@ -1,9 +1,14 @@
 # RxFM - A Web Framework Built on RxJS
 
-![Node.js CI](https://github.com/alden12/rxfm/workflows/Node.js%20CI/badge.svg?branch=master)
+[![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
 [![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
 [![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
+
+> ⚠️ **Alpha release.** This is the `3.0.0-alpha` line — an in-progress redesign (Vite build, no
+> JSX, a new fluent component API). The API may change between alpha versions. For the current
+> **stable release** and its **JSX/TSX syntax**, see the
+> [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
 
 RxFM is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
@@ -16,8 +21,10 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 * Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Works best with [TypeScript](https://www.typescriptlang.org/).
 
-> **Note:** As of `3.0.0` RxFM no longer ships JSX/TSX support — components are written with the
-> plain function API documented below. JSX may return in a redesigned form in a future release.
+> **Note:** As of the `3.0.0` alpha line RxFM no longer ships JSX/TSX support — components are
+> written with the plain function API documented below. For JSX/TSX, use the stable
+> [v2.1.1 release](https://github.com/alden12/rxfm/blob/v2.1.1/README.md). JSX may return in a
+> redesigned form in a future release.
 
 ---
 
@@ -87,30 +94,30 @@ const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
 ---
 
 ## State & Events
-State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. The `event` operator function lets us handle element events.
+State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. Element creators expose fluent methods for handling events — for every DOM event there's a matching `on<Event>` method (`onClick`, `onInput`, …):
 
 ```typescript
-import { Button, event } from 'rxfm';
+import { Button } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
 const ClickCounter = () => {
   const clicks = new BehaviorSubject(0);
 
-  return Button`Clicks: ${clicks}`.pipe(
-    event('click', () => clicks.next(clicks.value + 1)),
-  );
+  return Button.onClick(() => clicks.next(clicks.value + 1))`Clicks: ${clicks}`;
 };
 ```
 
-Here the `event` operator is what I've called a "component operator". These are operator functions taking a component observable, processing its element in some way, and returning the same component observable. In this case the component operator adds an event listener to the element.
-
-The `event` operator also allows each event type to be accessed as a property:
+These fluent methods are sugar for "component operators" applied via `.pipe`. A component operator is an operator function taking a component observable, processing its element in some way (here, adding an event listener), and returning the same component observable. The example above is equivalent to using the `event` operator directly:
 
 ```typescript
+import { Button, event } from 'rxfm';
+
 Button`Clicks: ${clicks}`.pipe(
   event.click(() => clicks.next(clicks.value + 1)),
 );
 ```
+
+The fluent methods can be chained, so several may be combined (`Button.onClick(handleClick).onMouseenter(handleHover)`), and a generic `on(type, handler)` form is available for dynamic event types.
 
 When components store state like this, they should be declared as functions as above so that instances of the component don't interfere with each-other.
 
@@ -121,39 +128,34 @@ Using Subjects to store state gives us an advantage over React in that we don't 
 ---
 
 ## Attributes & Styling
-Element attributes and styling can be set using operator functions imported from `rxfm`:
+Element styles, CSS classes, and attributes can be set using fluent methods on element creators:
 
 ```typescript
-import { styles, classes, attributes, Div, Input } from 'rxfm';
+import { Div, Input } from 'rxfm';
 ```
 
 ```typescript
-const StylesExample = Div`We can add styles`.pipe(
-  styles({
-    color: 'blue',
-    fontStyle: 'italic',
-  }),
-);
+const StylesExample = Div.style({
+  color: 'blue',
+  fontStyle: 'italic',
+})`We can add styles`;
 ```
 
 ```typescript
-const ClassExample = Div`We can add CSS classes`.pipe(
-  classes('example-class'),
-);
+const ClassExample = Div.class('example-class')`We can add CSS classes`;
 ```
+
+Each known attribute has its own method, and they chain like the event methods:
 
 ```typescript
-const AttributesExample = Input().pipe(
-  attributes({
-    type: 'text',
-    placeholder: 'We can set element attributes',
-  }),
-);
+const AttributesExample = Input
+  .type('text')
+  .placeholder('We can set element attributes')();
 ```
 
-Style, attributes and CSS class values may be strings, or they can be observables to set them dynamically.
+Style, attribute and CSS class values may be strings, or they can be observables to set them dynamically. A generic `attr(name, value)` method covers attributes outside the typed set (`data-*`, `aria-*`, and other custom attributes).
 
-We can also access individual operators for styles and attributes, as well as using the tagged template syntax:
+Like the event methods, `style`, `class`, and the attribute methods are sugar for the `styles`, `classes`, and `attribute` component operators, which can also be applied directly via `.pipe`. The operator forms additionally support a tagged template syntax and let us access individual style and attribute properties:
 
 ```typescript
 const StyleExample = Div`We access styles as properties and use tagged templates`.pipe(
@@ -227,10 +229,10 @@ interface OptionButtonProps {
   active: Observable<boolean>;
 }
 
-const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
-  event.click(() => setOption(option)),
-  classes`option-button ${conditional(active, 'active')}`,
-);
+const OptionButton = ({ option, setOption, active }: OptionButtonProps) =>
+  Button
+    .onClick(() => setOption(option))
+    .class('option-button', conditional(active, 'active'))(option);
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
@@ -253,9 +255,7 @@ const ComponentIOExample = () => {
 Component children can be passed in using the `ComponentChild` type. A variable number of component children can be passed in using a spread array:
 
 ```typescript
-const Card = (...children: ComponentChild[]) => Div(...children).pipe(
-  classes`card`,
-);
+const Card = (...children: ComponentChild[]) => Div.class('card')(...children);
 ```
 
 [Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/component-io.ts) | [Live Demo](https://alden12.github.io/rxfm/)
