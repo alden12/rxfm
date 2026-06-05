@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha.1] - 2026-06-05
+
+### Added
+- Fluent event methods on element creators: `` Div.onClick(handler)`text` `` is sugar for
+  `` Div`text`.pipe(event.click(handler)) ``. Every event in `ElementEventMap` has a corresponding
+  `on<EventName>` method (`onClick`, `onInput`, …), plus a generic `on(type, handler)` form, and
+  the methods may be chained (`Button.onClick(a).onMouseenter(b)`). The new `chainable` helper and
+  `ChainableComponentCreator` type are exported for use with custom component creators.
+- Fluent `class` method on element creators: `` Div.class('btn', isActive)`text` `` is sugar for
+  `` Div`text`.pipe(classes('btn', isActive)) ``, taking the same arguments as the `classes`
+  operator and chainable with the event methods.
+- Fluent `style` method (`` Div.style({ color: 'red' })`text` `` → `styles(...)`) and per-attribute
+  methods (`` Input.type('text').placeholder('…')() `` → the `attribute` operator) on element
+  creators, chainable with the event and class methods. A generic `attr(name, value)` method covers
+  attributes not in the typed map (`data-*`, `aria-*`, and other custom attributes).
+
 ## [3.0.0-alpha.0] - 2026-06-04
 
 ### Removed

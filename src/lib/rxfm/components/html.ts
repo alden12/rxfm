@@ -1,14 +1,17 @@
-import { componentCreator, ComponentCreator, componentFunction } from "./component";
+import { componentCreator, componentFunction } from "./component";
+import { chainable, ChainableComponentCreator } from "./chainable-creator";
 
 /**
- * A function to return a component creator for an HTML element with the given tag name.
+ * A function to return a component creator for an HTML element with the given tag name. The creator
+ * supports the standard call and tagged template syntax for children, plus fluent event methods
+ * such as `Div.onClick(handler)`.
  */
 export function htmlComponentCreator<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-): ComponentCreator<HTMLElementTagNameMap[K]> {
-  return componentCreator(
+): ChainableComponentCreator<HTMLElementTagNameMap[K]> {
+  return chainable(componentCreator(
     componentFunction(() => document.createElement(tagName)),
-  );
+  ));
 }
 
 export const A = htmlComponentCreator('a');

@@ -1,15 +1,14 @@
-import { Div, styles, classes, Input, attributes, style, attribute } from 'rxfm';
+import { Div, classes, Input, attributes, style, attribute } from 'rxfm';
 import { timer } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import './example-styles.css';
 
-export const StylesExample = Div`We can add styles`.pipe(
-  styles({
-    color: 'blue',
-    fontStyle: 'italic',
-  })
-);
+// The fluent `style` method is sugar for the `styles` operator.
+export const StylesExample = Div.style({
+  color: 'blue',
+  fontStyle: 'italic',
+})`We can add styles`;
 
 export const DynamicStyles = Div`Styles can be dynamic`.pipe(
   style('color', timer(0, 1000).pipe(map(i => i % 2 ? 'red' : 'blue'))),
@@ -19,27 +18,22 @@ export const StyleExample = Div`We access styles as properties and use tagged te
   style.color`blue`,
 );
 
-export const ClassExample = Div`We can add CSS classes`.pipe(
-  classes('example-class'),
-);
+// The fluent `class` method is sugar for the `classes` operator.
+export const ClassExample = Div.class('example-class')`We can add CSS classes`;
 
 export const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
   classes`example-class`,
 );
 
-export const DynamicClasses = Div`Classes can be dynamic`.pipe(
-  classes(
-    'example-class',
-    timer(0, 1000).pipe(map(i => i % 2 ? 'another-class' : null)),
-  ),
-);
+export const DynamicClasses = Div.class(
+  'example-class',
+  timer(0, 1000).pipe(map(i => i % 2 ? 'another-class' : null)),
+)`Classes can be dynamic`;
 
-export const AttributesExample = Input().pipe(
-  attributes({
-    type: 'text',
-    placeholder: 'We can set element attributes'
-  }),
-);
+// Per-attribute fluent methods are sugar for the `attribute` operator.
+export const AttributesExample = Input
+  .type('text')
+  .placeholder('We can set element attributes')();
 
 export const DynamicAttributes = Input().pipe(
   attributes({
