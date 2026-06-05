@@ -14,7 +14,7 @@ const getOffsetCell = (board: MinesweeperBoard, cellCoords: Vector, offset: Vect
   const cell = board[coords[0]] ? board[coords[0]][coords[1]] : undefined;
   if (!cell) return undefined;
   return { cell, coords };
-}
+};
 
 const getNeighboringCells = (board: MinesweeperBoard, cellCoords: Vector): OffsetCell[] => NEIGHBOR_VECTORS
   .map(vector => getOffsetCell(board, cellCoords, vector))
@@ -24,7 +24,7 @@ export const setCellNeighbors = (board: MinesweeperBoard, [x, y]: Vector) => {
   const neighboringCells = getNeighboringCells(board, [x, y]);
   const neighbors = neighboringCells.reduce((count, { cell }) => count + Number(Boolean(cell.isMine)), 0);
   board[x][y] = board[x][y].updateNeighbors(neighbors);
-}
+};
 
 export const getEmptyBoard = (): MinesweeperBoard => Array(BOARD_WIDTH)
   .fill(undefined)
@@ -44,7 +44,7 @@ export const clearEmptyCells = (board: MinesweeperBoard, [x, y]: Vector, clone =
     }
   }
   return newBoard;
-}
+};
 
 export const clearNeighbors = (board: MinesweeperBoard, [x, y]: Vector): MinesweeperBoard | null => {
   const cell = board[x][y];

@@ -43,7 +43,7 @@ class MinesweeperGame {
     const board = getEmptyBoard();
     const mines = placeRandomMines(MINE_COUNT, startingCell);
     mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('unflaggedMine'));
-    board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])))
+    board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])));
     return new MinesweeperGame(board, Date.now(), 'playing').clearCells(startingCell);
   }
 
@@ -58,7 +58,7 @@ class MinesweeperGame {
   private toggleFlagged([x, y]: Vector) {
     const previousCell = this.board[x][y];
     if (!previousCell.isCleared) {
-      return this.updateCell([x, y], previousCell.toggleFlagged())
+      return this.updateCell([x, y], previousCell.toggleFlagged());
     }
     return this;
   }
