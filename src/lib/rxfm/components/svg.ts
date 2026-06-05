@@ -1,16 +1,19 @@
-import { componentCreator, ComponentCreator, componentFunction } from "./component";
+import { componentCreator, componentFunction } from "./component";
+import { chainable, ChainableComponentCreator } from "./chainable-creator";
 
 const SVGNamespace = 'http://www.w3.org/2000/svg';
 
 /**
- * A function to return a component creator for an SVG element with the given tag name.
+ * A function to return a component creator for an SVG element with the given tag name. The creator
+ * supports the standard call and tagged template syntax for children, plus fluent event methods
+ * such as `Circle.onClick(handler)`.
  */
 export function svgComponentCreator<K extends keyof SVGElementTagNameMap>(
   tagName: K,
-): ComponentCreator<SVGElementTagNameMap[K]> {
-  return componentCreator(
+): ChainableComponentCreator<SVGElementTagNameMap[K]> {
+  return chainable(componentCreator(
     componentFunction(() => document.createElementNS(SVGNamespace, tagName)),
-  );
+  ));
 }
 
 export const SvgA = svgComponentCreator('a');
