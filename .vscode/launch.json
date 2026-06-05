@@ -6,9 +6,9 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/experiments/tsrx/vscode-extension",
+        "--extensionDevelopmentPath=${workspaceFolder}/tsrx/vscode-extension",
         "${workspaceFolder}",
-        "${workspaceFolder}/experiments/tsrx/example.tsrx"
+        "${workspaceFolder}/tsrx/example.tsrx"
       ]
     }
   ]

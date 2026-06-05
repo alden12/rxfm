@@ -6,7 +6,7 @@ import { tsrx } from './vite-plugin-tsrx.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '../..');
 
-// Run the tsrx demo:  npx vite --config experiments/tsrx/vite.tsrx.config.mjs
+// Run the tsrx demo:  npx vite --config tsrx/vite.tsrx.config.mjs
 export default defineConfig({
   root: here,
   plugins: [tsrx()],

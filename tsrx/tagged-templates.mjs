@@ -3,7 +3,7 @@
 // RxFM components use tagged templates for children (Div`hi ${x}`). Imperative
 // observable interpolations are lifted individually (so RxFM renders each as a
 // reactive child), while plain observables and non-observable interpolations are
-// left untouched. Run: node experiments/tsrx/tagged-templates.mjs — exits non-zero on failure.
+// left untouched. Run: node tsrx/tagged-templates.mjs — exits non-zero on failure.
 import ts from 'typescript';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';

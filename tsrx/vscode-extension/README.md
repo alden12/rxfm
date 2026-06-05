@@ -19,27 +19,52 @@ const w = x + z;   // hover ⇒ const w: Observable<number>   (propagated throug
 
 `y + z` shows **no** "Operator '+' cannot be applied to Observable" error.
 
-## Run it
+## Install it (no dev host)
+
+Build a `.vsix` and install it into your real VS Code — no Extension Development
+Host needed:
 
 ```sh
-# 1. install the tsserver plugin's deps (@volar/typescript)
-cd experiments/tsrx/ts-plugin && npm install
+# 1. install the tsserver plugin's deps (@volar/typescript), used by the bundler
+cd tsrx/ts-plugin && npm install
 
-# 2. install the extension (links tsrx-ts-plugin)
-cd ../vscode-extension && npm install
+# 2. install build deps and produce the .vsix
+cd ../vscode-extension && npm install && npm run package
+```
+
+This bundles the `tsrx-ts-plugin` tsserver plugin self-contained (Volar inlined,
+`typescript` left to the host) into `node_modules/tsrx-ts-plugin/` and emits
+`tsrx-vscode-<version>.vsix`. Install it with either:
+
+```sh
+code --install-extension tsrx-vscode-0.0.1.vsix
+```
+
+…or the Extensions view → **⋯** → **Install from VSIX…**. Then open any `.tsrx`
+file and hover the bindings.
+
+## Develop it (Extension Development Host)
+
+```sh
+cd tsrx/ts-plugin && npm install
+cd ../vscode-extension && npm install && npm run build   # build generates the plugin folder
 ```
 
 Then in VS Code:
 
-1. Open the `experiments/tsrx/vscode-extension` folder.
+1. Open the `tsrx/vscode-extension` folder.
 2. Press **F5** ("Run Extension") to launch the **Extension Development Host**.
-3. In that window, open `experiments/tsrx/example.tsrx`.
+3. In that window, open `tsrx/example.tsrx`.
 4. Hover `x` / `w` — you should see `Observable<number>`.
+
+> `npm run build` is what produces `node_modules/tsrx-ts-plugin/` (the bundled
+> plugin tsserver loads by name); F5 and the packaged `.vsix` run identical code.
+> Re-run it after editing anything under `../ts-plugin`.
 
 > The plugin loads for VS Code's **bundled** TypeScript automatically. If you've
 > selected a workspace TS version, `enableForWorkspaceTypeScriptVersions` keeps
 > it working. If types don't appear, run **"TypeScript: Restart TS Server"** from
-> the command palette in the dev-host window.
+> the command palette.
 
 ## Known limitations (it's a spike)
 

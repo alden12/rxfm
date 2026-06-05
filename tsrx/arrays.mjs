@@ -4,7 +4,7 @@
 // lifts to mapToComponents (keyed reconciliation) with the callback's item param
 // treated as an observable. A second arg supplies the key (prop name or fn),
 // defaulting to index. Value-maps (i => i.name) stay naive array maps.
-// Run: node experiments/tsrx/arrays.mjs — exits non-zero on failure.
+// Run: node tsrx/arrays.mjs — exits non-zero on failure.
 import ts from 'typescript';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';

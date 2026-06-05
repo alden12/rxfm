@@ -4,7 +4,7 @@
 // tsserver plugin runs), then uses its Volar `mappings` to map a source hover
 // position into the generated TS and asks the TS language service for the type.
 // If this passes, the only unverified bit left is VS Code's packaging/wiring.
-// Run: node experiments/tsrx/verify-plugin.mjs
+// Run: node tsrx/verify-plugin.mjs
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

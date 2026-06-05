@@ -10,13 +10,35 @@
 // tracked ourselves (the propagation table).
 'use strict';
 const path = require('node:path');
+const fs = require('node:fs');
 
-// The runtime module the generated code imports `render` from. We emit a
-// relative specifier from each .tsrx file's directory so it resolves in both the
-// headless harness and the editor.
-const RUNTIME_PATH = path.join(__dirname, '..', 'runtime.ts');
+// The runtime module the generated code imports `render` from. We emit a relative
+// specifier from each .tsrx file's directory so it resolves in both the headless
+// harness and the editor.
+//
+// The runtime is located by walking up from the .tsrx file's OWN directory, not
+// relative to this module — the plugin is bundled into the VS Code extension's
+// node_modules, far from the source tree, so anchoring on `__dirname` emitted an
+// unresolvable `../../…/node_modules/runtime` specifier and collapsed every lifted
+// binding to `any` in the installed extension. `__dirname/../runtime.ts` is only a
+// last-resort fallback (covers the in-repo plugin running from source).
+const FALLBACK_RUNTIME_PATH = path.join(__dirname, '..', 'runtime.ts');
+
+function findRuntimeFile(baseDir) {
+  let dir = baseDir;
+  for (let i = 0; i < 16; i++) {
+    const candidate = path.join(dir, 'runtime.ts');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
 function relativeRuntimeSpecifier(baseDir) {
-  let rel = path.relative(baseDir, RUNTIME_PATH).replace(/\.ts$/, '').split(path.sep).join('/');
+  const runtime = findRuntimeFile(baseDir) || FALLBACK_RUNTIME_PATH;
+  let rel = path.relative(baseDir, runtime).replace(/\.ts$/, '').split(path.sep).join('/');
   if (!rel.startsWith('.')) rel = `./${rel}`;
   return rel;
 }

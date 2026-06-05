@@ -2,7 +2,7 @@
 //
 // Simulates a hover: take a position in the .tsrx SOURCE, map it through to the
 // generated TS, ask the TS language service for the type, and report diagnostics.
-// Run: node experiments/tsrx/live-types.mjs
+// Run: node tsrx/live-types.mjs
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

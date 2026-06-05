@@ -2,7 +2,7 @@
 //
 // Property access, method calls and indexing on a stream auto-lift to map/
 // combineLatest, while members of the stream API itself (.value, .pipe, …) are
-// left untouched. Run: node experiments/tsrx/members.mjs — exits non-zero on failure.
+// left untouched. Run: node tsrx/members.mjs — exits non-zero on failure.
 import ts from 'typescript';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';

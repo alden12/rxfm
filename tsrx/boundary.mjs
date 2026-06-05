@@ -2,7 +2,7 @@
 //
 // Proves that imperative *reads* out of a reactive binding (which the transform
 // can't lift) surface as a teaching message rather than a raw RxJS type error,
-// and that unrelated errors are left untouched. Run: node experiments/tsrx/boundary.mjs
+// and that unrelated errors are left untouched. Run: node tsrx/boundary.mjs
 // Exits non-zero on failure.
 import ts from 'typescript';
 import { fileURLToPath } from 'node:url';

@@ -2,14 +2,22 @@
   "name": "tsrx-vscode",
   "displayName": "tsrx (live types)",
   "description": "Live TypeScript types for .tsrx files (imperative observables).",
-  "version": "0.0.0",
+  "version": "0.0.2",
+  "publisher": "alden12",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alden12/rxfm.git",
+    "directory": "tsrx/vscode-extension"
+  },
   "engines": {
     "vscode": "^1.88.0"
   },
   "categories": [
     "Programming Languages"
   ],
+  "icon": "icons/icon.png",
   "main": "./extension.cjs",
   "activationEvents": [
     "onLanguage:tsrx"
@@ -47,7 +55,13 @@
       }
     ]
   },
-  "dependencies": {
-    "tsrx-ts-plugin": "file:../ts-plugin"
+  "scripts": {
+    "build": "node ./build.mjs",
+    "vscode:prepublish": "node ./build.mjs",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0"
   }
 }

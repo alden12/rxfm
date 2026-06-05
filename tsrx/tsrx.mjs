@@ -1,5 +1,5 @@
 // tsrx — transform demo. Prints before/after and re-checks the output types.
-// Run: node experiments/tsrx/tsrx.mjs
+// Run: node tsrx/tsrx.mjs
 import ts from 'typescript';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
