@@ -31,5 +31,5 @@ export function addToView(
   return () => { // Return a function to remove the node and clean up subscription.
     subscription.unsubscribe();
     host.removeChild(oldNode);
-  }
+  };
 }
