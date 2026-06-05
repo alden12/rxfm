@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable } from "rxjs";
 import { Component, ElementType } from ".";
-import { Div, Button } from "./html";
+import { Div, Button, Input } from "./html";
 
 const testComponent = <T extends ElementType>(component: Component<T>) => {
   let element: T | undefined = undefined;
@@ -94,6 +94,47 @@ describe('chainable creator', () => {
       .class('btn')`x`;
     const { element, unsubscribe } = testComponent(component);
     expect(element.classList.contains('btn')).toBe(true);
+    element.dispatchEvent(new MouseEvent('click'));
+    expect(clicked).toBe(true);
+    unsubscribe();
+  });
+
+  it('should apply styles via the style method', () => {
+    const component = Div.style({ color: 'blue', fontStyle: 'italic' })`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.style.color).toEqual('blue');
+    expect(element.style.fontStyle).toEqual('italic');
+    unsubscribe();
+  });
+
+  it('should set an attribute via a per-attribute method', () => {
+    const component = Input.type('text')`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.getAttribute('type')).toEqual('text');
+    unsubscribe();
+  });
+
+  it('should reflect a dynamic attribute from an observable', () => {
+    const placeholder = new BehaviorSubject('first');
+    const component = Input.placeholder(placeholder)`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.getAttribute('placeholder')).toEqual('first');
+    placeholder.next('second');
+    expect(element.getAttribute('placeholder')).toEqual('second');
+    unsubscribe();
+  });
+
+  it('should chain attribute, style, class and event methods together', () => {
+    let clicked = false;
+    const component = Input
+      .type('text')
+      .class('field')
+      .style({ color: 'red' })
+      .onClick(() => { clicked = true; })`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.getAttribute('type')).toEqual('text');
+    expect(element.classList.contains('field')).toBe(true);
+    expect(element.style.color).toEqual('red');
     element.dispatchEvent(new MouseEvent('click'));
     expect(clicked).toBe(true);
     unsubscribe();

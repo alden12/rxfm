@@ -1,5 +1,9 @@
+import { Observable } from "rxjs";
 import { event, ElementEventMap, EventHandler } from "../events";
-import { classes, ClassType } from "../attributes";
+import {
+  classes, ClassType, attribute, AttributeKeys, AttributeType, styles, Styles, StyleObject,
+} from "../attributes";
+import { TypeOrObservable } from "../utils";
 import { Component, ComponentCreator, ComponentOperator, ElementType } from "./component";
 
 /**
@@ -27,21 +31,43 @@ export type ClassChainMethods<T extends ElementType> = {
 };
 
 /**
- * An element creator which, in addition to the standard call and tagged template syntax for
- * providing children, exposes fluent methods which apply the equivalent component operator via
- * `.pipe`. Event methods (`Div.onClick(handler)`) are sugar for the `event` operator, eg:
- * `` Div.onClick(handler)`text` `` is equivalent to `` Div`text`.pipe(event.click(handler)) ``; the
- * `class` method is sugar for the `classes` operator. Methods may be chained.
+ * Fluent styles method added to an element creator. `style` is sugar for the `styles` operator,
+ * taking a styles dictionary (or observable emitting one) and returning a new chainable creator.
  */
-export type ChainableComponentCreator<T extends ElementType = ElementType> =
-  ComponentCreator<T> & EventChainMethods<T> & ClassChainMethods<T>;
+export type StyleChainMethods<T extends ElementType> = {
+  style(styleDict: Styles | Observable<StyleObject>): ChainableComponentCreator<T>;
+};
 
 /**
- * Wrap a component creator so that it gains fluent event methods (`onClick`, `onInput`, …, and the
- * generic `on(type, handler)`) in addition to its existing call and tagged template syntax.
- * Each event method appends the equivalent `event` operator and returns a new chainable creator, so
- * the calls may be chained. The accumulated operators are applied (via `.pipe`) once children are
- * provided by the terminal call or tagged template.
+ * Fluent attribute methods added to an element creator. For each attribute name there is a
+ * corresponding method (eg. `Input.type('text')`, `Div.id('app')`) which is sugar for the
+ * equivalent `attribute` operator and returns a new chainable creator so calls may be chained.
+ */
+export type AttributeChainMethods<T extends ElementType> = {
+  [K in AttributeKeys]: (value: TypeOrObservable<AttributeType>) => ChainableComponentCreator<T>;
+};
+
+/**
+ * An element creator which, in addition to the standard call and tagged template syntax for
+ * providing children, exposes fluent methods which apply the equivalent component operator via
+ * `.pipe`. Sugar is provided for events (`Div.onClick(handler)` → the `event` operator), CSS classes
+ * (`Div.class('x')` → `classes`), styles (`Div.style({ color: 'red' })` → `styles`), and individual
+ * attributes (`Input.type('text')` → the `attribute` operator). All methods return a chainable
+ * creator, so they may be chained, eg: `` Input.type('text').onInput(handler).class('field')`` ``.
+ */
+export type ChainableComponentCreator<T extends ElementType = ElementType> =
+  ComponentCreator<T>
+  & EventChainMethods<T>
+  & ClassChainMethods<T>
+  & StyleChainMethods<T>
+  & AttributeChainMethods<T>;
+
+/**
+ * Wrap a component creator so that it gains fluent operator methods (events such as `onClick`, plus
+ * `class`, `style`, and per-attribute methods like `id` or `type`) in addition to its existing call
+ * and tagged template syntax. Each method appends the equivalent component operator and returns a
+ * new chainable creator, so calls may be chained. The accumulated operators are applied (via
+ * `.pipe`) once children are provided by the terminal call or tagged template.
  * @param create The base component creator to make chainable.
  * @param ops The operators accumulated so far in the chain (used internally; defaults to none).
  * @returns A chainable component creator of type T.
@@ -58,22 +84,29 @@ export function chainable<T extends ElementType>(
     return ops.reduce((result, op) => result.pipe(op), component);
   };
 
+  const next = (op: ComponentOperator<T>) => chainable<T>(create, [...ops, op]);
+
   return new Proxy(build, {
     get(target, prop, receiver) {
-      if (typeof prop === 'string') {
+      // Only string keys which aren't already function members (name, length, bind, …) are treated
+      // as fluent methods. `then` is excluded so the builder is never mistaken for a thenable.
+      if (typeof prop === 'string' && prop !== 'then' && !(prop in target)) {
         if (prop === 'class') {
-          return (...classNames: ClassType[]) =>
-            chainable<T>(create, [...ops, classes<T>(...classNames)]);
+          return (...classNames: ClassType[]) => next(classes<T>(...classNames));
+        }
+        if (prop === 'style') {
+          return (styleDict: Styles | Observable<StyleObject>) => next(styles<T>(styleDict));
         }
         if (prop === 'on') {
           return (type: keyof ElementEventMap, handler: EventHandler<T, keyof ElementEventMap>) =>
-            chainable<T>(create, [...ops, event(type, handler)]);
+            next(event(type, handler));
         }
         if (/^on[A-Z]/.test(prop)) {
           const type = (prop[2].toLowerCase() + prop.slice(3)) as keyof ElementEventMap;
-          return (handler: EventHandler<T, keyof ElementEventMap>) =>
-            chainable<T>(create, [...ops, event(type, handler)]);
+          return (handler: EventHandler<T, keyof ElementEventMap>) => next(event(type, handler));
         }
+        // Any other name is an individual attribute: `Input.type('text')` → `attribute('type', …)`.
+        return (value: TypeOrObservable<AttributeType>) => next(attribute(prop, value));
       }
       return Reflect.get(target, prop, receiver);
     },

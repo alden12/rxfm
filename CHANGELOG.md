@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fluent `class` method on element creators: `` Div.class('btn', isActive)`text` `` is sugar for
   `` Div`text`.pipe(classes('btn', isActive)) ``, taking the same arguments as the `classes`
   operator and chainable with the event methods.
+- Fluent `style` method (`` Div.style({ color: 'red' })`text` `` → `styles(...)`) and per-attribute
+  methods (`` Input.type('text').placeholder('…')() `` → the `attribute` operator) on element
+  creators, chainable with the event and class methods.
 
 ## [3.0.0-alpha.0] - 2026-06-04
 
