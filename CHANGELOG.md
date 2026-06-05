@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha.1] - 2026-06-05
+
 ### Added
 - Fluent event methods on element creators: `` Div.onClick(handler)`text` `` is sugar for
   `` Div`text`.pipe(event.click(handler)) ``. Every event in `ElementEventMap` has a corresponding
