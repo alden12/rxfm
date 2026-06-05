@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   operator and chainable with the event methods.
 - Fluent `style` method (`` Div.style({ color: 'red' })`text` `` → `styles(...)`) and per-attribute
   methods (`` Input.type('text').placeholder('…')() `` → the `attribute` operator) on element
-  creators, chainable with the event and class methods.
+  creators, chainable with the event and class methods. A generic `attr(name, value)` method covers
+  attributes not in the typed map (`data-*`, `aria-*`, and other custom attributes).
 
 ## [3.0.0-alpha.0] - 2026-06-04
 

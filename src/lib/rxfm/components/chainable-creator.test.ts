@@ -124,6 +124,17 @@ describe('chainable creator', () => {
     unsubscribe();
   });
 
+  it('should set a custom attribute via the generic attr method', () => {
+    const value = new BehaviorSubject('42');
+    const component = Div.attr('data-id', value).attr('aria-label', 'Row')`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.getAttribute('data-id')).toEqual('42');
+    expect(element.getAttribute('aria-label')).toEqual('Row');
+    value.next('43');
+    expect(element.getAttribute('data-id')).toEqual('43');
+    unsubscribe();
+  });
+
   it('should chain attribute, style, class and event methods together', () => {
     let clicked = false;
     const component = Input

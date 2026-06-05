@@ -39,12 +39,16 @@ export type StyleChainMethods<T extends ElementType> = {
 };
 
 /**
- * Fluent attribute methods added to an element creator. For each attribute name there is a
+ * Fluent attribute methods added to an element creator. For each known attribute name there is a
  * corresponding method (eg. `Input.type('text')`, `Div.id('app')`) which is sugar for the
- * equivalent `attribute` operator and returns a new chainable creator so calls may be chained.
+ * equivalent `attribute` operator and returns a new chainable creator so calls may be chained. The
+ * generic `attr(name, value)` method covers attributes not in the typed map (`data-*`, `aria-*`,
+ * and other custom attributes).
  */
 export type AttributeChainMethods<T extends ElementType> = {
   [K in AttributeKeys]: (value: TypeOrObservable<AttributeType>) => ChainableComponentCreator<T>;
+} & {
+  attr(name: string, value?: TypeOrObservable<AttributeType>): ChainableComponentCreator<T>;
 };
 
 /**
@@ -104,6 +108,10 @@ export function chainable<T extends ElementType>(
         if (/^on[A-Z]/.test(prop)) {
           const type = (prop[2].toLowerCase() + prop.slice(3)) as keyof ElementEventMap;
           return (handler: EventHandler<T, keyof ElementEventMap>) => next(event(type, handler));
+        }
+        if (prop === 'attr') {
+          return (name: string, value?: TypeOrObservable<AttributeType>) =>
+            next(attribute(name, value));
         }
         // Any other name is an individual attribute: `Input.type('text')` → `attribute('type', …)`.
         return (value: TypeOrObservable<AttributeType>) => next(attribute(prop, value));
