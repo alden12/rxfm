@@ -6,7 +6,7 @@
 // Note: lifting happens on variable initializers, so the rendered lines below
 // are bound to consts (line1..line4) and then passed to Div.
 import { BehaviorSubject } from 'rxjs';
-import { Div, Button, event } from 'rxfm';
+import { Div, Button } from 'rxfm';
 
 const Showcase = () => {
   const count = new BehaviorSubject(1);
@@ -53,21 +53,17 @@ const Showcase = () => {
     // callback's `todo` is treated as an observable so its fields lift.
     Div`Todos:`,
     todos.map(todo => Div`  ${todo.done ? '✓' : '○'} ${todo.text}`, 'id'),
-    Button`count +1`.pipe(
-      event.click(() => count.next(count.value + 1)),
-    ),
-    Button`add todo`.pipe(
-      event.click(() => todos.next([
-        ...todos.value,
-        { id: todos.value.length + 1, text: `Item ${todos.value.length + 1}`, done: false },
-      ])),
-    ),
-    Button`toggle nickname (${user.nickname ?? 'no nickname'})`.pipe(
-      event.click(() => user.next({
-        ...user.value,
-        nickname: user.value.nickname ? undefined : 'Countess',
-      })),
-    ),
+    // Fluent `onClick` (sugar for the `event` operator) chains straight onto
+    // the creator; the tagged-template children still lift in place.
+    Button.onClick(() => count.next(count.value + 1))`count +1`,
+    Button.onClick(() => todos.next([
+      ...todos.value,
+      { id: todos.value.length + 1, text: `Item ${todos.value.length + 1}`, done: false },
+    ]))`add todo`,
+    Button.onClick(() => user.next({
+      ...user.value,
+      nickname: user.value.nickname ? undefined : 'Countess',
+    }))`toggle nickname (${user.nickname ?? 'no nickname'})`,
   );
 };
 
