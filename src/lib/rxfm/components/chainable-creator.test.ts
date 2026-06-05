@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { Component, ElementType } from ".";
 import { Div, Button } from "./html";
 
@@ -62,6 +62,38 @@ describe('chainable creator', () => {
     const { element, unsubscribe } = testComponent(component);
     expect(element).toBeInstanceOf(HTMLDivElement);
     expect(element.childNodes.length).toEqual(0);
+    element.dispatchEvent(new MouseEvent('click'));
+    expect(clicked).toBe(true);
+    unsubscribe();
+  });
+
+  it('should apply CSS classes via the class method', () => {
+    const component = Div.class('one', 'two')`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.classList.contains('one')).toBe(true);
+    expect(element.classList.contains('two')).toBe(true);
+    unsubscribe();
+  });
+
+  it('should reflect a dynamic class from an observable', () => {
+    const active = new BehaviorSubject<string | null>('active');
+    const component = Div.class('base', active)`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.classList.contains('base')).toBe(true);
+    expect(element.classList.contains('active')).toBe(true);
+    active.next(null);
+    expect(element.classList.contains('active')).toBe(false);
+    expect(element.classList.contains('base')).toBe(true);
+    unsubscribe();
+  });
+
+  it('should chain class with event methods', () => {
+    let clicked = false;
+    const component = Div
+      .onClick(() => { clicked = true; })
+      .class('btn')`x`;
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.classList.contains('btn')).toBe(true);
     element.dispatchEvent(new MouseEvent('click'));
     expect(clicked).toBe(true);
     unsubscribe();

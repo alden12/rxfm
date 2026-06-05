@@ -19,20 +19,17 @@ export const StyleExample = Div`We access styles as properties and use tagged te
   style.color`blue`,
 );
 
-export const ClassExample = Div`We can add CSS classes`.pipe(
-  classes('example-class'),
-);
+// The fluent `class` method is sugar for the `classes` operator.
+export const ClassExample = Div.class('example-class')`We can add CSS classes`;
 
 export const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
   classes`example-class`,
 );
 
-export const DynamicClasses = Div`Classes can be dynamic`.pipe(
-  classes(
-    'example-class',
-    timer(0, 1000).pipe(map(i => i % 2 ? 'another-class' : null)),
-  ),
-);
+export const DynamicClasses = Div.class(
+  'example-class',
+  timer(0, 1000).pipe(map(i => i % 2 ? 'another-class' : null)),
+)`Classes can be dynamic`;
 
 export const AttributesExample = Input().pipe(
   attributes({

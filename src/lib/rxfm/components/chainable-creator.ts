@@ -1,4 +1,5 @@
 import { event, ElementEventMap, EventHandler } from "../events";
+import { classes, ClassType } from "../attributes";
 import { Component, ComponentCreator, ComponentOperator, ElementType } from "./component";
 
 /**
@@ -16,13 +17,24 @@ export type EventChainMethods<T extends ElementType> = {
 };
 
 /**
+ * Fluent CSS class method added to an element creator. `class` is sugar for the `classes` operator,
+ * taking the same spread of class names (strings, observables, or observable string arrays; falsy
+ * values remove the class) and returning a new chainable creator so it may be chained with other
+ * methods.
+ */
+export type ClassChainMethods<T extends ElementType> = {
+  class(...classNames: ClassType[]): ChainableComponentCreator<T>;
+};
+
+/**
  * An element creator which, in addition to the standard call and tagged template syntax for
- * providing children, exposes fluent event methods (`Div.onClick(handler)`). These are sugar for
- * applying the equivalent `event` operator via `.pipe`, eg: `` Div.onClick(handler)`text` `` is
- * equivalent to `` Div`text`.pipe(event.click(handler)) ``.
+ * providing children, exposes fluent methods which apply the equivalent component operator via
+ * `.pipe`. Event methods (`Div.onClick(handler)`) are sugar for the `event` operator, eg:
+ * `` Div.onClick(handler)`text` `` is equivalent to `` Div`text`.pipe(event.click(handler)) ``; the
+ * `class` method is sugar for the `classes` operator. Methods may be chained.
  */
 export type ChainableComponentCreator<T extends ElementType = ElementType> =
-  ComponentCreator<T> & EventChainMethods<T>;
+  ComponentCreator<T> & EventChainMethods<T> & ClassChainMethods<T>;
 
 /**
  * Wrap a component creator so that it gains fluent event methods (`onClick`, `onInput`, …, and the
@@ -49,6 +61,10 @@ export function chainable<T extends ElementType>(
   return new Proxy(build, {
     get(target, prop, receiver) {
       if (typeof prop === 'string') {
+        if (prop === 'class') {
+          return (...classNames: ClassType[]) =>
+            chainable<T>(create, [...ops, classes<T>(...classNames)]);
+        }
         if (prop === 'on') {
           return (type: keyof ElementEventMap, handler: EventHandler<T, keyof ElementEventMap>) =>
             chainable<T>(create, [...ops, event(type, handler)]);

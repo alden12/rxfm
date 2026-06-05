@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `on<EventName>` method (`onClick`, `onInput`, …), plus a generic `on(type, handler)` form, and
   the methods may be chained (`Button.onClick(a).onMouseenter(b)`). The new `chainable` helper and
   `ChainableComponentCreator` type are exported for use with custom component creators.
+- Fluent `class` method on element creators: `` Div.class('btn', isActive)`text` `` is sugar for
+  `` Div`text`.pipe(classes('btn', isActive)) ``, taking the same arguments as the `classes`
+  operator and chainable with the event methods.
 
 ## [3.0.0-alpha.0] - 2026-06-04
 
