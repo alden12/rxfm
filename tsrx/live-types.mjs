@@ -13,11 +13,12 @@ const { transformWithMappings, mapSourceToGenerated, getCompilerOptions } = tran
 const COMPILER_OPTIONS = getCompilerOptions(ts);
 
 const here = dirname(fileURLToPath(import.meta.url));
-const inputPath = join(here, 'example.input.ts');
-const genPath = join(here, 'example.generated.ts'); // virtual; resolves rxjs from repo node_modules
+const examplesDir = join(here, 'examples');
+const inputPath = join(examplesDir, 'example.input.ts');
+const genPath = join(examplesDir, 'example.generated.ts'); // virtual; resolves rxjs from repo node_modules
 
 const sourceText = readFileSync(inputPath, 'utf8');
-const { code, segments, sourceDiagnostics } = transformWithMappings(ts, sourceText, here);
+const { code, segments, sourceDiagnostics } = transformWithMappings(ts, sourceText, examplesDir);
 
 function createLanguageService(fileName, text) {
   const host = {
@@ -27,7 +28,7 @@ function createLanguageService(fileName, text) {
       f === fileName
         ? ts.ScriptSnapshot.fromString(text)
         : (ts.sys.fileExists(f) ? ts.ScriptSnapshot.fromString(ts.sys.readFile(f)) : undefined),
-    getCurrentDirectory: () => here,
+    getCurrentDirectory: () => examplesDir,
     getCompilationSettings: () => COMPILER_OPTIONS,
     getDefaultLibFileName: o => ts.getDefaultLibFilePath(o),
     fileExists: f => (f === fileName ? true : ts.sys.fileExists(f)),

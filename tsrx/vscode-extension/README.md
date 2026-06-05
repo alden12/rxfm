@@ -8,7 +8,7 @@ separate language server — it rides VS Code's built-in TS support.
 
 ## What you should see
 
-Open [`../example.tsrx`](../example.tsrx) and hover the bindings:
+Open [`../examples/example.tsrx`](../examples/example.tsrx) and hover the bindings:
 
 ```ts
 declare const y: Observable<number>;
@@ -21,8 +21,17 @@ const w = x + z;   // hover ⇒ const w: Observable<number>   (propagated throug
 
 ## Install it (no dev host)
 
-Build a `.vsix` and install it into your real VS Code — no Extension Development
-Host needed:
+A pre-built `.vsix` is committed in this folder, so you can install it straight
+from a clone — no Extension Development Host needed:
+
+```sh
+code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.3.vsix
+```
+
+…or the Extensions view → **⋯** → **Install from VSIX…**. Then open any `.tsrx`
+file and hover the bindings.
+
+### Rebuild the `.vsix` yourself
 
 ```sh
 # 1. install the tsserver plugin's deps (@volar/typescript), used by the bundler
@@ -34,14 +43,7 @@ cd ../vscode-extension && npm install && npm run package
 
 This bundles the `tsrx-ts-plugin` tsserver plugin self-contained (Volar inlined,
 `typescript` left to the host) into `node_modules/tsrx-ts-plugin/` and emits
-`tsrx-vscode-<version>.vsix`. Install it with either:
-
-```sh
-code --install-extension tsrx-vscode-0.0.1.vsix
-```
-
-…or the Extensions view → **⋯** → **Install from VSIX…**. Then open any `.tsrx`
-file and hover the bindings.
+`tsrx-vscode-<version>.vsix`.
 
 ## Develop it (Extension Development Host)
 
@@ -54,7 +56,7 @@ Then in VS Code:
 
 1. Open the `tsrx/vscode-extension` folder.
 2. Press **F5** ("Run Extension") to launch the **Extension Development Host**.
-3. In that window, open `tsrx/example.tsrx`.
+3. In that window, open `tsrx/examples/example.tsrx`.
 4. Hover `x` / `w` — you should see `Observable<number>`.
 
 > `npm run build` is what produces `node_modules/tsrx-ts-plugin/` (the bundled

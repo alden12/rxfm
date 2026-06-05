@@ -2,6 +2,14 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.3]
+
+### Changed
+- Full-bleed extension icon (the gradient tile now fills the whole square) so it
+  reads solidly in the Extensions list instead of looking inset.
+- The built `.vsix` is now committed to the repo so it can be sideloaded straight
+  from a clone.
+
 ## [0.0.2]
 
 ### Added

@@ -9,11 +9,12 @@ import transformCjs from './ts-plugin/transform.cjs';
 const { transformWithMappings, getCompilerOptions } = transformCjs;
 
 const here = dirname(fileURLToPath(import.meta.url));
-const inputPath = join(here, 'example.input.ts');
-const outputPath = join(here, 'example.output.ts');
+const examplesDir = join(here, 'examples');
+const inputPath = join(examplesDir, 'example.input.ts');
+const outputPath = join(examplesDir, 'example.output.ts');
 
 const sourceText = readFileSync(inputPath, 'utf8');
-const { code } = transformWithMappings(ts, sourceText, here);
+const { code } = transformWithMappings(ts, sourceText, examplesDir);
 writeFileSync(outputPath, code);
 
 console.log('=== INPUT (example.input.ts) ===\n');

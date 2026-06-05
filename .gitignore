@@ -1,9 +1,13 @@
 node_modules
+.DS_Store
 /dist/*
 /dist-demo/*
 /tsrx/dist-tsrx/
 *.tgz
 *.vsix
+# …except the published tsrx extension build, committed so it can be sideloaded
+# straight from a clone (see tsrx/vscode-extension/README.md).
+!/tsrx/vscode-extension/*.vsix
 
 # Playwright
 /test-results/

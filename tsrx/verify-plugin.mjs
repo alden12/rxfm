@@ -16,9 +16,10 @@ const { getCompilerOptions } = transformCjs;
 const COMPILER_OPTIONS = getCompilerOptions(ts);
 
 const here = dirname(fileURLToPath(import.meta.url));
-const sourceText = readFileSync(join(here, 'example.input.ts'), 'utf8');
-const tsrxUri = join(here, 'example.input.tsrx'); // pretend extension so the plugin engages
-const genPath = join(here, '__gen__.ts');
+const examplesDir = join(here, 'examples');
+const sourceText = readFileSync(join(examplesDir, 'example.input.ts'), 'utf8');
+const tsrxUri = join(examplesDir, 'example.input.tsrx'); // pretend extension so the plugin engages
+const genPath = join(examplesDir, '__gen__.ts');
 
 // --- run the plugin exactly as tsserver would -----------------------------
 const plugin = createTsrxLanguagePlugin(ts);
@@ -48,7 +49,7 @@ function createLanguageService(fileName, text) {
     getScriptSnapshot: f =>
       f === fileName ? ts.ScriptSnapshot.fromString(text)
         : (ts.sys.fileExists(f) ? ts.ScriptSnapshot.fromString(ts.sys.readFile(f)) : undefined),
-    getCurrentDirectory: () => here,
+    getCurrentDirectory: () => examplesDir,
     getCompilationSettings: () => COMPILER_OPTIONS,
     getDefaultLibFileName: o => ts.getDefaultLibFilePath(o),
     fileExists: f => (f === fileName ? true : ts.sys.fileExists(f)),

@@ -1,4 +1,4 @@
-import { render } from "./runtime";
+import { render } from "../runtime";
 import { combineLatest, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 // Conceptually a `.tsrx` file. Imperative use of observables.

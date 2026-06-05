@@ -16,7 +16,7 @@
       "args": [
         "--extensionDevelopmentPath=/Users/alden/Documents/code/rxfm/tsrx/vscode-extension",
         "/Users/alden/Documents/code/rxfm",
-        "/Users/alden/Documents/code/rxfm/tsrx/example.tsrx"
+        "/Users/alden/Documents/code/rxfm/tsrx/examples/example.tsrx"
       ]
     }
   ]

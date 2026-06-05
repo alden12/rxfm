@@ -8,7 +8,7 @@
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/tsrx/vscode-extension",
         "${workspaceFolder}",
-        "${workspaceFolder}/tsrx/example.tsrx"
+        "${workspaceFolder}/tsrx/examples/example.tsrx"
       ]
     }
   ]
