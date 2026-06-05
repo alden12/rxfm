@@ -5,6 +5,11 @@
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
 [![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
+> ⚠️ **Alpha release.** This is the `3.0.0-alpha` line — an in-progress redesign (Vite build, no
+> JSX, a new fluent component API). The API may change between alpha versions. For the current
+> **stable release** and its **JSX/TSX syntax**, see the
+> [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
+
 RxFM is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
 I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
@@ -16,8 +21,10 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 * Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Works best with [TypeScript](https://www.typescriptlang.org/).
 
-> **Note:** As of `3.0.0` RxFM no longer ships JSX/TSX support — components are written with the
-> plain function API documented below. JSX may return in a redesigned form in a future release.
+> **Note:** As of the `3.0.0` alpha line RxFM no longer ships JSX/TSX support — components are
+> written with the plain function API documented below. For JSX/TSX, use the stable
+> [v2.1.1 release](https://github.com/alden12/rxfm/blob/v2.1.1/README.md). JSX may return in a
+> redesigned form in a future release.
 
 ---
 

@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.0.0] - 2026-06-04
+## [3.0.0-alpha.0] - 2026-06-04
 
 ### Removed
 - Removed JSX/TSX support: the `RxFM` default export (`RxFM.createElement`), the `FC` type, and
