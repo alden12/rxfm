@@ -685,6 +685,64 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // The key arg (if any) operates on the plain item value — left verbatim.
   };
 
+  // D2: an event handler is a closure that runs *later*, so a stream referenced
+  // inside it is the stream, not its current value. When a handler captures
+  // observable bindings, lift it to a stream of handlers — the handler text is left
+  // verbatim and the map params re-bind the same names to current values:
+  //   () => f(index)            →  index.pipe(map(index => () => f(index)))
+  //   () => f(index, current)   →  combineLatest([index, current]).pipe(
+  //                                  map(([index, current]) => () => f(index, current)))
+  // rxfm's event operators already accept an Observable<handler> (EventHandler<T,E>).
+  const within = (node, ancestor) => node.getStart(sf) >= ancestor.getStart(sf) && node.getEnd() <= ancestor.getEnd();
+  const collectHandlerCaptures = fnNode => {
+    // A captured stream is lifted only if the handler reads it as a *value*. If it's
+    // touched via its stream API (`subject.next(…)`, `.value`, `.pipe`), the handler
+    // legitimately operates on the stream itself — lifting would replace it with a
+    // value and break the call — so such names are excluded entirely.
+    const valueUsed = new Map();
+    const streamUsed = new Set();
+    const walk = n => {
+      if (ts.isIdentifier(n)) {
+        const p = n.parent;
+        if (ts.isPropertyAccessExpression(p) && p.name === n) return;     // property name, not a ref
+        if (ts.isQualifiedName(p) && p.right === n) return;
+        if ((ts.isPropertyAssignment(p) || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
+        if (!isObservableExpr(n)) return;
+        const sym = checker.getSymbolAtLocation(n);
+        const decl = sym && sym.declarations && sym.declarations[0];
+        if (decl && within(decl, fnNode)) return;                          // local to handler, not a capture
+        if (ts.isPropertyAccessExpression(p) && p.expression === n && !memberTargetsValue(n, p.name.text)) {
+          streamUsed.add(n.text);                                          // e.g. difficulty.next(...)
+        } else if (!valueUsed.has(n.text)) {
+          valueUsed.set(n.text, n);
+        }
+        return;
+      }
+      ts.forEachChild(n, walk);
+    };
+    walk(fnNode.body);
+    for (const name of streamUsed) valueUsed.delete(name);
+    return valueUsed;
+  };
+  const liftHandlerClosure = fnNode => {
+    const names = [...collectHandlerCaptures(fnNode).keys()];
+    if (!names.length) return null;
+    needed['rxjs/operators'].add('map');
+    if (names.length === 1) return [names[0], '.pipe(map(', names[0], ' => ', V(fnNode), '))'];
+    needed.rxjs.add('combineLatest');
+    return ['combineLatest([', names.join(', '), ']).pipe(map(([', names.join(', '), ']) => ', V(fnNode), '))'];
+  };
+  // Does parameter `argIndex` of this call accept an Observable (e.g. an
+  // EventHandler slot, which is `handler | Observable<handler>`)?
+  const paramAcceptsObservable = (callNode, argIndex) => {
+    const sig = checker.getResolvedSignature(callNode);
+    if (!sig) return false;
+    const params = sig.getParameters();
+    if (!params.length) return false;
+    const pSym = params[Math.min(argIndex, params.length - 1)];
+    return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, callNode));
+  };
+
   // Lift variable initializers anywhere — including inside function bodies, since
   // a component is a function. Walk top-down so declarations are seen in source
   // order (so a binding is known observable before later statements use it).
@@ -791,11 +849,16 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // double-handle or fight C6's operator-style arg lifting.)
     if (ts.isCallExpression(node)) {
       visit(node.expression); // the callee chain (may hold object literals, nested calls, templates)
-      for (const arg of node.arguments) {
-        if (ts.isSpreadElement(arg)) { visit(arg); continue; }
+      node.arguments.forEach((arg, i) => {
+        if (ts.isSpreadElement(arg)) { visit(arg); return; }
         // A component-`.map` child (e.g. `Div(items.map(cb))`) is a keyed list, not a
         // value to render — hand it to the list handler, not the expression lifter.
-        if (isComponentMapCall(arg)) { handleComponentMap(arg); continue; }
+        if (isComponentMapCall(arg)) { handleComponentMap(arg); return; }
+        // An event handler capturing streams → a stream of handlers (D2).
+        if ((ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) && paramAcceptsObservable(node, i)) {
+          const handler = liftHandlerClosure(arg);
+          if (handler) { edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: handler }); return; }
+        }
         const r = transformExpression(arg);
         if (r.lifted) {
           usedRender = true;
@@ -805,7 +868,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
         } else {
           visit(arg);
         }
-      }
+      });
       return;
     }
     // Object-literal property values (e.g. `.style({ backgroundColor: cell.color })`):
