@@ -2,6 +2,26 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.11]
+
+### Changed
+- A ternary whose observables all root in one value (e.g. `x === undefined ? 0 : x + 1`,
+  `cell.symbol ? '12px' : '14px'`) now lifts to a single `map` with a plain ternary inside, so
+  TypeScript's narrowing applies in each branch (no more spurious "possibly undefined"). Ternaries
+  with a stream branch keep the lazy `switchMap` form.
+
+## [0.0.10]
+
+### Added
+- Lifting now reaches more positions, so an observable value no longer has to be pulled out into a
+  named `const` before use:
+  - **Destructuring** an observable: `const { board, stage } = game` lifts each field.
+  - **Object-literal values**: `.style({ backgroundColor: cell.color })` lifts `cell.color` in place.
+  - **Call arguments**: a `.class(cond ? 'a' : 'b')` flag or a conditional child lifts in place.
+- **Event-handler closures that capture a stream** are lifted to a stream of handlers, so
+  `onClick(() => dispatch(indexToVector(index)))` works when `index` is a stream. Streams used via
+  their API (`subject.next(…)`) are left alone.
+
 ## [0.0.9]
 
 ### Fixed
