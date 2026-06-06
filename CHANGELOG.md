@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and
+  is now redundant — use the native `array.flat()` instead. (`recursiveFlatten`, for arbitrary
+  depth, is unchanged.)
+
 ## [3.0.0-alpha.1] - 2026-06-05
 
 ### Added

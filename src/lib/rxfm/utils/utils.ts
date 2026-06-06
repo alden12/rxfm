@@ -9,14 +9,6 @@ export function coerceToArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
-// TODO: Deprecate once JS version has been updated to include 'flat' natively.
-export function flatten<T>(nested: (T | T[])[]): T[] {
-  return nested.reduce<T[]>((flat, array) => {
-    flat.push(...coerceToArray(array));
-    return flat;
-  }, []);
-}
-
 type Nested<T> = T | Nested<T>[];
 
 export function recursiveFlatten<T>(nested: Nested<T>): T[] {
