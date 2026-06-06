@@ -2,14 +2,23 @@
 
 All notable changes to the tsrx VS Code extension.
 
-## [0.0.8]
+## [0.0.9]
 
 ### Fixed
-- A bare cross-`.tsrx` import (`import { x } from './other'`) now resolves in the editor
-  (previously "Cannot find module './other'"). Volar's `resolveHiddenExtensions` is enabled so a
-  `./other` import maps to the sibling `./other.tsrx`'s virtual types. This is the editor-side half of
-  cross-`.tsrx` support; the transform's own inference already resolved them, so lifting + editor
-  types now both work across files.
+- A bare cross-`.tsrx` import (`import { x } from './engine'`) now resolves in the editor. 0.0.8's
+  `resolveHiddenExtensions` was necessary but insufficient: Volar only consults it when a file
+  already imports something with a literal `.tsrx` suffix, so a plain `./engine` specifier fell
+  through to stock TS resolution (which doesn't know `.tsrx`) and reported "Cannot find module". The
+  plugin now layers a fallback over the host's module resolution that maps any leftover unresolved
+  relative import to a sibling `.tsrx` file (served as `.ts`). A reactive "engine" module and its
+  view can now live in separate `.tsrx` files, and a derivation over an imported reactive value
+  still lifts with its real type.
+
+## [0.0.8]
+
+### Changed
+- Enabled Volar's `resolveHiddenExtensions` toward editor-side cross-`.tsrx` imports. This turned out
+  to be necessary but not sufficient on its own — see 0.0.9 for the completing fix.
 
 ## [0.0.7]
 
