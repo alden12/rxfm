@@ -274,9 +274,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
   function transformExpression(node) {
     if (ts.isParenthesizedExpression(node)) {
       const inner = transformExpression(node.expression);
-      return inner.lifted
-        ? { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable }
-        : { pieces: [V(node)], observable: inner.observable, lifted: false };
+      if (inner.lifted) return { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable };
+      if (inner.rewritten) return { pieces: ['(', ...inner.pieces, ')'], observable: inner.observable, lifted: false, rewritten: true };
+      return { pieces: [V(node)], observable: inner.observable, lifted: false };
     }
     // Ternary: when the condition is observable, switchMap so only the taken
     // branch is subscribed (lazy), and shareReplay so it behaves as a
@@ -399,10 +399,18 @@ function transformWithMappings(ts, sourceText, baseDir) {
       const liftableArg = args.map((a, i) => a.observable && !paramExpectsObservable(i));
       if (calleeIsFnStream || (!callee.observable && argsObservable)) {
         // Every observable argument is one the callee wants as a stream (no value
-        // arg actually needs lifting): an operator-style call. Leave it verbatim so
-        // it keeps its real semantics, reporting it observable if its return type is.
+        // arg actually needs lifting): an operator-style call. Leave the call itself
+        // in place — it keeps its real semantics and is NOT render-wrapped (the callee
+        // may return a non-observable, e.g. destructure's object). But if an argument
+        // itself lifted (e.g. interval(periodFor(difficulty))), re-emit the call with
+        // that argument's transformed pieces so the inner lift survives. Pieces
+        // compose, so nested operator-style calls work too.
         if (!calleeIsFnStream && !liftableArg.some(Boolean)) {
-          return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+          if (!args.some(a => a.lifted || a.rewritten)) {
+            return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+          }
+          const pieces = [...callee.pieces, '(', ...joinPieces(args.map(a => a.pieces), ', '), ')'];
+          return { pieces, observable: isObservableExpr(node), lifted: false, rewritten: true };
         }
         needed.rxjs.add('combineLatest');
         needed['rxjs/operators'].add('map');
@@ -613,6 +621,16 @@ function transformWithMappings(ts, sourceText, baseDir) {
         });
         return; // don't descend into an already-rewritten initializer
       }
+      if (r.rewritten) {
+        // An operator-style call left in place but with a lifted argument rewritten:
+        // apply the pieces as-is (no render wrap — the call's own result stands).
+        edits.push({
+          start: node.initializer.getStart(sf),
+          end: node.initializer.getEnd(),
+          pieces: r.pieces,
+        });
+        return;
+      }
     }
     // Tagged template (RxFM's children syntax, e.g. Div`hi ${user.name}`): each
     // ${…} interpolation is a child, and RxFM renders observables as reactive
@@ -629,6 +647,12 @@ function transformWithMappings(ts, sourceText, baseDir) {
             start: span.expression.getStart(sf),
             end: span.expression.getEnd(),
             pieces: ['render(', ...r.pieces, ')'],
+          });
+        } else if (r.rewritten) {
+          edits.push({
+            start: span.expression.getStart(sf),
+            end: span.expression.getEnd(),
+            pieces: r.pieces,
           });
         } else {
           visit(span.expression); // recurse — may hold nested tagged templates
