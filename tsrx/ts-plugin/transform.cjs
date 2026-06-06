@@ -154,6 +154,21 @@ function transformWithMappings(ts, sourceText, baseDir) {
   const sf = program.getSourceFile(fileName);
 
   const observableBindings = new Set();
+  // D4: destructured fields of a stream item, scoped to one component-`.map`
+  // callback. Maps an alias name (the field binding) → { param, prop }, where
+  // `param` is the synthetic stream identifier the binding pattern was renamed to.
+  // A reference to the alias lifts to `param.pipe(map(param => param.prop))`, and
+  // several aliases of the same item share `param` so they collapse like `cell.x`.
+  const aliasInfo = new Map();
+  // Declaration-site hover for destructured fields: the binding pattern `{ color }`
+  // is erased to the synthetic param, so its field tokens map to nothing. We record
+  // each field's declaration span and, after assembly, map it onto the generated
+  // `item.prop` token its first use produced — so hover / go-to-def work on the
+  // binding too, not just the uses. `cbSeq` keys fields to their callback (so a
+  // field name reused across callbacks resolves to its own callback's use).
+  let cbSeq = 0;
+  const declMappings = [];
+  const aliasGenTarget = new Map();
   // Lifted bindings whose emitted value is definitely not callable (e.g. the
   // result of an arithmetic lift). The checker can't tell us this — it analyses
   // the original (pre-transform) source, where these bindings have an erroring/
@@ -176,7 +191,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return Boolean(type.getProperty && type.getProperty('subscribe') && type.getProperty('pipe'));
   };
   const isObservableExpr = node =>
-    (ts.isIdentifier(node) && observableBindings.has(node.text)) ||
+    (ts.isIdentifier(node) && (observableBindings.has(node.text) || aliasInfo.has(node.text))) ||
     isObservableType(checker.getTypeAtLocation(node));
 
   // The value type T of an Observable<T>/RenderObservable<T>, or undefined if the
@@ -322,7 +337,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
       if (!ok) return;
       if (isObservableExpr(n)) {
         const r = rootOf(n);
-        if (r && ts.isIdentifier(r)) names.add(r.text);
+        // An alias roots in its synthetic item param, so fields of one destructured
+        // item collapse to a single root (and so to one map, like `cell.x`).
+        if (r && ts.isIdentifier(r)) names.add(aliasInfo.has(r.text) ? aliasInfo.get(r.text).param : r.text);
         else ok = false;
         return; // sub-parts share this root — don't double-count
       }
@@ -360,8 +377,57 @@ function transformWithMappings(ts, sourceText, baseDir) {
     needed.rxjs.add('of');
     return ['of(', ...operand.pieces, ')'];
   };
+  // Emit `node` verbatim (as source slices) but rewrite each alias VALUE reference
+  // to `param.prop`. Used where a node is re-emitted inside a `map(param => …)` whose
+  // param is the shared item — the D3 ternary body and a handler closure body — so
+  // the destructured names resolve to members of the bound item. With no aliases
+  // present it returns a single verbatim slice, identical to `[V(node)]`.
+  const expandAliases = node => {
+    const occ = [];
+    const walk = n => {
+      if (ts.isIdentifier(n) && aliasInfo.has(n.text)) {
+        const p = n.parent;
+        if (ts.isPropertyAccessExpression(p) && p.name === n) return;            // a property name
+        if (ts.isQualifiedName(p) && p.right === n) return;
+        if ((ts.isPropertyAssignment(p) || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
+        if (ts.isShorthandPropertyAssignment(p)) return;                         // `{ color }` — leave (rare)
+        occ.push(n);
+        return;
+      }
+      ts.forEachChild(n, walk);
+    };
+    walk(node);
+    if (!occ.length) return [V(node)];
+    occ.sort((a, b) => a.getStart(sf) - b.getStart(sf));
+    const pieces = [];
+    let cursor = node.getStart(sf);
+    for (const id of occ) {
+      if (id.getStart(sf) > cursor) pieces.push({ srcStart: cursor, srcEnd: id.getStart(sf) });
+      const { param, prop, cbId } = aliasInfo.get(id.text);
+      // Source-slice the prop token (when not renamed) so the field keeps hover / nav.
+      pieces.push(param, '.', id.text === prop
+        ? { srcStart: id.getStart(sf), srcEnd: id.getEnd(), aliasKey: `${cbId}:${id.text}` }
+        : prop);
+      cursor = id.getEnd();
+    }
+    if (cursor < node.getEnd()) pieces.push({ srcStart: cursor, srcEnd: node.getEnd() });
+    return pieces;
+  };
 
   function transformExpression(node) {
+    // A destructured field (D4) read as a value lifts exactly like the member
+    // access it stands for: `color` → `item.pipe(map(item => item.color))`.
+    if (ts.isIdentifier(node) && aliasInfo.has(node.text)) {
+      const { param, prop, cbId } = aliasInfo.get(node.text);
+      needed['rxjs/operators'].add('map');
+      // Map the generated `.prop` token back to the source field identifier (same
+      // text when not renamed) so hover / go-to-def work on the destructured name.
+      // `aliasKey` lets the declaration site borrow this same generated token.
+      const propPiece = node.text === prop
+        ? { srcStart: node.getStart(sf), srcEnd: node.getEnd(), aliasKey: `${cbId}:${node.text}` }
+        : prop;
+      return { pieces: [param, '.pipe(map(', param, ' => ', param, '.', propPiece, '))'], observable: true, lifted: true };
+    }
     if (ts.isParenthesizedExpression(node)) {
       const inner = transformExpression(node.expression);
       if (inner.lifted) return { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable };
@@ -386,7 +452,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
         if (roots && roots.size === 1) {
           const x = [...roots][0];
           needed['rxjs/operators'].add('map');
-          return { pieces: [x, '.pipe(map(', x, ' => ', V(node), '))'], observable: true, lifted: true };
+          // expandAliases rewrites any destructured field to `x.prop` (D4); with no
+          // aliases it's just the verbatim ternary, so this preserves narrowing as before.
+          return { pieces: [x, '.pipe(map(', x, ' => ', ...expandAliases(node), '))'], observable: true, lifted: true };
         }
         needed['rxjs/operators'].add('switchMap');
         const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
@@ -705,6 +773,18 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // arg (id prop name or id function) maps onto its idPropOrFunction, defaulting
   // to index when omitted. Done with edge edits so it composes with the inner
   // body edits without overlap.
+  // A synthetic stream-param name for a destructured item param (D4), chosen so it
+  // collides with neither an outer observable binding nor any identifier in the
+  // callback (the destructured fields, the index param, locals, free references).
+  const freshItemName = cb => {
+    const used = new Set(observableBindings);
+    const collect = n => { if (ts.isIdentifier(n)) used.add(n.text); ts.forEachChild(n, collect); };
+    collect(cb);
+    let name = 'item', n = 1;
+    while (used.has(name)) name = `item_${n++}`;
+    return name;
+  };
+
   const handleComponentMap = node => {
     const ex = node.expression;     // obj.map
     const obj = ex.expression;      // obj
@@ -719,13 +799,46 @@ function transformWithMappings(ts, sourceText, baseDir) {
     edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: ['.pipe('] });
     edits.push({ start: ex.name.getStart(), end: ex.name.getEnd(), remap: 'mapToComponents' });
     edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ['))'] });
-    // Lift the callback body with its params (item, index) treated as observables,
-    // scoped so the marking doesn't leak past this callback.
-    const params = cb.parameters.map(p => p.name.getText(sf));
-    const added = params.filter(p => !observableBindings.has(p));
-    added.forEach(p => observableBindings.add(p));
+    // Lift the callback body with its params treated as observables, scoped so the
+    // marking doesn't leak past this callback.
+    const addedBindings = [];
+    const addedAliases = [];
+    // D4: the item param may be destructured — `({ color, symbol }, i) => …`. The
+    // binding pattern can't survive (mapToComponents passes an Observable item, not
+    // the value), so rename it to a synthetic stream param and register each field
+    // as an alias that lifts to `param.field` wherever it's read. Only plain-field
+    // patterns qualify (no rest, defaults, computed names, or nesting).
+    const itemParam = cb.parameters[0];
+    const destructures = itemParam && ts.isObjectBindingPattern(itemParam.name)
+      && itemParam.name.elements.every(el =>
+        !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name)
+        && (!el.propertyName || ts.isIdentifier(el.propertyName)));
+    if (destructures) {
+      const synthetic = freshItemName(cb);
+      const cbId = cbSeq++;
+      edits.push({ start: itemParam.getStart(sf), end: itemParam.getEnd(), pieces: [synthetic] });
+      observableBindings.add(synthetic); addedBindings.push(synthetic);
+      for (const el of itemParam.name.elements) {
+        const prop = (el.propertyName || el.name).getText(sf);
+        const key = el.name.text;
+        addedAliases.push([key, aliasInfo.has(key) ? aliasInfo.get(key) : undefined]);
+        aliasInfo.set(key, { param: synthetic, prop, cbId });
+        // Non-renamed field: its declaration token can borrow a use's generated
+        // `item.prop` token for hover. (Renamed `{ a: b }` uses emit a plain string
+        // prop, so there's no source-mapped token to point at — left unmapped.)
+        if (!el.propertyName) declMappings.push({
+          aliasKey: `${cbId}:${key}`, srcStart: el.name.getStart(sf), len: el.name.getEnd() - el.name.getStart(sf),
+        });
+      }
+    }
+    // Remaining params (and a non-destructured item param) → plain observable bindings.
+    for (let i = destructures ? 1 : 0; i < cb.parameters.length; i++) {
+      const name = cb.parameters[i].name.getText(sf);
+      if (!observableBindings.has(name)) { observableBindings.add(name); addedBindings.push(name); }
+    }
     visit(cb.body);
-    added.forEach(p => observableBindings.delete(p));
+    addedBindings.forEach(p => observableBindings.delete(p));
+    for (const [key, prev] of addedAliases) prev ? aliasInfo.set(key, prev) : aliasInfo.delete(key);
     // The key arg (if any) operates on the plain item value — left verbatim.
   };
 
@@ -772,9 +885,21 @@ function transformWithMappings(ts, sourceText, baseDir) {
     const names = [...collectHandlerCaptures(fnNode).keys()];
     if (!names.length) return null;
     needed['rxjs/operators'].add('map');
-    if (names.length === 1) return [names[0], '.pipe(map(', names[0], ' => ', V(fnNode), '))'];
+    // A captured alias (D4) is sourced from its shared item param, deduped, and its
+    // fields are expanded in the body — so `() => f(color)` over a destructured
+    // `{ color }` lifts to `item.pipe(map(item => () => f(item.color)))`.
+    const sources = [];
+    const seen = new Set();
+    for (const name of names) {
+      const src = aliasInfo.has(name) ? aliasInfo.get(name).param : name;
+      if (seen.has(src)) continue;
+      seen.add(src);
+      sources.push(src);
+    }
+    const body = expandAliases(fnNode);
+    if (sources.length === 1) return [sources[0], '.pipe(map(', sources[0], ' => ', ...body, '))'];
     needed.rxjs.add('combineLatest');
-    return ['combineLatest([', names.join(', '), ']).pipe(map(([', names.join(', '), ']) => ', V(fnNode), '))'];
+    return ['combineLatest([', sources.join(', '), ']).pipe(map(([', sources.join(', '), ']) => ', ...body, '))'];
   };
   // Does parameter `argIndex` of this call accept an Observable (e.g. an
   // EventHandler slot, which is `handler | Observable<handler>`)?
@@ -996,7 +1121,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
       if (typeof piece === 'string') {
         code += piece;
       } else {
-        segments.push({ identity: true, srcStart: piece.srcStart, length: piece.srcEnd - piece.srcStart, genStart: code.length });
+        const length = piece.srcEnd - piece.srcStart;
+        segments.push({ identity: true, srcStart: piece.srcStart, length, genStart: code.length });
+        // First generated `item.prop` token for this field: the declaration borrows it.
+        if (piece.aliasKey && !aliasGenTarget.has(piece.aliasKey)) aliasGenTarget.set(piece.aliasKey, { genStart: code.length, len: length });
         code += sourceText.slice(piece.srcStart, piece.srcEnd);
       }
     }
@@ -1005,6 +1133,15 @@ function transformWithMappings(ts, sourceText, baseDir) {
   if (cursor < sourceText.length) {
     segments.push({ identity: true, srcStart: cursor, length: sourceText.length - cursor, genStart: code.length });
     code += sourceText.slice(cursor);
+  }
+
+  // Declaration-site mappings for destructured fields (D4): point each field's
+  // binding token at the generated `item.prop` token from its first use, so hover /
+  // go-to-def resolve on the binding too. These source spans sit in the erased
+  // binding-pattern region (no other segment covers them), so they never overlap.
+  for (const dm of declMappings) {
+    const target = aliasGenTarget.get(dm.aliasKey);
+    if (target) segments.push({ identity: false, navigable: true, srcStart: dm.srcStart, srcLen: dm.len, genStart: target.genStart, genLen: target.len });
   }
 
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
