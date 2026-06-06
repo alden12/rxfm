@@ -701,6 +701,33 @@ function transformWithMappings(ts, sourceText, baseDir) {
         handleComponentMap(node.initializer);
         return;
       }
+      // Destructuring an observable into its fields: `const { board, gameStage } = game`
+      // → `const board = render(game.pipe(map(game => game.board))), gameStage = …`.
+      // Each field becomes its own lifted member-access binding (the same shape the
+      // member-access lift produces), so it reads like ordinary destructuring.
+      // Limited to an identifier source — a non-identifier would be re-subscribed
+      // once per field.
+      if (ts.isObjectBindingPattern(node.name) && ts.isIdentifier(node.initializer)
+        && transformExpression(node.initializer).observable) {
+        const src = node.initializer;
+        const param = src.text;
+        needed['rxjs/operators'].add('map');
+        usedRender = true;
+        const groups = node.name.elements.map(el => {
+          if (el.dotDotDotToken || !ts.isIdentifier(el.name)) return null;
+          const prop = (el.propertyName || el.name).getText(sf);
+          observableBindings.add(el.name.text);
+          return [V(el.name), ' = render(', V(src), `.pipe(map(${param} => ${param}.${prop})))`];
+        });
+        if (groups.every(Boolean)) {
+          edits.push({
+            start: node.name.getStart(sf),
+            end: node.initializer.getEnd(),
+            pieces: joinPieces(groups, ', '),
+          });
+          return;
+        }
+      }
       const r = transformExpression(node.initializer);
       if (r.observable && ts.isIdentifier(node.name)) {
         observableBindings.add(node.name.text);
@@ -755,6 +782,57 @@ function transformWithMappings(ts, sourceText, baseDir) {
         }
       }
       return; // interpolations handled; don't re-descend
+    }
+    // Call arguments (component children, chainable `.class(…)` / `.attr(…)` args, …):
+    // lift an observable argument in place. Like object-literal values, only `lifted`
+    // arguments are touched — an observable here would otherwise be a type error — so
+    // plain arguments and the callee are left to descend normally. (Initializers and
+    // component-`.map` calls are handled above and never reach here, so this doesn't
+    // double-handle or fight C6's operator-style arg lifting.)
+    if (ts.isCallExpression(node)) {
+      visit(node.expression); // the callee chain (may hold object literals, nested calls, templates)
+      for (const arg of node.arguments) {
+        if (ts.isSpreadElement(arg)) { visit(arg); continue; }
+        // A component-`.map` child (e.g. `Div(items.map(cb))`) is a keyed list, not a
+        // value to render — hand it to the list handler, not the expression lifter.
+        if (isComponentMapCall(arg)) { handleComponentMap(arg); continue; }
+        const r = transformExpression(arg);
+        if (r.lifted) {
+          usedRender = true;
+          edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: ['render(', ...r.pieces, ')'] });
+        } else if (r.rewritten) {
+          edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: r.pieces });
+        } else {
+          visit(arg);
+        }
+      }
+      return;
+    }
+    // Object-literal property values (e.g. `.style({ backgroundColor: cell.color })`):
+    // lift an observable value in place rather than forcing it to be named first.
+    // Only `lifted` values are touched — those are observable expressions that would
+    // otherwise be a type error here anyway — so a constant value is left untouched.
+    if (ts.isObjectLiteralExpression(node)) {
+      for (const prop of node.properties) {
+        if (ts.isPropertyAssignment(prop)) {
+          const r = transformExpression(prop.initializer);
+          if (r.lifted) {
+            usedRender = true;
+            edits.push({
+              start: prop.initializer.getStart(sf),
+              end: prop.initializer.getEnd(),
+              pieces: ['render(', ...r.pieces, ')'],
+            });
+          } else if (r.rewritten) {
+            edits.push({ start: prop.initializer.getStart(sf), end: prop.initializer.getEnd(), pieces: r.pieces });
+          } else {
+            visit(prop.initializer);
+          }
+        } else {
+          visit(prop);
+        }
+      }
+      return;
     }
     ts.forEachChild(node, visit);
   };
