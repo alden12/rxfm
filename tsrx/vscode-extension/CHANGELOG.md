@@ -2,6 +2,19 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.12]
+
+### Added
+- **Destructuring a component-`.map` item param** now works:
+  `board.flat().map(({ color, symbol }, index) => …)`. Each field is treated as a stream of that
+  field (`color` → `item.pipe(map(item => item.color))`), and fields of one item share the stream, so
+  a multi-field expression collapses to a single `map` — same output as reading `cell.color`. Only
+  plain-field patterns qualify (no rest, defaults, computed names, or nesting). Both the field's
+  *uses* and its declaration in the `{ … }` pattern map back to the generated property token, so
+  hover / go-to-def resolve a real type on the destructured name (e.g. `(property) color: string`)
+  rather than nothing. (The type shown is the emitted field type, matching how `cell.color` reads —
+  not `Observable<…>`; the stream wrapping is the lift's job, kept out of the value view.)
+
 ## [0.0.11]
 
 ### Changed
