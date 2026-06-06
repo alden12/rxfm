@@ -11,10 +11,11 @@ test('renders the example app shell', async ({ page }) => {
 
 test('click counter increments on click (reactivity)', async ({ page }) => {
   const counter = page.getByRole('button', { name: /^Clicks:/ });
-  await expect(counter).toHaveText('Clicks: 0');
+  // The tsrx demo's counter also renders a derived value, e.g. "Clicks: 0 (doubled: 0)".
+  await expect(counter).toContainText('Clicks: 0');
   await counter.click();
   await counter.click();
-  await expect(counter).toHaveText('Clicks: 2');
+  await expect(counter).toContainText('Clicks: 2');
 });
 
 test('todo list renders its initial items', async ({ page }) => {

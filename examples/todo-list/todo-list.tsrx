@@ -65,5 +65,3 @@ export const TodoList = () => {
     TodoItems,
   );
 };
-
-TodoList().subscribe(element => document.body.appendChild(element));

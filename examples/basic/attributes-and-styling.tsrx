@@ -3,7 +3,7 @@
 // tsrx earns its keep: drive a value off a clock and write the derived expression
 // inline — `tick % 2 ? 'red' : 'blue'` lifts in place, no `.pipe(map(...))`.
 import { Div, Input } from 'rxfm';
-import { interval } from '../../runtime';
+import { interval } from '../runtime';
 
 import './example-styles.css';
 

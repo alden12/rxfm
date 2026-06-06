@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Docs & examples restructured around tsrx as the default style.** The README is now a lean
+  landing page; the full docs live in `docs/` (`getting-started.md`, `guide.md` for the tsrx
+  walkthrough, `plain-typescript.md` for the plain-RxJS reference). The demo example app moved to a
+  top-level `examples/` directory and is now authored in tsrx — `yarn dev` / `yarn build:app`
+  compile it via the tsrx Vite plugin. The previous plain-TypeScript demo is preserved as a
+  reference at `examples/plain-typescript/`. No library/runtime code changed.
+
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and
   is now redundant — use the native `array.flat()` instead. (`recursiveFlatten`, for arbitrary

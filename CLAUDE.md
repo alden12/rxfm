@@ -11,9 +11,11 @@ An experimental web framework built on RxJS. The core idea: **a component is jus
 
 ## Layout
 
-- [src/lib/rxfm/](src/lib/rxfm/) — the framework itself (what gets published).
+- [src/lib/rxfm/](src/lib/rxfm/) — the framework itself (what gets published). `src/` now holds only `lib/`.
 - [src/lib/index.ts](src/lib/index.ts) — package entry, re-exports `src/lib/rxfm` (named exports only, no default).
-- [src/app/](src/app/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). Basic examples mirror the README; advanced examples are a todo list, snake game, and minesweeper. Entry is [src/app/index.ts](src/app/index.ts), loaded by the root [index.html](index.html).
+- [examples/](examples/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). As of the tsrx-default switch the demo is authored in **tsrx** (`.tsrx`): basic examples mirror the guide; advanced examples are a todo list, snake game, and minesweeper. Entry is [examples/main.ts](examples/main.ts), loaded by the root [index.html](index.html); [examples/runtime.ts](examples/runtime.ts) re-exports [tsrx/runtime.ts](tsrx/runtime.ts) so the tree (a sibling of `tsrx/`) resolves the runtime; [examples/tsconfig.json](examples/tsconfig.json) governs `.tsrx` editor types.
+- [examples/plain-typescript/](examples/plain-typescript/) — the previous plain-RxJS demo, demoted to a reference (not wired to a build). Mirrors the [plain-TypeScript docs](docs/plain-typescript.md).
+- [docs/](docs/) — `getting-started.md`, `guide.md` (tsrx walkthrough), `plain-typescript.md` (plain reference). The root [README.md](README.md) is a lean landing page linking into them. (Slated to move to the github.io site later.)
 
 ### Library internals (`src/lib/rxfm/`)
 
@@ -38,8 +40,11 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 
 - **Vite 8** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
-- `yarn dev` — Vite dev server (port 3000) serving the demo from `src/app`. The demo's `rxfm`
-  import is aliased to live lib source (`src/lib/rxfm/index.ts`).
+  The demo config loads the `tsrx()` Vite plugin ([tsrx/vite-plugin-tsrx.mjs](tsrx/vite-plugin-tsrx.mjs))
+  so it can compile the `.tsrx` examples, and adds `.tsrx` to `resolve.extensions` for bare
+  cross-file imports.
+- `yarn dev` — Vite dev server (port 3000) serving the tsrx demo from `examples/` (entry
+  `examples/main.ts`). The demo's `rxfm` import is aliased to live lib source (`src/lib/rxfm/index.ts`).
 - `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the
   declaration tree (`index.d.ts` + `rxfm/**.d.ts`) via `vite-plugin-dts`. `rxjs` is externalised
   (`external: [/^rxjs/]`), not bundled. This is what npm publishes (`files: ["dist"]`).

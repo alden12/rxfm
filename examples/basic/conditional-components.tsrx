@@ -4,7 +4,7 @@
 // lazily (switchMap under the hood, subscribing only the taken branch). The empty
 // branch is `null` (not EMPTY) so rxfm clears the element when the condition flips.
 import { Div } from 'rxfm';
-import { interval } from '../../runtime';
+import { interval } from '../runtime';
 
 const tick = interval(1000);
 const visible = tick % 2 === 0;

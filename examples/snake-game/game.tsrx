@@ -11,7 +11,7 @@
 //   retry()/throw         → ?? getInitialSnakeState()  — reset on game over
 //   switchMap(d => timer) → interval(period)           — a clock whose rate can change
 import { BehaviorSubject } from 'rxjs';
-import { accumulate, interval } from '../../runtime';
+import { accumulate, interval } from '../runtime';
 import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
 import { DIFFICULTY_TICK_PERIOD_MAP } from './constants';
 import { Difficulty, Direction } from './types';
@@ -23,14 +23,16 @@ export const direction = new BehaviorSubject<Direction>('right');
 // A clock whose rate follows the chosen difficulty (interval re-times on change).
 const tick = interval(DIFFICULTY_TICK_PERIOD_MAP[difficulty]);
 
-// Each tick advances the snake; a collision (null) resets to the initial state.
+// Each tick advances the snake; a collision (null from the reducer) resets to the
+// initial state. `accumulate` also emits `null` before the first tick, so the outer
+// `?? getInitialSnakeState()` supplies the initial board immediately on load.
 const state = accumulate(
   tick,
   snake => getNewSnakeState(snake, direction.value, difficulty.value) ?? getInitialSnakeState(),
   getInitialSnakeState(),
-);
+) ?? getInitialSnakeState();
 
 // Derived reactive values, exported for the view.
 export const board = getBoard(state.trail.coordinates, state.food);
 export const score = state.score;
-export const highScore = accumulate(score, (highest, s) => Math.max(highest, s), 0);
+export const highScore = accumulate(score, (highest, s) => Math.max(highest, s), 0) ?? 0;

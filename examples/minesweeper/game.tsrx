@@ -8,8 +8,8 @@
 //   throw 'Restart' + retry()    → reduceGame resets      — explicit restart (see game-logic)
 //   switchMap(start/end → timer) → ternary + interval     — a clock that starts/stops/freezes
 //   filter(both times) + scan    → `? : EMPTY` + accumulate — best-time, only on wins
-import { Subject } from 'rxjs';
-import { accumulate, interval, EMPTY } from '../../runtime';
+import { Subject, startWith } from 'rxjs';
+import { accumulate, interval, EMPTY } from '../runtime';
 import { getInitialGame, reduceGame } from './game-logic';
 import { CellAction } from './types';
 
@@ -17,8 +17,11 @@ import { CellAction } from './types';
 export const cellAction = new Subject<CellAction>();
 export const dispatch = (action: CellAction) => cellAction.next(action);
 
-// Fold each action into the next game state.
-const game = accumulate(cellAction, reduceGame, getInitialGame());
+// Fold each action into the next game state. `accumulate` (scan) doesn't emit
+// until the first action, and the action Subject is silent on load, so the
+// initial board would be blank until the first click — `startWith` seeds the
+// starting state immediately (mirrors the plain version's `startWith(getStartingState())`).
+const game = accumulate(cellAction, reduceGame, getInitialGame()) ?? getInitialGame();
 
 // Derived reactive views of the state. Destructuring a stream lifts each field
 // into its own derivation, so this reads like plain object destructuring.

@@ -13,7 +13,9 @@ import pluginCjs from './ts-plugin/index.cjs';
 const { transformWithMappings } = transformCjs;
 const { patchTsrxModuleResolution } = pluginCjs;
 const here = dirname(fileURLToPath(import.meta.url));
-const examples = join(here, 'examples');
+// The structured example suite was promoted to the top-level `examples/` (sibling
+// of `tsrx/`) when tsrx became the default style; loose transform fixtures stay here.
+const examples = join(here, '..', 'examples');
 
 const parsed = ts.parseJsonConfigFileContent(
   ts.readConfigFile(join(here, 'tsconfig.json'), ts.sys.readFile).config, ts.sys, here,

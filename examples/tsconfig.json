@@ -1,0 +1,24 @@
+{
+  // Governs the example sources, including `.tsrx` files in the editor. Mirrors
+  // tsrx/tsconfig.json: the root tsconfig excludes `examples/`, which would
+  // otherwise leave `.tsrx` files in an inferred project with default options (no
+  // `paths`, unreliable extraFileExtensions wiring), so the tsrx tsserver plugin's
+  // virtual TypeScript never type-checked properly. This pins the same options the
+  // transform itself uses (see tsrx/ts-plugin/transform.cjs `getCompilerOptions`)
+  // plus the `rxfm` path. The generated `render` import and the hand-written
+  // `accumulate`/`interval`/`EMPTY` imports both resolve to `examples/runtime.ts`.
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "rxfm": ["../src/lib/rxfm/index"]
+    }
+  },
+  "include": ["**/*.tsrx", "**/*.ts"],
+  "exclude": ["node_modules"]
+}

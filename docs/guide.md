@@ -1,10 +1,11 @@
-# RxFM with tsrx
+# RxFM Guide
 
-> 🧪 **Work in progress.** This is a secondary, tsrx-flavoured version of the
-> [main RxFM README](README.md). It shows RxFM written in the **tsrx** style throughout. tsrx is
-> an experimental transform (a "spike") — see [its roadmap](tsrx/ROADMAP.md) for status. The
-> [main README](README.md) remains the canonical, no-build-step reference; this page may be
-> promoted to the primary docs once tsrx settles.
+> The full walkthrough of RxFM in the **tsrx** style — components, state & events, attributes,
+> conditional rendering, inputs/outputs, and dynamic lists. New here? Start with the
+> [README](../README.md) for the pitch and a quick example, then [Getting started](getting-started.md)
+> to set up your editor and build. Prefer plain RxJS with no build step? See the
+> [plain-TypeScript reference](plain-typescript.md). tsrx is experimental — see
+> [How tsrx works](#how-tsrx-works) below and the [roadmap](../tsrx/ROADMAP.md).
 
 RxFM is an experimental web framework built on [RxJS](https://github.com/ReactiveX/rxjs): a
 **component is just an `Observable<HTMLElement>`**. There's no virtual DOM and no re-render cycle —
@@ -229,7 +230,8 @@ array index. If `items` emits a new array, the list updates in place, reusing ex
 for items whose id is unchanged.
 
 The plain-RxFM equivalent — a per-item component over `Observable<TodoItem>` passed to
-`mapToComponents(Item, 'name')` — is documented in the [main README](README.md#dynamic-component-arrays).
+`mapToComponents(Item, 'name')` — is documented in the
+[plain-TypeScript reference](plain-typescript.md#dynamic-component-arrays).
 
 ---
 
@@ -256,13 +258,16 @@ RxFM.
 
 > **Status.** tsrx is a spike. It needs the [tsrx transform / editor extension](tsrx/), and its
 > build-time story is still being worked out (see [tsrx/ROADMAP.md](tsrx/ROADMAP.md)). For anything
-> production-facing today, prefer the plain style in the [main README](README.md).
+> production-facing today, prefer the plain style in the
+> [plain-TypeScript reference](plain-typescript.md).
 
 ---
 
 ## Advanced Examples
 
-A runnable tsrx showcase lives in [tsrx/examples/app.tsrx](tsrx/examples/app.tsrx). Larger plain-RxFM
-examples (todo list, snake, minesweeper) are in
-[src/app/advanced-examples](src/app/advanced-examples) — see the
-[live demo](https://alden12.github.io/rxfm/).
+The full tsrx example suite — the basics covered on this page plus a todo list, snake game, and
+minesweeper — lives in [examples/](../examples/) and powers the
+[live demo](https://alden12.github.io/rxfm/) (`yarn dev` to run it locally). A condensed,
+single-file tsrx showcase is in [tsrx/examples/app.tsrx](../tsrx/examples/app.tsrx). The
+plain-TypeScript equivalents are in
+[examples/plain-typescript](../examples/plain-typescript/).

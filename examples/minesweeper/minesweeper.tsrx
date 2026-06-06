@@ -59,5 +59,3 @@ export const Minesweeper = () => {
       controls,
     );
 };
-
-Minesweeper().subscribe(element => document.body.appendChild(element));

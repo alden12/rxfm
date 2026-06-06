@@ -37,5 +37,3 @@ export const SnakeGame = () => {
       ),
   );
 };
-
-SnakeGame().subscribe(element => document.body.appendChild(element));
