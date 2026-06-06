@@ -169,6 +169,13 @@ function transformWithMappings(ts, sourceText, baseDir) {
   let cbSeq = 0;
   const declMappings = [];
   const aliasGenTarget = new Map();
+  // D5 hover: when a single-root expression collapses to `x.pipe(map(x => …))`, the
+  // root's source occurrences are emitted as the map param but mapped onto the OUTER
+  // stream reference, so hovering the variable shows its `Observable<…>` type (like
+  // the member-access lift) rather than the in-map value. `collapseSeq` keys each
+  // collapse to its own outer reference.
+  let collapseSeq = 0;
+  const rootMappings = [];
   // Lifted bindings whose emitted value is definitely not callable (e.g. the
   // result of an arithmetic lift). The checker can't tell us this — it analyses
   // the original (pre-transform) source, where these bindings have an erroring/
@@ -315,34 +322,40 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return isObservableChain(ex.expression) && returnsComponent(cb);
   };
 
-  // The set of root identifier names of every observable sub-expression in `node`
-  // (`a.b`, `a[i]`, `a.f()` all root at `a`), or null if some observable doesn't
-  // root in a plain identifier. When this is a single name, the whole expression can
-  // be lifted as `x.pipe(map(x => <expr verbatim>))` — the expression runs as plain
-  // code with `x` bound to the value, so TS's control-flow narrowing is preserved
-  // (D3). Used only when no branch is itself a stream.
+  // The set of root identifier names of every observable VALUE referenced in `node`,
+  // or null if the expression can't lift as one `x.pipe(map(x => <verbatim>))`. When
+  // this is a single name, the whole expression lifts that way — it runs as plain code
+  // with `x` bound to the emitted value, so TS's control-flow narrowing is preserved
+  // (D3) and a single-stream operator chain becomes one map (D5).
+  //
+  // An observable counts only when it's read as a VALUE (`x`, `x.field`, `x[i]`):
+  //   - a stream-API use (`x.value`, `x.next(…)`, `x.pipe(…)`) means binding `x` to the
+  //     emitted value would break the call, so the expression can't collapse → null;
+  //   - an observable that isn't a bare identifier (e.g. a call returning a stream)
+  //     has no named root → null;
+  //   - property names / binding targets aren't value references and are skipped.
   const observableRoots = node => {
     const names = new Set();
     let ok = true;
-    const rootOf = n => {
-      while (n) {
-        if (ts.isParenthesizedExpression(n)) { n = n.expression; continue; }
-        if (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) { n = n.expression; continue; }
-        if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) { n = n.expression.expression; continue; }
-        break;
-      }
-      return n;
-    };
     const walk = n => {
       if (!ok) return;
-      if (isObservableExpr(n)) {
-        const r = rootOf(n);
+      if (ts.isIdentifier(n)) {
+        const p = n.parent;
+        if (ts.isPropertyAccessExpression(p) && p.name === n) return;            // a property name
+        if (ts.isQualifiedName(p) && p.right === n) return;
+        if ((ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)
+          || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
+        if (!isObservableExpr(n)) return;
+        // Read via a stream-API member (`x.value`, `x.next`, `x.pipe`)? Not a value lift.
+        if (ts.isPropertyAccessExpression(p) && p.expression === n && !memberTargetsValue(n, p.name.text)) { ok = false; return; }
         // An alias roots in its synthetic item param, so fields of one destructured
         // item collapse to a single root (and so to one map, like `cell.x`).
-        if (r && ts.isIdentifier(r)) names.add(aliasInfo.has(r.text) ? aliasInfo.get(r.text).param : r.text);
-        else ok = false;
-        return; // sub-parts share this root — don't double-count
+        names.add(aliasInfo.has(n.text) ? aliasInfo.get(n.text).param : n.text);
+        return;
       }
+      // A non-identifier observable (e.g. a call/chain returning a stream) has no
+      // named root to map over — can't collapse.
+      if (isObservableExpr(n)) { ok = false; return; }
       ts.forEachChild(n, walk);
     };
     walk(node);
@@ -382,36 +395,69 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // param is the shared item — the D3 ternary body and a handler closure body — so
   // the destructured names resolve to members of the bound item. With no aliases
   // present it returns a single verbatim slice, identical to `[V(node)]`.
-  const expandAliases = node => {
+  const expandAliases = (node, root) => {
+    // Collect alias (D4) value references, and — when `root` (a real observable
+    // identifier) is given — its value occurrences too (D5), in source order.
     const occ = [];
     const walk = n => {
-      if (ts.isIdentifier(n) && aliasInfo.has(n.text)) {
+      if (ts.isIdentifier(n)) {
         const p = n.parent;
         if (ts.isPropertyAccessExpression(p) && p.name === n) return;            // a property name
         if (ts.isQualifiedName(p) && p.right === n) return;
         if ((ts.isPropertyAssignment(p) || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
         if (ts.isShorthandPropertyAssignment(p)) return;                         // `{ color }` — leave (rare)
-        occ.push(n);
+        if (aliasInfo.has(n.text)) { occ.push({ id: n, alias: true }); return; }
+        if (root && n.text === root.name && isObservableExpr(n)) { occ.push({ id: n, alias: false }); return; }
         return;
       }
       ts.forEachChild(n, walk);
     };
     walk(node);
     if (!occ.length) return [V(node)];
-    occ.sort((a, b) => a.getStart(sf) - b.getStart(sf));
+    occ.sort((a, b) => a.id.getStart(sf) - b.id.getStart(sf));
     const pieces = [];
     let cursor = node.getStart(sf);
-    for (const id of occ) {
+    for (const { id, alias } of occ) {
       if (id.getStart(sf) > cursor) pieces.push({ srcStart: cursor, srcEnd: id.getStart(sf) });
-      const { param, prop, cbId } = aliasInfo.get(id.text);
-      // Source-slice the prop token (when not renamed) so the field keeps hover / nav.
-      pieces.push(param, '.', id.text === prop
-        ? { srcStart: id.getStart(sf), srcEnd: id.getEnd(), aliasKey: `${cbId}:${id.text}` }
-        : prop);
+      if (alias) {
+        const { param, prop, cbId } = aliasInfo.get(id.text);
+        // Source-slice the prop token (when not renamed) so the field keeps hover / nav.
+        pieces.push(param, '.', id.text === prop
+          ? { srcStart: id.getStart(sf), srcEnd: id.getEnd(), aliasKey: `${cbId}:${id.text}` }
+          : prop);
+      } else {
+        // Real root: emit the map param as generated text and record the source span,
+        // so it maps onto the outer stream reference (Observable type) — not the param.
+        rootMappings.push({ srcStart: id.getStart(sf), len: id.getEnd() - id.getStart(sf), key: root.key });
+        pieces.push(root.name);
+      }
       cursor = id.getEnd();
     }
     if (cursor < node.getEnd()) pieces.push({ srcStart: cursor, srcEnd: node.getEnd() });
     return pieces;
+  };
+
+  // When every observable in `node` roots in a single identifier `x`, the whole
+  // expression lifts as one `x.pipe(map(x => <verbatim>))` — no combineLatest, and
+  // the body runs as plain code so TS narrowing is preserved. Shared by the ternary
+  // (D3) and the operator lifts (D5). `expandAliases` rewrites any destructured
+  // field to `x.prop` (D4); with none it's just the verbatim expression. Returns
+  // null when there's no single root (zero observables, or several distinct ones).
+  const singleRootLift = (node, callable) => {
+    const roots = observableRoots(node);
+    if (!roots || roots.size !== 1) return null;
+    const x = [...roots][0];
+    needed['rxjs/operators'].add('map');
+    const key = `c:${collapseSeq++}`;
+    const body = expandAliases(node, { name: x, key });
+    // The outer `x` is the actual stream; tag its generated position so the root's
+    // source occurrences (now the map param in `body`) hover/navigate to it — showing
+    // `Observable<…>`, the variable's real type. (For an alias root the param is
+    // synthetic, has no source occurrences, and the tag is simply unused.)
+    // `callable` mirrors the eager path: arithmetic/comparison/unary emit primitives
+    // (false), ternary/logical leave it unknown (undefined). It marks the binding
+    // non-callable so a later `binding(...)` surfaces as a boundary teaching message.
+    return { pieces: [{ gen: x, refKey: key }, '.pipe(map(', x, ' => ', ...body, '))'], observable: true, lifted: true, callable };
   };
 
   function transformExpression(node) {
@@ -438,24 +484,17 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // branch is subscribed (lazy), and shareReplay so it behaves as a
     // RenderObservable (replays its latest value to late subscribers).
     if (ts.isConditionalExpression(node)) {
+      // D3 — preserve narrowing: if every observable in the ternary roots in one
+      // identifier (so no branch is a separate stream — a component branch like
+      // `Div`…`` roots elsewhere and disqualifies this), lift the whole ternary as
+      // one `x.pipe(map(x => <verbatim>))`, so a guard like `x === undefined` narrows
+      // `x` in its branch — exactly as it would without tsrx.
+      const collapsed = singleRootLift(node);
+      if (collapsed) return collapsed;
       const cond = transformExpression(node.condition);
       const whenTrue = transformExpression(node.whenTrue);
       const whenFalse = transformExpression(node.whenFalse);
       if (cond.observable) {
-        // D3 — preserve narrowing: if every observable in the ternary roots in one
-        // identifier (so no branch is a separate stream — a component branch like
-        // `Div`…`` roots elsewhere and disqualifies this), lift the whole ternary as
-        // `x.pipe(map(x => <verbatim>))`. The condition and branches then run as plain
-        // code with `x` bound to the value, so a guard like `x === undefined` narrows
-        // `x` in its branch — exactly as it would without tsrx.
-        const roots = observableRoots(node);
-        if (roots && roots.size === 1) {
-          const x = [...roots][0];
-          needed['rxjs/operators'].add('map');
-          // expandAliases rewrites any destructured field to `x.prop` (D4); with no
-          // aliases it's just the verbatim ternary, so this preserves narrowing as before.
-          return { pieces: [x, '.pipe(map(', x, ' => ', ...expandAliases(node), '))'], observable: true, lifted: true };
-        }
         needed['rxjs/operators'].add('switchMap');
         const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
         // switchMap for laziness; the render() wrapper (added at the binding)
@@ -701,6 +740,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Short-circuiting logical operator with an observable left → switchMap, so
     // the right side is only subscribed when the left selects it.
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LOGICAL) {
+      // Single-root (D5): both sides root in one stream, so there's nothing to keep
+      // lazy — one map preserves short-circuit semantics as plain JS.
+      const collapsed = singleRootLift(node);
+      if (collapsed) return collapsed;
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
       if (left.observable) {
@@ -725,6 +768,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
 
     // Prefix unary on a stream → map over it (single source, no combineLatest).
     if (ts.isPrefixUnaryExpression(node) && node.operator in LIFTABLE_UNARY) {
+      // Single-root (D5): collapse `!user.active` to one map over `user`, not a
+      // member-access map piped into a unary map. Emits a primitive → non-callable.
+      const collapsed = singleRootLift(node, false);
+      if (collapsed) return collapsed;
       const operand = transformExpression(node.operand);
       if (operand.observable) {
         needed['rxjs/operators'].add('map');
@@ -737,6 +784,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
     }
 
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LIFTABLE) {
+      // Single-root (D5): `count * 2`, `tick % 2 === 0`, `selected === option` all
+      // root in one stream → one map instead of (nested) combineLatest. Emits a
+      // primitive, so it's non-callable.
+      const collapsed = singleRootLift(node, false);
+      if (collapsed) return collapsed;
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
       if (left.observable || right.observable) {
@@ -1120,6 +1172,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
     for (const piece of edit.pieces) {
       if (typeof piece === 'string') {
         code += piece;
+      } else if (piece.gen !== undefined) {
+        // Generated-only text whose position is recorded as a mapping target (the
+        // outer stream reference of a single-root collapse — D5 root hover).
+        if (piece.refKey) aliasGenTarget.set(piece.refKey, { genStart: code.length, len: piece.gen.length });
+        code += piece.gen;
       } else {
         const length = piece.srcEnd - piece.srcStart;
         segments.push({ identity: true, srcStart: piece.srcStart, length, genStart: code.length });
@@ -1142,6 +1199,12 @@ function transformWithMappings(ts, sourceText, baseDir) {
   for (const dm of declMappings) {
     const target = aliasGenTarget.get(dm.aliasKey);
     if (target) segments.push({ identity: false, navigable: true, srcStart: dm.srcStart, srcLen: dm.len, genStart: target.genStart, genLen: target.len });
+  }
+  // D5 root hover: each single-root occurrence maps onto its collapse's outer stream
+  // reference, so the variable shows its `Observable<…>` type, not the in-map value.
+  for (const rm of rootMappings) {
+    const target = aliasGenTarget.get(rm.key);
+    if (target) segments.push({ identity: false, navigable: true, srcStart: rm.srcStart, srcLen: rm.len, genStart: target.genStart, genLen: target.len });
   }
 
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
