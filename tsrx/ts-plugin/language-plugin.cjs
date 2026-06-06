@@ -55,6 +55,11 @@ function createTsrxLanguagePlugin(ts) {
       extraFileExtensions: [
         { extension: 'tsrx', isMixedContent: false, scriptKind: ts.ScriptKind.Deferred },
       ],
+      // Let a bare `import … from './game'` resolve to a sibling `./game.tsrx`: TS
+      // probes for `./game.d.ts`, and Volar remaps that to the .tsrx's virtual TS.
+      // This is the editor-side half of cross-.tsrx imports (the transform's own
+      // inference Program resolves them separately in transform.cjs).
+      resolveHiddenExtensions: true,
       // Our whole file maps to one TS document, so the root virtual code IS the
       // script tsserver should analyse.
       getServiceScript(rootVirtualCode) {

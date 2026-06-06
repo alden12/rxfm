@@ -54,9 +54,12 @@ console.log('=== tagged-template interpolation lifting ===');
 
 // Lifts apply per-interpolation; the Div`...` template structure stays intact.
 check('field interpolation lifts: Div`… ${user.name}`', lineWith('a').includes('Div`my name is ${render(user.pipe(map(user => user.name)))}`'));
-check('?? interpolation lifts', lineWith('b').includes('switchMap(_l => _l != null ? of(_l) : of(\'none\'))'));
+// `user.nickname ?? 'none'` roots in one stream (`user`), so it collapses to a
+// single narrowing-preserving map (D5) rather than a lazy switchMap.
+check('?? interpolation lifts', lineWith('b').includes("render(user.pipe(map(user => user.nickname ?? 'none')))"));
 check('plain observable left untouched: ${count}', lineWith('c').includes('count = ${count},'));
-check('derived interpolation lifts: ${count * 2}', lineWith('c').includes('${render(combineLatest([count, of(2)])'));
+// `count * 2` is single-root too → one map, not combineLatest (D5).
+check('derived interpolation lifts: ${count * 2}', lineWith('c').includes('${render(count.pipe(map(count => count * 2)))}'));
 check('non-observable interpolation untouched: ${1 + 1}', lineWith('d').includes('Div`static ${1 + 1}`'));
 
 // The lifted interpolations are valid (ignoring the unresolved rxfm import).

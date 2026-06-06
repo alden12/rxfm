@@ -2,7 +2,7 @@ import { combineLatest, Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
 import { Component, componentOperator, ComponentOperator, ElementType } from '../components/component';
 import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
-import { StringLike, NullLike, flatten, coerceToArray } from '../utils';
+import { StringLike, NullLike, coerceToArray } from '../utils';
 import { childDiffer } from './child-differ';
 import { operatorIsolationService } from '../operator-isolation-service';
 
@@ -109,7 +109,7 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
     return combineLatest(childComponents.map(coerceChildComponent)).pipe(
       startWith([] as (CoercedChildComponent | null)[]),
       //  Remove empty children then flatten.
-      map(childrenOrNull => flatten(childrenOrNull.filter(child => child !== null) as CoercedChildComponent[])),
+      map(childrenOrNull => (childrenOrNull.filter(child => child !== null) as CoercedChildComponent[]).flat()),
       tap(elements => {
         updateElementChildren(element, previousElements, elements, symbol, end); // Update the element child nodes.
         previousElements = elements; // Store nodes for reference.

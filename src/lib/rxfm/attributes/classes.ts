@@ -2,7 +2,7 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { map, startWith, tap } from 'rxjs/operators';
 import { ComponentOperator, ElementType, componentOperator, Component } from '../components';
 import { operatorIsolationService } from '../operator-isolation-service';
-import { NullLike, coerceToArray, flatten } from '../utils';
+import { NullLike, coerceToArray } from '../utils';
 
 /**
  * A CSS class name string or null-like to signify removed.
@@ -20,11 +20,11 @@ export type ClassType = ClassSingle | Observable<ClassSingle | ClassSingle[]>;
 function classTypesToSetObservable(classTypes: ClassType[]): Observable<Set<string>> {
   const classStringsObservables = classTypes.map(classType => classType instanceof Observable ? classType.pipe(
     map(classNames => coerceToArray(classNames).filter(Boolean) as string[]),
-    map(classNames => flatten(classNames.map(name => name.split(' ').filter(Boolean)))),
+    map(classNames => classNames.map(name => name.split(' ').filter(Boolean)).flat()),
   ) : of(classType ? classType.split(' ').filter(Boolean) : []));
 
   return combineLatest(classStringsObservables).pipe(
-    map(stringArrayArray => new Set(flatten(stringArrayArray) as string[])),
+    map(stringArrayArray => new Set(stringArrayArray.flat())),
   );
 }
 

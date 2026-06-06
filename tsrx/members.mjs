@@ -63,7 +63,7 @@ for (const d of diags) console.log('      ✘ ' + ts.flattenDiagnosticMessageTex
 
 // Value members lift to map over the stream.
 check('field extraction: user.name → map(u => u.name)', lineWith('name').includes('user.pipe(map(user => user.name))'));
-check('nested field: user.address.city → chained maps', lineWith('city').includes('map(user => user.address)).pipe(map(_o => _o.city))'));
+check('nested field: user.address.city → one fused map (C4)', lineWith('city').includes('user.pipe(map(user => user.address.city))'));
 check('method call: count.toFixed(2) → combineLatest + call on value', lineWith('fixed').includes('count.toFixed(_a0)'));
 check('static index: items[0] → map(i => i[0])', lineWith('first').includes('items.pipe(map(items => items[0]))'));
 check('dynamic index: items[idx] → combineLatest both', lineWith('dyn').includes('combineLatest([items, idx]).pipe(map(([items, _i]) => items[_i]))'));

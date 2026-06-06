@@ -1,7 +1,7 @@
 import { defer, MonoTypeOperatorFunction, Observable, of } from "rxjs";
 import { tap } from "rxjs/operators";
 import { children, ComponentChild } from "../children/children";
-import { flatten, switchTap } from "../utils";
+import { switchTap } from "../utils";
 
 /**
  * The possible DOM element types which can be used in RxFM. These are HTML and SVG elements.
@@ -54,9 +54,9 @@ export function componentCreator<T extends ElementType>(componentFunction: Compo
     if (Array.isArray(stringsOrFirstChild)) {
       if (stringsOrFirstChild.every(val => typeof val === 'string')) {
         return componentFunction(
-          ...flatten((stringsOrFirstChild as TemplateStringsArray)
-            .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null]),
-          ),
+          ...(stringsOrFirstChild as TemplateStringsArray)
+            .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null])
+            .flat(),
         );
       }
       throw new TypeError('Arrays may only be passed as component children when using the tagged templates form eg: "div`hello world`".');

@@ -1,4 +1,4 @@
-import { Div, event, flatten, mapToComponents, Button, destructure, classes, style, access } from "rxfm";
+import { Div, event, mapToComponents, Button, destructure, classes, style, access } from "rxfm";
 import { Observable, BehaviorSubject } from "rxjs";
 import { map, scan } from "rxjs/operators";
 import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";
@@ -14,7 +14,7 @@ const GameCell = (cellType: Observable<SnakeCell>) => Div().pipe(
 
 const GameBoard = (board: Observable<SnakeBoard>) => Div(
   board.pipe(
-    map(flatten),
+    map(board => board.flat()),
     mapToComponents(GameCell),
   ),
 ).pipe(

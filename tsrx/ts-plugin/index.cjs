@@ -6,13 +6,87 @@
 'use strict';
 // The quickstart helper isn't re-exported from the package root in Volar 2.4,
 // so require it by subpath.
+const path = require('node:path');
 const { createLanguageServicePlugin } = require('@volar/typescript/lib/quickstart/createLanguageServicePlugin.js');
 const { createTsrxLanguagePlugin } = require('./language-plugin.cjs');
 const { rewriteBoundaryDiagnostic } = require('./boundary-diagnostics.cjs');
+const { transformWithMappings } = require('./transform.cjs');
+
+// tsrx-originated warnings (not rewrites of TS errors): a binding produced by the
+// `cond ? x : EMPTY` filter idiom can be empty, so combining it with combineLatest
+// stalls until it first emits. The transform reports those spans; surface each as a
+// warning on the .tsrx source.
+function stallDiagnostics(ts, info, fileName, existingFile) {
+  try {
+    const snapshot = info.languageServiceHost.getScriptSnapshot(fileName);
+    if (!snapshot) return [];
+    const text = snapshot.getText(0, snapshot.getLength());
+    const { stalls } = transformWithMappings(ts, text, path.dirname(fileName));
+    if (!stalls || !stalls.length) return [];
+    const file = existingFile || ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
+    return stalls.map(s => ({
+      file,
+      start: s.start,
+      length: s.length,
+      category: ts.DiagnosticCategory.Warning,
+      code: 9001,
+      messageText:
+        `'${s.name}' can be empty (its \`? : EMPTY\` branch), so combining it here makes the ` +
+        `result wait for its first value — it won't emit until then. Provide a fallback value ` +
+        `instead of EMPTY, or keep '${s.name}' as a standalone child rather than combining it.`,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 const base = createLanguageServicePlugin((ts /*, info */) => ({
   languagePlugins: [createTsrxLanguagePlugin(ts)],
 }));
+
+// Hosts whose module resolution we've already augmented (create() can run once
+// per project; don't stack wrappers).
+const tsrxResolutionPatched = new WeakSet();
+
+// Resolve a bare relative import (`./game`, `../engine`) to a sibling .tsrx file.
+// Returns the resolved-module shape TS expects, served as `.ts` (Volar's
+// getServiceScript maps .tsrx virtual code to .ts), or undefined if no such file.
+function resolveTsrxSibling(ts, containingFile, specifier) {
+  if (!specifier.startsWith('.')) return undefined;
+  const base = path.resolve(path.dirname(containingFile), specifier);
+  const candidate = [base + '.tsrx', path.join(base, 'index.tsrx')].find(f => ts.sys.fileExists(f));
+  if (!candidate) return undefined;
+  return { resolvedFileName: candidate, extension: '.ts', isExternalLibraryImport: false };
+}
+
+// Volar's own cross-.tsrx resolution (resolveHiddenExtensions) only kicks in when a
+// file already imports something with a literal `.tsrx` suffix; a plain `./game`
+// specifier falls through to stock TS resolution, which doesn't know .tsrx — so the
+// editor reports "Cannot find module './game'". Layer a fallback over the
+// (Volar-decorated) host that resolves those leftover relative imports to sibling
+// .tsrx files, so a reactive "engine" module and its view can live in separate files.
+function patchTsrxModuleResolution(ts, languageServiceHost) {
+  if (tsrxResolutionPatched.has(languageServiceHost)) return;
+  tsrxResolutionPatched.add(languageServiceHost);
+  const resolveLiterals = languageServiceHost.resolveModuleNameLiterals?.bind(languageServiceHost);
+  if (resolveLiterals) {
+    languageServiceHost.resolveModuleNameLiterals = (literals, containingFile, ...rest) => {
+      const resolved = resolveLiterals(literals, containingFile, ...rest);
+      return resolved.map((result, i) => {
+        if (result.resolvedModule) return result;
+        const sibling = resolveTsrxSibling(ts, containingFile, literals[i].text);
+        return sibling ? { resolvedModule: sibling } : result;
+      });
+    };
+  }
+  const resolveNames = languageServiceHost.resolveModuleNames?.bind(languageServiceHost);
+  if (resolveNames) {
+    languageServiceHost.resolveModuleNames = (names, containingFile, ...rest) => {
+      const resolved = resolveNames(names, containingFile, ...rest);
+      return resolved.map((module, i) => module || resolveTsrxSibling(ts, containingFile, names[i]));
+    };
+  }
+}
 
 // Wrap Volar's decorated language service so semantic errors on .tsrx files get
 // the teaching-message treatment for boundary violations. Volar's service is a
@@ -25,13 +99,17 @@ module.exports = modules => {
   const originalCreate = pluginModule.create;
   pluginModule.create = info => {
     const languageService = originalCreate(info);
+    // originalCreate() has now let Volar decorate the host's module resolution;
+    // layer our sibling-.tsrx fallback on top of it.
+    patchTsrxModuleResolution(ts, info.languageServiceHost);
     return new Proxy(languageService, {
       get(target, prop) {
         if (prop === 'getSemanticDiagnostics') {
           return (fileName, ...rest) => {
             const diagnostics = target.getSemanticDiagnostics(fileName, ...rest);
             if (typeof fileName !== 'string' || !fileName.endsWith('.tsrx')) return diagnostics;
-            return diagnostics.map(d => rewriteBoundaryDiagnostic(ts, d) || d);
+            const rewritten = diagnostics.map(d => rewriteBoundaryDiagnostic(ts, d) || d);
+            return rewritten.concat(stallDiagnostics(ts, info, fileName, rewritten[0] && rewritten[0].file));
           };
         }
         return target[prop];
@@ -40,3 +118,9 @@ module.exports = modules => {
   };
   return pluginModule;
 };
+
+// Exposed for headless testing of the stall-warning surfacing.
+module.exports.stallDiagnostics = stallDiagnostics;
+// Exposed for headless testing of cross-.tsrx module resolution.
+module.exports.patchTsrxModuleResolution = patchTsrxModuleResolution;
+module.exports.resolveTsrxSibling = resolveTsrxSibling;

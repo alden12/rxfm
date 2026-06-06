@@ -56,16 +56,50 @@ function getCompilerOptions(ts) {
 
 // A Program that serves `text` for `fileName` and reads everything else (libs,
 // rxjs) from disk. Lets us type-check an unsaved editor buffer.
+//
+// Cross-.tsrx imports: a `.tsrx` file importing another `.tsrx` must see the
+// imported reactive values with REAL types — lifting is checker-driven, so an
+// `any` import would silently stop derivations lifting. So we resolve `./foo` to a
+// sibling `foo.tsrx` (when normal resolution finds nothing) and serve it as TS,
+// transformed on the fly. (No cycle handling yet; .tsrx import graphs are shallow.)
 function createProgramFromText(ts, fileName, text, options) {
   const host = ts.createCompilerHost(options, true);
+  const isTsrx = f => typeof f === 'string' && f.endsWith('.tsrx');
+  const tsrxCache = new Map();
+  const tsrxCode = f => {
+    const src = fs.readFileSync(f, 'utf8');
+    const hit = tsrxCache.get(f);
+    if (hit && hit.src === src) return hit.code;
+    const { code } = transformWithMappings(ts, src, path.dirname(f));
+    tsrxCache.set(f, { src, code });
+    return code;
+  };
+
   const getSourceFile = host.getSourceFile.bind(host);
-  host.getSourceFile = (name, languageVersion, ...rest) =>
-    name === fileName
-      ? ts.createSourceFile(name, text, languageVersion, true)
-      : getSourceFile(name, languageVersion, ...rest);
+  host.getSourceFile = (name, languageVersion, ...rest) => {
+    if (name === fileName) return ts.createSourceFile(name, text, languageVersion, true);
+    if (isTsrx(name)) return ts.createSourceFile(name, tsrxCode(name), languageVersion, true, ts.ScriptKind.TS);
+    return getSourceFile(name, languageVersion, ...rest);
+  };
   host.fileExists = f => (f === fileName ? true : ts.sys.fileExists(f));
   const readFile = host.readFile.bind(host);
-  host.readFile = f => (f === fileName ? text : readFile(f));
+  host.readFile = f => (f === fileName ? text : isTsrx(f) ? tsrxCode(f) : readFile(f));
+
+  const resolve = (name, containingFile) => {
+    const standard = ts.resolveModuleName(name, containingFile, options, host).resolvedModule;
+    if (standard) return standard;
+    if (name.startsWith('.')) {
+      const candidate = path.resolve(path.dirname(containingFile), `${name}.tsrx`);
+      if (ts.sys.fileExists(candidate)) return { resolvedFileName: candidate, extension: ts.Extension.Ts };
+    }
+    return undefined;
+  };
+  if (ts.resolveModuleNameLiterals) {
+    host.resolveModuleNameLiterals = (literals, containingFile) =>
+      literals.map(lit => ({ resolvedModule: resolve(lit.text, containingFile) }));
+  } else {
+    host.resolveModuleNames = (names, containingFile) => names.map(n => resolve(n, containingFile));
+  }
   return ts.createProgram([fileName], options, host);
 }
 
@@ -120,6 +154,28 @@ function transformWithMappings(ts, sourceText, baseDir) {
   const sf = program.getSourceFile(fileName);
 
   const observableBindings = new Set();
+  // D4: destructured fields of a stream item, scoped to one component-`.map`
+  // callback. Maps an alias name (the field binding) → { param, prop }, where
+  // `param` is the synthetic stream identifier the binding pattern was renamed to.
+  // A reference to the alias lifts to `param.pipe(map(param => param.prop))`, and
+  // several aliases of the same item share `param` so they collapse like `cell.x`.
+  const aliasInfo = new Map();
+  // Declaration-site hover for destructured fields: the binding pattern `{ color }`
+  // is erased to the synthetic param, so its field tokens map to nothing. We record
+  // each field's declaration span and, after assembly, map it onto the generated
+  // `item.prop` token its first use produced — so hover / go-to-def work on the
+  // binding too, not just the uses. `cbSeq` keys fields to their callback (so a
+  // field name reused across callbacks resolves to its own callback's use).
+  let cbSeq = 0;
+  const declMappings = [];
+  const aliasGenTarget = new Map();
+  // D5 hover: when a single-root expression collapses to `x.pipe(map(x => …))`, the
+  // root's source occurrences are emitted as the map param but mapped onto the OUTER
+  // stream reference, so hovering the variable shows its `Observable<…>` type (like
+  // the member-access lift) rather than the in-map value. `collapseSeq` keys each
+  // collapse to its own outer reference.
+  let collapseSeq = 0;
+  const rootMappings = [];
   // Lifted bindings whose emitted value is definitely not callable (e.g. the
   // result of an arithmetic lift). The checker can't tell us this — it analyses
   // the original (pre-transform) source, where these bindings have an erroring/
@@ -127,6 +183,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // "observable-emitting-a-function" call lift for them, letting the imperative
   // boundary surface instead (RenderObservable<number> has no call signatures).
   const nonCallableBindings = new Set();
+  // Bindings whose lifted value can be EMPTY (a `cond ? x : EMPTY` filter idiom):
+  // they may never emit, so combining them with combineLatest can stall. Tracked so
+  // we can warn when one feeds a combine. Paired source spans collected in `stalls`.
+  const maybeEmptyBindings = new Set();
+  const stalls = [];
   const needed = { rxjs: new Set(), 'rxjs/operators': new Set(), rxfm: new Set() };
   const edits = [];
   let usedRender = false;
@@ -137,7 +198,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return Boolean(type.getProperty && type.getProperty('subscribe') && type.getProperty('pipe'));
   };
   const isObservableExpr = node =>
-    (ts.isIdentifier(node) && observableBindings.has(node.text)) ||
+    (ts.isIdentifier(node) && (observableBindings.has(node.text) || aliasInfo.has(node.text))) ||
     isObservableType(checker.getTypeAtLocation(node));
 
   // The value type T of an Observable<T>/RenderObservable<T>, or undefined if the
@@ -155,6 +216,25 @@ function transformWithMappings(ts, sourceText, baseDir) {
     let args;
     try { args = checker.getTypeArguments(type); } catch { args = type.typeArguments; }
     return args && args.length ? args[0] : undefined;
+  };
+
+  // Does this expression evaluate to an observable that completes WITHOUT emitting
+  // (RxJS `EMPTY`, i.e. Observable<never>)? Used to spot the `cond ? x : EMPTY`
+  // filter idiom so we can flag the resulting binding as maybe-empty.
+  const emitsNever = node => {
+    const value = observableValueType(checker.getTypeAtLocation(node));
+    return Boolean(value && value.flags & ts.TypeFlags.Never);
+  };
+
+  // Record a "stall" warning when an operand fed into a combineLatest is a
+  // maybe-empty binding: combineLatest waits for every source's first emission, so a
+  // source that can stay EMPTY freezes the whole derived value until (if ever) it
+  // emits. The `cond ? x : EMPTY` filter idiom is fine standalone (as a child) but
+  // hazardous when combined — this teaches that exactly where it happens.
+  const noteStall = node => {
+    if (ts.isIdentifier(node) && maybeEmptyBindings.has(node.text)) {
+      stalls.push({ start: node.getStart(sf), length: node.getEnd() - node.getStart(sf), name: node.text });
+    }
   };
 
   // Would calling this expression be a boundary violation rather than a real
@@ -242,6 +322,46 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return isObservableChain(ex.expression) && returnsComponent(cb);
   };
 
+  // The set of root identifier names of every observable VALUE referenced in `node`,
+  // or null if the expression can't lift as one `x.pipe(map(x => <verbatim>))`. When
+  // this is a single name, the whole expression lifts that way — it runs as plain code
+  // with `x` bound to the emitted value, so TS's control-flow narrowing is preserved
+  // (D3) and a single-stream operator chain becomes one map (D5).
+  //
+  // An observable counts only when it's read as a VALUE (`x`, `x.field`, `x[i]`):
+  //   - a stream-API use (`x.value`, `x.next(…)`, `x.pipe(…)`) means binding `x` to the
+  //     emitted value would break the call, so the expression can't collapse → null;
+  //   - an observable that isn't a bare identifier (e.g. a call returning a stream)
+  //     has no named root → null;
+  //   - property names / binding targets aren't value references and are skipped.
+  const observableRoots = node => {
+    const names = new Set();
+    let ok = true;
+    const walk = n => {
+      if (!ok) return;
+      if (ts.isIdentifier(n)) {
+        const p = n.parent;
+        if (ts.isPropertyAccessExpression(p) && p.name === n) return;            // a property name
+        if (ts.isQualifiedName(p) && p.right === n) return;
+        if ((ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)
+          || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
+        if (!isObservableExpr(n)) return;
+        // Read via a stream-API member (`x.value`, `x.next`, `x.pipe`)? Not a value lift.
+        if (ts.isPropertyAccessExpression(p) && p.expression === n && !memberTargetsValue(n, p.name.text)) { ok = false; return; }
+        // An alias roots in its synthetic item param, so fields of one destructured
+        // item collapse to a single root (and so to one map, like `cell.x`).
+        names.add(aliasInfo.has(n.text) ? aliasInfo.get(n.text).param : n.text);
+        return;
+      }
+      // A non-identifier observable (e.g. a call/chain returning a stream) has no
+      // named root to map over — can't collapse.
+      if (isObservableExpr(n)) { ok = false; return; }
+      ts.forEachChild(n, walk);
+    };
+    walk(node);
+    return ok ? names : null;
+  };
+
   // Generates unique, readable param names within a single lifted expression.
   const freshNamer = () => {
     const used = new Set();
@@ -270,18 +390,107 @@ function transformWithMappings(ts, sourceText, baseDir) {
     needed.rxjs.add('of');
     return ['of(', ...operand.pieces, ')'];
   };
+  // Emit `node` verbatim (as source slices) but rewrite each alias VALUE reference
+  // to `param.prop`. Used where a node is re-emitted inside a `map(param => …)` whose
+  // param is the shared item — the D3 ternary body and a handler closure body — so
+  // the destructured names resolve to members of the bound item. With no aliases
+  // present it returns a single verbatim slice, identical to `[V(node)]`.
+  const expandAliases = (node, root) => {
+    // Collect alias (D4) value references, and — when `root` (a real observable
+    // identifier) is given — its value occurrences too (D5), in source order.
+    const occ = [];
+    const walk = n => {
+      if (ts.isIdentifier(n)) {
+        const p = n.parent;
+        if (ts.isPropertyAccessExpression(p) && p.name === n) return;            // a property name
+        if (ts.isQualifiedName(p) && p.right === n) return;
+        if ((ts.isPropertyAssignment(p) || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
+        if (ts.isShorthandPropertyAssignment(p)) return;                         // `{ color }` — leave (rare)
+        if (aliasInfo.has(n.text)) { occ.push({ id: n, alias: true }); return; }
+        if (root && n.text === root.name && isObservableExpr(n)) { occ.push({ id: n, alias: false }); return; }
+        return;
+      }
+      ts.forEachChild(n, walk);
+    };
+    walk(node);
+    if (!occ.length) return [V(node)];
+    occ.sort((a, b) => a.id.getStart(sf) - b.id.getStart(sf));
+    const pieces = [];
+    let cursor = node.getStart(sf);
+    for (const { id, alias } of occ) {
+      if (id.getStart(sf) > cursor) pieces.push({ srcStart: cursor, srcEnd: id.getStart(sf) });
+      if (alias) {
+        const { param, prop, cbId } = aliasInfo.get(id.text);
+        // Source-slice the prop token (when not renamed) so the field keeps hover / nav.
+        pieces.push(param, '.', id.text === prop
+          ? { srcStart: id.getStart(sf), srcEnd: id.getEnd(), aliasKey: `${cbId}:${id.text}` }
+          : prop);
+      } else {
+        // Real root: emit the map param as generated text and record the source span,
+        // so it maps onto the outer stream reference (Observable type) — not the param.
+        rootMappings.push({ srcStart: id.getStart(sf), len: id.getEnd() - id.getStart(sf), key: root.key });
+        pieces.push(root.name);
+      }
+      cursor = id.getEnd();
+    }
+    if (cursor < node.getEnd()) pieces.push({ srcStart: cursor, srcEnd: node.getEnd() });
+    return pieces;
+  };
+
+  // When every observable in `node` roots in a single identifier `x`, the whole
+  // expression lifts as one `x.pipe(map(x => <verbatim>))` — no combineLatest, and
+  // the body runs as plain code so TS narrowing is preserved. Shared by the ternary
+  // (D3) and the operator lifts (D5). `expandAliases` rewrites any destructured
+  // field to `x.prop` (D4); with none it's just the verbatim expression. Returns
+  // null when there's no single root (zero observables, or several distinct ones).
+  const singleRootLift = (node, callable) => {
+    const roots = observableRoots(node);
+    if (!roots || roots.size !== 1) return null;
+    const x = [...roots][0];
+    needed['rxjs/operators'].add('map');
+    const key = `c:${collapseSeq++}`;
+    const body = expandAliases(node, { name: x, key });
+    // The outer `x` is the actual stream; tag its generated position so the root's
+    // source occurrences (now the map param in `body`) hover/navigate to it — showing
+    // `Observable<…>`, the variable's real type. (For an alias root the param is
+    // synthetic, has no source occurrences, and the tag is simply unused.)
+    // `callable` mirrors the eager path: arithmetic/comparison/unary emit primitives
+    // (false), ternary/logical leave it unknown (undefined). It marks the binding
+    // non-callable so a later `binding(...)` surfaces as a boundary teaching message.
+    return { pieces: [{ gen: x, refKey: key }, '.pipe(map(', x, ' => ', ...body, '))'], observable: true, lifted: true, callable };
+  };
 
   function transformExpression(node) {
+    // A destructured field (D4) read as a value lifts exactly like the member
+    // access it stands for: `color` → `item.pipe(map(item => item.color))`.
+    if (ts.isIdentifier(node) && aliasInfo.has(node.text)) {
+      const { param, prop, cbId } = aliasInfo.get(node.text);
+      needed['rxjs/operators'].add('map');
+      // Map the generated `.prop` token back to the source field identifier (same
+      // text when not renamed) so hover / go-to-def work on the destructured name.
+      // `aliasKey` lets the declaration site borrow this same generated token.
+      const propPiece = node.text === prop
+        ? { srcStart: node.getStart(sf), srcEnd: node.getEnd(), aliasKey: `${cbId}:${node.text}` }
+        : prop;
+      return { pieces: [param, '.pipe(map(', param, ' => ', param, '.', propPiece, '))'], observable: true, lifted: true };
+    }
     if (ts.isParenthesizedExpression(node)) {
       const inner = transformExpression(node.expression);
-      return inner.lifted
-        ? { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable }
-        : { pieces: [V(node)], observable: inner.observable, lifted: false };
+      if (inner.lifted) return { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable };
+      if (inner.rewritten) return { pieces: ['(', ...inner.pieces, ')'], observable: inner.observable, lifted: false, rewritten: true };
+      return { pieces: [V(node)], observable: inner.observable, lifted: false };
     }
     // Ternary: when the condition is observable, switchMap so only the taken
     // branch is subscribed (lazy), and shareReplay so it behaves as a
     // RenderObservable (replays its latest value to late subscribers).
     if (ts.isConditionalExpression(node)) {
+      // D3 — preserve narrowing: if every observable in the ternary roots in one
+      // identifier (so no branch is a separate stream — a component branch like
+      // `Div`…`` roots elsewhere and disqualifies this), lift the whole ternary as
+      // one `x.pipe(map(x => <verbatim>))`, so a guard like `x === undefined` narrows
+      // `x` in its branch — exactly as it would without tsrx.
+      const collapsed = singleRootLift(node);
+      if (collapsed) return collapsed;
       const cond = transformExpression(node.condition);
       const whenTrue = transformExpression(node.whenTrue);
       const whenFalse = transformExpression(node.whenFalse);
@@ -294,7 +503,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
           ...cond.pieces, '.pipe(switchMap(', param, ' => ', param, ' ? ',
           ...asStream(whenTrue), ' : ', ...asStream(whenFalse), '))',
         ];
-        return { pieces, observable: true, lifted: true };
+        // `cond ? x : EMPTY` (the filter idiom) can produce no value: flag it so a
+        // later combine over this binding can warn about stalling.
+        const emptyable = emitsNever(node.whenTrue) || emitsNever(node.whenFalse);
+        return { pieces, observable: true, lifted: true, emptyable };
       }
       // Static condition: an ordinary ternary picking between values/streams.
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
@@ -384,7 +596,34 @@ function transformWithMappings(ts, sourceText, baseDir) {
       // stream type, which the teaching diagnostics then explain.
       const calleeIsFnStream = callee.observable && !calleeEmitsNonCallable(node.expression);
       const argsObservable = args.some(a => a.observable);
+      // A parameter typed `Observable<…>` wants to RECEIVE the stream — the callee
+      // is operator-style (`destructure`, `mapToComponents`, a custom
+      // `accumulate(stream, …)`, …). Its observable argument must pass through
+      // verbatim, not be mapped over per emission. Ask the checker which arguments
+      // land on such parameters; the rest (value args over observables) still lift.
+      const sig = checker.getResolvedSignature(node);
+      const paramExpectsObservable = i => {
+        const params = sig ? sig.getParameters() : [];
+        if (!params.length) return false;
+        const pSym = params[Math.min(i, params.length - 1)];
+        return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, node));
+      };
+      const liftableArg = args.map((a, i) => a.observable && !paramExpectsObservable(i));
       if (calleeIsFnStream || (!callee.observable && argsObservable)) {
+        // Every observable argument is one the callee wants as a stream (no value
+        // arg actually needs lifting): an operator-style call. Leave the call itself
+        // in place — it keeps its real semantics and is NOT render-wrapped (the callee
+        // may return a non-observable, e.g. destructure's object). But if an argument
+        // itself lifted (e.g. interval(periodFor(difficulty))), re-emit the call with
+        // that argument's transformed pieces so the inner lift survives. Pieces
+        // compose, so nested operator-style calls work too.
+        if (!calleeIsFnStream && !liftableArg.some(Boolean)) {
+          if (!args.some(a => a.lifted || a.rewritten)) {
+            return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+          }
+          const pieces = [...callee.pieces, '(', ...joinPieces(args.map(a => a.pieces), ', '), ')'];
+          return { pieces, observable: isObservableExpr(node), lifted: false, rewritten: true };
+        }
         needed.rxjs.add('combineLatest');
         needed['rxjs/operators'].add('map');
         const fresh = freshNamer();
@@ -407,11 +646,21 @@ function transformWithMappings(ts, sourceText, baseDir) {
           return { pieces, observable: true, lifted: true, callable };
         }
 
-        const argParams = node.arguments.map(argParam);
-        const sources = joinPieces(args.map(asStream), ', ');
+        // Plain function call: combineLatest only the value args that need lifting;
+        // inline everything else (plain values, and any stream the callee takes as a
+        // parameter) verbatim in the call so its real arguments are preserved.
+        const params = [];
+        const sources = [];
+        const callArgs = node.arguments.map((argNode, i) => {
+          if (!liftableArg[i]) return args[i].pieces;
+          const p = argParam(argNode, i);
+          params.push(p);
+          sources.push(asStream(args[i]));
+          return [p];
+        });
         const pieces = [
-          'combineLatest([', ...sources, ']).pipe(map(([', argParams.join(', '), ']) => ',
-          ...callee.pieces, '(', argParams.join(', '), ')))',
+          'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
+          ...callee.pieces, '(', ...joinPieces(callArgs, ', '), ')))',
         ];
         // Plain function over observable args: emits the function's return value.
         // The callee is a real (non-observable) function, so its type is reliable.
@@ -424,6 +673,27 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Property access on a stream → map out the field (the RxFM "extract a field
     // from an object observable" pattern), unless the member is a stream-API one.
     if (ts.isPropertyAccessExpression(node)) {
+      // Collapse a chain of property accesses rooted in a single stream into ONE map
+      // (`state.trail.coordinates` → `state.pipe(map(state => state.trail.coordinates))`)
+      // rather than a map per hop. Walk down through property accesses to the root;
+      // fuse only when it's a pure property chain (≥2 hops) rooted in an observable
+      // whose first hop targets the emitted value (not a stream member like `.value`).
+      let root = node.expression;
+      let firstName = node.name;
+      while (ts.isPropertyAccessExpression(root)) {
+        firstName = root.name;
+        root = root.expression;
+      }
+      if (root !== node.expression && isObservableExpr(root) && memberTargetsValue(root, firstName.text)) {
+        needed['rxjs/operators'].add('map');
+        const rootR = transformExpression(root);
+        const p = ts.isIdentifier(root) ? root.text : '_o';
+        // The access path (`.trail.coordinates`) is emitted as a mapped source slice
+        // so hover / go-to-def on each property still resolves.
+        const path = { srcStart: root.getEnd(), srcEnd: node.getEnd() };
+        const pieces = [...rootR.pieces, '.pipe(map(', p, ' => ', p, path, '))'];
+        return { pieces, observable: true, lifted: true };
+      }
       const obj = transformExpression(node.expression);
       if (obj.observable && memberTargetsValue(node.expression, node.name.text)) {
         needed['rxjs/operators'].add('map');
@@ -434,13 +704,14 @@ function transformWithMappings(ts, sourceText, baseDir) {
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
-    // Element access on a stream → map out the indexed value (index may itself
-    // be a stream, in which case combineLatest both).
+    // Element access where the object and/or the index is a stream → map out the
+    // indexed value. Three cases: object observable (+ optional observable index,
+    // via combineLatest), or a static object with an observable index.
     if (ts.isElementAccessExpression(node)) {
       const obj = transformExpression(node.expression);
+      const index = transformExpression(node.argumentExpression);
       if (obj.observable) {
         needed['rxjs/operators'].add('map');
-        const index = transformExpression(node.argumentExpression);
         const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
         if (index.observable) {
           needed.rxjs.add('combineLatest');
@@ -453,12 +724,26 @@ function transformWithMappings(ts, sourceText, baseDir) {
         const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '[', ...index.pieces, ']))'];
         return { pieces, observable: true, lifted: true };
       }
+      // Static object, observable index (e.g. `CELL_COLOR_MAP[cell]`): drive off the
+      // index — `cell.pipe(map(cell => CELL_COLOR_MAP[cell]))`. The object expression
+      // is re-referenced inside the map, which is free for the common case (a constant
+      // lookup table named by identifier).
+      if (index.observable) {
+        needed['rxjs/operators'].add('map');
+        const i = ts.isIdentifier(node.argumentExpression) ? node.argumentExpression.text : '_i';
+        const pieces = [...index.pieces, '.pipe(map(', i, ' => ', ...obj.pieces, '[', i, ']))'];
+        return { pieces, observable: true, lifted: true };
+      }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
     // Short-circuiting logical operator with an observable left → switchMap, so
     // the right side is only subscribed when the left selects it.
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LOGICAL) {
+      // Single-root (D5): both sides root in one stream, so there's nothing to keep
+      // lazy — one map preserves short-circuit semantics as plain JS.
+      const collapsed = singleRootLift(node);
+      if (collapsed) return collapsed;
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
       if (left.observable) {
@@ -483,6 +768,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
 
     // Prefix unary on a stream → map over it (single source, no combineLatest).
     if (ts.isPrefixUnaryExpression(node) && node.operator in LIFTABLE_UNARY) {
+      // Single-root (D5): collapse `!user.active` to one map over `user`, not a
+      // member-access map piped into a unary map. Emits a primitive → non-callable.
+      const collapsed = singleRootLift(node, false);
+      if (collapsed) return collapsed;
       const operand = transformExpression(node.operand);
       if (operand.observable) {
         needed['rxjs/operators'].add('map');
@@ -495,11 +784,18 @@ function transformWithMappings(ts, sourceText, baseDir) {
     }
 
     if (ts.isBinaryExpression(node) && node.operatorToken.kind in LIFTABLE) {
+      // Single-root (D5): `count * 2`, `tick % 2 === 0`, `selected === option` all
+      // root in one stream → one map instead of (nested) combineLatest. Emits a
+      // primitive, so it's non-callable.
+      const collapsed = singleRootLift(node, false);
+      if (collapsed) return collapsed;
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
       if (left.observable || right.observable) {
         needed.rxjs.add('combineLatest');
         needed['rxjs/operators'].add('map');
+        noteStall(node.left);
+        noteStall(node.right);
         const used = new Set();
         const paramOf = (operandNode, i) => {
           let base = ts.isIdentifier(operandNode) ? operandNode.text : `_${i}`;
@@ -529,6 +825,18 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // arg (id prop name or id function) maps onto its idPropOrFunction, defaulting
   // to index when omitted. Done with edge edits so it composes with the inner
   // body edits without overlap.
+  // A synthetic stream-param name for a destructured item param (D4), chosen so it
+  // collides with neither an outer observable binding nor any identifier in the
+  // callback (the destructured fields, the index param, locals, free references).
+  const freshItemName = cb => {
+    const used = new Set(observableBindings);
+    const collect = n => { if (ts.isIdentifier(n)) used.add(n.text); ts.forEachChild(n, collect); };
+    collect(cb);
+    let name = 'item', n = 1;
+    while (used.has(name)) name = `item_${n++}`;
+    return name;
+  };
+
   const handleComponentMap = node => {
     const ex = node.expression;     // obj.map
     const obj = ex.expression;      // obj
@@ -543,14 +851,117 @@ function transformWithMappings(ts, sourceText, baseDir) {
     edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: ['.pipe('] });
     edits.push({ start: ex.name.getStart(), end: ex.name.getEnd(), remap: 'mapToComponents' });
     edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ['))'] });
-    // Lift the callback body with its params (item, index) treated as observables,
-    // scoped so the marking doesn't leak past this callback.
-    const params = cb.parameters.map(p => p.name.getText(sf));
-    const added = params.filter(p => !observableBindings.has(p));
-    added.forEach(p => observableBindings.add(p));
+    // Lift the callback body with its params treated as observables, scoped so the
+    // marking doesn't leak past this callback.
+    const addedBindings = [];
+    const addedAliases = [];
+    // D4: the item param may be destructured — `({ color, symbol }, i) => …`. The
+    // binding pattern can't survive (mapToComponents passes an Observable item, not
+    // the value), so rename it to a synthetic stream param and register each field
+    // as an alias that lifts to `param.field` wherever it's read. Only plain-field
+    // patterns qualify (no rest, defaults, computed names, or nesting).
+    const itemParam = cb.parameters[0];
+    const destructures = itemParam && ts.isObjectBindingPattern(itemParam.name)
+      && itemParam.name.elements.every(el =>
+        !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name)
+        && (!el.propertyName || ts.isIdentifier(el.propertyName)));
+    if (destructures) {
+      const synthetic = freshItemName(cb);
+      const cbId = cbSeq++;
+      edits.push({ start: itemParam.getStart(sf), end: itemParam.getEnd(), pieces: [synthetic] });
+      observableBindings.add(synthetic); addedBindings.push(synthetic);
+      for (const el of itemParam.name.elements) {
+        const prop = (el.propertyName || el.name).getText(sf);
+        const key = el.name.text;
+        addedAliases.push([key, aliasInfo.has(key) ? aliasInfo.get(key) : undefined]);
+        aliasInfo.set(key, { param: synthetic, prop, cbId });
+        // Non-renamed field: its declaration token can borrow a use's generated
+        // `item.prop` token for hover. (Renamed `{ a: b }` uses emit a plain string
+        // prop, so there's no source-mapped token to point at — left unmapped.)
+        if (!el.propertyName) declMappings.push({
+          aliasKey: `${cbId}:${key}`, srcStart: el.name.getStart(sf), len: el.name.getEnd() - el.name.getStart(sf),
+        });
+      }
+    }
+    // Remaining params (and a non-destructured item param) → plain observable bindings.
+    for (let i = destructures ? 1 : 0; i < cb.parameters.length; i++) {
+      const name = cb.parameters[i].name.getText(sf);
+      if (!observableBindings.has(name)) { observableBindings.add(name); addedBindings.push(name); }
+    }
     visit(cb.body);
-    added.forEach(p => observableBindings.delete(p));
+    addedBindings.forEach(p => observableBindings.delete(p));
+    for (const [key, prev] of addedAliases) prev ? aliasInfo.set(key, prev) : aliasInfo.delete(key);
     // The key arg (if any) operates on the plain item value — left verbatim.
+  };
+
+  // D2: an event handler is a closure that runs *later*, so a stream referenced
+  // inside it is the stream, not its current value. When a handler captures
+  // observable bindings, lift it to a stream of handlers — the handler text is left
+  // verbatim and the map params re-bind the same names to current values:
+  //   () => f(index)            →  index.pipe(map(index => () => f(index)))
+  //   () => f(index, current)   →  combineLatest([index, current]).pipe(
+  //                                  map(([index, current]) => () => f(index, current)))
+  // rxfm's event operators already accept an Observable<handler> (EventHandler<T,E>).
+  const within = (node, ancestor) => node.getStart(sf) >= ancestor.getStart(sf) && node.getEnd() <= ancestor.getEnd();
+  const collectHandlerCaptures = fnNode => {
+    // A captured stream is lifted only if the handler reads it as a *value*. If it's
+    // touched via its stream API (`subject.next(…)`, `.value`, `.pipe`), the handler
+    // legitimately operates on the stream itself — lifting would replace it with a
+    // value and break the call — so such names are excluded entirely.
+    const valueUsed = new Map();
+    const streamUsed = new Set();
+    const walk = n => {
+      if (ts.isIdentifier(n)) {
+        const p = n.parent;
+        if (ts.isPropertyAccessExpression(p) && p.name === n) return;     // property name, not a ref
+        if (ts.isQualifiedName(p) && p.right === n) return;
+        if ((ts.isPropertyAssignment(p) || ts.isBindingElement(p) || ts.isParameter(p)) && p.name === n) return;
+        if (!isObservableExpr(n)) return;
+        const sym = checker.getSymbolAtLocation(n);
+        const decl = sym && sym.declarations && sym.declarations[0];
+        if (decl && within(decl, fnNode)) return;                          // local to handler, not a capture
+        if (ts.isPropertyAccessExpression(p) && p.expression === n && !memberTargetsValue(n, p.name.text)) {
+          streamUsed.add(n.text);                                          // e.g. difficulty.next(...)
+        } else if (!valueUsed.has(n.text)) {
+          valueUsed.set(n.text, n);
+        }
+        return;
+      }
+      ts.forEachChild(n, walk);
+    };
+    walk(fnNode.body);
+    for (const name of streamUsed) valueUsed.delete(name);
+    return valueUsed;
+  };
+  const liftHandlerClosure = fnNode => {
+    const names = [...collectHandlerCaptures(fnNode).keys()];
+    if (!names.length) return null;
+    needed['rxjs/operators'].add('map');
+    // A captured alias (D4) is sourced from its shared item param, deduped, and its
+    // fields are expanded in the body — so `() => f(color)` over a destructured
+    // `{ color }` lifts to `item.pipe(map(item => () => f(item.color)))`.
+    const sources = [];
+    const seen = new Set();
+    for (const name of names) {
+      const src = aliasInfo.has(name) ? aliasInfo.get(name).param : name;
+      if (seen.has(src)) continue;
+      seen.add(src);
+      sources.push(src);
+    }
+    const body = expandAliases(fnNode);
+    if (sources.length === 1) return [sources[0], '.pipe(map(', sources[0], ' => ', ...body, '))'];
+    needed.rxjs.add('combineLatest');
+    return ['combineLatest([', sources.join(', '), ']).pipe(map(([', sources.join(', '), ']) => ', ...body, '))'];
+  };
+  // Does parameter `argIndex` of this call accept an Observable (e.g. an
+  // EventHandler slot, which is `handler | Observable<handler>`)?
+  const paramAcceptsObservable = (callNode, argIndex) => {
+    const sig = checker.getResolvedSignature(callNode);
+    if (!sig) return false;
+    const params = sig.getParameters();
+    if (!params.length) return false;
+    const pSym = params[Math.min(argIndex, params.length - 1)];
+    return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, callNode));
   };
 
   // Lift variable initializers anywhere — including inside function bodies, since
@@ -569,10 +980,38 @@ function transformWithMappings(ts, sourceText, baseDir) {
         handleComponentMap(node.initializer);
         return;
       }
+      // Destructuring an observable into its fields: `const { board, gameStage } = game`
+      // → `const board = render(game.pipe(map(game => game.board))), gameStage = …`.
+      // Each field becomes its own lifted member-access binding (the same shape the
+      // member-access lift produces), so it reads like ordinary destructuring.
+      // Limited to an identifier source — a non-identifier would be re-subscribed
+      // once per field.
+      if (ts.isObjectBindingPattern(node.name) && ts.isIdentifier(node.initializer)
+        && transformExpression(node.initializer).observable) {
+        const src = node.initializer;
+        const param = src.text;
+        needed['rxjs/operators'].add('map');
+        usedRender = true;
+        const groups = node.name.elements.map(el => {
+          if (el.dotDotDotToken || !ts.isIdentifier(el.name)) return null;
+          const prop = (el.propertyName || el.name).getText(sf);
+          observableBindings.add(el.name.text);
+          return [V(el.name), ' = render(', V(src), `.pipe(map(${param} => ${param}.${prop})))`];
+        });
+        if (groups.every(Boolean)) {
+          edits.push({
+            start: node.name.getStart(sf),
+            end: node.initializer.getEnd(),
+            pieces: joinPieces(groups, ', '),
+          });
+          return;
+        }
+      }
       const r = transformExpression(node.initializer);
       if (r.observable && ts.isIdentifier(node.name)) {
         observableBindings.add(node.name.text);
         if (r.callable === false) nonCallableBindings.add(node.name.text);
+        if (r.emptyable) maybeEmptyBindings.add(node.name.text);
       }
       if (r.lifted) {
         // Every imperative result is a RenderObservable: wrap the binding once.
@@ -583,6 +1022,16 @@ function transformWithMappings(ts, sourceText, baseDir) {
           pieces: ['render(', ...r.pieces, ')'],
         });
         return; // don't descend into an already-rewritten initializer
+      }
+      if (r.rewritten) {
+        // An operator-style call left in place but with a lifted argument rewritten:
+        // apply the pieces as-is (no render wrap — the call's own result stands).
+        edits.push({
+          start: node.initializer.getStart(sf),
+          end: node.initializer.getEnd(),
+          pieces: r.pieces,
+        });
+        return;
       }
     }
     // Tagged template (RxFM's children syntax, e.g. Div`hi ${user.name}`): each
@@ -601,11 +1050,73 @@ function transformWithMappings(ts, sourceText, baseDir) {
             end: span.expression.getEnd(),
             pieces: ['render(', ...r.pieces, ')'],
           });
+        } else if (r.rewritten) {
+          edits.push({
+            start: span.expression.getStart(sf),
+            end: span.expression.getEnd(),
+            pieces: r.pieces,
+          });
         } else {
           visit(span.expression); // recurse — may hold nested tagged templates
         }
       }
       return; // interpolations handled; don't re-descend
+    }
+    // Call arguments (component children, chainable `.class(…)` / `.attr(…)` args, …):
+    // lift an observable argument in place. Like object-literal values, only `lifted`
+    // arguments are touched — an observable here would otherwise be a type error — so
+    // plain arguments and the callee are left to descend normally. (Initializers and
+    // component-`.map` calls are handled above and never reach here, so this doesn't
+    // double-handle or fight C6's operator-style arg lifting.)
+    if (ts.isCallExpression(node)) {
+      visit(node.expression); // the callee chain (may hold object literals, nested calls, templates)
+      node.arguments.forEach((arg, i) => {
+        if (ts.isSpreadElement(arg)) { visit(arg); return; }
+        // A component-`.map` child (e.g. `Div(items.map(cb))`) is a keyed list, not a
+        // value to render — hand it to the list handler, not the expression lifter.
+        if (isComponentMapCall(arg)) { handleComponentMap(arg); return; }
+        // An event handler capturing streams → a stream of handlers (D2).
+        if ((ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) && paramAcceptsObservable(node, i)) {
+          const handler = liftHandlerClosure(arg);
+          if (handler) { edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: handler }); return; }
+        }
+        const r = transformExpression(arg);
+        if (r.lifted) {
+          usedRender = true;
+          edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: ['render(', ...r.pieces, ')'] });
+        } else if (r.rewritten) {
+          edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: r.pieces });
+        } else {
+          visit(arg);
+        }
+      });
+      return;
+    }
+    // Object-literal property values (e.g. `.style({ backgroundColor: cell.color })`):
+    // lift an observable value in place rather than forcing it to be named first.
+    // Only `lifted` values are touched — those are observable expressions that would
+    // otherwise be a type error here anyway — so a constant value is left untouched.
+    if (ts.isObjectLiteralExpression(node)) {
+      for (const prop of node.properties) {
+        if (ts.isPropertyAssignment(prop)) {
+          const r = transformExpression(prop.initializer);
+          if (r.lifted) {
+            usedRender = true;
+            edits.push({
+              start: prop.initializer.getStart(sf),
+              end: prop.initializer.getEnd(),
+              pieces: ['render(', ...r.pieces, ')'],
+            });
+          } else if (r.rewritten) {
+            edits.push({ start: prop.initializer.getStart(sf), end: prop.initializer.getEnd(), pieces: r.pieces });
+          } else {
+            visit(prop.initializer);
+          }
+        } else {
+          visit(prop);
+        }
+      }
+      return;
     }
     ts.forEachChild(node, visit);
   };
@@ -661,8 +1172,16 @@ function transformWithMappings(ts, sourceText, baseDir) {
     for (const piece of edit.pieces) {
       if (typeof piece === 'string') {
         code += piece;
+      } else if (piece.gen !== undefined) {
+        // Generated-only text whose position is recorded as a mapping target (the
+        // outer stream reference of a single-root collapse — D5 root hover).
+        if (piece.refKey) aliasGenTarget.set(piece.refKey, { genStart: code.length, len: piece.gen.length });
+        code += piece.gen;
       } else {
-        segments.push({ identity: true, srcStart: piece.srcStart, length: piece.srcEnd - piece.srcStart, genStart: code.length });
+        const length = piece.srcEnd - piece.srcStart;
+        segments.push({ identity: true, srcStart: piece.srcStart, length, genStart: code.length });
+        // First generated `item.prop` token for this field: the declaration borrows it.
+        if (piece.aliasKey && !aliasGenTarget.has(piece.aliasKey)) aliasGenTarget.set(piece.aliasKey, { genStart: code.length, len: length });
         code += sourceText.slice(piece.srcStart, piece.srcEnd);
       }
     }
@@ -673,8 +1192,23 @@ function transformWithMappings(ts, sourceText, baseDir) {
     code += sourceText.slice(cursor);
   }
 
+  // Declaration-site mappings for destructured fields (D4): point each field's
+  // binding token at the generated `item.prop` token from its first use, so hover /
+  // go-to-def resolve on the binding too. These source spans sit in the erased
+  // binding-pattern region (no other segment covers them), so they never overlap.
+  for (const dm of declMappings) {
+    const target = aliasGenTarget.get(dm.aliasKey);
+    if (target) segments.push({ identity: false, navigable: true, srcStart: dm.srcStart, srcLen: dm.len, genStart: target.genStart, genLen: target.len });
+  }
+  // D5 root hover: each single-root occurrence maps onto its collapse's outer stream
+  // reference, so the variable shows its `Observable<…>` type, not the in-map value.
+  for (const rm of rootMappings) {
+    const target = aliasGenTarget.get(rm.key);
+    if (target) segments.push({ identity: false, navigable: true, srcStart: rm.srcStart, srcLen: rm.len, genStart: target.genStart, genLen: target.len });
+  }
+
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
-  return { code, segments, sourceDiagnostics };
+  return { code, segments, sourceDiagnostics, stalls };
 }
 
 function mapSourceToGenerated(segments, srcOffset) {
