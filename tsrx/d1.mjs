@@ -56,7 +56,8 @@ check('destructured `stage` → member-access map', has('stage = render(game.pip
 check('object value `cell.color` lifted in place', has('background: render(cell.pipe(map(cell => cell.color)))'));
 check('object value `cell.size` lifted in place', has('fontSize: render(cell.pipe(map(cell => cell.size)))'));
 check('destructured binding propagates (stage.length lifts)', has('len = render(stage.pipe(map(stage => stage.length)))'));
-check('call argument lifts in place (ternary in klass(...))', has("klass('base', render(") && has("? of('big') : of('small')"));
+check('call argument lifts in place (ternary in klass(...))',
+  has("klass('base', render(cell.pipe(map(cell => cell.size > 1 ? 'big' : 'small'))))"));
 
 if (failures.length) { console.error(`\n${failures.length} check(s) failed.`); process.exit(1); }
 console.log('\nAll D1 checks passed.');

@@ -300,6 +300,38 @@ function transformWithMappings(ts, sourceText, baseDir) {
     return isObservableChain(ex.expression) && returnsComponent(cb);
   };
 
+  // The set of root identifier names of every observable sub-expression in `node`
+  // (`a.b`, `a[i]`, `a.f()` all root at `a`), or null if some observable doesn't
+  // root in a plain identifier. When this is a single name, the whole expression can
+  // be lifted as `x.pipe(map(x => <expr verbatim>))` — the expression runs as plain
+  // code with `x` bound to the value, so TS's control-flow narrowing is preserved
+  // (D3). Used only when no branch is itself a stream.
+  const observableRoots = node => {
+    const names = new Set();
+    let ok = true;
+    const rootOf = n => {
+      while (n) {
+        if (ts.isParenthesizedExpression(n)) { n = n.expression; continue; }
+        if (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) { n = n.expression; continue; }
+        if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) { n = n.expression.expression; continue; }
+        break;
+      }
+      return n;
+    };
+    const walk = n => {
+      if (!ok) return;
+      if (isObservableExpr(n)) {
+        const r = rootOf(n);
+        if (r && ts.isIdentifier(r)) names.add(r.text);
+        else ok = false;
+        return; // sub-parts share this root — don't double-count
+      }
+      ts.forEachChild(n, walk);
+    };
+    walk(node);
+    return ok ? names : null;
+  };
+
   // Generates unique, readable param names within a single lifted expression.
   const freshNamer = () => {
     const used = new Set();
@@ -344,6 +376,18 @@ function transformWithMappings(ts, sourceText, baseDir) {
       const whenTrue = transformExpression(node.whenTrue);
       const whenFalse = transformExpression(node.whenFalse);
       if (cond.observable) {
+        // D3 — preserve narrowing: if every observable in the ternary roots in one
+        // identifier (so no branch is a separate stream — a component branch like
+        // `Div`…`` roots elsewhere and disqualifies this), lift the whole ternary as
+        // `x.pipe(map(x => <verbatim>))`. The condition and branches then run as plain
+        // code with `x` bound to the value, so a guard like `x === undefined` narrows
+        // `x` in its branch — exactly as it would without tsrx.
+        const roots = observableRoots(node);
+        if (roots && roots.size === 1) {
+          const x = [...roots][0];
+          needed['rxjs/operators'].add('map');
+          return { pieces: [x, '.pipe(map(', x, ' => ', V(node), '))'], observable: true, lifted: true };
+        }
         needed['rxjs/operators'].add('switchMap');
         const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
         // switchMap for laziness; the render() wrapper (added at the binding)
