@@ -384,7 +384,26 @@ function transformWithMappings(ts, sourceText, baseDir) {
       // stream type, which the teaching diagnostics then explain.
       const calleeIsFnStream = callee.observable && !calleeEmitsNonCallable(node.expression);
       const argsObservable = args.some(a => a.observable);
+      // A parameter typed `Observable<…>` wants to RECEIVE the stream — the callee
+      // is operator-style (`destructure`, `mapToComponents`, a custom
+      // `accumulate(stream, …)`, …). Its observable argument must pass through
+      // verbatim, not be mapped over per emission. Ask the checker which arguments
+      // land on such parameters; the rest (value args over observables) still lift.
+      const sig = checker.getResolvedSignature(node);
+      const paramExpectsObservable = i => {
+        const params = sig ? sig.getParameters() : [];
+        if (!params.length) return false;
+        const pSym = params[Math.min(i, params.length - 1)];
+        return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, node));
+      };
+      const liftableArg = args.map((a, i) => a.observable && !paramExpectsObservable(i));
       if (calleeIsFnStream || (!callee.observable && argsObservable)) {
+        // Every observable argument is one the callee wants as a stream (no value
+        // arg actually needs lifting): an operator-style call. Leave it verbatim so
+        // it keeps its real semantics, reporting it observable if its return type is.
+        if (!calleeIsFnStream && !liftableArg.some(Boolean)) {
+          return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
+        }
         needed.rxjs.add('combineLatest');
         needed['rxjs/operators'].add('map');
         const fresh = freshNamer();
@@ -407,11 +426,21 @@ function transformWithMappings(ts, sourceText, baseDir) {
           return { pieces, observable: true, lifted: true, callable };
         }
 
-        const argParams = node.arguments.map(argParam);
-        const sources = joinPieces(args.map(asStream), ', ');
+        // Plain function call: combineLatest only the value args that need lifting;
+        // inline everything else (plain values, and any stream the callee takes as a
+        // parameter) verbatim in the call so its real arguments are preserved.
+        const params = [];
+        const sources = [];
+        const callArgs = node.arguments.map((argNode, i) => {
+          if (!liftableArg[i]) return args[i].pieces;
+          const p = argParam(argNode, i);
+          params.push(p);
+          sources.push(asStream(args[i]));
+          return [p];
+        });
         const pieces = [
-          'combineLatest([', ...sources, ']).pipe(map(([', argParams.join(', '), ']) => ',
-          ...callee.pieces, '(', argParams.join(', '), ')))',
+          'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
+          ...callee.pieces, '(', ...joinPieces(callArgs, ', '), ')))',
         ];
         // Plain function over observable args: emits the function's return value.
         // The callee is a real (non-observable) function, so its type is reliable.
