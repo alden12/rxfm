@@ -5,6 +5,11 @@
 import { Observable, of, timer } from 'rxjs';
 import { distinctUntilChanged, scan, shareReplay, switchMap } from 'rxjs/operators';
 
+// Re-exported so the filter idiom `cond ? value : EMPTY` needs only one tsrx import:
+// a ternary whose else-branch is EMPTY drops the value when the condition is false
+// (the imperative spelling of RxJS `filter`).
+export { EMPTY } from 'rxjs';
+
 /**
  * The observable type produced by imperative tsrx syntax — a "RenderObservable".
  *

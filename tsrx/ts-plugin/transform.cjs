@@ -56,16 +56,50 @@ function getCompilerOptions(ts) {
 
 // A Program that serves `text` for `fileName` and reads everything else (libs,
 // rxjs) from disk. Lets us type-check an unsaved editor buffer.
+//
+// Cross-.tsrx imports: a `.tsrx` file importing another `.tsrx` must see the
+// imported reactive values with REAL types — lifting is checker-driven, so an
+// `any` import would silently stop derivations lifting. So we resolve `./foo` to a
+// sibling `foo.tsrx` (when normal resolution finds nothing) and serve it as TS,
+// transformed on the fly. (No cycle handling yet; .tsrx import graphs are shallow.)
 function createProgramFromText(ts, fileName, text, options) {
   const host = ts.createCompilerHost(options, true);
+  const isTsrx = f => typeof f === 'string' && f.endsWith('.tsrx');
+  const tsrxCache = new Map();
+  const tsrxCode = f => {
+    const src = fs.readFileSync(f, 'utf8');
+    const hit = tsrxCache.get(f);
+    if (hit && hit.src === src) return hit.code;
+    const { code } = transformWithMappings(ts, src, path.dirname(f));
+    tsrxCache.set(f, { src, code });
+    return code;
+  };
+
   const getSourceFile = host.getSourceFile.bind(host);
-  host.getSourceFile = (name, languageVersion, ...rest) =>
-    name === fileName
-      ? ts.createSourceFile(name, text, languageVersion, true)
-      : getSourceFile(name, languageVersion, ...rest);
+  host.getSourceFile = (name, languageVersion, ...rest) => {
+    if (name === fileName) return ts.createSourceFile(name, text, languageVersion, true);
+    if (isTsrx(name)) return ts.createSourceFile(name, tsrxCode(name), languageVersion, true, ts.ScriptKind.TS);
+    return getSourceFile(name, languageVersion, ...rest);
+  };
   host.fileExists = f => (f === fileName ? true : ts.sys.fileExists(f));
   const readFile = host.readFile.bind(host);
-  host.readFile = f => (f === fileName ? text : readFile(f));
+  host.readFile = f => (f === fileName ? text : isTsrx(f) ? tsrxCode(f) : readFile(f));
+
+  const resolve = (name, containingFile) => {
+    const standard = ts.resolveModuleName(name, containingFile, options, host).resolvedModule;
+    if (standard) return standard;
+    if (name.startsWith('.')) {
+      const candidate = path.resolve(path.dirname(containingFile), `${name}.tsrx`);
+      if (ts.sys.fileExists(candidate)) return { resolvedFileName: candidate, extension: ts.Extension.Ts };
+    }
+    return undefined;
+  };
+  if (ts.resolveModuleNameLiterals) {
+    host.resolveModuleNameLiterals = (literals, containingFile) =>
+      literals.map(lit => ({ resolvedModule: resolve(lit.text, containingFile) }));
+  } else {
+    host.resolveModuleNames = (names, containingFile) => names.map(n => resolve(n, containingFile));
+  }
   return ts.createProgram([fileName], options, host);
 }
 
@@ -127,6 +161,11 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // "observable-emitting-a-function" call lift for them, letting the imperative
   // boundary surface instead (RenderObservable<number> has no call signatures).
   const nonCallableBindings = new Set();
+  // Bindings whose lifted value can be EMPTY (a `cond ? x : EMPTY` filter idiom):
+  // they may never emit, so combining them with combineLatest can stall. Tracked so
+  // we can warn when one feeds a combine. Paired source spans collected in `stalls`.
+  const maybeEmptyBindings = new Set();
+  const stalls = [];
   const needed = { rxjs: new Set(), 'rxjs/operators': new Set(), rxfm: new Set() };
   const edits = [];
   let usedRender = false;
@@ -155,6 +194,25 @@ function transformWithMappings(ts, sourceText, baseDir) {
     let args;
     try { args = checker.getTypeArguments(type); } catch { args = type.typeArguments; }
     return args && args.length ? args[0] : undefined;
+  };
+
+  // Does this expression evaluate to an observable that completes WITHOUT emitting
+  // (RxJS `EMPTY`, i.e. Observable<never>)? Used to spot the `cond ? x : EMPTY`
+  // filter idiom so we can flag the resulting binding as maybe-empty.
+  const emitsNever = node => {
+    const value = observableValueType(checker.getTypeAtLocation(node));
+    return Boolean(value && value.flags & ts.TypeFlags.Never);
+  };
+
+  // Record a "stall" warning when an operand fed into a combineLatest is a
+  // maybe-empty binding: combineLatest waits for every source's first emission, so a
+  // source that can stay EMPTY freezes the whole derived value until (if ever) it
+  // emits. The `cond ? x : EMPTY` filter idiom is fine standalone (as a child) but
+  // hazardous when combined — this teaches that exactly where it happens.
+  const noteStall = node => {
+    if (ts.isIdentifier(node) && maybeEmptyBindings.has(node.text)) {
+      stalls.push({ start: node.getStart(sf), length: node.getEnd() - node.getStart(sf), name: node.text });
+    }
   };
 
   // Would calling this expression be a boundary violation rather than a real
@@ -294,7 +352,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
           ...cond.pieces, '.pipe(switchMap(', param, ' => ', param, ' ? ',
           ...asStream(whenTrue), ' : ', ...asStream(whenFalse), '))',
         ];
-        return { pieces, observable: true, lifted: true };
+        // `cond ? x : EMPTY` (the filter idiom) can produce no value: flag it so a
+        // later combine over this binding can warn about stalling.
+        const emptyable = emitsNever(node.whenTrue) || emitsNever(node.whenFalse);
+        return { pieces, observable: true, lifted: true, emptyable };
       }
       // Static condition: an ordinary ternary picking between values/streams.
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
@@ -461,6 +522,27 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Property access on a stream → map out the field (the RxFM "extract a field
     // from an object observable" pattern), unless the member is a stream-API one.
     if (ts.isPropertyAccessExpression(node)) {
+      // Collapse a chain of property accesses rooted in a single stream into ONE map
+      // (`state.trail.coordinates` → `state.pipe(map(state => state.trail.coordinates))`)
+      // rather than a map per hop. Walk down through property accesses to the root;
+      // fuse only when it's a pure property chain (≥2 hops) rooted in an observable
+      // whose first hop targets the emitted value (not a stream member like `.value`).
+      let root = node.expression;
+      let firstName = node.name;
+      while (ts.isPropertyAccessExpression(root)) {
+        firstName = root.name;
+        root = root.expression;
+      }
+      if (root !== node.expression && isObservableExpr(root) && memberTargetsValue(root, firstName.text)) {
+        needed['rxjs/operators'].add('map');
+        const rootR = transformExpression(root);
+        const p = ts.isIdentifier(root) ? root.text : '_o';
+        // The access path (`.trail.coordinates`) is emitted as a mapped source slice
+        // so hover / go-to-def on each property still resolves.
+        const path = { srcStart: root.getEnd(), srcEnd: node.getEnd() };
+        const pieces = [...rootR.pieces, '.pipe(map(', p, ' => ', p, path, '))'];
+        return { pieces, observable: true, lifted: true };
+      }
       const obj = transformExpression(node.expression);
       if (obj.observable && memberTargetsValue(node.expression, node.name.text)) {
         needed['rxjs/operators'].add('map');
@@ -548,6 +630,8 @@ function transformWithMappings(ts, sourceText, baseDir) {
       if (left.observable || right.observable) {
         needed.rxjs.add('combineLatest');
         needed['rxjs/operators'].add('map');
+        noteStall(node.left);
+        noteStall(node.right);
         const used = new Set();
         const paramOf = (operandNode, i) => {
           let base = ts.isIdentifier(operandNode) ? operandNode.text : `_${i}`;
@@ -621,6 +705,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
       if (r.observable && ts.isIdentifier(node.name)) {
         observableBindings.add(node.name.text);
         if (r.callable === false) nonCallableBindings.add(node.name.text);
+        if (r.emptyable) maybeEmptyBindings.add(node.name.text);
       }
       if (r.lifted) {
         // Every imperative result is a RenderObservable: wrap the binding once.
@@ -738,7 +823,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
   }
 
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
-  return { code, segments, sourceDiagnostics };
+  return { code, segments, sourceDiagnostics, stalls };
 }
 
 function mapSourceToGenerated(segments, srcOffset) {

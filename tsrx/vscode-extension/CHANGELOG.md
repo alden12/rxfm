@@ -2,6 +2,61 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.8]
+
+### Fixed
+- A bare cross-`.tsrx` import (`import { x } from './other'`) now resolves in the editor
+  (previously "Cannot find module './other'"). Volar's `resolveHiddenExtensions` is enabled so a
+  `./other` import maps to the sibling `./other.tsrx`'s virtual types. This is the editor-side half of
+  cross-`.tsrx` support; the transform's own inference already resolved them, so lifting + editor
+  types now both work across files.
+
+## [0.0.7]
+
+### Added
+- Cross-`.tsrx` imports resolve with real types, so a derivation over a reactive value
+  imported from another `.tsrx` file still lifts — you can split a reactive "engine"
+  module from its view.
+- The `cond ? value : EMPTY` filter idiom (and `EMPTY` is re-exported from the runtime).
+  A warning flags when an EMPTY-able value is combined with another stream, since
+  `combineLatest` stalls until it first emits.
+
+### Changed
+- A chain of property accesses on a stream (`state.trail.coordinates`) now lifts to a
+  single `map` instead of one per hop.
+
+## [0.0.6]
+
+### Added
+- Element access with an observable index over a static object now lifts —
+  `CELL_COLOR_MAP[cell]` becomes `cell.pipe(map(cell => CELL_COLOR_MAP[cell]))`. Previously only an
+  observable *object* lifted, so a constant lookup table indexed by a stream needed a wrapper
+  function; now the lookup can be written directly.
+
+## [0.0.5]
+
+### Fixed
+- Operator-style calls now lift a liftable *argument* in place — e.g.
+  `interval(periodFor(difficulty))` transforms the inner `periodFor(difficulty)` instead of emitting
+  the call verbatim (which type-errored). Previously the argument had to be lifted at a separate
+  binding first.
+
+### Added
+- `interval(period)` and `accumulate(source, reducer, seed)` runtime helpers, and `RenderObservable`
+  is now distinct-by-reference (a derivation from an unchanged value no longer touches the DOM).
+
+## [0.0.4]
+
+### Fixed
+- Operator-style calls — functions taking a stream argument (`destructure`,
+  `snakeGameLoop(difficulty)`, custom helpers like `accumulate`) — were mis-lifted
+  into a per-emission `map`, producing wrong types and spurious errors. They now
+  pass through untouched, so they can be written inline in `.tsrx`.
+
+### Added
+- The transform now recognises `Observable`-typed parameters, which also enables a
+  library of plain stream helpers (e.g. `accumulate`, the explicit form of `scan`).
+
 ## [0.0.3]
 
 ### Changed
