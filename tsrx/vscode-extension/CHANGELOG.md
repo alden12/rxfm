@@ -2,6 +2,18 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.13]
+
+### Changed
+- A binary, unary, or logical expression whose observables all root in **one** stream now lifts as a
+  single `map` (`count * 2` → `count.pipe(map(count => count * 2))`, `tick % 2 === 0` → one map, not
+  nested `combineLatest`), preserving TypeScript narrowing — the same collapse the ternary already
+  did. Multi-stream expressions (`a + b` over two streams) still use `combineLatest`; a value read via
+  a stream API (`subject.value`) is left alone.
+- Hovering the named observable inside a collapsed expression (`count` in `count * 2`) now shows its
+  declared `Observable<…>` type — mapped to the outer stream reference — matching the member-access
+  lift and the variable's own declaration, instead of the in-`map` value type.
+
 ## [0.0.12]
 
 ### Added
