@@ -1,0 +1,41 @@
+import { Div, Button } from 'rxfm';
+import { board, score, highScore, difficulty, direction } from './game';
+import { CELL_COLOR_MAP, BOARD_HEIGHT, KEY_MAP } from './constants';
+import { Difficulty } from './types';
+
+import './snake-styles.css';
+
+const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+
+export const SnakeGame = () => {
+  const cells = board.flat().map(cell => Div
+      .class('snake-cell')
+      .style({ backgroundColor: CELL_COLOR_MAP[cell] })``
+  );
+
+  return Div
+  .class('snake-game')
+  .onKeydown(event => {
+    if (event instanceof KeyboardEvent && event.code in KEY_MAP) direction.next(KEY_MAP[event.code]);
+  })(
+    Div
+      .class('snake-game-board')
+      .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })(
+        cells
+      ),
+    Div
+      .class('score-board')(
+        Div`Score: ${score}`,
+        Div`High Score: ${highScore}`,
+        ...difficulties.map(option =>
+          Button
+            .onClick(() => difficulty.next(option))
+            .class('difficulty-button')(
+              option,
+            ),
+        ),
+      ),
+  );
+};
+
+SnakeGame().subscribe(element => document.body.appendChild(element));

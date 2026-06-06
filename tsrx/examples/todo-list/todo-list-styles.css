@@ -1,0 +1,19 @@
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 5px 0;
+  border-bottom: 1px solid black;
+}
+
+.todo-item input {
+  pointer-events: none;
+}
+
+.todo-item:hover {
+  background-color: lightgrey;
+}
+
+.todo-item.done {
+  opacity: 0.7;
+}
