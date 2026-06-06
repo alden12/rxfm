@@ -471,13 +471,14 @@ function transformWithMappings(ts, sourceText, baseDir) {
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
-    // Element access on a stream → map out the indexed value (index may itself
-    // be a stream, in which case combineLatest both).
+    // Element access where the object and/or the index is a stream → map out the
+    // indexed value. Three cases: object observable (+ optional observable index,
+    // via combineLatest), or a static object with an observable index.
     if (ts.isElementAccessExpression(node)) {
       const obj = transformExpression(node.expression);
+      const index = transformExpression(node.argumentExpression);
       if (obj.observable) {
         needed['rxjs/operators'].add('map');
-        const index = transformExpression(node.argumentExpression);
         const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
         if (index.observable) {
           needed.rxjs.add('combineLatest');
@@ -488,6 +489,16 @@ function transformWithMappings(ts, sourceText, baseDir) {
           return { pieces, observable: true, lifted: true };
         }
         const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '[', ...index.pieces, ']))'];
+        return { pieces, observable: true, lifted: true };
+      }
+      // Static object, observable index (e.g. `CELL_COLOR_MAP[cell]`): drive off the
+      // index — `cell.pipe(map(cell => CELL_COLOR_MAP[cell]))`. The object expression
+      // is re-referenced inside the map, which is free for the common case (a constant
+      // lookup table named by identifier).
+      if (index.observable) {
+        needed['rxjs/operators'].add('map');
+        const i = ts.isIdentifier(node.argumentExpression) ? node.argumentExpression.text : '_i';
+        const pieces = [...index.pieces, '.pipe(map(', i, ' => ', ...obj.pieces, '[', i, ']))'];
         return { pieces, observable: true, lifted: true };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
