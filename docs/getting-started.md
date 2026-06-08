@@ -95,12 +95,25 @@ export default defineConfig({
 });
 ```
 
-The transform emits `import { render } from "./…/runtime"`; provide a `runtime.ts` reachable by
-walking up from your `.tsrx` files. In this repo the canonical implementation is
-[tsrx/runtime.ts](../tsrx/runtime.ts), re-exported next to the examples as
-[examples/runtime.ts](../examples/runtime.ts) so the demo tree (a sibling of `tsrx/`) can reach it.
-The runtime also exports the helpers tsrx leaves for you to call by hand — `accumulate`, `interval`,
-`EMPTY`.
+The helpers tsrx leaves for you to call by hand — `accumulate`, `interval`, and `EMPTY` — are
+exported from the package root, so you import them like anything else:
+
+```ts
+import { accumulate, interval, EMPTY } from 'rxfm';
+```
+
+The transform also emits `import { render } from "./…/runtime"` around lifted expressions, so it
+needs a `runtime.ts` reachable by walking up from your `.tsrx` files; make it a one-line re-export
+of the rxfm runtime:
+
+```ts
+// runtime.ts
+export * from 'rxfm';
+```
+
+(In this repo the examples re-export from the library source via [examples/runtime.ts](../examples/runtime.ts)
+rather than the published package — the same reason the demo aliases `rxfm` to `src/` — but a real
+consumer's `runtime.ts` is just the one-liner above.)
 
 ### Run the examples
 

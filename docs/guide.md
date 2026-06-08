@@ -171,7 +171,7 @@ Inputs are function arguments; outputs are callbacks you pass in. Values derived
 "is this option the selected one?" — are just expressions:
 
 ```typescript
-import { Div, Button, conditional } from 'rxfm';
+import { Div, Button } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
@@ -180,25 +180,27 @@ const ComponentIOExample = () => {
   const selectedOption = new BehaviorSubject('Option 1');
   const setOption = (option: string) => selectedOption.next(option);
 
-  const Options = options.map(option => {
-    const active = selectedOption === option;   // ⇒ RenderObservable<boolean>
-    return Button
+  const Options = options.map(option =>
+    Button
       .onClick(() => setOption(option))
-      .class('option-button', conditional(active, 'active'))(option);
-  });
+      .class('option-button', selectedOption === option && 'active')
+      `${option}`,
+  );
 
-  return Div(...Options, Div`Current Value: ${selectedOption}`);
+  return Div(Options, Div`Current Value: ${selectedOption}`);
 };
 ```
 
 `selectedOption === option` lifts to `RenderObservable<boolean>` — replacing
-`selectedOption.pipe(map(s => s === option))` — and the rest is plain RxFM (`conditional`, the
-fluent `.class` / `.onClick` methods).
+`selectedOption.pipe(map(s => s === option))` — and is passed straight to `.class` as the active
+flag. Note `Options` is handed to `Div` as a **single array**, with no spread.
 
-Component children can be passed using the `ComponentChild` type, including a spread array:
+Children may be passed as a (possibly nested) **array** as well as individually — handy for a mapped
+list like `Options` above. A component that forwards a variable number of children typed as
+`ComponentChild` can hand them straight on:
 
 ```typescript
-const Card = (...children: ComponentChild[]) => Div.class('card')(...children);
+const Card = (...children: ComponentChild[]) => Div.class('card')(children);
 ```
 
 ---

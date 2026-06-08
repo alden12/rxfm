@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Static arrays of children may now be passed directly to a component, without spreading:
+  `Div(items.map(Item))` (and nested arrays) work the same as `Div(...items.map(Item))`. Arrays may
+  be mixed with other children and used inside tagged templates (`` Div`${items.map(Item)}` ``).
+  Previously a non-template array threw, and an array interpolated into a template was rendered as
+  text. `ComponentChild` now includes `ComponentChild[]`. (For a list whose membership changes over
+  time, keep emitting an `ElementType[]` from an observable — see `mapToComponents`.)
+- The tsrx runtime now ships with the package and is exported from the root: `render`,
+  `RenderObservable`, `accumulate`, `interval`, and `EMPTY` are importable via
+  `import { accumulate, interval } from 'rxfm'`. These are useful with plain rxfm too — a
+  shared/replaying derived value (`render`/`RenderObservable`), a running fold (`accumulate`), and a
+  reactive-period clock (`interval`). The tsrx transform still injects `render` from a local
+  `runtime.ts`, which can now be a one-line `export * from 'rxfm'`.
+
 ### Changed
 - **Docs & examples restructured around tsrx as the default style.** The README is now a lean
   landing page; the full docs live in `docs/` (`getting-started.md`, `guide.md` for the tsrx
