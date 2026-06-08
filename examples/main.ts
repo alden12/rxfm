@@ -3,7 +3,7 @@
 // themselves are authored in tsrx (`.tsrx`); importing them here pulls them into
 // the module graph so the tsrx Vite plugin transforms each one. The layout below
 // is ordinary RxFM — no derived expressions — so it needs no lifting.
-import { attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'rxfm';
+import { addToView, attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'rxfm';
 import {
   HelloWorld,
   ChildrenExample,
@@ -75,4 +75,4 @@ const App = Div(Title, Examples).pipe(
   attribute.id`app`,
 );
 
-App.subscribe(element => document.body.appendChild(element));
+addToView(App);

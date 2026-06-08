@@ -8,12 +8,12 @@
 **Build reactive web apps as plain RxJS streams — no virtual DOM, no re-render cycle.**
 
 In RxFM a **component is just an `Observable<HTMLElement>`**. Elements are reactive simply because
-they're streams, so there's nothing to diff and nothing to re-render — a single `subscribe` at the
-app root sets the whole app in motion. With the experimental **tsrx** layer, derived state reads like
+they're streams, so there's nothing to diff and nothing to re-render — a single mount at the app
+root (`addToView`) sets the whole app in motion. With the experimental **tsrx** layer, derived state reads like
 ordinary maths (`count * 2`) and is lifted into reactive streams for you, fully typed.
 
 ```ts
-import { Div, Button } from 'rxfm';
+import { Div, Button, addToView } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
 const Counter = () => {
@@ -25,7 +25,7 @@ const Counter = () => {
   );
 };
 
-Counter().subscribe(el => document.body.append(el));
+addToView(Counter()); // the one subscription your app needs — mounts to document.body
 ```
 
 That `count * 2` is the whole pitch. tsrx lifts it to the exact RxJS you'd otherwise write by hand:

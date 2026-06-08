@@ -19,15 +19,22 @@ npm install rxfm rxjs@^7
 # or: yarn add rxfm rxjs@^7
 ```
 
-Write a component (a component is just an `Observable<HTMLElement>`) and subscribe once at the root:
+Write a component (a component is just an `Observable<HTMLElement>`) and mount it once at the root
+with `addToView`:
 
 ```ts
-import { Div } from 'rxfm';
+import { Div, addToView } from 'rxfm';
 
 const HelloWorld = Div('Hello, World!');
 
-HelloWorld.subscribe(el => document.body.appendChild(el));
+addToView(HelloWorld); // mounts to document.body; returns a teardown function
 ```
+
+`addToView` is the one subscription your app needs. Under the hood it's the line you'd otherwise
+write by hand — `HelloWorld.subscribe(el => document.body.appendChild(el))` — except it also swaps
+the element if the component ever re-emits (e.g. a conditional or switched root, which a plain
+`appendChild` would duplicate) and hands you a function to tear it down. That's the whole trick;
+there's no virtual DOM underneath.
 
 That's it — no bundler plugin, no transform. The full walkthrough lives in the
 [plain-TypeScript reference](plain-typescript.md), and the

@@ -61,13 +61,15 @@ These may take any number of children as arguments, including strings, observabl
 const HelloWorld = Div('Hello, World!');
 ```
 
-The root component can be added to the DOM by subscribing to it and adding its element to the document:
+The root component can be added to the DOM with `addToView`, which subscribes to it and adds its element to the document:
 
 ```typescript
-HelloWorld.subscribe(el => document.body.appendChild(el));
+import { addToView } from 'rxfm';
+
+addToView(HelloWorld); // mounts to document.body; returns a teardown function
 ```
 
-The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
+`addToView` is the honest spelling of `HelloWorld.subscribe(el => document.body.appendChild(el))`: it does the same append, but also swaps the element if the component re-emits (which a bare `appendChild` would duplicate) and returns a function to tear it down. It should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables piggyback on the application subscription and are subscribed by virtue of being part of the component stream. This way a single subscription at the app root can set the entire application in motion!
 
 ### Component Children:
 

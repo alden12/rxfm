@@ -9,8 +9,8 @@
 
 RxFM is an experimental web framework built on [RxJS](https://github.com/ReactiveX/rxjs): a
 **component is just an `Observable<HTMLElement>`**. There's no virtual DOM and no re-render cycle —
-elements are reactive simply because they're observable streams, and a single `subscribe` at the
-app root sets the whole app in motion.
+elements are reactive simply because they're observable streams, and a single mount at the app root
+(`addToView`) sets the whole app in motion.
 
 ---
 
@@ -50,15 +50,16 @@ Components in RxFM are simply `Observable`s emitting `HTMLElement`s. Component n
 ### Hello World
 
 ```typescript
-import { Div } from 'rxfm';
+import { Div, addToView } from 'rxfm';
 
 const HelloWorld = Div('Hello, World!');
 
-HelloWorld.subscribe(el => document.body.appendChild(el));
+addToView(HelloWorld); // mounts to document.body; returns a teardown function
 ```
 
-The root component should be the only subscribed component in the app — everything else piggybacks
-on that single subscription.
+`addToView` makes the single subscription your app needs: it appends the element (swapping it if the
+component ever re-emits) and returns a function to tear it down. The root should be the only mounted
+component — everything else piggybacks on that one subscription.
 
 ### Component Children
 
