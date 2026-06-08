@@ -3,6 +3,10 @@ node_modules
 /dist/*
 /dist-demo/*
 /tsrx/dist-tsrx/
+# Compiled tsrx plugin output. The .cts sources are the source of truth; every
+# consumer regenerates these (pretest + build:tsrx for tests, build.mjs for the
+# extension bundle), so tracking them only invites stale-artifact drift.
+/tsrx/ts-plugin/*.cjs
 *.tgz
 *.vsix
 # …except the published tsrx extension build, committed so it can be sideloaded
