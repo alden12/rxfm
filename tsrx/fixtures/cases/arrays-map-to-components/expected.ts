@@ -1,5 +1,4 @@
 import { render } from "./runtime";
-import { combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
 import { mapToComponents } from "rxfm";
 import { BehaviorSubject } from 'rxjs';
@@ -8,6 +7,6 @@ declare const items: BehaviorSubject<{ id: number; name: string; done: boolean }
 const a = items.pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))} is ${render(item.pipe(map(item => item.done ? 'done' : 'todo')))}`));
 const b = items.pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))}`, 'id'));
 const c = items.pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))}`, item => item.id));
-const names = render(combineLatest([items]).pipe(map(([items]) => items.map(i => i.name))));
-const visible = combineLatest([items]).pipe(map(([items]) => items.filter(i => i.done))).pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))}`, 'id'));
+const names = render(items.pipe(map(items => items.map(i => i.name))));
+const visible = items.pipe(map(items => items.filter(i => i.done))).pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))}`, 'id'));
 const nested = Div(items.pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))}`)));

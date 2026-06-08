@@ -1,11 +1,10 @@
 import { render } from "./runtime";
-import { combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
 import { Observable } from 'rxjs';
 declare const y: Observable<number>;
 const double = (n: number) => n * 2;
 const sum = render(y.pipe(map(y => y + 1)));
 const c = sum(1);
-const called = render(combineLatest([y]).pipe(map(([y]) => double(y))));
+const called = render(y.pipe(map(y => double(y))));
 const d = called(1);
 const bad: string = 123;

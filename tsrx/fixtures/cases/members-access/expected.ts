@@ -1,5 +1,5 @@
 import { render } from "./runtime";
-import { combineLatest, of } from "rxjs";
+import { of, combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
 import { Observable, BehaviorSubject } from 'rxjs';
 declare const user: Observable<{ name: string; address: { city: string } }>;

@@ -454,6 +454,17 @@ function transformWithMappings(ts, sourceText, baseDir) {
         needed.rxjs.add('of');
         return ['of(', ...operand.pieces, ')'];
     };
+    // Combine `sources` (each a stream's pieces) and map their emitted values —
+    // bound to `params` — through `body`. A single source needs no combineLatest:
+    // it collapses to `source.pipe(map(param => body))` (the same single-root
+    // shape D5 produces), which is tighter and imports one fewer operator.
+    const combineMap = (sources, params, body) => {
+        needed['rxjs/operators'].add('map');
+        if (sources.length === 1)
+            return [...sources[0], '.pipe(map(', params[0], ' => ', ...body, '))'];
+        needed.rxjs.add('combineLatest');
+        return ['combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ', ...body, '))'];
+    };
     // Emit `node` verbatim (as source slices) but rewrite each alias VALUE reference
     // to `param.prop`. Used where a node is re-emitted inside a `map(param => …)` whose
     // param is the shared item — the D3 ternary body and a handler closure body — so
@@ -599,8 +610,6 @@ function transformWithMappings(ts, sourceText, baseDir) {
         if (ts.isTemplateExpression(node)) {
             const spans = node.templateSpans.map(s => ({ expr: transformExpression(s.expression), node: s.expression, literal: s.literal }));
             if (spans.some(s => s.expr.observable)) {
-                needed.rxjs.add('combineLatest');
-                needed['rxjs/operators'].add('map');
                 const fresh = freshNamer();
                 const sources = [];
                 const params = [];
@@ -618,11 +627,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
                     body.push(...(sub.param ? [sub.param] : sub.inline));
                     body.push(V(s.literal));
                 });
-                const pieces = [
-                    'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
-                    ...body, '))',
-                ];
-                return { pieces, observable: true, lifted: true, callable: false };
+                return { pieces: combineMap(sources, params, body), observable: true, lifted: true, callable: false };
             }
             return { pieces: [V(node)], observable: false, lifted: false };
         }
@@ -643,8 +648,6 @@ function transformWithMappings(ts, sourceText, baseDir) {
             if (ts.isPropertyAccessExpression(ex)) {
                 const obj = transformExpression(ex.expression);
                 if (obj.observable && memberTargetsValue(ex.expression, ex.name.text)) {
-                    needed.rxjs.add('combineLatest');
-                    needed['rxjs/operators'].add('map');
                     const fresh = freshNamer();
                     const objParam = fresh(ts.isIdentifier(ex.expression) ? ex.expression.text : '_o');
                     // Function-expression args are callbacks (arr.map/filter's fn): keep
@@ -660,11 +663,8 @@ function transformWithMappings(ts, sourceText, baseDir) {
                         params.push(p);
                         return [p];
                     });
-                    const pieces = [
-                        'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
-                        objParam, '.', V(ex.name), '(', ...joinPieces(callArgs, ', '), ')))',
-                    ];
-                    return { pieces, observable: true, lifted: true };
+                    const body = [objParam, '.', V(ex.name), '(', ...joinPieces(callArgs, ', '), ')'];
+                    return { pieces: combineMap(sources, params, body), observable: true, lifted: true };
                 }
             }
             const callee = transformExpression(node.expression);
@@ -696,19 +696,14 @@ function transformWithMappings(ts, sourceText, baseDir) {
                     const pieces = [...callee.pieces, '(', ...joinPieces(args.map(a => a.pieces), ', '), ')'];
                     return { pieces, observable: isObservableExpr(node), lifted: false, rewritten: true };
                 }
-                needed.rxjs.add('combineLatest');
-                needed['rxjs/operators'].add('map');
                 const fresh = freshNamer();
                 const argParam = (argNode, i) => fresh(ts.isIdentifier(argNode) ? argNode.text : `_a${i}`);
                 if (calleeIsFnStream) {
                     const fnParam = fresh(ts.isIdentifier(node.expression) ? node.expression.text : '_fn');
                     const argParams = node.arguments.map(argParam);
-                    const sources = joinPieces([callee.pieces, ...args.map(asStream)], ', ');
+                    const sources = [callee.pieces, ...args.map(asStream)];
                     const params = [fnParam, ...argParams];
-                    const pieces = [
-                        'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
-                        fnParam, '(', argParams.join(', '), ')))',
-                    ];
+                    const pieces = combineMap(sources, params, [fnParam, '(', argParams.join(', '), ')']);
                     // Emits the result of the emitted function. Only reliable when the
                     // callee is checker-visible as an observable (not a tracked binding,
                     // whose pre-transform type the checker can't see) — else leave unknown.
@@ -729,10 +724,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
                     sources.push(asStream(args[i]));
                     return [p];
                 });
-                const pieces = [
-                    'combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ',
-                    ...callee.pieces, '(', ...joinPieces(callArgs, ', '), ')))',
-                ];
+                const pieces = combineMap(sources, params, [...callee.pieces, '(', ...joinPieces(callArgs, ', '), ')']);
                 // Plain function over observable args: emits the function's return value.
                 // The callee is a real (non-observable) function, so its type is reliable.
                 const calleeReturn = returnTypeOf(checker.getTypeAtLocation(node.expression));
@@ -795,6 +787,8 @@ function transformWithMappings(ts, sourceText, baseDir) {
                 needed['rxjs/operators'].add('map');
                 const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
                 if (index.observable) {
+                    // Two distinct streams (object + index) → always a genuine combineLatest,
+                    // never the single-source collapse, so it's emitted directly not via combineMap.
                     needed.rxjs.add('combineLatest');
                     const pieces = [
                         'combineLatest([', ...joinPieces([obj.pieces, asStream(index)], ', '),
@@ -873,6 +867,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
             const left = transformExpression(node.left);
             const right = transformExpression(node.right);
             if (left.observable || right.observable) {
+                // singleRootLift above already collapsed the single-root case, so reaching
+                // here means two distinct operand streams → a genuine combineLatest, not
+                // the single-source combineMap path.
                 needed.rxjs.add('combineLatest');
                 needed['rxjs/operators'].add('map');
                 noteStall(node.left);
@@ -1031,7 +1028,6 @@ function transformWithMappings(ts, sourceText, baseDir) {
         const names = [...collectHandlerCaptures(fnNode).keys()];
         if (!names.length)
             return null;
-        needed['rxjs/operators'].add('map');
         // A captured alias (D4) is sourced from its shared item param, deduped, and its
         // fields are expanded in the body — so `() => f(color)` over a destructured
         // `{ color }` lifts to `item.pipe(map(item => () => f(item.color)))`.
@@ -1044,11 +1040,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
             seen.add(src);
             sources.push(src);
         }
-        const body = expandAliases(fnNode);
-        if (sources.length === 1)
-            return [sources[0], '.pipe(map(', sources[0], ' => ', ...body, '))'];
-        needed.rxjs.add('combineLatest');
-        return ['combineLatest([', sources.join(', '), ']).pipe(map(([', sources.join(', '), ']) => ', ...body, '))'];
+        // The captured streams are both the sources and the map params (re-bound to
+        // their current values inside the handler body).
+        return combineMap(sources.map(s => [s]), sources, expandAliases(fnNode));
     };
     // Lift variable initializers anywhere — including inside function bodies, since
     // a component is a function. Walk top-down so declarations are seen in source
