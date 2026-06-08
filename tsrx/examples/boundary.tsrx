@@ -18,10 +18,22 @@ const half = (n: number) => n / 2;
 const halved = half(count); // RenderObservable<number>
 const boom = halved(2);
 
+// ❌ Constructing a reactive value: `new` wants a constructor, but `doubled` is a
+//    stream of numbers, not a class. tsrx leaves it for TypeScript, then rewrites
+//    the raw "no construct signatures" error into the same map-it hint.
+const rebuilt = new doubled();
+
 // ✅ For contrast — *reaching into* a stream is no longer a boundary. These lift
 //    automatically (Tier 3), so there are no errors below:
-const formatted = doubled.toFixed(2); // → doubled.pipe(map(d => d.toFixed(2)))
-const tenth = count / 10;             // → combineLatest([count, of(10)]).pipe(map(...))
+const formatted = doubled.toFixed(2); // → combineLatest([doubled, of(2)]).pipe(map(([d, n]) => d.toFixed(n)))
+const tenth = count / 10;             // → count.pipe(map(c => c / 10))
+
+// ✅ Indexing and property reads lift too, not just arithmetic: a stream index is
+//    mapped exactly like a field read, so neither is a boundary. (The matching
+//    "can't index / no such property" teaching messages only ever fire if the
+//    emitted *value* genuinely lacks that index/member.)
+const nums = new BehaviorSubject([10, 20, 30]);
+const top = nums[0];                  // → nums.pipe(map(n => n[0]))
 
 // ⚠️ Higher-order lift: `timer` itself RETURNS an observable, so lifting it over an
 //    observable period builds Observable<Observable<number>> — a stream of timers
