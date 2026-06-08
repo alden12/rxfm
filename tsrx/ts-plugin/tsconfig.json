@@ -9,15 +9,15 @@
   // still receives `ts` injected at runtime (tsserver hands the plugin its own
   // copy) — we only borrow TypeScript's types at compile time.
   //
-  // noImplicitAny is off for the first port: the AST-walking locals stay inferred
-  // so the diff is "add the data-model types", not a wholesale annotation churn.
-  // Tighten in a later pass.
+  // Fully strict, including noImplicitAny: the AST-walking locals are annotated
+  // (mostly `TS.Node` / `TS.Type | undefined`), so the checker catches any-holes
+  // in the transform itself.
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "node",
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "skipLibCheck": true,
     "declaration": false,
     "sourceMap": false,

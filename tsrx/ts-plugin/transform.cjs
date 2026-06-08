@@ -63,9 +63,9 @@ function getCompilerOptions(ts) {
 // transformed on the fly. (No cycle handling yet; .tsrx import graphs are shallow.)
 function createProgramFromText(ts, fileName, text, options) {
     const host = ts.createCompilerHost(options, true);
-    const isTsrx = f => typeof f === 'string' && f.endsWith('.tsrx');
+    const isTsrx = (f) => typeof f === 'string' && f.endsWith('.tsrx');
     const tsrxCache = new Map();
-    const tsrxCode = f => {
+    const tsrxCode = (f) => {
         const src = fs.readFileSync(f, 'utf8');
         const hit = tsrxCache.get(f);
         if (hit && hit.src === src)
@@ -100,7 +100,7 @@ function createProgramFromText(ts, fileName, text, options) {
         host.resolveModuleNameLiterals = (literals, containingFile) => literals.map(lit => ({ resolvedModule: resolve(lit.text, containingFile) }));
     }
     else {
-        host.resolveModuleNames = (names, containingFile) => names.map(n => resolve(n, containingFile));
+        host.resolveModuleNames = (names, containingFile) => names.map((n) => resolve(n, containingFile));
     }
     return ts.createProgram([fileName], options, host);
 }
@@ -224,14 +224,14 @@ function transformWithMappings(ts, sourceText, baseDir) {
     //   - structural recognizers (returnsComponent, isComponentMapCall) classify a
     //     node by what it would produce.
     // ---------------------------------------------------------------------------
-    const isObservableType = type => {
+    const isObservableType = (type) => {
         if (!type)
             return false;
         if (type.isUnion && type.isUnion())
             return type.types.some(isObservableType);
         return Boolean(type.getProperty && type.getProperty('subscribe') && type.getProperty('pipe'));
     };
-    const isObservableExpr = node => (ts.isIdentifier(node) && (observableBindings.has(node.text) || aliasInfo.has(node.text))) ||
+    const isObservableExpr = (node) => (ts.isIdentifier(node) && (observableBindings.has(node.text) || aliasInfo.has(node.text))) ||
         isObservableType(checker.getTypeAtLocation(node));
     // Does parameter `argIndex` of this call accept an Observable? Two callers ask
     // this for different reasons: an operator-style call whose stream argument must
@@ -249,7 +249,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     };
     // The value type T of an Observable<T>/RenderObservable<T>, or undefined if the
     // type isn't an observable. Reads the type's first type argument.
-    const observableValueType = type => {
+    const observableValueType = (type) => {
         if (!type)
             return undefined;
         if (type.isUnion && type.isUnion()) {
@@ -274,7 +274,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Does this expression evaluate to an observable that completes WITHOUT emitting
     // (RxJS `EMPTY`, i.e. Observable<never>)? Used to spot the `cond ? x : EMPTY`
     // filter idiom so we can flag the resulting binding as maybe-empty.
-    const emitsNever = node => {
+    const emitsNever = (node) => {
         const value = observableValueType(checker.getTypeAtLocation(node));
         return Boolean(value && value.flags & ts.TypeFlags.Never);
     };
@@ -283,7 +283,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // source that can stay EMPTY freezes the whole derived value until (if ever) it
     // emits. The `cond ? x : EMPTY` filter idiom is fine standalone (as a child) but
     // hazardous when combined — this teaches that exactly where it happens.
-    const noteStall = node => {
+    const noteStall = (node) => {
         if (ts.isIdentifier(node) && maybeEmptyBindings.has(node.text)) {
             stalls.push({ start: node.getStart(sf), length: node.getEnd() - node.getStart(sf), name: node.text });
         }
@@ -292,7 +292,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // "observable emitting a function"? True when the callee is a stream whose
     // emitted value can't be called: a binding we lifted to a non-callable value,
     // or a checker-visible observable whose T has no call signatures.
-    const calleeEmitsNonCallable = node => {
+    const calleeEmitsNonCallable = (node) => {
         if (ts.isIdentifier(node) && nonCallableBindings.has(node.text))
             return true;
         const valueType = observableValueType(checker.getTypeAtLocation(node));
@@ -300,9 +300,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
             return checker.getSignaturesOfType(valueType, ts.SignatureKind.Call).length === 0;
         return false;
     };
-    const typeIsCallable = type => Boolean(type) && checker.getSignaturesOfType(type, ts.SignatureKind.Call).length > 0;
+    const typeIsCallable = (type) => type ? checker.getSignaturesOfType(type, ts.SignatureKind.Call).length > 0 : false;
     // The return type of a callable type's first call signature, or undefined.
-    const returnTypeOf = type => {
+    const returnTypeOf = (type) => {
         const sigs = type ? checker.getSignaturesOfType(type, ts.SignatureKind.Call) : [];
         return sigs.length ? sigs[0].getReturnType() : undefined;
     };
@@ -327,13 +327,13 @@ function transformWithMappings(ts, sourceText, baseDir) {
         return !STREAM_MEMBERS.has(name);
     };
     // Structural test for a DOM element type — RxFM components emit these.
-    const isElementValueType = type => Boolean(type && type.getProperty && type.getProperty('nodeType') &&
+    const isElementValueType = (type) => Boolean(type && type.getProperty && type.getProperty('nodeType') &&
         (type.getProperty('tagName') || type.getProperty('nodeName')));
     // Does this function expression return a component (an Observable of a DOM
     // element)? Excludes `any` (which a value-mapping callback gets, since its item
     // param is untyped once `.map` fails to resolve on Observable). Reliable because
     // component creators (Div, …) are typed regardless of the item param.
-    const returnsComponent = fnNode => {
+    const returnsComponent = (fnNode) => {
         const sig = checker.getSignatureFromDeclaration(fnNode);
         if (!sig)
             return false;
@@ -346,7 +346,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // chain roots in an observable (so the whole thing lifts to stay observable).
     // Lets `items.filter(...).map(...)` be recognised, where the checker can't type
     // the derived receiver directly.
-    const isObservableChain = node => {
+    const isObservableChain = (node) => {
         if (!node)
             return false;
         if (isObservableExpr(node))
@@ -364,7 +364,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Is this `obj.map(cb, key?)` where obj is a stream and cb returns a component?
     // Such a call is the imperative way to render a list — lift it to
     // mapToComponents (keyed reconciliation) rather than a naive array map.
-    const isComponentMapCall = node => {
+    const isComponentMapCall = (node) => {
         if (!ts.isCallExpression(node) || node.arguments.length < 1)
             return false;
         const ex = node.expression;
@@ -390,7 +390,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     const observableRoots = (node) => {
         const names = new Set();
         let ok = true;
-        const walk = n => {
+        const walk = (n) => {
             if (!ok)
                 return;
             if (ts.isIdentifier(n)) {
@@ -428,7 +428,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Generates unique, readable param names within a single lifted expression.
     const freshNamer = () => {
         const used = new Set();
-        return base => {
+        return (base) => {
             let name = base, n = 1;
             while (used.has(name))
                 name = `${base}_${n++}`;
@@ -443,7 +443,6 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // hover / go-to-def / semantic highlighting keep working on them — while the
     // synthesized scaffolding stays generated-only (unmapped).
     const V = (node) => ({ srcStart: node.getStart(sf), srcEnd: node.getEnd() });
-    const piecesText = (pieces) => pieces.map(p => (typeof p === 'string' ? p : 'srcStart' in p ? sourceText.slice(p.srcStart, p.srcEnd) : p.gen)).join('');
     // Join several piece-lists with a separator string.
     const joinPieces = (groups, sep) => groups.flatMap((g, i) => (i === 0 ? g : [sep, ...g]));
     // Coerce a (possibly non-observable) operand into an observable source for
@@ -474,7 +473,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
         // Collect alias (D4) value references, and — when `root` (a real observable
         // identifier) is given — its value occurrences too (D5), in source order.
         const occ = [];
-        const walk = n => {
+        const walk = (n) => {
             if (ts.isIdentifier(n)) {
                 const p = n.parent;
                 if (ts.isPropertyAccessExpression(p) && p.name === n)
@@ -906,9 +905,9 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // A synthetic stream-param name for a destructured item param (D4), chosen so it
     // collides with neither an outer observable binding nor any identifier in the
     // callback (the destructured fields, the index param, locals, free references).
-    const freshItemName = cb => {
+    const freshItemName = (cb) => {
         const used = new Set(observableBindings);
-        const collect = n => { if (ts.isIdentifier(n))
+        const collect = (n) => { if (ts.isIdentifier(n))
             used.add(n.text); ts.forEachChild(n, collect); };
         collect(cb);
         let name = 'item', n = 1;
@@ -916,10 +915,12 @@ function transformWithMappings(ts, sourceText, baseDir) {
             name = `item_${n++}`;
         return name;
     };
-    const handleComponentMap = node => {
+    const handleComponentMap = (node) => {
+        // The caller only reaches here via isComponentMapCall, which has already
+        // verified the receiver is `obj.map` and the first arg is an arrow/function.
         const ex = node.expression; // obj.map
         const obj = ex.expression; // obj
-        const cb = node.arguments[0]; // arrow / function expression
+        const cb = node.arguments[0];
         needed.rxfm.add('mapToComponents');
         // Lift the receiver if it's itself an imperative expression (e.g. a filter).
         const objR = transformExpression(obj);
@@ -987,14 +988,14 @@ function transformWithMappings(ts, sourceText, baseDir) {
     //                                  map(([index, current]) => () => f(index, current)))
     // rxfm's event operators already accept an Observable<handler> (EventHandler<T,E>).
     const within = (node, ancestor) => node.getStart(sf) >= ancestor.getStart(sf) && node.getEnd() <= ancestor.getEnd();
-    const collectHandlerCaptures = fnNode => {
+    const collectHandlerCaptures = (fnNode) => {
         // A captured stream is lifted only if the handler reads it as a *value*. If it's
         // touched via its stream API (`subject.next(…)`, `.value`, `.pipe`), the handler
         // legitimately operates on the stream itself — lifting would replace it with a
         // value and break the call — so such names are excluded entirely.
         const valueUsed = new Map();
         const streamUsed = new Set();
-        const walk = n => {
+        const walk = (n) => {
             if (ts.isIdentifier(n)) {
                 const p = n.parent;
                 if (ts.isPropertyAccessExpression(p) && p.name === n)
@@ -1047,7 +1048,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // Lift variable initializers anywhere — including inside function bodies, since
     // a component is a function. Walk top-down so declarations are seen in source
     // order (so a binding is known observable before later statements use it).
-    const visit = node => {
+    const visit = (node) => {
         // Component-list map in any expression position (e.g. a child argument).
         if (isComponentMapCall(node)) {
             handleComponentMap(node);
@@ -1244,7 +1245,7 @@ function assembleOutput({ ts, sf, sourceText, baseDir, edits, needed, usedRender
     // features (hover, go-to-def) on them via their identity mappings. The extra
     // names we need go in a separate generated-only import line at the top (two
     // imports from the same module is legal as long as names don't collide).
-    const alreadyImported = mod => {
+    const alreadyImported = (mod) => {
         const names = new Set();
         for (const s of sf.statements) {
             if (ts.isImportDeclaration(s) && ts.isStringLiteral(s.moduleSpecifier) && s.moduleSpecifier.text === mod) {
