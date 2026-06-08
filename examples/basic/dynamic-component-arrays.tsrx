@@ -1,7 +1,3 @@
-// Dynamic component arrays. `items.map(cb, 'name')` lifts to `mapToComponents`
-// (keyed by name for reconciliation). The callback destructures the item stream in
-// place — `({ name, done }) => …` — so `name` and `done ? '' : 'not'` read as plain
-// values inside the template (D4); no separate `Item` helper or `destructure` needed.
 import { Div } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
@@ -22,5 +18,5 @@ export const ComponentArraysExample = () => {
     'name',
   );
 
-  return Div(ItemComponents);
+  return Div`${ItemComponents}`;
 };

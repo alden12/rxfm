@@ -1,6 +1,3 @@
-// Components — the simplest examples. Nothing here lifts (there are no observable
-// expressions to derive from), so a .tsrx file reads exactly like the plain rxfm
-// form: tsrx only changes things where you'd otherwise reach for `.pipe(...)`.
 import { Div, B, Span } from 'rxfm';
 import { interval } from '../runtime';
 

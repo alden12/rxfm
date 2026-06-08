@@ -8,32 +8,33 @@ import './snake-styles.css';
 const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
 export const SnakeGame = () => {
-  const cells = board.flat().map(cell => Div
+  const Cells = board.flat().map(cell =>
+    Div
       .class('snake-cell')
-      .style({ backgroundColor: CELL_COLOR_MAP[cell] })``
+      .style({ backgroundColor: CELL_COLOR_MAP[cell] })
+      ``,
   );
 
   return Div
-  .class('snake-game')
-  .onKeydown(event => {
-    if (event instanceof KeyboardEvent && event.code in KEY_MAP) direction.next(KEY_MAP[event.code]);
-  })(
-    Div
-      .class('snake-game-board')
-      .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })(
-        cells
-      ),
-    Div
-      .class('score-board')(
-        Div`Score: ${score}`,
-        Div`High Score: ${highScore}`,
-        ...difficulties.map(option =>
-          Button
-            .onClick(() => difficulty.next(option))
-            .class('difficulty-button')(
-              option,
-            ),
+    .class('snake-game')
+    .tabindex(0)
+    .onKeydown(event => {
+      if (event instanceof KeyboardEvent && event.code in KEY_MAP) direction.next(KEY_MAP[event.code]);
+    })(
+      Div
+        .class('snake-game-board')
+        .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })
+        `${Cells}`,
+      Div
+        .class('score-board')(
+          Div`Score: ${score}`,
+          Div`High Score: ${highScore}`,
+          difficulties.map(option =>
+            Button
+              .onClick(() => difficulty.next(option))
+              .class('difficulty-button')
+              `${option}`,
+          ),
         ),
-      ),
-  );
+    );
 };
