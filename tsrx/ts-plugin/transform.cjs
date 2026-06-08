@@ -104,54 +104,72 @@ function createProgramFromText(ts, fileName, text, options) {
     }
     return ts.createProgram([fileName], options, host);
 }
+// The operators we lift, keyed by SyntaxKind → the source token we re-emit.
+// Built from the injected `ts` (SyntaxKind values are only known at runtime).
+function operatorTables(ts) {
+    return {
+        // Binary operators we lift eagerly via combineLatest + map. All emit a
+        // primitive (number / boolean / string), so the result is never callable.
+        // NOTE: short-circuiting operators (&& || ??) are deliberately absent — they
+        // get lazy switchMap handling below, like the ternary.
+        LIFTABLE: {
+            [ts.SyntaxKind.PlusToken]: '+',
+            [ts.SyntaxKind.MinusToken]: '-',
+            [ts.SyntaxKind.AsteriskToken]: '*',
+            [ts.SyntaxKind.SlashToken]: '/',
+            [ts.SyntaxKind.PercentToken]: '%',
+            [ts.SyntaxKind.AsteriskAsteriskToken]: '**',
+            // Comparisons → boolean streams (these feed ternary/logical conditions).
+            [ts.SyntaxKind.LessThanToken]: '<',
+            [ts.SyntaxKind.GreaterThanToken]: '>',
+            [ts.SyntaxKind.LessThanEqualsToken]: '<=',
+            [ts.SyntaxKind.GreaterThanEqualsToken]: '>=',
+            [ts.SyntaxKind.EqualsEqualsEqualsToken]: '===',
+            [ts.SyntaxKind.ExclamationEqualsEqualsToken]: '!==',
+            [ts.SyntaxKind.EqualsEqualsToken]: '==',
+            [ts.SyntaxKind.ExclamationEqualsToken]: '!=',
+            // Bitwise → number streams.
+            [ts.SyntaxKind.AmpersandToken]: '&',
+            [ts.SyntaxKind.BarToken]: '|',
+            [ts.SyntaxKind.CaretToken]: '^',
+            [ts.SyntaxKind.LessThanLessThanToken]: '<<',
+            [ts.SyntaxKind.GreaterThanGreaterThanToken]: '>>',
+            [ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken]: '>>>',
+        },
+        // Prefix unary operators we lift via map. All emit a primitive.
+        LIFTABLE_UNARY: {
+            [ts.SyntaxKind.ExclamationToken]: '!',
+            [ts.SyntaxKind.MinusToken]: '-',
+            [ts.SyntaxKind.PlusToken]: '+',
+            [ts.SyntaxKind.TildeToken]: '~',
+        },
+        // Short-circuiting operators: lifted lazily via switchMap (like the ternary) so
+        // the right-hand stream is only subscribed when the left actually selects it.
+        LOGICAL: {
+            [ts.SyntaxKind.AmpersandAmpersandToken]: '&&',
+            [ts.SyntaxKind.BarBarToken]: '||',
+            [ts.SyntaxKind.QuestionQuestionToken]: '??',
+        },
+    };
+}
 function transformWithMappings(ts, sourceText, baseDir) {
-    // Binary operators we lift eagerly via combineLatest + map. All emit a
-    // primitive (number / boolean / string), so the result is never callable.
-    // NOTE: short-circuiting operators (&& || ??) are deliberately absent — they
-    // get lazy switchMap handling below, like the ternary.
-    const LIFTABLE = {
-        [ts.SyntaxKind.PlusToken]: '+',
-        [ts.SyntaxKind.MinusToken]: '-',
-        [ts.SyntaxKind.AsteriskToken]: '*',
-        [ts.SyntaxKind.SlashToken]: '/',
-        [ts.SyntaxKind.PercentToken]: '%',
-        [ts.SyntaxKind.AsteriskAsteriskToken]: '**',
-        // Comparisons → boolean streams (these feed ternary/logical conditions).
-        [ts.SyntaxKind.LessThanToken]: '<',
-        [ts.SyntaxKind.GreaterThanToken]: '>',
-        [ts.SyntaxKind.LessThanEqualsToken]: '<=',
-        [ts.SyntaxKind.GreaterThanEqualsToken]: '>=',
-        [ts.SyntaxKind.EqualsEqualsEqualsToken]: '===',
-        [ts.SyntaxKind.ExclamationEqualsEqualsToken]: '!==',
-        [ts.SyntaxKind.EqualsEqualsToken]: '==',
-        [ts.SyntaxKind.ExclamationEqualsToken]: '!=',
-        // Bitwise → number streams.
-        [ts.SyntaxKind.AmpersandToken]: '&',
-        [ts.SyntaxKind.BarToken]: '|',
-        [ts.SyntaxKind.CaretToken]: '^',
-        [ts.SyntaxKind.LessThanLessThanToken]: '<<',
-        [ts.SyntaxKind.GreaterThanGreaterThanToken]: '>>',
-        [ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken]: '>>>',
-    };
-    // Prefix unary operators we lift via map. All emit a primitive.
-    const LIFTABLE_UNARY = {
-        [ts.SyntaxKind.ExclamationToken]: '!',
-        [ts.SyntaxKind.MinusToken]: '-',
-        [ts.SyntaxKind.PlusToken]: '+',
-        [ts.SyntaxKind.TildeToken]: '~',
-    };
-    // Short-circuiting operators: lifted lazily via switchMap (like the ternary) so
-    // the right-hand stream is only subscribed when the left actually selects it.
-    const LOGICAL = {
-        [ts.SyntaxKind.AmpersandAmpersandToken]: '&&',
-        [ts.SyntaxKind.BarBarToken]: '||',
-        [ts.SyntaxKind.QuestionQuestionToken]: '??',
-    };
+    const { LIFTABLE, LIFTABLE_UNARY, LOGICAL } = operatorTables(ts);
     const fileName = path.join(baseDir, '__tsrx_virtual__.ts');
     const options = getCompilerOptions(ts);
     const program = createProgramFromText(ts, fileName, sourceText, options);
     const checker = program.getTypeChecker();
     const sf = program.getSourceFile(fileName);
+    // ---------------------------------------------------------------------------
+    // The transform's mutable state. Two roles:
+    //   (1) TRAVERSAL-SCOPED TRACKING — what `visit`/`transformExpression` have
+    //       learned about the source so far (which names are observable, what each
+    //       destructured field stands for). Some is pushed/popped per `.map`
+    //       callback so a marking doesn't leak past its scope.
+    //   (2) OUTPUT-PLAN ACCUMULATORS — the plan handed to `assembleOutput`: the
+    //       edits to splice, the imports needed, the position-mapping bookkeeping,
+    //       and the warnings to surface.
+    // ---------------------------------------------------------------------------
+    // (1) Traversal-scoped tracking.
     const observableBindings = new Set();
     // D4: destructured fields of a stream item, scoped to one component-`.map`
     // callback. Maps an alias name (the field binding) → { param, prop }, where
@@ -159,22 +177,6 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // A reference to the alias lifts to `param.pipe(map(param => param.prop))`, and
     // several aliases of the same item share `param` so they collapse like `cell.x`.
     const aliasInfo = new Map();
-    // Declaration-site hover for destructured fields: the binding pattern `{ color }`
-    // is erased to the synthetic param, so its field tokens map to nothing. We record
-    // each field's declaration span and, after assembly, map it onto the generated
-    // `item.prop` token its first use produced — so hover / go-to-def work on the
-    // binding too, not just the uses. `cbSeq` keys fields to their callback (so a
-    // field name reused across callbacks resolves to its own callback's use).
-    let cbSeq = 0;
-    const declMappings = [];
-    const aliasGenTarget = new Map();
-    // D5 hover: when a single-root expression collapses to `x.pipe(map(x => …))`, the
-    // root's source occurrences are emitted as the map param but mapped onto the OUTER
-    // stream reference, so hovering the variable shows its `Observable<…>` type (like
-    // the member-access lift) rather than the in-map value. `collapseSeq` keys each
-    // collapse to its own outer reference.
-    let collapseSeq = 0;
-    const rootMappings = [];
     // Lifted bindings whose emitted value is definitely not callable (e.g. the
     // result of an arithmetic lift). The checker can't tell us this — it analyses
     // the original (pre-transform) source, where these bindings have an erroring/
@@ -186,14 +188,42 @@ function transformWithMappings(ts, sourceText, baseDir) {
     // they may never emit, so combining them with combineLatest can stall. Tracked so
     // we can warn when one feeds a combine. Paired source spans collected in `stalls`.
     const maybeEmptyBindings = new Set();
+    // `cbSeq` keys destructured fields to their callback (so a field name reused
+    // across callbacks resolves to its own callback's use); `collapseSeq` keys each
+    // single-root collapse to its own outer stream reference. Both feed the hover
+    // mappings below.
+    let cbSeq = 0;
+    let collapseSeq = 0;
+    // (2) Output-plan accumulators.
+    const edits = [];
+    const needed = { rxjs: new Set(), 'rxjs/operators': new Set(), rxfm: new Set() };
+    let usedRender = false;
+    // Declaration-site hover for destructured fields: the binding pattern `{ color }`
+    // is erased to the synthetic param, so its field tokens map to nothing. We record
+    // each field's declaration span and, after assembly, map it onto the generated
+    // `item.prop` token its first use produced — so hover / go-to-def work on the
+    // binding too, not just the uses.
+    const declMappings = [];
+    // D5 hover: when a single-root expression collapses to `x.pipe(map(x => …))`, the
+    // root's source occurrences are emitted as the map param but mapped onto the OUTER
+    // stream reference, so hovering the variable shows its `Observable<…>` type (like
+    // the member-access lift) rather than the in-map value.
+    const rootMappings = [];
     const stalls = [];
     // Spans where a lifted call is higher-order (the callee returns an observable, so
     // mapping over a lifted arg nests it: Observable<Observable<…>>). Surfaced as a
     // warning, since it type-checks and would otherwise be a silent footgun.
     const higherOrder = [];
-    const needed = { rxjs: new Set(), 'rxjs/operators': new Set(), rxfm: new Set() };
-    const edits = [];
-    let usedRender = false;
+    // ---------------------------------------------------------------------------
+    // Checker predicates. The transform's questions about the source, answered by
+    // the real type checker plus the tracked-binding state above. Three layers:
+    //   - pure type queries (isObservableType, observableValueType, typeIsCallable, …)
+    //     read only a `ts.Type`;
+    //   - observability of an EXPRESSION (isObservableExpr, isObservableChain) also
+    //     consults the tracked bindings/aliases the checker can't see post-transform;
+    //   - structural recognizers (returnsComponent, isComponentMapCall) classify a
+    //     node by what it would produce.
+    // ---------------------------------------------------------------------------
     const isObservableType = type => {
         if (!type)
             return false;
@@ -203,6 +233,20 @@ function transformWithMappings(ts, sourceText, baseDir) {
     };
     const isObservableExpr = node => (ts.isIdentifier(node) && (observableBindings.has(node.text) || aliasInfo.has(node.text))) ||
         isObservableType(checker.getTypeAtLocation(node));
+    // Does parameter `argIndex` of this call accept an Observable? Two callers ask
+    // this for different reasons: an operator-style call whose stream argument must
+    // pass through verbatim (not be mapped per emission), and an EventHandler slot
+    // (`handler | Observable<handler>`) that takes a lifted handler stream (D2).
+    const paramAcceptsObservable = (callNode, argIndex) => {
+        const sig = checker.getResolvedSignature(callNode);
+        if (!sig)
+            return false;
+        const params = sig.getParameters();
+        if (!params.length)
+            return false;
+        const pSym = params[Math.min(argIndex, params.length - 1)];
+        return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, callNode));
+    };
     // The value type T of an Observable<T>/RenderObservable<T>, or undefined if the
     // type isn't an observable. Reads the type's first type argument.
     const observableValueType = type => {
@@ -636,15 +680,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
             // `accumulate(stream, …)`, …). Its observable argument must pass through
             // verbatim, not be mapped over per emission. Ask the checker which arguments
             // land on such parameters; the rest (value args over observables) still lift.
-            const sig = checker.getResolvedSignature(node);
-            const paramExpectsObservable = i => {
-                const params = sig ? sig.getParameters() : [];
-                if (!params.length)
-                    return false;
-                const pSym = params[Math.min(i, params.length - 1)];
-                return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, node));
-            };
-            const liftableArg = args.map((a, i) => a.observable && !paramExpectsObservable(i));
+            const liftableArg = args.map((a, i) => a.observable && !paramAcceptsObservable(node, i));
             if (calleeIsFnStream || (!callee.observable && argsObservable)) {
                 // Every observable argument is one the callee wants as a stream (no value
                 // arg actually needs lifting): an operator-style call. Leave the call itself
@@ -1014,18 +1050,6 @@ function transformWithMappings(ts, sourceText, baseDir) {
         needed.rxjs.add('combineLatest');
         return ['combineLatest([', sources.join(', '), ']).pipe(map(([', sources.join(', '), ']) => ', ...body, '))'];
     };
-    // Does parameter `argIndex` of this call accept an Observable (e.g. an
-    // EventHandler slot, which is `handler | Observable<handler>`)?
-    const paramAcceptsObservable = (callNode, argIndex) => {
-        const sig = checker.getResolvedSignature(callNode);
-        if (!sig)
-            return false;
-        const params = sig.getParameters();
-        if (!params.length)
-            return false;
-        const pSym = params[Math.min(argIndex, params.length - 1)];
-        return Boolean(pSym) && isObservableType(checker.getTypeOfSymbolAtLocation(pSym, callNode));
-    };
     // Lift variable initializers anywhere — including inside function bodies, since
     // a component is a function. Walk top-down so declarations are seen in source
     // order (so a binding is known observable before later statements use it).
@@ -1203,6 +1227,24 @@ function transformWithMappings(ts, sourceText, baseDir) {
         ts.forEachChild(node, visit);
     };
     visit(sf);
+    // Assemble the planned edits into generated code + the source↔generated
+    // position map. Everything above is the PLANNING phase (deciding what to
+    // rewrite); this is the EMIT phase (splicing it together).
+    const { code, segments } = assembleOutput({
+        ts, sf, sourceText, baseDir, edits, needed, usedRender, declMappings, rootMappings,
+    });
+    const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
+    return { code, segments, sourceDiagnostics, stalls, higherOrder };
+}
+// Splice the planned edits over the source to produce the generated code, and
+// record the source↔generated SEGMENTS as we go. Pure with respect to the
+// transform's checker state — it consumes only the plan (edits + the import/
+// mapping bookkeeping) and the original text.
+function assembleOutput({ ts, sf, sourceText, baseDir, edits, needed, usedRender, declMappings, rootMappings }) {
+    // First generated position recorded per alias/root key, so the destructured-
+    // field declaration sites (D4) and single-root occurrences (D5) can map onto
+    // the `item.prop` / outer-stream token their first use emitted.
+    const aliasGenTarget = new Map();
     // Names already imported per module — so we don't import a name twice. We do
     // NOT modify the existing import statements: leaving them intact keeps full TS
     // features (hover, go-to-def) on them via their identity mappings. The extra
@@ -1297,8 +1339,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
         if (target)
             segments.push({ identity: false, navigable: true, srcStart: rm.srcStart, srcLen: rm.len, genStart: target.genStart, genLen: target.len });
     }
-    const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
-    return { code, segments, sourceDiagnostics, stalls, higherOrder };
+    return { code, segments };
 }
 function mapSourceToGenerated(segments, srcOffset) {
     for (const seg of segments) {
