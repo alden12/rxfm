@@ -12,10 +12,10 @@ const z = 1;
 const double = (n: number) => n * 2;
 
 // Binary op on an observable → combineLatest + map.
-const sum = render(combineLatest([y, of(z)]).pipe(map(([y, z]) => y + z)));
+const sum = render(y.pipe(map(y => y + z)));
 
 // Plain function over an observable arg → map.
-const called = render(combineLatest([y]).pipe(map(([y]) => double(y))));
+const called = render(y.pipe(map(y => double(y))));
 
 // Observable emitting a function, applied to an observable arg →
 // combineLatest the fn stream with the arg stream and call it.
