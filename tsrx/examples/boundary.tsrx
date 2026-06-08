@@ -2,7 +2,8 @@
 // teaching diagnostics. Open this in the editor (with the tsrx extension) to see
 // the red squiggles and hover the messages. It is NOT imported by main.ts, so it
 // never runs or breaks the build.
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, timer } from 'rxjs';
+import { interval } from '../runtime';
 
 const count = new BehaviorSubject(0);
 const doubled = count * 2; // RenderObservable<number>
@@ -21,3 +22,13 @@ const boom = halved(2);
 //    automatically (Tier 3), so there are no errors below:
 const formatted = doubled.toFixed(2); // → doubled.pipe(map(d => d.toFixed(2)))
 const tenth = count / 10;             // → combineLatest([count, of(10)]).pipe(map(...))
+
+// ⚠️ Higher-order lift: `timer` itself RETURNS an observable, so lifting it over an
+//    observable period builds Observable<Observable<number>> — a stream of timers
+//    that never flattens, so it won't tick as one clock. It type-checks, so tsrx
+//    can't leave it to TypeScript; instead it's a tsrx *warning* pointing at the fix.
+const ticker = timer(0, count); // ⚠️ stream-of-streams — hover for the warning
+
+// ✅ The fix — `interval` flattens internally (switchMap), so it stays a single
+//    Observable<number> and re-times whenever the period changes. No warning.
+const clock = interval(count);

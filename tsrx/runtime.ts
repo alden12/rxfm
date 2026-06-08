@@ -3,7 +3,7 @@
 // possibly a native/RxJS-8 Observable later) can change without touching emitted
 // code shape.
 import { Observable, of, timer } from 'rxjs';
-import { distinctUntilChanged, scan, shareReplay, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, scan, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
 // Re-exported so the filter idiom `cond ? value : EMPTY` needs only one tsrx import:
 // a ternary whose else-branch is EMPTY drops the value when the condition is false
@@ -56,15 +56,30 @@ export function render<T>(source: Observable<T>): RenderObservable<T> {
  * the stream as a parameter, the tsrx transform leaves the call untouched (it is
  * operator-style, not a value mapped over emissions).
  *
+ * **Emits `null` before the first source value.** RxJS `scan` stays silent until
+ * its source emits, which leaves a fold over a not-yet-emitted source (a click
+ * `Subject`, say) invisible — and nothing in the types warns you. `accumulate`
+ * instead emits `null` up front, so the result is `RenderObservable<A | null>` and
+ * every consumer is forced to handle the "no result yet" case. The idiom is nullish
+ * coalescing — `accumulate(...) ?? initialValue` to show a default immediately, or
+ * leave it `A | null` and let a truthiness guard hide it until the first real value.
+ * This separates the fold's *seed* (the accumulator the reducer starts from) from
+ * *what to show before any result exists*: e.g. a min-reduction seeds `Infinity`
+ * but should render nothing until the first value, which `?? `/guards express and a
+ * seed-emitting variant could not.
+ *
  * @example
- * const highScore = accumulate(score, (highest, score) => Math.max(highest, score), 0);
+ * // Show a default immediately:
+ * const game = accumulate(actions, reduceGame, getInitialGame()) ?? getInitialGame();
+ * // Or leave null and hide until the first win (seed `Infinity` stays internal):
+ * const best = accumulate(winTimes, Math.min, Infinity);  // best ? `Best: ${best}` : null
  */
 export function accumulate<T, A>(
   source: Observable<T>,
   accumulator: (acc: A, value: T) => A,
   seed: A,
-): RenderObservable<A> {
-  return render(source.pipe(scan(accumulator, seed)));
+): RenderObservable<A | null> {
+  return render(source.pipe(scan(accumulator, seed), startWith(null)));
 }
 
 /**

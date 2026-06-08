@@ -188,6 +188,10 @@ function transformWithMappings(ts, sourceText, baseDir) {
   // we can warn when one feeds a combine. Paired source spans collected in `stalls`.
   const maybeEmptyBindings = new Set();
   const stalls = [];
+  // Spans where a lifted call is higher-order (the callee returns an observable, so
+  // mapping over a lifted arg nests it: Observable<Observable<…>>). Surfaced as a
+  // warning, since it type-checks and would otherwise be a silent footgun.
+  const higherOrder = [];
   const needed = { rxjs: new Set(), 'rxjs/operators': new Set(), rxfm: new Set() };
   const edits = [];
   let usedRender = false;
@@ -664,7 +668,19 @@ function transformWithMappings(ts, sourceText, baseDir) {
         ];
         // Plain function over observable args: emits the function's return value.
         // The callee is a real (non-observable) function, so its type is reliable.
-        const callable = typeIsCallable(returnTypeOf(checker.getTypeAtLocation(node.expression)));
+        const calleeReturn = returnTypeOf(checker.getTypeAtLocation(node.expression));
+        const callable = typeIsCallable(calleeReturn);
+        // Higher-order trap: if the function itself RETURNS an observable (e.g.
+        // `timer(0, period)` over an observable period), mapping over the lifted arg
+        // produces Observable<Observable<…>> — a stream of streams that never flattens.
+        // It type-checks, so nothing else warns; record the span so the editor can.
+        if (isObservableType(calleeReturn)) {
+          higherOrder.push({
+            start: node.getStart(sf),
+            length: node.getEnd() - node.getStart(sf),
+            name: ts.isIdentifier(node.expression) ? node.expression.text : null,
+          });
+        }
         return { pieces, observable: true, lifted: true, callable };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
@@ -1208,7 +1224,7 @@ function transformWithMappings(ts, sourceText, baseDir) {
   }
 
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
-  return { code, segments, sourceDiagnostics, stalls };
+  return { code, segments, sourceDiagnostics, stalls, higherOrder };
 }
 
 function mapSourceToGenerated(segments, srcOffset) {

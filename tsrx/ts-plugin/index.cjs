@@ -40,6 +40,37 @@ function stallDiagnostics(ts, info, fileName, existingFile) {
   }
 }
 
+// tsrx-originated warning: lifting a call whose function itself returns an observable
+// (e.g. `timer(0, period)` over an observable period) makes a stream-of-streams
+// (Observable<Observable<…>>) that never flattens, so it won't behave as one reactive
+// value. It type-checks — TS stays silent — so the transform reports the span and we
+// surface it here, pointing at a flattening helper.
+function higherOrderDiagnostics(ts, info, fileName, existingFile) {
+  try {
+    const snapshot = info.languageServiceHost.getScriptSnapshot(fileName);
+    if (!snapshot) return [];
+    const text = snapshot.getText(0, snapshot.getLength());
+    const { higherOrder } = transformWithMappings(ts, text, path.dirname(fileName));
+    if (!higherOrder || !higherOrder.length) return [];
+    const file = existingFile || ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
+    return higherOrder.map(h => ({
+      file,
+      start: h.start,
+      length: h.length,
+      category: ts.DiagnosticCategory.Warning,
+      code: 9002,
+      messageText:
+        `${h.name ? `'${h.name}'` : 'This call'} returns a stream, so lifting it over an ` +
+        `observable argument makes a stream-of-streams (Observable<Observable<…>>) that never ` +
+        `flattens — it won't behave as a single reactive value. Use a helper that flattens with ` +
+        `switchMap (e.g. \`interval(period)\` for a clock whose rate can change), or write the ` +
+        `\`switchMap\` explicitly.`,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 const base = createLanguageServicePlugin((ts /*, info */) => ({
   languagePlugins: [createTsrxLanguagePlugin(ts)],
 }));
@@ -109,7 +140,10 @@ module.exports = modules => {
             const diagnostics = target.getSemanticDiagnostics(fileName, ...rest);
             if (typeof fileName !== 'string' || !fileName.endsWith('.tsrx')) return diagnostics;
             const rewritten = diagnostics.map(d => rewriteBoundaryDiagnostic(ts, d) || d);
-            return rewritten.concat(stallDiagnostics(ts, info, fileName, rewritten[0] && rewritten[0].file));
+            const existing = rewritten[0] && rewritten[0].file;
+            return rewritten
+              .concat(stallDiagnostics(ts, info, fileName, existing))
+              .concat(higherOrderDiagnostics(ts, info, fileName, existing));
           };
         }
         return target[prop];
@@ -121,6 +155,8 @@ module.exports = modules => {
 
 // Exposed for headless testing of the stall-warning surfacing.
 module.exports.stallDiagnostics = stallDiagnostics;
+// Exposed for headless testing of the higher-order-lift warning surfacing.
+module.exports.higherOrderDiagnostics = higherOrderDiagnostics;
 // Exposed for headless testing of cross-.tsrx module resolution.
 module.exports.patchTsrxModuleResolution = patchTsrxModuleResolution;
 module.exports.resolveTsrxSibling = resolveTsrxSibling;
