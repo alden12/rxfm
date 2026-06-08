@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { tsrx } from './vite-plugin-tsrx.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, '../..');
+// here is tsrx/; the repo root (with src/lib) is one level up.
+const repoRoot = resolve(here, '..');
 
 // Run the tsrx demo:  npx vite --config tsrx/vite.tsrx.config.mjs
 export default defineConfig({
