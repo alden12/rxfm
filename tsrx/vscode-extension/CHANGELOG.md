@@ -2,6 +2,15 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.17]
+
+### Fixed
+- Standard editing affordances now work in `.tsrx` files: toggle-comment (`Cmd`/`Ctrl` + `/`),
+  auto-indent on Enter and paste, and wrap-selection-in-brackets/quotes (auto-surround). The `tsrx`
+  language declared a grammar and the tsserver plugin but contributed no `language-configuration.json`,
+  which is the file VS Code reads for comments, indentation rules, and surrounding pairs. Added one
+  mirroring TypeScript's (`.tsrx` is TypeScript syntactically), so these behave as they do in `.ts`.
+
 ## [0.0.16]
 
 ### Changed
