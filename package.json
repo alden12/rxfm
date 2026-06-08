@@ -41,6 +41,8 @@
     "build": "vite build --config vite.lib.config.ts",
     "build:app": "vite build",
     "preview": "vite preview",
+    "build:tsrx": "tsc -p tsrx/ts-plugin/tsconfig.json",
+    "pretest": "tsc -p tsrx/ts-plugin/tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",

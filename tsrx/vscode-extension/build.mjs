@@ -11,14 +11,23 @@
 // real, dependency-free folder, so F5 and the packaged extension run identical code.
 // Re-run after editing the plugin: `npm run build`.
 import esbuild from 'esbuild';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { rmSync, mkdirSync, writeFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const pluginEntry = join(here, '..', 'ts-plugin', 'index.cjs');
+const repoRoot = join(here, '..', '..');
+const tsPluginDir = join(here, '..', 'ts-plugin');
+const pluginEntry = join(tsPluginDir, 'index.cjs');
 const outDir = join(here, 'node_modules', 'tsrx-ts-plugin');
 const outFile = join(outDir, 'index.cjs');
+
+// The transform is authored in TypeScript (transform.cts). Compile it to the
+// transform.cjs that index.cjs require()s BEFORE bundling, so the .vsix can never
+// ship a stale build of it (editing transform.cts then packaging is otherwise a
+// silent footgun — esbuild would inline whatever transform.cjs is on disk).
+execFileSync('npx', ['tsc', '-p', join(tsPluginDir, 'tsconfig.json')], { stdio: 'inherit', cwd: repoRoot });
 
 // Drop whatever is there (a dev symlink to ../../ts-plugin, or a previous build)
 // before writing the real folder. rmSync unlinks a symlink rather than following it.
