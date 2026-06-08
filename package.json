@@ -42,6 +42,8 @@
     "build:app": "vite build",
     "preview": "vite preview",
     "build:tsrx": "tsc -p tsrx/ts-plugin/tsconfig.json",
+    "dev:tsrx": "yarn build:tsrx && vite --config tsrx/vite.tsrx.config.ts",
+    "build:tsrx-demo": "yarn build:tsrx && vite build --config tsrx/vite.tsrx.config.ts",
     "pretest": "tsc -p tsrx/ts-plugin/tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",

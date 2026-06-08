@@ -1,13 +1,15 @@
 import { defineConfig } from 'vite';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tsrx } from './vite-plugin-tsrx.mjs';
+import { tsrx } from './vite-plugin-tsrx';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // here is tsrx/; the repo root (with src/lib) is one level up.
 const repoRoot = resolve(here, '..');
 
-// Run the tsrx demo:  npx vite --config tsrx/vite.tsrx.config.mjs
+// Run the tsrx demo:  yarn dev:tsrx  (builds the transform first, then serves).
+// The plugin imports the compiled ts-plugin/transform.cjs, which is gitignored —
+// `yarn build:tsrx` regenerates it.
 export default defineConfig({
   root: here,
   plugins: [tsrx()],

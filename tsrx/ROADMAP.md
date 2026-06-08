@@ -15,7 +15,7 @@ Three layers are built:
   wrapped as a tsserver plugin ([ts-plugin/index.cjs](ts-plugin/index.cjs)), giving live hover /
   errors / go-to-def on `.tsrx` files mapped back to source. It rides VS Code's **real** tsserver
   project, so it already resolves the user's own `rxfm` / `rxjs`.
-- **The build path** — [vite-plugin-tsrx.mjs](vite-plugin-tsrx.mjs) + [runtime.ts](runtime.ts).
+- **The build path** — [vite-plugin-tsrx.ts](vite-plugin-tsrx.ts) + [runtime.ts](runtime.ts).
 - **The extension scaffold** — [vscode-extension/](vscode-extension/): contributes the `.tsrx`
   language, a (copied) TS grammar, and registers the tsserver plugin. Currently **F5-only** (runs in
   the Extension Development Host).

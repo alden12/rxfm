@@ -4,15 +4,14 @@
 // transpileModule (Vite 8 is rolldown/oxc-based and doesn't ship esbuild).
 import ts from 'typescript';
 import { dirname } from 'node:path';
-import transformCjs from './ts-plugin/transform.cjs';
+import type { Plugin } from 'vite';
+import { transformWithMappings } from './ts-plugin/transform.cjs';
 
-const { transformWithMappings } = transformCjs;
-
-export function tsrx() {
+export function tsrx(): Plugin {
   return {
     name: 'vite-plugin-tsrx',
     enforce: 'pre', // run before Vite's own TS handling
-    transform(code, id) {
+    transform(code: string, id: string) {
       const file = id.split('?')[0]; // strip Vite's query suffix (?v=, ?import, …)
       if (!file.endsWith('.tsrx')) return null;
       const { code: tsCode } = transformWithMappings(ts, code, dirname(file));
