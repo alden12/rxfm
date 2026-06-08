@@ -50,7 +50,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "extension:install-deps": "cd tsrx/vscode-extension && npm install",
+    "extension:build": "cd tsrx/vscode-extension && npm run package",
+    "extension:build-and-install": "cd tsrx/vscode-extension && npm run reinstall",
+    "extension:bump-version": "cd tsrx/vscode-extension && npm run bump"
   },
   "peerDependencies": {
     "rxjs": "^7.0.0"

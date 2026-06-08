@@ -1,4 +1,4 @@
-# tsrx — live editor types (spike)
+# TSRx — live editor types (spike)
 
 A minimal VS Code extension that gives `.tsrx` files **live TypeScript types**.
 It contributes a tsserver plugin (`tsrx-ts-plugin`) that, on every keystroke,
@@ -25,13 +25,29 @@ A pre-built `.vsix` is committed in this folder, so you can install it straight
 from a clone — no Extension Development Host needed:
 
 ```sh
-code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.3.vsix
+code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.19.vsix
 ```
 
 …or the Extensions view → **⋯** → **Install from VSIX…**. Then open any `.tsrx`
 file and hover the bindings.
 
 ### Rebuild the `.vsix` yourself
+
+From the **repo root** there are convenience scripts so you don't have to change
+directories (they delegate into this folder):
+
+```sh
+yarn extension:install-deps      # one-time: install this folder's build deps
+yarn extension:build             # produce the .vsix (cleans old ones first)
+yarn extension:build-and-install # build the .vsix and install it into VS Code
+yarn extension:bump-version      # patch-bump the version before a release
+```
+
+`build` / `build-and-install` delete any existing `tsrx-vscode-*.vsix` first, so
+exactly one build is ever on disk (and the committed one updates cleanly in git).
+After `build-and-install`, reload the VS Code window to pick up the new version.
+
+The equivalent done by hand in this folder:
 
 ```sh
 # 1. install the tsserver plugin's deps (@volar/typescript), used by the bundler

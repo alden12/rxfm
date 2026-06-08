@@ -1,8 +1,8 @@
 {
   "name": "tsrx-vscode",
-  "displayName": "tsrx (live types)",
+  "displayName": "TSRx (live types)",
   "description": "Live TypeScript types for .tsrx files (imperative observables).",
-  "version": "0.0.16",
+  "version": "0.0.19",
   "publisher": "alden12",
   "private": true,
   "license": "MIT",
@@ -32,6 +32,7 @@
         "extensions": [
           ".tsrx"
         ],
+        "configuration": "./language-configuration.json",
         "icon": {
           "light": "./icons/tsrx.svg",
           "dark": "./icons/tsrx.svg"
@@ -58,7 +59,10 @@
   "scripts": {
     "build": "node ./build.mjs",
     "vscode:prepublish": "node ./build.mjs",
-    "package": "vsce package"
+    "clean": "rm -f tsrx-vscode-*.vsix",
+    "package": "npm run clean && vsce package",
+    "reinstall": "npm run package && code --install-extension \"$(ls -t tsrx-vscode-*.vsix | head -1)\"",
+    "bump": "npm version patch --no-git-tag-version"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.0.0",

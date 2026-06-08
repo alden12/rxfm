@@ -1,6 +1,6 @@
-# tsrx — roadmap & next steps
+# TSRx — roadmap & next steps
 
-Notes on where the tsrx experiment is and what comes next. tsrx is an experimental
+Notes on where the TSRx experiment is and what comes next. TSRx is an experimental
 TypeScript transform that "lifts" imperative expressions into reactive RxJS
 `Observable`s, so you can write `const x = y + z` over observables and have it Just Work.
 
@@ -87,14 +87,14 @@ Estimated ~half a day of packaging plumbing; no new framework logic.
    unblocks them.
 4. **Source maps in build output**, so debugging `.tsrx` in the browser maps back to source. (Editor
    mappings already exist; confirm the Vite plugin emits source maps on the emit path.)
-5. **Decide tsrx's relationship to rxfm.** The new fluent API removed one original motivation (events
-   no longer need the boundary). Be explicit about what tsrx still buys over fluent rxfm — mainly
+5. **Decide TSRx's relationship to rxfm.** The new fluent API removed one original motivation (events
+   no longer need the boundary). Be explicit about what TSRx still buys over fluent rxfm — mainly
    arithmetic / derived-value ergonomics — and whether `runtime.ts` should fold into rxfm core or
    stay a separate published package.
 6. **Editor polish.** tsrx-specific syntax highlighting (currently a copied TS grammar); verify
    cross-file go-to-def / rename work through the Volar mappings.
-7. **Runtime-import distribution (needed before tsrx merges).** The transform auto-emits the
-   `render` import via a walk-up to the nearest `runtime.ts`, but the helpers tsrx leaves for you to
+7. **Runtime-import distribution (needed before TSRx merges).** The transform auto-emits the
+   `render` import via a walk-up to the nearest `runtime.ts`, but the helpers TSRx leaves for you to
    call by hand — `accumulate`, `interval`, `EMPTY` — are imported with **brittle relative paths**
    (`from '../runtime'`). Relocating the examples to the top-level `examples/` exposed this: every
    such path had to be hand-edited, and a `examples/runtime.ts` re-export shim was added so the tree
@@ -115,7 +115,7 @@ Packaging (A) first — living in `.tsrx` daily is the best way to find what's m
 **The north star:** make observable / reactive programming approachable for people coming from an
 imperative or functional background. Reactive code trips newcomers up mostly on the *time*
 dimension — a variable isn't one value, it's a value over time, sometimes absent, sometimes
-carrying state. tsrx's job is to let the easy part read like ordinary code, and to make the genuinely
+carrying state. TSRx's job is to let the easy part read like ordinary code, and to make the genuinely
 time-shaped part *legible* rather than hidden behind operator jargon.
 
 ### Guiding principle (the "lifts vs. explicit" rule)
@@ -157,7 +157,7 @@ don't give an else-value, downstream waits."
 ### C2. Recognise `Observable`-typed parameters — don't mis-lift operator-style functions — ✅ DONE
 
 **The linchpin fix.** A function whose parameter is typed `Observable<…>` is meant to *receive the
-stream*, not be mapped over its emissions. Today tsrx mis-lifts these:
+stream*, not be mapped over its emissions. Today TSRx mis-lifts these:
 
 ```ts
 accumulate(score, (hi, s) => Math.max(hi, s), 0)
@@ -294,12 +294,12 @@ arg lifting) · **C7 ✅** (element-access by stream index). All of section C is
   `interval(periodFor(difficulty))` works (no need to lift at a separate binding first).
 - **C7 ✅** — element access over a static object with a stream index lifts; the snake game dropped
   its `cellColor` / `periodFor` lookup helpers and indexes the lookup tables directly.
-- **tsrx works outside rxfm** (the reactive engine `examples/snake-game/game.tsrx` has ZERO rxfm
-  imports — `accumulate` + `interval` + derived lifts — and type-checks on its own). tsrx is just
+- **TSRx works outside rxfm** (the reactive engine `examples/snake-game/game.tsrx` has ZERO rxfm
+  imports — `accumulate` + `interval` + derived lifts — and type-checks on its own). TSRx is just
   RxJS + the tiny runtime; the pure game rules stay pure (no observables to lift). So the natural
-  decomposition is: **reactive glue → tsrx; pure algorithms → plain functions.** For tightly-coupled
+  decomposition is: **reactive glue → TSRx; pure algorithms → plain functions.** For tightly-coupled
   state (snake trail + food + score co-evolve) the reactive unit is a single combined `accumulate` —
-  that's the problem's structure, not a tsrx limit; splitting into per-field streams would need
+  that's the problem's structure, not a TSRx limit; splitting into per-field streams would need
   feedback Subjects.
 - **C1 ✅ / C4 ✅** — filter idiom + stall warning, and chained-member collapse (above).
 - **Cross-`.tsrx` imports — transform side ✅, editor side ✅ (B1):**
@@ -380,7 +380,7 @@ not its current value:
 .onClick(() => dispatch({ type: 'discover', cell: indexToVector(index) }))
 ```
 
-The original used `index.pipe(map(i => () => dispatch(...)))` — a *stream of handlers*. tsrx has no
+The original used `index.pipe(map(i => () => dispatch(...)))` — a *stream of handlers*. TSRx has no
 way to express that imperatively yet. Minesweeper sidesteps it with a fixed grid keyed by static
 `[x, y]` coordinates, so handlers capture plain numbers — clean, but it forced the whole
 board-rendering shape.
@@ -486,7 +486,7 @@ nothing in the types warned of it. The hand-written RxJS version sidesteps this 
 
 **Decision — `accumulate` emits `null` before the first source value**, so it returns
 `RenderObservable<A | null>` and every consumer must handle "no result yet". The idiom is nullish
-coalescing, which tsrx already lifts:
+coalescing, which TSRx already lifts:
 
 - `const game = accumulate(actions, reduceGame, getInitialGame()) ?? getInitialGame();` — show a
   default immediately (lowers to a `switchMap` that swaps in the fallback on `null`).
@@ -503,4 +503,4 @@ consumer handles the initial case) and a one-time migration of existing folds (s
   `null` can't distinguish the two (and `??` would swallow a real null). Fine for game state/scores;
   a dedicated symbol sentinel would be more rigorous but loses `??` ergonomics.
 - **Follow-up:** this is implemented on the docs/examples branch (runtime + snake/minesweeper). The
-  same `accumulate` change + consumer migration must be applied on the tsrx implementation branch.
+  same `accumulate` change + consumer migration must be applied on the TSRx implementation branch.

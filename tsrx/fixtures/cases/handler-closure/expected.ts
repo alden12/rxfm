@@ -1,6 +1,5 @@
-import { combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, combineLatest } from 'rxjs';
 declare const index: Observable<number>;
 declare const a: Observable<number>;
 declare const b: Observable<string>;

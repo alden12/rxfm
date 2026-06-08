@@ -23,6 +23,40 @@ test('todo list renders its initial items', async ({ page }) => {
   await expect(page.getByPlaceholder('Add Item')).toBeVisible();
 });
 
+test('todo list adds an item from the input (keyed-list reactivity)', async ({ page }) => {
+  const items = page.locator('.todo-item');
+  const initialCount = await items.count();
+
+  const input = page.getByPlaceholder('Add Item');
+  await input.fill('Walk the dog');
+  await input.blur(); // commit — fires the native `change` event the example listens for
+
+  await expect(page.locator('.todo-item', { hasText: 'Walk the dog' })).toBeVisible();
+  await expect(items).toHaveCount(initialCount + 1);
+});
+
+test('todo item toggles done on click (event → conditional class + checkbox binding)', async ({ page }) => {
+  const item = page.locator('.todo-item', { hasText: 'Finish RxFM' });
+  const checkbox = item.locator('input[type="checkbox"]');
+
+  await expect(item).not.toHaveClass(/\bdone\b/);
+  await expect(checkbox).not.toBeChecked();
+
+  await page.getByText('Finish RxFM').click();
+
+  await expect(item).toHaveClass(/\bdone\b/);
+  await expect(checkbox).toBeChecked();
+});
+
+test('conditional child toggles on a timer (time-driven reactivity)', async ({ page }) => {
+  // tsrx demo: `interval(1000)` (immediate first tick) gated by `tick % 2 === 0` —
+  // visible at t=0, hidden ~1s, visible ~2s.
+  const message = page.getByText('Now you see me!').first();
+  await expect(message).toBeVisible();
+  await expect(message).toBeHidden({ timeout: 2000 });
+  await expect(message).toBeVisible({ timeout: 2000 });
+});
+
 test('snake game board renders a grid of cells', async ({ page }) => {
   await expect(page.locator('.snake-game-board')).toBeVisible();
   expect(await page.locator('.snake-cell').count()).toBeGreaterThan(0);

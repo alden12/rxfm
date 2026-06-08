@@ -1,8 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { mapToComponents } from "rxfm";
 import { Observable } from 'rxjs';
-import { Div } from 'rxfm';
+import { Div, mapToComponents } from 'rxfm';
 declare const cells: Observable<{ color: string; symbol?: string; neighbors: number; cleared: boolean }[]>;
 declare const COLORS: Record<number, string>;
 declare function dispatch(index: number): void;

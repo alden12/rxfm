@@ -1,7 +1,6 @@
 import { render } from "./runtime";
-import { of, combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
 declare const user: Observable<{ name: string; address: { city: string } }>;
 declare const count: Observable<number>;
 declare const items: Observable<string[]>;

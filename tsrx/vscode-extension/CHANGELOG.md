@@ -2,6 +2,38 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.19]
+
+### Fixed
+- **Auto-import edits now actually apply.** 0.0.18 made the suggestion/"Update import" fix appear,
+  but accepting it added nothing. The transform injected its own `import { … } from "rxjs"` /
+  `"rxfm"` lines into a generated-only preamble *before* the file's own imports; TypeScript merges a
+  new symbol into the **first** import for a module — the injected one — and that edit lands in
+  generated text Volar can't map back to the `.tsrx`, so it was silently dropped. The transform now
+  folds the names it needs into the source's existing import for each module (a separate line only
+  when the source doesn't import that module), leaving a single source-anchored import the
+  auto-import can merge into and map back. Now the import line is written as in `.ts`.
+
+## [0.0.18]
+
+### Fixed
+- **Auto-imports now work in `.tsrx` files.** Typing an unimported `Div` / `timer` / … and accepting
+  the completion (or using "Add import") had offered nothing. TypeScript only returns module-export
+  (auto-import) completions when `includeCompletionsForModuleExports` is set, and VS Code's built-in
+  TypeScript extension keys that preference off the `typescript`/`javascript` language ids — so it
+  never sent it for the custom `tsrx` language. The plugin now forces it on for `.tsrx` completion
+  requests (merging with VS Code's other preferences), so auto-import suggestions appear and insert
+  the import as in `.ts`.
+
+## [0.0.17]
+
+### Fixed
+- Standard editing affordances now work in `.tsrx` files: toggle-comment (`Cmd`/`Ctrl` + `/`),
+  auto-indent on Enter and paste, and wrap-selection-in-brackets/quotes (auto-surround). The `tsrx`
+  language declared a grammar and the tsserver plugin but contributed no `language-configuration.json`,
+  which is the file VS Code reads for comments, indentation rules, and surrounding pairs. Added one
+  mirroring TypeScript's (`.tsrx` is TypeScript syntactically), so these behave as they do in `.ts`.
+
 ## [0.0.16]
 
 ### Changed
