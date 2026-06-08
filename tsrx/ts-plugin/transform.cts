@@ -24,7 +24,7 @@ import { getCompilerOptions, createProgramFromText } from './transform-program.c
 import { assembleOutput, mapSourceToGenerated, segmentsToVolarMappings } from './transform-emit.cjs';
 import { createChecker } from './transform-checker.cjs';
 
-function transformWithMappings(ts: Ts, sourceText: string, baseDir: string) {
+export function transformWithMappings(ts: Ts, sourceText: string, baseDir: string) {
   const { LIFTABLE, LIFTABLE_UNARY, LOGICAL } = operatorTables(ts);
 
   const fileName = path.join(baseDir, '__tsrx_virtual__.ts');
@@ -900,4 +900,7 @@ function transformWithMappings(ts: Ts, sourceText: string, baseDir: string) {
   return { code, segments, sourceDiagnostics, stalls, higherOrder };
 }
 
-module.exports = { transformWithMappings, mapSourceToGenerated, segmentsToVolarMappings, getCompilerOptions };
+// Re-export the public API (transformWithMappings is exported inline above). The
+// mapping utilities and compiler options live in their own modules; surfacing them
+// here keeps `require('./transform.cjs')` the single entry point consumers use.
+export { mapSourceToGenerated, segmentsToVolarMappings, getCompilerOptions };

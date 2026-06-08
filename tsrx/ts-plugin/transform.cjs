@@ -10,10 +10,15 @@
 // tracked ourselves (the propagation table).
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getCompilerOptions = exports.segmentsToVolarMappings = exports.mapSourceToGenerated = void 0;
+exports.transformWithMappings = transformWithMappings;
 const path = require('node:path');
 const transform_operators_cjs_1 = require("./transform-operators.cjs");
 const transform_program_cjs_1 = require("./transform-program.cjs");
+Object.defineProperty(exports, "getCompilerOptions", { enumerable: true, get: function () { return transform_program_cjs_1.getCompilerOptions; } });
 const transform_emit_cjs_1 = require("./transform-emit.cjs");
+Object.defineProperty(exports, "mapSourceToGenerated", { enumerable: true, get: function () { return transform_emit_cjs_1.mapSourceToGenerated; } });
+Object.defineProperty(exports, "segmentsToVolarMappings", { enumerable: true, get: function () { return transform_emit_cjs_1.segmentsToVolarMappings; } });
 const transform_checker_cjs_1 = require("./transform-checker.cjs");
 function transformWithMappings(ts, sourceText, baseDir) {
     const { LIFTABLE, LIFTABLE_UNARY, LOGICAL } = (0, transform_operators_cjs_1.operatorTables)(ts);
@@ -937,4 +942,3 @@ function transformWithMappings(ts, sourceText, baseDir) {
     const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
     return { code, segments, sourceDiagnostics, stalls, higherOrder };
 }
-module.exports = { transformWithMappings, mapSourceToGenerated: transform_emit_cjs_1.mapSourceToGenerated, segmentsToVolarMappings: transform_emit_cjs_1.segmentsToVolarMappings, getCompilerOptions: transform_program_cjs_1.getCompilerOptions };
