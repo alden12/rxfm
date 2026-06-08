@@ -2,6 +2,16 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.14]
+
+### Added
+- Warns on **higher-order lifts**. Lifting a call whose function itself returns an observable — e.g.
+  `timer(0, period)` over an observable `period` — maps over the lifted argument and produces
+  `Observable<Observable<…>>`, a stream of streams that never flattens, so it won't behave as one
+  reactive value. This type-checks (TypeScript stays silent), so it was a silent footgun; it's now a
+  warning that points at a `switchMap`-flattening helper (e.g. `interval(period)` for a clock whose
+  rate can change). See the higher-order case in `examples/boundary.tsrx`.
+
 ## [0.0.13]
 
 ### Changed
