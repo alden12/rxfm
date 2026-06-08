@@ -2,6 +2,17 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.16]
+
+### Changed
+- New `.tsrx` file icon: a bold **RX** wordmark in tsrx purple on a transparent background
+  (replacing the gradient marble badge), so it sits cleanly on light and dark themes.
+
+### Internal
+- The tsserver-plugin layer and the transform are now authored in TypeScript (`.cts`), with the
+  transform split into focused modules. No behaviour change — same generated output, diagnostics,
+  and warnings; the bundled plugin is functionally identical.
+
 ## [0.0.15]
 
 ### Fixed
