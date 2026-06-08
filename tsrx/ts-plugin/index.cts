@@ -133,9 +133,10 @@ function patchTsrxModuleResolution(ts: Ts, languageServiceHost: any) {
 }
 
 // Wrap Volar's decorated language service so semantic errors on .tsrx files get
-// the teaching-message treatment for boundary violations. Volar's service is a
-// JS Proxy, so we delegate everything through a Proxy of our own and override
-// only `getSemanticDiagnostics`. (TS language-service methods are closures, not
+// the teaching-message treatment for boundary violations, and so .tsrx completions
+// offer auto-imports. Volar's service is a JS Proxy, so we delegate everything
+// through a Proxy of our own and override only `getSemanticDiagnostics` and
+// `getCompletionsAtPosition`. (TS language-service methods are closures, not
 // `this`-bound, so forwarding `target[p]` is safe.)
 module.exports = (modules: any) => {
   const pluginModule = base(modules);
@@ -157,6 +158,21 @@ module.exports = (modules: any) => {
             return rewritten
               .concat(stallDiagnostics(ts, info, fileName, existing))
               .concat(higherOrderDiagnostics(ts, info, fileName, existing));
+          };
+        }
+        // Auto-imports: TS only returns module-export (auto-import) completions when
+        // `includeCompletionsForModuleExports` is set. VS Code's built-in TypeScript
+        // extension keys that preference off the `typescript`/`javascript` language
+        // ids and so never sends it for our custom `tsrx` language — so typing an
+        // unimported `Div`/`timer`/… offered no "add import" entry. Force it on (with
+        // insert-text, which auto-import entries need) for .tsrx requests, merging so
+        // VS Code's other preferences are preserved. Safe: it only enables suggestions.
+        if (prop === 'getCompletionsAtPosition') {
+          return (fileName: string, position: number, options: any, formattingSettings: any) => {
+            const opts = typeof fileName === 'string' && fileName.endsWith('.tsrx')
+              ? { ...options, includeCompletionsForModuleExports: true, includeCompletionsWithInsertText: true }
+              : options;
+            return target.getCompletionsAtPosition(fileName, position, opts, formattingSettings);
           };
         }
         return target[prop];

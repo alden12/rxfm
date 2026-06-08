@@ -2,6 +2,17 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.18]
+
+### Fixed
+- **Auto-imports now work in `.tsrx` files.** Typing an unimported `Div` / `timer` / … and accepting
+  the completion (or using "Add import") had offered nothing. TypeScript only returns module-export
+  (auto-import) completions when `includeCompletionsForModuleExports` is set, and VS Code's built-in
+  TypeScript extension keys that preference off the `typescript`/`javascript` language ids — so it
+  never sent it for the custom `tsrx` language. The plugin now forces it on for `.tsrx` completion
+  requests (merging with VS Code's other preferences), so auto-import suggestions appear and insert
+  the import as in `.ts`.
+
 ## [0.0.17]
 
 ### Fixed
