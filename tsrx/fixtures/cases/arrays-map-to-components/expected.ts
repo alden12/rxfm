@@ -1,8 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { mapToComponents } from "rxfm";
 import { BehaviorSubject } from 'rxjs';
-import { Div } from 'rxfm';
+import { Div, mapToComponents } from 'rxfm';
 declare const items: BehaviorSubject<{ id: number; name: string; done: boolean }[]>;
 const a = items.pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))} is ${render(item.pipe(map(item => item.done ? 'done' : 'todo')))}`));
 const b = items.pipe(mapToComponents(item => Div`${render(item.pipe(map(item => item.name)))}`, 'id'));

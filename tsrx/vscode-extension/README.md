@@ -25,7 +25,7 @@ A pre-built `.vsix` is committed in this folder, so you can install it straight
 from a clone — no Extension Development Host needed:
 
 ```sh
-code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.18.vsix
+code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.19.vsix
 ```
 
 …or the Extensions view → **⋯** → **Install from VSIX…**. Then open any `.tsrx`

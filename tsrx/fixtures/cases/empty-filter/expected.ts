@@ -1,7 +1,6 @@
 import { render } from "../runtime";
-import { of, combineLatest } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
-import { Observable, EMPTY } from "rxjs";
+import { Observable, EMPTY, of, combineLatest } from "rxjs";
 declare const score: Observable<number>;
 declare const other: Observable<number>;
 const big = render(score.pipe(map(score => score > 10)).pipe(switchMap(_cond => _cond ? score : EMPTY)));      // filter idiom → maybe-empty

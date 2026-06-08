@@ -1,7 +1,6 @@
 import { render } from "./runtime";
-import { combineLatest } from "rxjs";
 import { map } from "rxjs/operators";
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 declare const count: Observable<number>;
 declare const other: Observable<number>;
 declare const user: Observable<{ active: boolean; name: string }>;

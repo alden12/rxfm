@@ -2,6 +2,18 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.19]
+
+### Fixed
+- **Auto-import edits now actually apply.** 0.0.18 made the suggestion/"Update import" fix appear,
+  but accepting it added nothing. The transform injected its own `import { … } from "rxjs"` /
+  `"rxfm"` lines into a generated-only preamble *before* the file's own imports; TypeScript merges a
+  new symbol into the **first** import for a module — the injected one — and that edit lands in
+  generated text Volar can't map back to the `.tsrx`, so it was silently dropped. The transform now
+  folds the names it needs into the source's existing import for each module (a separate line only
+  when the source doesn't import that module), leaving a single source-anchored import the
+  auto-import can merge into and map back. Now the import line is written as in `.ts`.
+
 ## [0.0.18]
 
 ### Fixed

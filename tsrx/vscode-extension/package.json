@@ -2,7 +2,7 @@
   "name": "tsrx-vscode",
   "displayName": "TSRx (live types)",
   "description": "Live TypeScript types for .tsrx files (imperative observables).",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "publisher": "alden12",
   "private": true,
   "license": "MIT",

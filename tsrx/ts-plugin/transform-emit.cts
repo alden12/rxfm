@@ -31,11 +31,19 @@ export function assembleOutput(
   // the `item.prop` / outer-stream token their first use emitted.
   const aliasGenTarget = new Map<string, GenTarget>();
 
-  // Names already imported per module — so we don't import a name twice. We do
-  // NOT modify the existing import statements: leaving them intact keeps full TS
-  // features (hover, go-to-def) on them via their identity mappings. The extra
-  // names we need go in a separate generated-only import line at the top (two
-  // imports from the same module is legal as long as names don't collide).
+  // The source's first VALUE named-import declaration for a module — the statement
+  // we fold our extra names into (see foldOrLine). Type-only clauses are skipped:
+  // the names we add are used as values.
+  const namedImportTarget = (mod: string): TS.NamedImports | undefined => {
+    for (const s of sf.statements) {
+      if (ts.isImportDeclaration(s) && ts.isStringLiteral(s.moduleSpecifier) && s.moduleSpecifier.text === mod) {
+        const ic = s.importClause;
+        if (ic && !ic.isTypeOnly && ic.namedBindings && ts.isNamedImports(ic.namedBindings)) return ic.namedBindings;
+      }
+    }
+    return undefined;
+  };
+  // Names already imported per module — so we don't import a name twice.
   const alreadyImported = (mod: string) => {
     const names = new Set<string>();
     for (const s of sf.statements) {
@@ -49,12 +57,30 @@ export function assembleOutput(
   const newNames = (mod: string, set: Set<string>) => [...set].filter(n => !alreadyImported(mod).has(n));
   const importLines: string[] = [];
   if (usedRender) importLines.push(`import { render } from "${relativeRuntimeSpecifier(baseDir)}";`);
-  const rxjsNew = newNames('rxjs', needed.rxjs);
-  if (rxjsNew.length) importLines.push(`import { ${rxjsNew.join(', ')} } from "rxjs";`);
-  const opNew = newNames('rxjs/operators', needed['rxjs/operators']);
-  if (opNew.length) importLines.push(`import { ${opNew.join(', ')} } from "rxjs/operators";`);
-  const rxfmNew = newNames('rxfm', needed.rxfm);
-  if (rxfmNew.length) importLines.push(`import { ${rxfmNew.join(', ')} } from "rxfm";`);
+  // Fold the names we need from a module into the source's EXISTING named import for
+  // it — an edit splicing `, name` in before the closing brace — rather than emitting
+  // a separate generated import line. Why: a separate injected `import { … } from
+  // "rxjs"` sits in the generated-only preamble, BEFORE the source's own import. The
+  // editor's auto-import merges a new symbol into the FIRST import for the module —
+  // the injected one — and that edit lands in generated-only territory Volar can't map
+  // back to the .tsrx, so it's silently dropped (the "Update import" fix appears but
+  // does nothing). Folding keeps a single, source-anchored import per module, so the
+  // merge targets it and maps back. Only modules the source doesn't already import
+  // (and the runtime `render`) still need a separate generated line.
+  const foldOrLine = (mod: string, set: Set<string>) => {
+    const names = newNames(mod, set);
+    if (!names.length) return;
+    const target = namedImportTarget(mod);
+    if (target && target.elements.length) {
+      const at = target.elements[target.elements.length - 1].getEnd();
+      edits.push({ start: at, end: at, pieces: [`, ${names.join(', ')}`] });
+    } else {
+      importLines.push(`import { ${names.join(', ')} } from "${mod}";`);
+    }
+  };
+  foldOrLine('rxjs', needed.rxjs);
+  foldOrLine('rxjs/operators', needed['rxjs/operators']);
+  foldOrLine('rxfm', needed.rxfm);
   const importBlock = importLines.length ? importLines.join('\n') + '\n' : '';
 
   edits.sort((a, b) => a.start - b.start);

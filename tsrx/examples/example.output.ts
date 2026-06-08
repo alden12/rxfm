@@ -1,9 +1,8 @@
 import { render } from "../runtime";
-import { combineLatest, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 // Conceptually a `.tsrx` file. Imperative use of observables.
 // `tsc` would normally reject these — the transform fixes them.
-import { Observable } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
 
 declare const y: Observable<number>;
 declare const cond: Observable<boolean>;
