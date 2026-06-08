@@ -1,0 +1,7 @@
+{
+  "description": "The `cond ? x : EMPTY` filter idiom marks a binding maybe-empty. Combining a maybe-empty source with another stream via combineLatest can freeze it → a stall is recorded. Single-root and standalone uses do not stall.",
+  "baseDir": "../../../examples",
+  "diagnostics": [],
+  "stalls": [{ "name": "big" }],
+  "higherOrder": []
+}

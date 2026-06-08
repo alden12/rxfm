@@ -1,0 +1,6 @@
+{
+  "description": "Tagged-template interpolation lifting — imperative observable interpolations are lifted per-interpolation (Div renders each as a reactive child); plain observables and non-observable interpolations are left untouched.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

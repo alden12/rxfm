@@ -1,0 +1,9 @@
+import { BehaviorSubject } from 'rxjs';
+import { Div } from 'rxfm';
+declare const items: BehaviorSubject<{ id: number; name: string; done: boolean }[]>;
+const a = items.map(item => Div`${item.name} is ${item.done ? 'done' : 'todo'}`);
+const b = items.map(item => Div`${item.name}`, 'id');
+const c = items.map(item => Div`${item.name}`, item => item.id);
+const names = items.map(i => i.name);
+const visible = items.filter(i => i.done).map(item => Div`${item.name}`, 'id');
+const nested = Div(items.map(item => Div`${item.name}`));

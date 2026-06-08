@@ -1,0 +1,6 @@
+{
+  "description": "Member-access lifting — property access, method calls and indexing on a stream auto-lift to map/combineLatest; nested fields fuse into one map; stream-API members (.value, .pipe) are left untouched.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

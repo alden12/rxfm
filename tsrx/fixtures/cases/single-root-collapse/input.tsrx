@@ -1,0 +1,11 @@
+import { BehaviorSubject, Observable } from 'rxjs';
+declare const count: Observable<number>;
+declare const other: Observable<number>;
+declare const user: Observable<{ active: boolean; name: string }>;
+const clicks = new BehaviorSubject(0);
+const doubled = count * 2;
+const chained = count % 2 === 0;
+const negated = !user.active;
+const fallback = user.name || 'anon';
+const combined = count + other;
+const fromValue = clicks.value + 1;

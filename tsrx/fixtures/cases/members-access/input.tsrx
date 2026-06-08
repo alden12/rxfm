@@ -1,0 +1,13 @@
+import { Observable, BehaviorSubject } from 'rxjs';
+declare const user: Observable<{ name: string; address: { city: string } }>;
+declare const count: Observable<number>;
+declare const items: Observable<string[]>;
+declare const idx: Observable<number>;
+const subject = new BehaviorSubject(0);
+const name = user.name;
+const city = user.address.city;
+const fixed = count.toFixed(2);
+const first = items[0];
+const dyn = items[idx];
+const cur = subject.value;
+const piped = count.pipe();

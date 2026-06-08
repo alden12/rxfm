@@ -1,0 +1,6 @@
+{
+  "description": "Lifting in more positions: destructuring an observable, observable values inside object literals, a call argument, and propagation through a destructured binding.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}
