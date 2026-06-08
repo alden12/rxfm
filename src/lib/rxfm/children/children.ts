@@ -8,6 +8,11 @@ import { operatorIsolationService } from '../operator-isolation-service';
 
 /**
  * The possible types which may be passed as a component child.
+ *
+ * As well as the scalar forms, a (possibly nested) array of children may be passed directly, so a
+ * mapped list of components can be added without spreading: `Div(items.map(Item))`. Note this is a
+ * *static* array — its membership is fixed when the component is created. For a list whose items
+ * change over time, emit an `ElementType[]` from an observable (see `mapToComponents`).
  */
 export type ComponentChild =
   | StringLike
@@ -18,7 +23,8 @@ export type ComponentChild =
     | ElementType
     | ElementType[]
   >
-  | (() => Component);
+  | (() => Component)
+  | ComponentChild[];
 
 /**
  * The possible types which may be used as a child element.
@@ -31,7 +37,17 @@ type CoercedChildComponent = ChildElement[];
  * Coerce any of the members of the ChildComponent type to be the most generic child component type.
  */
 function coerceChildComponent(childComponent: ComponentChild): Observable<CoercedChildComponent | null> {
-  if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
+  if (Array.isArray(childComponent)) { // If a (possibly nested) static array of children.
+    if (childComponent.length === 0) return of(null); // Empty array contributes no children.
+    // Coerce each member then combine: the array re-emits whenever any member does, and its
+    // elements are flattened into this child's slot (nesting handled by the recursive coercion).
+    return combineLatest(childComponent.map(coerceChildComponent)).pipe(
+      map(children => {
+        const elements = (children.filter(child => child !== null) as CoercedChildComponent[]).flat();
+        return elements.length > 0 ? elements : null;
+      }),
+    );
+  } else if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
     let node: Text; // Create outer reference to text node if it is needed.
     return (typeof childComponent === 'function' ? childComponent() : childComponent).pipe( // Create observable if applicable.
       startWith(null),
@@ -123,8 +139,10 @@ function startOrEndChildren<T extends ElementType>(childComponents: ComponentChi
  * children will be added after those of the previous operators.
  * @param childComponents A spread array of ChildComponent type to add to this component. These may take a number of
  * forms, the simplest of which are strings, numbers, booleans, or observables emitting any of these. Other components
- * may also be passed. Finally Observables emitting component arrays may be passed, this is used for adding dynamic
- * arrays of components (see the 'mapToComponents' operator).
+ * may also be passed. A (possibly nested) static array of children may be passed in a single slot, so a mapped list
+ * can be added without spreading: `Div(items.map(Item))`. Finally Observables emitting component arrays may be passed,
+ * this is used for adding dynamic arrays of components whose membership changes over time (see the 'mapToComponents'
+ * operator).
  */
 export function children<T extends ElementType>(...childComponents: ComponentChild[]): ComponentOperator<T> {
   return startOrEndChildren(childComponents, false);
