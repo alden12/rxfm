@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, NEVER } from 'rxjs';
 import { addToView } from './add-to-view';
 import { ElementType } from './component';
 
@@ -33,6 +33,13 @@ describe('addToView', () => {
     expect(host.children.length).toBe(0);
 
     component.next(second); // subscription torn down → no re-add
+    expect(host.children.length).toBe(0);
+  });
+
+  it('does not throw when removed before the component has emitted', () => {
+    const host = document.createElement('div');
+    const remove = addToView(NEVER, host); // never emits an element
+    expect(() => remove()).not.toThrow();
     expect(host.children.length).toBe(0);
   });
 });
