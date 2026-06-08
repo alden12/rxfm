@@ -1,0 +1,6 @@
+{
+  "description": "Single-observable value ternaries collapse to one narrowing-preserving map, so the guard narrows in its branch (no spurious 'possibly undefined').",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

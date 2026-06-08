@@ -1,0 +1,7 @@
+{
+  "description": "Higher-order lift warning — lifting a call whose function itself returns an observable (timer(0, period)) yields Observable<Observable<…>> that never flattens; it type-checks, so the transform records the span. The operator-style `interval` helper flattens internally and must NOT warn.",
+  "baseDir": "../../../examples",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [{ "name": "timer" }]
+}

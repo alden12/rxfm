@@ -2,6 +2,37 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.16]
+
+### Changed
+- New `.tsrx` file icon: a bold **RX** wordmark in the tsrx pink→purple gradient on a transparent
+  background (replacing the gradient marble badge), so it stands out on dark and reads on light.
+
+### Internal
+- The tsserver-plugin layer and the transform are now authored in TypeScript (`.cts`), with the
+  transform split into focused modules. No behaviour change — same generated output, diagnostics,
+  and warnings; the bundled plugin is functionally identical.
+
+## [0.0.15]
+
+### Fixed
+- Transform-emitted warnings now actually surface in the editor — both the higher-order-lift warning
+  (0.0.14) and the older `? : EMPTY` stall warning (0.0.7). They re-ran the transform on the host's
+  snapshot for the `.tsrx` path, which under Volar is the **generated** TS that tsserver analyses,
+  not the original source — so they found none of the source-level patterns they key off and
+  silently emitted nothing. They now reuse the result the language plugin already computes from the
+  original source.
+
+## [0.0.14]
+
+### Added
+- Warns on **higher-order lifts**. Lifting a call whose function itself returns an observable — e.g.
+  `timer(0, period)` over an observable `period` — maps over the lifted argument and produces
+  `Observable<Observable<…>>`, a stream of streams that never flattens, so it won't behave as one
+  reactive value. This type-checks (TypeScript stays silent), so it was a silent footgun; it's now a
+  warning that points at a `switchMap`-flattening helper (e.g. `interval(period)` for a clock whose
+  rate can change). See the higher-order case in `examples/boundary.tsrx`.
+
 ## [0.0.13]
 
 ### Changed

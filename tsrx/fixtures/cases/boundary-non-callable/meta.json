@@ -1,0 +1,13 @@
+{
+  "description": "Boundary diagnostics — calling a non-callable reactive value isn't lifted; the raw 'has no call signatures' TS error is rewritten into a teaching message. Both an arithmetic-derived (sum) and a call-derived (called) binding qualify. The unrelated number→string error is left untouched (not rewritten).",
+  "diagnostics": [
+    { "code": 2349, "category": "Error", "message": "This expression is not callable.   Type 'RenderObservable<number>' has no call signatures." },
+    { "code": 2349, "category": "Error", "message": "This expression is not callable.   Type 'RenderObservable<number>' has no call signatures." },
+    { "code": 2322, "category": "Error", "message": "Type 'number' is not assignable to type 'string'." }
+  ],
+  "stalls": [],
+  "higherOrder": [],
+  "boundaryRewrites": [
+    { "headline": "calling a reactive value", "original": "has no call signatures" }
+  ]
+}

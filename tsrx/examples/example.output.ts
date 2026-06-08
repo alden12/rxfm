@@ -15,7 +15,7 @@ const double = (n: number) => n * 2;
 const sum = render(y.pipe(map(y => y + z)));
 
 // Plain function over an observable arg → map.
-const called = render(combineLatest([y]).pipe(map(([y]) => double(y))));
+const called = render(y.pipe(map(y => double(y))));
 
 // Observable emitting a function, applied to an observable arg →
 // combineLatest the fn stream with the arg stream and call it.

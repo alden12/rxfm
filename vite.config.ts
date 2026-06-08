@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import { tsrx } from './tsrx/vite-plugin-tsrx.mjs';
+import { tsrx } from './tsrx/vite-plugin-tsrx';
 
 // Build/dev config for the demo example app (examples/). The demo is authored in
 // tsrx, so the tsrx plugin compiles each `.tsrx` (imperative observables → RxJS)

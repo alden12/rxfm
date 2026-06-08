@@ -1,0 +1,9 @@
+{
+  "description": "Array lifting — obsArray.map(item => <component>) lifts to mapToComponents (keyed reconciliation), item param treated as observable; 2nd arg supplies the key; value-returning maps (i => i.name) lift to a reactive array map (render(combineLatest([items]).pipe(...))), only component-maps become mapToComponents; filter→map composes.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [],
+  "hovers": [
+    { "find": ".map(item => Div", "token": "map", "expect": "mapToComponents" }
+  ]
+}

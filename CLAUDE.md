@@ -40,9 +40,12 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 
 - **Vite 8** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
-  The demo config loads the `tsrx()` Vite plugin ([tsrx/vite-plugin-tsrx.mjs](tsrx/vite-plugin-tsrx.mjs))
+  The demo config loads the `tsrx()` Vite plugin ([tsrx/vite-plugin-tsrx.ts](tsrx/vite-plugin-tsrx.ts))
   so it can compile the `.tsrx` examples, and adds `.tsrx` to `resolve.extensions` for bare
-  cross-file imports.
+  cross-file imports. The plugin `require`s the **compiled** `tsrx/ts-plugin/transform.cjs`, so
+  `dev`/`build:app` run `build:tsrx` first (`predev`/`prebuild:app` hooks) to regenerate it from the
+  `.cts` sources (the `.cjs` are gitignored build artifacts — see [Library internals] / the tsrx
+  TypeScript build below).
 - `yarn dev` — Vite dev server (port 3000) serving the tsrx demo from `examples/` (entry
   `examples/main.ts`). The demo's `rxfm` import is aliased to live lib source (`src/lib/rxfm/index.ts`).
 - `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the

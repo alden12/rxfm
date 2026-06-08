@@ -37,10 +37,16 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
+    "predev": "yarn build:tsrx",
     "dev": "vite",
     "build": "vite build --config vite.lib.config.ts",
+    "prebuild:app": "yarn build:tsrx",
     "build:app": "vite build",
     "preview": "vite preview",
+    "build:tsrx": "tsc -p tsrx/ts-plugin/tsconfig.json",
+    "dev:tsrx": "yarn build:tsrx && vite --config tsrx/vite.tsrx.config.ts",
+    "build:tsrx-demo": "yarn build:tsrx && vite build --config tsrx/vite.tsrx.config.ts",
+    "pretest": "tsc -p tsrx/ts-plugin/tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
