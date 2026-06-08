@@ -32,8 +32,9 @@ export type StyleObject = AttributeMetadataObject<StyleKeys, StyleType>;
  * Apply a style to an element.
  */
 const setStyle = (element: ElementType, key: StyleKeys, value: string | null) => {
-  if (element.style[key] || null !== value || null) { // If style has changed (coercing empty string to null).
-    element.style[key] = (value || null) as string; // Set style or remove by setting to null.
+  const nextValue = (value as string) || null; // Coerce empty string / falsy to null.
+  if ((element.style[key] || null) !== nextValue) { // Only write when the value has actually changed.
+    element.style[key] = nextValue as string; // Set style or remove by setting to null.
   }
 };
 
