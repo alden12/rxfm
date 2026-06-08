@@ -8,9 +8,23 @@
 // so require it by subpath.
 const path = require('node:path');
 const { createLanguageServicePlugin } = require('@volar/typescript/lib/quickstart/createLanguageServicePlugin.js');
-const { createTsrxLanguagePlugin } = require('./language-plugin.cjs');
+const { createTsrxLanguagePlugin, getTransformResult } = require('./language-plugin.cjs');
 const { rewriteBoundaryDiagnostic } = require('./boundary-diagnostics.cjs');
 const { transformWithMappings } = require('./transform.cjs');
+
+// The transform result for a .tsrx, computed from its ORIGINAL source. Prefer the
+// one the Volar LanguagePlugin already built (keyed by path) — the host's snapshot
+// for a .tsrx path is the GENERATED TS, so re-transforming it would find none of the
+// source-level patterns these warnings key off. Falls back to transforming the
+// snapshot directly (the headless harnesses' mock host serves the real source).
+function tsrxTransformFor(ts, info, fileName) {
+  const cached = getTransformResult(fileName);
+  if (cached) return cached;
+  const snapshot = info.languageServiceHost.getScriptSnapshot(fileName);
+  if (!snapshot) return undefined;
+  const text = snapshot.getText(0, snapshot.getLength());
+  return { text, result: transformWithMappings(ts, text, path.dirname(fileName)) };
+}
 
 // tsrx-originated warnings (not rewrites of TS errors): a binding produced by the
 // `cond ? x : EMPTY` filter idiom can be empty, so combining it with combineLatest
@@ -18,10 +32,9 @@ const { transformWithMappings } = require('./transform.cjs');
 // warning on the .tsrx source.
 function stallDiagnostics(ts, info, fileName, existingFile) {
   try {
-    const snapshot = info.languageServiceHost.getScriptSnapshot(fileName);
-    if (!snapshot) return [];
-    const text = snapshot.getText(0, snapshot.getLength());
-    const { stalls } = transformWithMappings(ts, text, path.dirname(fileName));
+    const transformed = tsrxTransformFor(ts, info, fileName);
+    if (!transformed) return [];
+    const { text, result: { stalls } } = transformed;
     if (!stalls || !stalls.length) return [];
     const file = existingFile || ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
     return stalls.map(s => ({
@@ -47,10 +60,9 @@ function stallDiagnostics(ts, info, fileName, existingFile) {
 // surface it here, pointing at a flattening helper.
 function higherOrderDiagnostics(ts, info, fileName, existingFile) {
   try {
-    const snapshot = info.languageServiceHost.getScriptSnapshot(fileName);
-    if (!snapshot) return [];
-    const text = snapshot.getText(0, snapshot.getLength());
-    const { higherOrder } = transformWithMappings(ts, text, path.dirname(fileName));
+    const transformed = tsrxTransformFor(ts, info, fileName);
+    if (!transformed) return [];
+    const { text, result: { higherOrder } } = transformed;
     if (!higherOrder || !higherOrder.length) return [];
     const file = existingFile || ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true);
     return higherOrder.map(h => ({

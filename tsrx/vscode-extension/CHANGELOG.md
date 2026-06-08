@@ -2,6 +2,16 @@
 
 All notable changes to the tsrx VS Code extension.
 
+## [0.0.15]
+
+### Fixed
+- Transform-emitted warnings now actually surface in the editor — both the higher-order-lift warning
+  (0.0.14) and the older `? : EMPTY` stall warning (0.0.7). They re-ran the transform on the host's
+  snapshot for the `.tsrx` path, which under Volar is the **generated** TS that tsserver analyses,
+  not the original source — so they found none of the source-level patterns they key off and
+  silently emitted nothing. They now reuse the result the language plugin already computes from the
+  original source.
+
 ## [0.0.14]
 
 ### Added

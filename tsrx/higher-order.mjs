@@ -45,6 +45,20 @@ check('plugin emits one Warning diagnostic', warnings.length === 1 && warnings[0
 check('message explains the stream-of-streams + points at a flattening helper', warnings[0] && /stream-of-streams/.test(warnings[0].messageText) && /interval/.test(warnings[0].messageText));
 check('warning span matches the source call', warnings[0] && src.slice(warnings[0].start, warnings[0].start + warnings[0].length) === 'timer(0, period)');
 
+// Editor-path regression: in the live editor the decorated host's snapshot for a
+// .tsrx path is the GENERATED TS (Volar's getServiceScript), not the source — so
+// re-transforming it finds nothing. The plugin must instead reuse the result the
+// LanguagePlugin computed from the ORIGINAL source. Populate that cache, then feed
+// the diagnostic the generated code as the host snapshot and confirm it still fires.
+const { createTsrxLanguagePlugin } = await import('./ts-plugin/language-plugin.cjs');
+const lp = createTsrxLanguagePlugin(ts);
+const tsrxPath = join(examplesDir, 'x.tsrx');
+lp.createVirtualCode(tsrxPath, 'tsrx', ts.ScriptSnapshot.fromString(src)); // caches from source
+const editorInfo = { languageServiceHost: { getScriptSnapshot: () => ts.ScriptSnapshot.fromString(code) } };
+const editorWarnings = higherOrderDiagnostics(ts, editorInfo, tsrxPath, undefined);
+check('surfaces via the LanguagePlugin cache when the host serves generated code',
+  editorWarnings.length === 1 && src.slice(editorWarnings[0].start, editorWarnings[0].start + editorWarnings[0].length) === 'timer(0, period)');
+
 console.log(higherOrder.length ? `\nhigher-order: ${JSON.stringify(higherOrder.map(h => span(h)))}` : '');
 console.log(ok ? '\nAll higher-order checks passed.' : '\nSome checks failed.');
 process.exit(ok ? 0 : 1);

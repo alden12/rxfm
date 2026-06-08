@@ -11,6 +11,17 @@ const path = require('node:path');
 const { transformWithMappings, segmentsToVolarMappings } = require('./transform.cjs');
 
 const uriPath = uri => (typeof uri === 'string' ? uri : uri.path || uri.fsPath || String(uri));
+const normPath = p => uriPath(p).replace(/^file:\/\//, '');
+
+// The latest transform result per .tsrx path, computed from the ORIGINAL source
+// (the snapshot Volar hands createVirtualCode). The tsserver-plugin diagnostics
+// layer (index.cjs) reuses this to surface transform-emitted warnings (stalls,
+// higher-order lifts): it can't re-derive them from the host, whose snapshot for a
+// .tsrx path is the GENERATED TS (what tsserver analyses), not the source.
+// Module-level so both halves of the plugin share one map. Stores the original
+// `text` too, for building a source file when there are no existing diagnostics.
+const transformResults = new Map();
+const getTransformResult = fileName => transformResults.get(normPath(fileName));
 
 function createTsrxLanguagePlugin(ts) {
   // Cache by source text so we don't rebuild a Program when nothing changed.
@@ -25,7 +36,9 @@ function createTsrxLanguagePlugin(ts) {
 
   const makeVirtualCode = (filePath, snapshot) => {
     const text = snapshot.getText(0, snapshot.getLength());
-    const { code, segments } = compile(filePath, text);
+    const result = compile(filePath, text);
+    const { code, segments } = result;
+    transformResults.set(normPath(filePath), { text, result });
     return {
       id: 'root',
       languageId: 'typescript',
@@ -69,4 +82,4 @@ function createTsrxLanguagePlugin(ts) {
   };
 }
 
-module.exports = { createTsrxLanguagePlugin };
+module.exports = { createTsrxLanguagePlugin, getTransformResult };
