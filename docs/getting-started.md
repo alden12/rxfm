@@ -72,7 +72,7 @@ A pre-built `.vsix` is committed in the repo, so you can install it without the 
 Host:
 
 ```sh
-code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.13.vsix
+code --install-extension tsrx/vscode-extension/tsrx-vscode-0.0.17.vsix
 ```
 
 …or in the Extensions view → **⋯** → **Install from VSIX…**. Then open any `.tsrx` file and hover a
