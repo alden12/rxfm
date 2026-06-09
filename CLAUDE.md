@@ -49,15 +49,24 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 - `yarn test` / `yarn test:watch` — Jest 30 (ts-jest, jsdom), scoped to `src/`. Config is [jest.config.cjs](jest.config.cjs) (`.cjs` because the package is `type: module`). Main test: [components/component.test.ts](src/lib/rxfm/components/component.test.ts).
 - `yarn test:e2e` — Playwright end-to-end tests in [e2e/](e2e/), run against the Vite dev server (auto-started). Config: [playwright.config.ts](playwright.config.ts). Needs `yarn playwright install chromium` once.
 - `yarn lint` — ESLint (8 + typescript-eslint 7) over `.ts`. Currently 0 errors, a few `semi` warnings.
-- **VS Code extension** ([tsrx/vscode-extension/](tsrx/vscode-extension/), npm-managed, not a Yarn
+- **Reactive TS** — the experimental `.rts` language layer, in [reactive-ts/](reactive-ts/) (formerly
+  "tsrx" / `.tsrx`; renamed off a name-clash with an unrelated TS UI extension). Imperative-observable
+  code in `.rts` files is transformed to real RxJS with live editor types. The transform + Volar
+  tsserver plugin live in [reactive-ts/ts-plugin/](reactive-ts/ts-plugin/) (`.cts` sources → gitignored
+  `.cjs`, built by `yarn build:reactive-ts`); the Vite plugin is
+  [reactive-ts/vite-plugin-reactive-ts.ts](reactive-ts/vite-plugin-reactive-ts.ts) (`reactiveTs()`,
+  served via `yarn dev:reactive-ts`); fixtures are in [reactive-ts/fixtures/](reactive-ts/fixtures/)
+  (the `reactive-ts` Jest project). Editor language id is `rts`. Published separately on npm under the
+  `@reactive-ts/*` scope; the runtime framework is being renamed to Corrente.
+- **VS Code extension** ([reactive-ts/vscode-extension/](reactive-ts/vscode-extension/), npm-managed, not a Yarn
   workspace — Yarn Classic would require a private root, but `rxfm` publishes from root). Root
   passthrough scripts avoid `cd`ing in: `yarn extension:install-deps` (one-time), `yarn
   extension:build` (produce the `.vsix`), `yarn extension:build-and-install` (build + `code
   --install-extension`), `yarn extension:bump-version` (patch bump). Each delegates to the
-  extension's own npm scripts. `package`/`reinstall` delete any old `tsrx-vscode-*.vsix` first, so
-  exactly one build is on disk; it's git-tracked via the `!/tsrx/vscode-extension/*.vsix` exception
+  extension's own npm scripts. `package`/`reinstall` delete any old `reactive-ts-vscode-*.vsix` first, so
+  exactly one build is on disk; it's git-tracked via the `!/reactive-ts/vscode-extension/*.vsix` exception
   in `.gitignore`. The extension contributes a `language-configuration.json` (mirrors TypeScript's)
-  for `.tsrx` comment-toggling, auto-indent, and bracket/quote surround.
+  for `.rts` comment-toggling, auto-indent, and bracket/quote surround.
 
 ## Conventions & notes
 

@@ -1,4 +1,4 @@
-// The tsrx runtime, shipped as part of rxfm. The tsrx transform emits `render(...)`
+// The Reactive TS runtime, shipped as part of rxfm. The Reactive TS transform emits `render(...)`
 // around lifted expressions and leaves `accumulate` / `interval` / `EMPTY` for you
 // to call by hand; all of them live here. They're useful with plain rxfm too — a
 // shared/replaying derived value (`render`), a running fold (`accumulate`), and a
@@ -16,13 +16,13 @@ import {
   switchMap,
 } from "rxjs/operators";
 
-// Re-exported so the filter idiom `cond ? value : EMPTY` needs only one tsrx import:
+// Re-exported so the filter idiom `cond ? value : EMPTY` needs only one Reactive TS import:
 // a ternary whose else-branch is EMPTY drops the value when the condition is false
 // (the imperative spelling of RxJS `filter`).
 export { EMPTY } from "rxjs";
 
 /**
- * The observable type produced by imperative tsrx syntax — a "RenderObservable".
+ * The observable type produced by imperative Reactive TS syntax — a "RenderObservable".
  *
  * Behaviourally it's a shared, replaying observable that only re-emits when its
  * value actually changes: one upstream subscription is shared across subscribers,
@@ -66,7 +66,7 @@ export function render<T>(source: Observable<T>): RenderObservable<T> {
  * collapse to a single value on completion); it reports its accumulation as each
  * value arrives. `accumulate` keeps the familiar `(accumulator, value) => result`
  * shape of array reduce without implying the stream has to end. Because it takes
- * the stream as a parameter, the tsrx transform leaves the call untouched (it is
+ * the stream as a parameter, the Reactive TS transform leaves the call untouched (it is
  * operator-style, not a value mapped over emissions).
  *
  * **Emits `null` before the first source value.** RxJS `scan` stays silent until
