@@ -2,6 +2,16 @@
 
 All notable changes to the Reactive TS VS Code extension.
 
+## [0.0.21]
+
+### Changed
+- Shortened the display name from "Reactive TS (live types)" to just **"Reactive TS"**.
+- Refreshed the `.rts` file icon (centered RTS wordmark; the language icon is a fallback that file
+  icon themes can override — the default Seti theme does, so it shows in tabs/quick-open but not the
+  Explorer unless a deferring icon theme is active).
+- Bundled transform now lifts a destructured `Observable<T>` parameter of a standalone function
+  (`({ name, done }: Observable<T>) => …`), not just a component-`.map` item param.
+
 ## [0.0.20]
 
 ### Changed
