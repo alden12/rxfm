@@ -18,27 +18,24 @@ export const Minesweeper = () => {
       `${isCleared && hasNeighbors ? neighbors : symbol}`,
   );
 
-  const gameBoard = Div
-    .class('minesweeper-board')
-    .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })
-    .onContextmenu(event => event.preventDefault())
-    `${cells}`;
-
-  const controls = Div
-    .class('minesweeper-controls')(
-      Button
-        .onClick(() => dispatch({ type: 'start', cell: [0, 0] }))
-        `Restart`,
-      Div`Time: ${gameTime}s`,
-      highScore ? Div`Best: ${highScore}s` : null,
-      gameStage === 'win' ? Div`You Win!`
-        : gameStage === 'gameOver' ? Div`Game Over!`
-        : null,
-    );
-
   return Div
-    .class('minesweeper')`
-      ${gameBoard}
-      ${controls}
-    `;
+    .class('minesweeper')(
+      Div
+        .class('minesweeper-board')
+        .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })
+        .onContextmenu(event => event.preventDefault())(
+          cells,
+        ),
+      Div
+        .class('minesweeper-controls')(
+          Button
+            .onClick(() => dispatch({ type: 'start', cell: [0, 0] }))
+            `Restart`,
+          Div`Time: ${gameTime}s`,
+          highScore ? Div`Best: ${highScore}s` : null,
+          gameStage === 'win' ? Div`You Win!`
+            : gameStage === 'gameOver' ? Div`Game Over!`
+            : null,
+        )
+    );
 };

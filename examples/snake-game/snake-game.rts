@@ -11,8 +11,7 @@ export const SnakeGame = () => {
   const Cells = board.flat().map(cell =>
     Div
       .class('snake-cell')
-      .style({ backgroundColor: CELL_COLOR_MAP[cell] })
-      ``,
+      .style({ backgroundColor: CELL_COLOR_MAP[cell] })(),
   );
 
   return Div
@@ -23,8 +22,9 @@ export const SnakeGame = () => {
     })(
       Div
         .class('snake-game-board')
-        .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })
-        `${Cells}`,
+        .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })(
+          Cells,
+        ),
       Div
         .class('score-board')(
           Div`Score: ${score}`,
@@ -32,8 +32,9 @@ export const SnakeGame = () => {
           difficulties.map(option =>
             Button
               .onClick(() => difficulty.next(option))
-              .class('difficulty-button')
-              `${option}`,
+              .class('difficulty-button')(
+                option,
+              ),
           ),
         ),
     );
