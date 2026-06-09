@@ -2,6 +2,13 @@
 
 All notable changes to the Reactive TS VS Code extension.
 
+## [0.0.22]
+
+### Changed
+- Recoloured the icons: the "TS" in the RTS wordmark is now violet (matching the brand
+  pink→purple gradient) rather than blue, so the mark reads as its own wordmark rather than
+  evoking the TypeScript logo.
+
 ## [0.0.21]
 
 ### Changed
