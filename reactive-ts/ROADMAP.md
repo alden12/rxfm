@@ -438,6 +438,18 @@ board.flat().map(({ color, symbol }, index) => …)   // color/symbol off Observ
   the `cell.` form, narrowing preserved. Only simple-field patterns qualify (no rest, defaults,
   computed names, or nesting); anything else falls back to the plain-identifier param. Covered by
   `d4.mjs`; the Minesweeper board now destructures its cell.
+- **Extension ✅ — destructure an `Observable<T>` param of a *standalone* function.** Pulling a
+  component out into a named function (`const TodoItem = ({ name, done }: Observable<TodoItem>) => …`)
+  hit the same wall, but off the `.map` path. The same rebind now fires for any arrow / function /
+  method whose parameter is a plain object-binding pattern **explicitly annotated `Observable<T>`** —
+  the pattern is rebound to a synthetic `item` (the `: Observable<T>` annotation is preserved, so the
+  function's signature and callers are unaffected) and the fields lift in the body just as the map
+  item does. Gated on the explicit annotation because, unlike a map callback (where the item is
+  contextually a stream), a named function can be called from anywhere — without the annotation the
+  destructure is ordinary value-unwrapping and is left untouched. The two paths share one
+  `bindDestructure` helper. Covered by the `destructured-fn-param` fixture; the todo-list example's
+  `TodoItem` now uses this form. (A field-typed `Observable<T>` param passed at the call site flows
+  through verbatim, so it composes with the `mapToComponents` the `.map` emits.)
 
 ### D5. Single-stream operator chains don't collapse to one map — ✅ DONE
 

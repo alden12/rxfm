@@ -614,6 +614,42 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     return name;
   };
 
+  // A parameter `{ a, b }` qualifies for the destructured-stream rebind only when every
+  // field is a plain binding — no rest, default, computed name, or nesting (the same
+  // restriction the component-`.map` item param uses).
+  const qualifiesDestructure = (param: TS.ParameterDeclaration | undefined): boolean =>
+    Boolean(param) && ts.isObjectBindingPattern(param!.name)
+    && param!.name.elements.every(el =>
+      !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name)
+      && (!el.propertyName || ts.isIdentifier(el.propertyName)));
+
+  // Rebind a destructured stream param to a synthetic name and register each field as an
+  // alias that lifts to `synthetic.field` wherever it's read (D4). The undo entries are
+  // pushed onto `addedBindings`/`addedAliases` so the caller can unscope after visiting
+  // the body. Replaces only the binding NAME, so an explicit `: Observable<T>` annotation
+  // survives (a component-`.map` item param is untyped, so name and param spans coincide).
+  const bindDestructure = (
+    param: TS.ParameterDeclaration, scope: TS.Node,
+    addedBindings: string[], addedAliases: [string, AliasInfo | undefined][],
+  ) => {
+    const synthetic = freshItemName(scope);
+    const cbId = cbSeq++;
+    edits.push({ start: param.name.getStart(sf), end: param.name.getEnd(), pieces: [synthetic] });
+    observableBindings.add(synthetic); addedBindings.push(synthetic);
+    for (const el of (param.name as TS.ObjectBindingPattern).elements) {
+      const prop = (el.propertyName || el.name).getText(sf);
+      const key = (el.name as TS.Identifier).text;
+      addedAliases.push([key, aliasInfo.has(key) ? aliasInfo.get(key) : undefined]);
+      aliasInfo.set(key, { param: synthetic, prop, cbId });
+      // Non-renamed field: its declaration token can borrow a use's generated `item.prop`
+      // token for hover. (A renamed `{ a: b }` use emits a plain string prop — no
+      // source-mapped token to point at — so it's left unmapped.)
+      if (!el.propertyName) declMappings.push({
+        aliasKey: `${cbId}:${key}`, srcStart: el.name.getStart(sf), len: el.name.getEnd() - el.name.getStart(sf),
+      });
+    }
+  };
+
   const handleComponentMap = (node: TS.CallExpression) => {
     // The caller only reaches here via isComponentMapCall, which has already
     // verified the receiver is `obj.map` and the first arg is an arrow/function.
@@ -636,32 +672,11 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     const addedAliases: [string, AliasInfo | undefined][] = [];
     // D4: the item param may be destructured — `({ color, symbol }, i) => …`. The
     // binding pattern can't survive (mapToComponents passes an Observable item, not
-    // the value), so rename it to a synthetic stream param and register each field
-    // as an alias that lifts to `param.field` wherever it's read. Only plain-field
-    // patterns qualify (no rest, defaults, computed names, or nesting).
+    // the value), so rebind it to a synthetic stream param and lift its fields. Here
+    // the item is contextually a stream, so no `Observable<T>` annotation is required.
     const itemParam = cb.parameters[0];
-    const destructures = itemParam && ts.isObjectBindingPattern(itemParam.name)
-      && itemParam.name.elements.every(el =>
-        !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name)
-        && (!el.propertyName || ts.isIdentifier(el.propertyName)));
-    if (destructures) {
-      const synthetic = freshItemName(cb);
-      const cbId = cbSeq++;
-      edits.push({ start: itemParam.getStart(sf), end: itemParam.getEnd(), pieces: [synthetic] });
-      observableBindings.add(synthetic); addedBindings.push(synthetic);
-      for (const el of (itemParam.name as TS.ObjectBindingPattern).elements) {
-        const prop = (el.propertyName || el.name).getText(sf);
-        const key = (el.name as TS.Identifier).text;
-        addedAliases.push([key, aliasInfo.has(key) ? aliasInfo.get(key) : undefined]);
-        aliasInfo.set(key, { param: synthetic, prop, cbId });
-        // Non-renamed field: its declaration token can borrow a use's generated
-        // `item.prop` token for hover. (Renamed `{ a: b }` uses emit a plain string
-        // prop, so there's no source-mapped token to point at — left unmapped.)
-        if (!el.propertyName) declMappings.push({
-          aliasKey: `${cbId}:${key}`, srcStart: el.name.getStart(sf), len: el.name.getEnd() - el.name.getStart(sf),
-        });
-      }
-    }
+    const destructures = qualifiesDestructure(itemParam);
+    if (destructures) bindDestructure(itemParam, cb, addedBindings, addedAliases);
     // Remaining params (and a non-destructured item param) → plain observable bindings.
     for (let i = destructures ? 1 : 0; i < cb.parameters.length; i++) {
       const name = cb.parameters[i].name.getText(sf);
@@ -884,6 +899,28 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         }
       }
       return;
+    }
+    // A standalone function whose parameter is an explicitly typed `Observable<T>`
+    // destructured in place — `const TodoItem = ({ name, done }: Observable<TodoItem>) => …`.
+    // Rebind the pattern to a synthetic stream param and lift its fields in the body,
+    // exactly as a component-`.map` item param does. Gated on the explicit annotation:
+    // unlike a map callback (where the item is contextually a stream), a named function
+    // can be called from anywhere, so the stream intent must be declared, not inferred —
+    // and without it the binding is just ordinary value destructuring, left untouched.
+    // (Map callbacks never reach here: handleComponentMap visits their body directly.)
+    if ((ts.isArrowFunction(node) || ts.isFunctionExpression(node)
+      || ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node)) && node.body) {
+      const streamParams = node.parameters.filter(p =>
+        qualifiesDestructure(p) && p.type && isObservableType(checker.getTypeFromTypeNode(p.type)));
+      if (streamParams.length) {
+        const addedBindings: string[] = [];
+        const addedAliases: [string, AliasInfo | undefined][] = [];
+        for (const p of streamParams) bindDestructure(p, node, addedBindings, addedAliases);
+        visit(node.body);
+        addedBindings.forEach(b => observableBindings.delete(b));
+        for (const [key, prev] of addedAliases) prev ? aliasInfo.set(key, prev) : aliasInfo.delete(key);
+        return;
+      }
     }
     ts.forEachChild(node, visit);
   };
