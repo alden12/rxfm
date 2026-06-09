@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'dist-demo', 'playwright-report', 'test-results', 'tsrx'],
+    ignores: ['dist', 'dist-demo', 'playwright-report', 'test-results', 'reactive-ts'],
   },
   {
     files: ['**/*.ts'],

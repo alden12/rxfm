@@ -3,7 +3,7 @@
 > 📘 **Plain RxJS style (no build step).** This is the plain-TypeScript reference for RxFM, where
 > derived values are written explicitly with RxJS operators (`count.pipe(map(c => c * 2))`). It's a
 > complete guide and needs nothing beyond `rxfm` + `rxjs`. The project's default style is now
-> **tsrx** — see the [README](../README.md) and the [tsrx guide](guide.md), where those same
+> **Reactive TS** — see the [README](../README.md) and the [Reactive TS guide](guide.md), where those same
 > derivations are written as plain expressions (`count * 2`) and lifted to streams for you.
 
 > ⚠️ **Alpha release.** This is the `3.0.0-alpha` line — an in-progress redesign (Vite build, no

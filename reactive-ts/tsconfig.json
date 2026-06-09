@@ -1,0 +1,22 @@
+{
+  // Governs .rts files in the editor. The root tsconfig deliberately excludes
+  // `reactive-ts/`, which would otherwise leave .rts files in an inferred project with
+  // default options — no `paths`, unreliable extraFileExtensions wiring, so the
+  // Reactive TS tsserver plugin's virtual TypeScript never type-checked properly (hovers
+  // showed `any`). This pins the same options the transform itself uses
+  // (see ts-plugin/transform.cjs `getCompilerOptions`) plus the `rxfm` path.
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "rxfm": ["../src/lib/rxfm/index"]
+    }
+  },
+  "include": ["**/*.rts", "**/*.ts"],
+  "exclude": ["node_modules", "dist-reactive-ts", "ts-plugin"]
+}

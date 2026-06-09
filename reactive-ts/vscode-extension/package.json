@@ -1,0 +1,72 @@
+{
+  "name": "reactive-ts-vscode",
+  "displayName": "Reactive TS (live types)",
+  "description": "Live TypeScript types for .rts files (imperative observables).",
+  "version": "0.0.20",
+  "publisher": "alden12",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alden12/rxfm.git",
+    "directory": "reactive-ts/vscode-extension"
+  },
+  "engines": {
+    "vscode": "^1.88.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "icon": "icons/icon.png",
+  "main": "./extension.cjs",
+  "activationEvents": [
+    "onLanguage:rts"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "rts",
+        "aliases": [
+          "Reactive TS",
+          "rts"
+        ],
+        "extensions": [
+          ".rts"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/rts.svg",
+          "dark": "./icons/rts.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rts",
+        "scopeName": "source.rts",
+        "path": "./TypeScript.tmLanguage.json"
+      }
+    ],
+    "typescriptServerPlugins": [
+      {
+        "name": "reactive-ts-plugin",
+        "enableForWorkspaceTypeScriptVersions": true,
+        "languages": [
+          "rts"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node ./build.mjs",
+    "vscode:prepublish": "node ./build.mjs",
+    "clean": "rm -f reactive-ts-vscode-*.vsix",
+    "package": "npm run clean && vsce package",
+    "reinstall": "npm run package && code --install-extension \"$(ls -t reactive-ts-vscode-*.vsix | head -1)\"",
+    "bump": "npm version patch --no-git-tag-version"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0"
+  }
+}

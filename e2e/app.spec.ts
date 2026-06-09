@@ -11,7 +11,7 @@ test('renders the example app shell', async ({ page }) => {
 
 test('click counter increments on click (reactivity)', async ({ page }) => {
   const counter = page.getByRole('button', { name: /^Clicks:/ });
-  // The tsrx demo's counter also renders a derived value, e.g. "Clicks: 0 (doubled: 0)".
+  // The Reactive TS demo's counter also renders a derived value, e.g. "Clicks: 0 (doubled: 0)".
   await expect(counter).toContainText('Clicks: 0');
   await counter.click();
   await counter.click();
@@ -49,7 +49,7 @@ test('todo item toggles done on click (event → conditional class + checkbox bi
 });
 
 test('conditional child toggles on a timer (time-driven reactivity)', async ({ page }) => {
-  // tsrx demo: `interval(1000)` (immediate first tick) gated by `tick % 2 === 0` —
+  // Reactive TS demo: `interval(1000)` (immediate first tick) gated by `tick % 2 === 0` —
   // visible at t=0, hidden ~1s, visible ~2s.
   const message = page.getByText('Now you see me!').first();
   await expect(message).toBeVisible();

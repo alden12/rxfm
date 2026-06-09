@@ -1,0 +1,15 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Transparent background, bold "RTS" wordmark filled with the Reactive TS pink->purple
+       gradient (the diagonal from the original badge), so it stands out on a dark
+       editor background and stays legible on light. This is the language-contributed
+       icon VS Code falls back to for .rts when the file icon theme has no mapping. -->
+  <defs>
+    <linearGradient id="rts" x1="-10" y1="0" x2="32" y2="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff00bb"/>
+      <stop offset="1" stop-color="#ef51f7"/>
+    </linearGradient>
+  </defs>
+  <text x="15.8" y="23" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="19" font-weight="400" fill="url(#rts)" letter-spacing="-1.5">RTS</text>
+</svg>

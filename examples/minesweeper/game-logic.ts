@@ -1,12 +1,12 @@
 // Pure domain logic for Minesweeper — no RxJS, no reactivity. The cell, the board
 // operations, and the game state machine, all ordinary value code. The reactive
-// wiring lives in game.tsrx; this module is just the rules.
+// wiring lives in game.rts; this module is just the rules.
 //
 // One change from the original RxJS version: restarting is modelled explicitly.
 // The original threw an Error on a 'start' action and relied on `retry()` to
 // resubscribe the `scan`, resetting the fold. Here `reduceGame` just resets when it
 // sees a 'start' (or the very first action, from `pregame`) — an honest imperative
-// reducer instead of control-flow-via-exceptions, which is what tsrx's
+// reducer instead of control-flow-via-exceptions, which is what Reactive TS's
 // `accumulate` wants.
 import {
   NEIGHBOR_VECTORS, BOARD_WIDTH, BOARD_HEIGHT, MINE_COUNT,
@@ -173,7 +173,7 @@ export class MinesweeperGame {
   }
 
   // Elapsed seconds between start and end (0 until both exist). Kept here, in pure
-  // code, so the undefined-handling enjoys normal type narrowing — tsrx's lifting
+  // code, so the undefined-handling enjoys normal type narrowing — Reactive TS's lifting
   // doesn't carry a ternary's narrowing into the lifted branches, so the same
   // arithmetic written as a reactive expression would see `number | undefined`.
   public get duration(): number {

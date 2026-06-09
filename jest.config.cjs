@@ -1,7 +1,7 @@
 // Two Jest projects so `yarn test` runs both suites:
 //  - lib:  the framework unit tests (ts-jest + jsdom), scoped to src/.
-//  - tsrx: the .tsrx transform fixture suite (plain CommonJS, node env), under
-//          tsrx/fixtures/. No ts-jest — the transform and the fixture driver are
+//  - reactive-ts: the .rts transform fixture suite (plain CommonJS, node env), under
+//          reactive-ts/fixtures/. No ts-jest — the transform and the fixture driver are
 //          already CJS, so Jest runs them natively (no ESM/--experimental-vm-modules).
 // e2e (Playwright) specs under e2e/ are run separately via `yarn test:e2e`.
 module.exports = {
@@ -13,9 +13,9 @@ module.exports = {
       roots: ['<rootDir>/src'],
     },
     {
-      displayName: 'tsrx',
+      displayName: 'reactive-ts',
       testEnvironment: 'node',
-      roots: ['<rootDir>/tsrx/fixtures'],
+      roots: ['<rootDir>/reactive-ts/fixtures'],
       testMatch: ['**/*.test.cjs'],
     },
   ],

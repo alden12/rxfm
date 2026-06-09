@@ -1,14 +1,16 @@
-// The tsrx runtime, shipped as part of rxfm. The tsrx transform emits `render(...)`
-// around lifted expressions and leaves `accumulate` / `interval` / `EMPTY` for you
-// to call by hand; all of them live here. They're useful with plain rxfm too — a
-// shared/replaying derived value (`render`), a running fold (`accumulate`), and a
-// reactive-period clock (`interval`) — so they sit on the public `rxfm` surface.
+// The Reactive TS runtime, shipped as part of rxfm. The Reactive TS transform emits `render(...)`
+// around lifted expressions and leaves `accumulate` / `interval` / `fallback` / `EMPTY` for
+// you to call by hand; all of them live here. They're useful with plain rxfm too — a
+// shared/replaying derived value (`render`), a running fold (`accumulate`), a
+// reactive-period clock (`interval`), and an error boundary (`fallback`) — so they sit on
+// the public `rxfm` surface.
 //
 // A single indirection point also lets the underlying observable implementation
 // (RxJS today, possibly a native/RxJS-8 Observable later) change without touching
 // emitted code shape.
-import { Observable, of, timer } from "rxjs";
+import { EMPTY, Observable, isObservable, of, timer } from "rxjs";
 import {
+  catchError,
   distinctUntilChanged,
   scan,
   shareReplay,
@@ -16,13 +18,13 @@ import {
   switchMap,
 } from "rxjs/operators";
 
-// Re-exported so the filter idiom `cond ? value : EMPTY` needs only one tsrx import:
+// Re-exported so the filter idiom `cond ? value : EMPTY` needs only one Reactive TS import:
 // a ternary whose else-branch is EMPTY drops the value when the condition is false
 // (the imperative spelling of RxJS `filter`).
-export { EMPTY } from "rxjs";
+export { EMPTY };
 
 /**
- * The observable type produced by imperative tsrx syntax — a "RenderObservable".
+ * The observable type produced by imperative Reactive TS syntax — a "RenderObservable".
  *
  * Behaviourally it's a shared, replaying observable that only re-emits when its
  * value actually changes: one upstream subscription is shared across subscribers,
@@ -66,7 +68,7 @@ export function render<T>(source: Observable<T>): RenderObservable<T> {
  * collapse to a single value on completion); it reports its accumulation as each
  * value arrives. `accumulate` keeps the familiar `(accumulator, value) => result`
  * shape of array reduce without implying the stream has to end. Because it takes
- * the stream as a parameter, the tsrx transform leaves the call untouched (it is
+ * the stream as a parameter, the Reactive TS transform leaves the call untouched (it is
  * operator-style, not a value mapped over emissions).
  *
  * **Emits `null` before the first source value.** RxJS `scan` stays silent until
@@ -119,4 +121,83 @@ export function interval(
     distinctUntilChanged(),
     switchMap((ms) => timer(0, ms)),
   );
+}
+
+/**
+ * The control signal a {@link fallback} handler returns to retry the source instead of
+ * recovering — resubscribe and try again, rather than switch to a recovery value/stream.
+ * It's a unique symbol so it can never collide with a real recovered value.
+ *
+ * @example
+ * fallback(request, (_, attempt) => attempt < 3 ? RETRY : "gave up");
+ */
+export const RETRY: unique symbol = Symbol("RETRY");
+
+/**
+ * The value a {@link fallback} handler contributes downstream once `RETRY` is excluded:
+ * nothing for a void/undefined return (the error is swallowed and the stream completes),
+ * the inner value for an `Observable` return (it's switched to), or the value itself.
+ */
+type Recovered<R> = Exclude<R, typeof RETRY> extends infer V
+  ? V extends void | undefined
+    ? never
+    : V extends Observable<infer U>
+      ? U
+      : V
+  : never;
+
+/**
+ * An error boundary for a stream — the legible, `catch`-block-shaped form of stream error
+ * handling (RxJS `catchError` + `retry` in one). If `source` errors, `handler` runs with
+ * the error and the attempt number (1 on the first error), and its **return value**
+ * decides what happens next, the way the body of a `try/catch` does:
+ *
+ * - return **`RETRY`** (`(e, attempt) => attempt < 3 ? RETRY : …`) → resubscribe to
+ *   `source` and try again (the retry loop — `attempt` increments each time);
+ * - return **nothing** (`(e) => console.error(e)`) → the error is swallowed and the
+ *   stream completes (RxJS `EMPTY`);
+ * - return a **plain value** (`() => "There was an error"`, `() => null`) → that value is
+ *   emitted once, then the stream completes (the recovered value);
+ * - return an **`Observable`** (`() => of(0)`) → the stream switches to it (full
+ *   `catchError` power for an async/multi-value recovery).
+ *
+ * This is the point of the helper: stream errors don't fit `try/catch` syntax — `try {
+ * obs }` reads as "if *evaluating* `obs` throws now," but an observable never throws on
+ * reference; it errors *later*, on subscription, when a value flows. `fallback` lets you
+ * *think* in `try/catch` terms — retry, recover with a value, or just log — while the
+ * handling stays correctly at the stream level. Because it takes the stream as a
+ * parameter, the Reactive TS transform leaves the call untouched (operator-style, not a
+ * value mapped over emissions). The result is *not* wrapped as a `RenderObservable` —
+ * like `interval`, it's a transparent stream guard; render/lift it where you derive a
+ * view from it.
+ *
+ * Note a plain value is emitted via `of`, not `from`, so a string recovers as the whole
+ * string (not character-by-character) and an array as the whole array. To stream a
+ * promise or array as a *recovery source*, return `from(...)` explicitly.
+ *
+ * ⚠️ Returning `RETRY` unconditionally retries forever; on a source that always fails
+ * *synchronously* that's an infinite loop. Bound it on `attempt` (`(_, n) => n < 3 ? …`)
+ * or the error type unless the source can only fail transiently.
+ *
+ * @example
+ * const logged = fallback(risky, (e) => console.error(e));      // swallow + log, completes
+ * const labelled = fallback(risky, () => "There was an error");  // RenderObservable<number | string>
+ * const orNull = fallback(risky, () => null);                    // number | null — pairs with `?? default`
+ * const robust = fallback(risky, (e, n) => n < 3 ? RETRY : 0);   // retry 3×, then recover with 0
+ */
+export function fallback<T, R>(
+  source: Observable<T>,
+  handler: (error: unknown, attempt: number) => R | typeof RETRY,
+): Observable<T | Recovered<R>> {
+  const attempt = (n: number): Observable<unknown> =>
+    source.pipe(
+      catchError((error) => {
+        const recovery = handler(error, n);
+        if (recovery === RETRY) return attempt(n + 1);
+        if (recovery === undefined) return EMPTY;
+        if (isObservable(recovery)) return recovery;
+        return of(recovery);
+      }),
+    );
+  return attempt(1) as Observable<T | Recovered<R>>;
 }

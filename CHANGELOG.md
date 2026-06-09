@@ -13,24 +13,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Previously a non-template array threw, and an array interpolated into a template was rendered as
   text. `ComponentChild` now includes `ComponentChild[]`. (For a list whose membership changes over
   time, keep emitting an `ElementType[]` from an observable — see `mapToComponents`.)
-- The tsrx runtime now ships with the package and is exported from the root: `render`,
+- The Reactive TS runtime now ships with the package and is exported from the root: `render`,
   `RenderObservable`, `accumulate`, `interval`, and `EMPTY` are importable via
   `import { accumulate, interval } from 'rxfm'`. These are useful with plain rxfm too — a
   shared/replaying derived value (`render`/`RenderObservable`), a running fold (`accumulate`), and a
-  reactive-period clock (`interval`). The tsrx transform still injects `render` from a local
+  reactive-period clock (`interval`). The Reactive TS transform still injects `render` from a local
   `runtime.ts`, which can now be a one-line `export * from 'rxfm'`.
+- `fallback(source, handler)` runtime helper (with the `RETRY` sentinel) — stream error handling that
+  reads like a `try/catch` body, folding `catchError` *and* `retry` into one. When `source` errors,
+  `handler` runs with `(error, attempt)` and its **return value** decides what happens, the way a `catch`
+  block does: return `RETRY` to resubscribe and try again (`attempt` increments), return nothing
+  (`e => console.error(e)`) to swallow and complete, return a plain value (`() => "error"`, `() => null`)
+  to emit it once, or return an `Observable` (`() => of(0)`) to switch to it. So retry-then-recover is a
+  single call: `fallback(x, (e, n) => n < 3 ? RETRY : 0)`. It sits alongside `accumulate`/`interval` on
+  the `rxfm` runtime surface and, being operator-style (it takes the stream as a parameter), the Reactive
+  TS transform leaves the call untouched in `.rts`. A named helper rather than `try/catch` sugar:
+  `try { obs }` reads as "if evaluating `obs` throws now," but an observable errors *later* on
+  subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
 
 ### Changed
 - Docs and examples now mount the app root with `addToView(App)` rather than a raw
   `App.subscribe(el => document.body.appendChild(el))`. `addToView` is the safe spelling of that
   single root subscription — it swaps the element if the root component ever re-emits (which a bare
   `appendChild` would duplicate) and returns a teardown function.
-- **Docs & examples restructured around tsrx as the default style.** The README is now a lean
-  landing page; the full docs live in `docs/` (`getting-started.md`, `guide.md` for the tsrx
+- **Docs & examples restructured around Reactive TS as the default style.** The README is now a lean
+  landing page; the full docs live in `docs/` (`getting-started.md`, `guide.md` for the Reactive TS
   walkthrough, `plain-typescript.md` for the plain-RxJS reference). The demo example app moved to a
-  top-level `examples/` directory and is now authored in tsrx — `yarn dev` / `yarn build:app`
-  compile it via the tsrx Vite plugin. The previous plain-TypeScript demo is preserved as a
-  reference at `examples/plain-typescript/`. No library/runtime code changed.
+  top-level `examples/` directory and is now authored in Reactive TS (`.rts`) — `yarn dev` /
+  `yarn build:app` compile it via the Reactive TS Vite plugin. The previous plain-TypeScript demo is
+  preserved as a reference at `examples/plain-typescript/`. No library/runtime code changed.
 
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and

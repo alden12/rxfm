@@ -1,11 +1,11 @@
 # RxFM Guide
 
-> The full walkthrough of RxFM in the **tsrx** style — components, state & events, attributes,
+> The full walkthrough of RxFM in the **Reactive TS** style — components, state & events, attributes,
 > conditional rendering, inputs/outputs, and dynamic lists. New here? Start with the
 > [README](../README.md) for the pitch and a quick example, then [Getting started](getting-started.md)
 > to set up your editor and build. Prefer plain RxJS with no build step? See the
-> [plain-TypeScript reference](plain-typescript.md). tsrx is experimental — see
-> [How tsrx works](#how-tsrx-works) below and the [roadmap](../tsrx/ROADMAP.md).
+> [plain-TypeScript reference](plain-typescript.md). Reactive TS is experimental — see
+> [How Reactive TS works](#how-reactive-ts-works) below and the [roadmap](../reactive-ts/ROADMAP.md).
 
 RxFM is an experimental web framework built on [RxJS](https://github.com/ReactiveX/rxjs): a
 **component is just an `Observable<HTMLElement>`**. There's no virtual DOM and no re-render cycle —
@@ -14,13 +14,13 @@ elements are reactive simply because they're observable streams, and a single mo
 
 ---
 
-## What is tsrx?
+## What is Reactive TS?
 
 RxJS streams are powerful, but they don't compose like ordinary values: you can't just write
 `count * 2` or `a === b` over an observable — you reach for `map`, `combineLatest`, and `switchMap`.
 
-**tsrx lets you treat streams as if they were normal variables.** Write the plain expression and
-tsrx wires up the reactivity for you:
+**Reactive TS lets you treat streams as if they were normal variables.** Write the plain expression and
+Reactive TS wires up the reactivity for you:
 
 ```typescript
 const doubled = count * 2;               // a stream that re-emits whenever count changes
@@ -38,7 +38,7 @@ Why it's nice:
 - **Incremental** — it's plain RxFM with extra ergonomics, so you can lift a single expression or a
   whole app, and freely mix lifted and hand-written streams.
 
-> tsrx is experimental — see [How tsrx works](#how-tsrx-works) at the end for the mechanics and
+> Reactive TS is experimental — see [How Reactive TS works](#how-reactive-ts-works) at the end for the mechanics and
 > current status.
 
 ---
@@ -238,10 +238,10 @@ The plain-RxFM equivalent — a per-item component over `Observable<TodoItem>` p
 
 ---
 
-## How tsrx works
+## How Reactive TS works
 
-tsrx is a **checker-driven transform**: it builds a real TypeScript program and asks the type
-checker whether each expression touches an observable. If it does, tsrx "lifts" the expression into
+Reactive TS is a **checker-driven transform**: it builds a real TypeScript program and asks the type
+checker whether each expression touches an observable. If it does, Reactive TS "lifts" the expression into
 the equivalent reactive stream — `count * 2` becomes
 `combineLatest([count, of(2)]).pipe(map(([c, n]) => c * n))`, a `cond ? a : b` becomes a
 `switchMap`, and so on. The result is a `RenderObservable<T>` that behaves exactly like the
@@ -254,13 +254,13 @@ live on their own lines rather than buried inside call arguments:
 - **tagged-template interpolations** — ``Div`count = ${count * 2}` ``
 - **array `.map` calls** — ``items.map(item => Div`…`, 'id')`` lifts to `mapToComponents`
 
-**tsrx vs. the fluent API.** The fluent component methods (`onClick`, `.style`, `.class`,
+**Reactive TS vs. the fluent API.** The fluent component methods (`onClick`, `.style`, `.class`,
 `Input.type()`) and reactive tagged templates are plain RxFM features that work with or without
-tsrx. tsrx only adds the derived-value ergonomics on top — everything else on this page is ordinary
+Reactive TS. Reactive TS only adds the derived-value ergonomics on top — everything else on this page is ordinary
 RxFM.
 
-> **Status.** tsrx is a spike. It needs the [tsrx transform / editor extension](tsrx/), and its
-> build-time story is still being worked out (see [tsrx/ROADMAP.md](tsrx/ROADMAP.md)). For anything
+> **Status.** Reactive TS is a spike. It needs the [Reactive TS transform / editor extension](reactive-ts/), and its
+> build-time story is still being worked out (see [reactive-ts/ROADMAP.md](reactive-ts/ROADMAP.md)). For anything
 > production-facing today, prefer the plain style in the
 > [plain-TypeScript reference](plain-typescript.md).
 
@@ -268,9 +268,9 @@ RxFM.
 
 ## Advanced Examples
 
-The full tsrx example suite — the basics covered on this page plus a todo list, snake game, and
+The full Reactive TS example suite — the basics covered on this page plus a todo list, snake game, and
 minesweeper — lives in [examples/](../examples/) and powers the
 [live demo](https://alden12.github.io/rxfm/) (`yarn dev` to run it locally). A condensed,
-single-file tsrx showcase is in [tsrx/examples/app.tsrx](../tsrx/examples/app.tsrx). The
+single-file Reactive TS showcase is in [reactive-ts/examples/app.rts](../reactive-ts/examples/app.rts). The
 plain-TypeScript equivalents are in
 [examples/plain-typescript](../examples/plain-typescript/).

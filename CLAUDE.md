@@ -13,9 +13,9 @@ An experimental web framework built on RxJS. The core idea: **a component is jus
 
 - [src/lib/rxfm/](src/lib/rxfm/) — the framework itself (what gets published). `src/` now holds only `lib/`.
 - [src/lib/index.ts](src/lib/index.ts) — package entry, re-exports `src/lib/rxfm` (named exports only, no default).
-- [examples/](examples/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). As of the tsrx-default switch the demo is authored in **tsrx** (`.tsrx`): basic examples mirror the guide; advanced examples are a todo list, snake game, and minesweeper. Entry is [examples/main.ts](examples/main.ts), loaded by the root [index.html](index.html); [examples/runtime.ts](examples/runtime.ts) re-exports [tsrx/runtime.ts](tsrx/runtime.ts) so the tree (a sibling of `tsrx/`) resolves the runtime; [examples/tsconfig.json](examples/tsconfig.json) governs `.tsrx` editor types.
+- [examples/](examples/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). As of the Reactive-TS-default switch the demo is authored in **Reactive TS** (`.rts`): basic examples mirror the guide; advanced examples are a todo list, snake game, and minesweeper. Entry is [examples/main.ts](examples/main.ts), loaded by the root [index.html](index.html); [examples/runtime.ts](examples/runtime.ts) re-exports [reactive-ts/runtime.ts](reactive-ts/runtime.ts) so the tree (a sibling of `reactive-ts/`) resolves the runtime; [examples/tsconfig.json](examples/tsconfig.json) governs `.rts` editor types.
 - [examples/plain-typescript/](examples/plain-typescript/) — the previous plain-RxJS demo, demoted to a reference (not wired to a build). Mirrors the [plain-TypeScript docs](docs/plain-typescript.md).
-- [docs/](docs/) — `getting-started.md`, `guide.md` (tsrx walkthrough), `plain-typescript.md` (plain reference). The root [README.md](README.md) is a lean landing page linking into them. (Slated to move to the github.io site later.)
+- [docs/](docs/) — `getting-started.md`, `guide.md` (Reactive TS walkthrough), `plain-typescript.md` (plain reference). The root [README.md](README.md) is a lean landing page linking into them. (Slated to move to the github.io site later.)
 
 ### Library internals (`src/lib/rxfm/`)
 
@@ -40,13 +40,13 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 
 - **Vite 8** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
-  The demo config loads the `tsrx()` Vite plugin ([tsrx/vite-plugin-tsrx.ts](tsrx/vite-plugin-tsrx.ts))
-  so it can compile the `.tsrx` examples, and adds `.tsrx` to `resolve.extensions` for bare
-  cross-file imports. The plugin `require`s the **compiled** `tsrx/ts-plugin/transform.cjs`, so
-  `dev`/`build:app` run `build:tsrx` first (`predev`/`prebuild:app` hooks) to regenerate it from the
-  `.cts` sources (the `.cjs` are gitignored build artifacts — see [Library internals] / the tsrx
+  The demo config loads the `reactiveTs()` Vite plugin ([reactive-ts/vite-plugin-reactive-ts.ts](reactive-ts/vite-plugin-reactive-ts.ts))
+  so it can compile the `.rts` examples, and adds `.rts` to `resolve.extensions` for bare
+  cross-file imports. The plugin `require`s the **compiled** `reactive-ts/ts-plugin/transform.cjs`, so
+  `dev`/`build:app` run `build:reactive-ts` first (`predev`/`prebuild:app` hooks) to regenerate it from the
+  `.cts` sources (the `.cjs` are gitignored build artifacts — see [Library internals] / the Reactive TS
   TypeScript build below).
-- `yarn dev` — Vite dev server (port 3000) serving the tsrx demo from `examples/` (entry
+- `yarn dev` — Vite dev server (port 3000) serving the Reactive TS demo from `examples/` (entry
   `examples/main.ts`). The demo's `rxfm` import is aliased to live lib source (`src/lib/rxfm/index.ts`).
 - `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the
   declaration tree (`index.d.ts` + `rxfm/**.d.ts`) via `vite-plugin-dts`. `rxjs` is externalised
@@ -57,15 +57,24 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 - `yarn test` / `yarn test:watch` — Jest 30 (ts-jest, jsdom), scoped to `src/`. Config is [jest.config.cjs](jest.config.cjs) (`.cjs` because the package is `type: module`). Main test: [components/component.test.ts](src/lib/rxfm/components/component.test.ts).
 - `yarn test:e2e` — Playwright end-to-end tests in [e2e/](e2e/), run against the Vite dev server (auto-started). Config: [playwright.config.ts](playwright.config.ts). Needs `yarn playwright install chromium` once.
 - `yarn lint` — ESLint (8 + typescript-eslint 7) over `.ts`. Currently 0 errors, a few `semi` warnings.
-- **VS Code extension** ([tsrx/vscode-extension/](tsrx/vscode-extension/), npm-managed, not a Yarn
+- **Reactive TS** — the experimental `.rts` language layer, in [reactive-ts/](reactive-ts/) (formerly
+  "tsrx" / `.tsrx`; renamed off a name-clash with an unrelated TS UI extension). Imperative-observable
+  code in `.rts` files is transformed to real RxJS with live editor types. The transform + Volar
+  tsserver plugin live in [reactive-ts/ts-plugin/](reactive-ts/ts-plugin/) (`.cts` sources → gitignored
+  `.cjs`, built by `yarn build:reactive-ts`); the Vite plugin is
+  [reactive-ts/vite-plugin-reactive-ts.ts](reactive-ts/vite-plugin-reactive-ts.ts) (`reactiveTs()`,
+  served via `yarn dev:reactive-ts`); fixtures are in [reactive-ts/fixtures/](reactive-ts/fixtures/)
+  (the `reactive-ts` Jest project). Editor language id is `rts`. Published separately on npm under the
+  `@reactive-ts/*` scope; the runtime framework is being renamed to Corrente.
+- **VS Code extension** ([reactive-ts/vscode-extension/](reactive-ts/vscode-extension/), npm-managed, not a Yarn
   workspace — Yarn Classic would require a private root, but `rxfm` publishes from root). Root
   passthrough scripts avoid `cd`ing in: `yarn extension:install-deps` (one-time), `yarn
   extension:build` (produce the `.vsix`), `yarn extension:build-and-install` (build + `code
   --install-extension`), `yarn extension:bump-version` (patch bump). Each delegates to the
-  extension's own npm scripts. `package`/`reinstall` delete any old `tsrx-vscode-*.vsix` first, so
-  exactly one build is on disk; it's git-tracked via the `!/tsrx/vscode-extension/*.vsix` exception
+  extension's own npm scripts. `package`/`reinstall` delete any old `reactive-ts-vscode-*.vsix` first, so
+  exactly one build is on disk; it's git-tracked via the `!/reactive-ts/vscode-extension/*.vsix` exception
   in `.gitignore`. The extension contributes a `language-configuration.json` (mirrors TypeScript's)
-  for `.tsrx` comment-toggling, auto-indent, and bracket/quote surround.
+  for `.rts` comment-toggling, auto-indent, and bracket/quote surround.
 
 ## Conventions & notes
 

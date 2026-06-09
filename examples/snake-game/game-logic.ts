@@ -1,7 +1,7 @@
 // Pure domain logic for Snake — no RxJS, no reactivity. Everything here is
 // ordinary imperative/value code: the trail data structure, the rules for
-// advancing a tick, board construction, food placement. In the tsrx version ALL
-// of the reactive wiring lives in the view (snake-game.tsrx); this module is just
+// advancing a tick, board construction, food placement. In the Reactive TS version ALL
+// of the reactive wiring lives in the view (snake-game.rts); this module is just
 // the rules of the game.
 import {
   DIRECTION_MAP,
@@ -89,7 +89,7 @@ export const getInitialSnakeState = (): SnakeState => ({
 
 // Advance one tick. Returns the next state, or `null` on game over (collision) —
 // the caller decides how to restart. (The original RxJS version threw 'Game Over!'
-// and relied on retry(); returning null lets the tsrx loop reset imperatively in
+// and relied on retry(); returning null lets the Reactive TS loop reset imperatively in
 // its reducer.)
 export const getNewSnakeState = (
   previousState: SnakeState,

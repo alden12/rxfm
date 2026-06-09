@@ -1,14 +1,14 @@
 // Demo entry. A plain `.ts` module (so Vite treats it as part of the graph) that
-// imports the tsrx example components and lays them out. The example components
-// themselves are authored in tsrx (`.tsrx`); importing them here pulls them into
-// the module graph so the tsrx Vite plugin transforms each one. The layout below
+// imports the Reactive TS example components and lays them out. The example components
+// themselves are authored in Reactive TS (`.rts`); importing them here pulls them into
+// the module graph so the Reactive TS Vite plugin transforms each one. The layout below
 // is ordinary RxFM — no derived expressions — so it needs no lifting.
 import { addToView, attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'rxfm';
 import {
   HelloWorld,
   ChildrenExample,
   TaggedTemplateExample,
-} from './basic/components.tsrx';
+} from './basic/components.rts';
 import {
   StylesExample,
   DynamicStyles,
@@ -17,14 +17,14 @@ import {
   AttributesExample,
   DynamicAttributes,
   AttributeExample,
-} from './basic/attributes-and-styling.tsrx';
-import { ClickCounter } from './basic/state-and-events.tsrx';
-import { ConditionalComponentsExample } from './basic/conditional-components.tsrx';
-import { ComponentIOExample } from './basic/component-io.tsrx';
-import { ComponentArraysExample } from './basic/dynamic-component-arrays.tsrx';
-import { TodoList } from './todo-list/todo-list.tsrx';
-import { SnakeGame } from './snake-game/snake-game.tsrx';
-import { Minesweeper } from './minesweeper/minesweeper.tsrx';
+} from './basic/attributes-and-styling.rts';
+import { ClickCounter } from './basic/state-and-events.rts';
+import { ConditionalComponentsExample } from './basic/conditional-components.rts';
+import { ComponentIOExample } from './basic/component-io.rts';
+import { ComponentArraysExample } from './basic/dynamic-component-arrays.rts';
+import { TodoList } from './todo-list/todo-list.rts';
+import { SnakeGame } from './snake-game/snake-game.rts';
+import { Minesweeper } from './minesweeper/minesweeper.rts';
 
 import './styles.css';
 
