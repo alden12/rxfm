@@ -602,15 +602,16 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // arg (id prop name or id function) maps onto its idPropOrFunction, defaulting
   // to index when omitted. Done with edge edits so it composes with the inner
   // body edits without overlap.
-  // A synthetic stream-param name for a destructured item param (D4), chosen so it
-  // collides with neither an outer observable binding nor any identifier in the
-  // callback (the destructured fields, the index param, locals, free references).
-  const freshItemName = (cb: TS.Node) => {
+  // A synthetic stream-param name (default base `item`) for a destructured item param
+  // (D4) or the flatMap flatten operator, chosen so it collides with neither an outer
+  // observable binding nor any identifier in `scope` (the callback's destructured
+  // fields, index param, locals, free references).
+  const freshItemName = (scope: TS.Node, base = 'item') => {
     const used = new Set(observableBindings);
     const collect = (n: TS.Node) => { if (ts.isIdentifier(n)) used.add(n.text); ts.forEachChild(n, collect); };
-    collect(cb);
-    let name = 'item', n = 1;
-    while (used.has(name)) name = `item_${n++}`;
+    collect(scope);
+    let name = base, n = 1;
+    while (used.has(name)) name = `${base}_${n++}`;
     return name;
   };
 
@@ -651,11 +652,12 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   };
 
   const handleComponentMap = (node: TS.CallExpression) => {
-    // The caller only reaches here via isComponentMapCall, which has already
-    // verified the receiver is `obj.map` and the first arg is an arrow/function.
-    const ex = node.expression as TS.PropertyAccessExpression;  // obj.map
+    // The caller only reaches here via isComponentMapCall, which has already verified
+    // the receiver is `obj.map` / `obj.flatMap` and the first arg is an arrow/function.
+    const ex = node.expression as TS.PropertyAccessExpression;  // obj.map / obj.flatMap
     const obj = ex.expression;                                  // obj
     const cb = node.arguments[0] as TS.ArrowFunction | TS.FunctionExpression;
+    const isFlat = ex.name.text === 'flatMap';
     needed.rxfm.add('mapToComponents');
     // Lift the receiver if it's itself an imperative expression (e.g. a filter).
     const objR = transformExpression(obj);
@@ -663,7 +665,16 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // `.map(` → `.pipe(mapToComponents(`, final `)` → `))`. The `map` token is
     // *remapped* (not swallowed) to the generated `mapToComponents` identifier so
     // hovering `.map` shows mapToComponents' signature/docs rather than nothing.
-    edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: ['.pipe('] });
+    // `.flatMap(` additionally flattens the source one level first, so the cb maps each
+    // leaf of a nested array: `.flatMap(` → `.pipe(map(a => a.flat()), mapToComponents(`.
+    // (`.flat()` is a no-op on an already-flat array, so this is safe regardless.)
+    if (isFlat) {
+      needed['rxjs/operators'].add('map');
+      const f = freshItemName(node, 'arr');
+      edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: [`.pipe(map(${f} => ${f}.flat()), `] });
+    } else {
+      edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: ['.pipe('] });
+    }
     edits.push({ start: ex.name.getStart(), end: ex.name.getEnd(), remap: 'mapToComponents' });
     edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ['))'] });
     // Lift the callback body with its params treated as observables, scoped so the
