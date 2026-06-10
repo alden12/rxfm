@@ -29,7 +29,7 @@ export const Minesweeper = () => {
       Div
         .class('minesweeper-controls')(
           Button
-            .onClick(() => dispatch({ type: 'start', cell: [0, 0] }))
+            .onClick(() => dispatch({ type: 'restart' }))
             `Restart`,
           Div`Time: ${gameTime}s`,
           highScore ? Div`Best: ${highScore}s` : null,

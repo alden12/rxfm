@@ -4,8 +4,9 @@
 //
 // One change from the original RxJS version: restarting is modelled explicitly.
 // The original threw an Error on a 'start' action and relied on `retry()` to
-// resubscribe the `scan`, resetting the fold. Here `reduceGame` just resets when it
-// sees a 'start' (or the very first action, from `pregame`) — an honest imperative
+// resubscribe the `scan`, resetting the fold. Here a 'restart' action just resets
+// the game to `pregame` (waiting for the next click to lay the board), and the first
+// click out of `pregame` becomes the board-generating 'start' — an honest imperative
 // reducer instead of control-flow-via-exceptions, which is what Reactive TS's
 // `accumulate` wants.
 import {
@@ -181,10 +182,12 @@ export class MinesweeperGame {
     return Math.round((this.endTime - this.startTime) / 1000);
   }
 
-  // Apply an action. A 'start' always (re)starts — even from 'win'/'gameOver' — so
-  // the Restart button works at any time; other actions are ignored once the game
+  // Apply an action. 'restart' resets to pregame from any stage (so the Restart
+  // button works at any time) and waits for the next click to lay the board; 'start'
+  // generates the board around its cell. Other actions are ignored once the game
   // has ended.
   public dispatch(action: CellAction): MinesweeperGame {
+    if (action.type === 'restart') return getInitialGame();
     const { type, cell } = action;
     if (type === 'start') return this.startGame(cell);
     if (isOneOf<GameStage>(this.gameStage, ['win', 'gameOver'])) return this;
@@ -251,7 +254,12 @@ export class MinesweeperGame {
 
 export const getInitialGame = (): MinesweeperGame => new MinesweeperGame(getEmptyBoard(), undefined, 'pregame');
 
-// The fold step for the reactive loop: the first action (while still in 'pregame')
-// becomes the game-starting click; everything after is dispatched as-is.
+// The fold step for the reactive loop: the first cell click (while still in
+// 'pregame') becomes the game-starting 'start'; everything else — including the
+// cell-free 'restart' — is dispatched as-is.
 export const reduceGame = (game: MinesweeperGame, action: CellAction): MinesweeperGame =>
-  game.dispatch(game.gameStage === 'pregame' ? { ...action, type: 'start' } : action);
+  game.dispatch(
+    game.gameStage === 'pregame' && action.type !== 'restart'
+      ? { ...action, type: 'start' }
+      : action,
+  );
