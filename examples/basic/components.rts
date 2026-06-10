@@ -1,5 +1,5 @@
 import { Div, B, Span } from 'rxfm';
-import { interval } from '../runtime';
+import { timer } from 'rxjs';
 
 export const HelloWorld = Div('Hello, World!');
 
@@ -8,7 +8,7 @@ export const ChildrenExample = Div(
   B('child components, '),
   () => Span('functions returning components, '),
   'or observables: ',
-  interval(1000),
+  timer(0, 1000),
   's elapsed.',
 );
 

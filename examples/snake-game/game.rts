@@ -1,17 +1,17 @@
-import { BehaviorSubject } from 'rxjs';
-import { accumulate, interval } from '../runtime';
+import { BehaviorSubject, timer } from 'rxjs';
+import { accumulate } from '../runtime';
 import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
-import { DIFFICULTY_TICK_PERIOD_MAP } from './constants';
+import { TICK_MS } from './constants';
 import { Difficulty, Direction } from './types';
 
 export const difficulty = new BehaviorSubject<Difficulty>('Easy');
 export const direction = new BehaviorSubject<Direction>('right');
 
-const tick = interval(DIFFICULTY_TICK_PERIOD_MAP[difficulty]);
+const tick = timer(0, TICK_MS);
 
 const { trail, food, score } = accumulate(
   tick,
-  snake => getNewSnakeState(snake, direction.value, difficulty.value) ?? getInitialSnakeState(),
+  (snake, i) => getNewSnakeState(snake, direction.value, difficulty.value, i) ?? getInitialSnakeState(),
   getInitialSnakeState(),
 ) ?? getInitialSnakeState();
 

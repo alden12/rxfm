@@ -3,12 +3,15 @@ import { Vector, SnakeCell, Direction, Difficulty } from "./types";
 export const BOARD_WIDTH = 20;
 export const BOARD_HEIGHT = 10;
 
-export const STARTING_SNAKE_COORDS: [Vector, ...Vector[]] = [[8, 4], [9, 4]];
+export const STARTING_SNAKE_COORDS: [Vector, ...Vector[]] = [
+  [8, 4],
+  [9, 4],
+];
 
 export const CELL_COLOR_MAP: Record<SnakeCell, string> = {
-  empty: 'lightgrey',
-  trail: 'black',
-  food: 'red',
+  empty: "lightgrey",
+  trail: "black",
+  food: "red",
 };
 
 export const DIRECTION_MAP: Record<Direction, Vector> = {
@@ -19,20 +22,22 @@ export const DIRECTION_MAP: Record<Direction, Vector> = {
 };
 
 export const KEY_MAP: Record<string, Direction> = {
-  KeyW: 'up',
-  KeyS: 'down',
-  KeyA: 'left',
-  KeyD: 'right',
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
+  KeyW: "up",
+  KeyS: "down",
+  KeyA: "left",
+  KeyD: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
 };
 
+export const TICK_MS = 50;
+
 export const DIFFICULTY_TICK_PERIOD_MAP: Record<Difficulty, number> = {
-  Easy: 250, // ms
-  Medium: 200, // ms
-  Hard: 150, // ms
+  Easy: 5, // ticks
+  Medium: 4, // ticks
+  Hard: 3, // ticks
 };
 
 export const DIFFICULTY_SCORE_MAP: Record<Difficulty, number> = {

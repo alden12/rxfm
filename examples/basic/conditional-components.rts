@@ -1,7 +1,7 @@
 import { Div } from 'rxfm';
-import { interval } from '../runtime';
+import { timer } from 'rxjs';
 
-const tick = interval(1000);
+const tick = timer(0, 1000);
 const visible = tick % 2 === 0;
 
 export const ConditionalComponentsExample = Div(

@@ -1,7 +1,7 @@
 import { Div, Input } from 'rxfm';
-import { interval } from '../runtime';
 
 import './example-styles.css';
+import { timer } from 'rxjs';
 
 export const StylesExample = Div.style({
     color: 'blue',
@@ -9,7 +9,7 @@ export const StylesExample = Div.style({
   })
   `We can add styles`;
 
-const tick = interval(1000);
+const tick = timer(0, 1000);
 
 export const DynamicStyles = Div
   .style({ color: tick % 2 ? 'red' : 'blue' })

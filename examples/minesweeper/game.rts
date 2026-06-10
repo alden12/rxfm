@@ -1,5 +1,5 @@
-import { Subject } from 'rxjs';
-import { accumulate, interval, EMPTY } from '../runtime';
+import { Subject, timer } from 'rxjs';
+import { accumulate, EMPTY } from '../runtime';
 import { getInitialGame, reduceGame } from './game-logic';
 import { CellAction } from './types';
 
@@ -11,7 +11,7 @@ export { board, gameStage };
 
 export const gameTime =
   gameStage === 'pregame' ? 0
-  : gameStage === 'playing' ? interval(1000)
+  : gameStage === 'playing' ? timer(0, 1000)
   : duration;
 
 const winTime = gameStage === 'win' ? duration : EMPTY;
