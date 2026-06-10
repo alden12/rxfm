@@ -162,13 +162,15 @@ export function createChecker(ts: Ts, checker: TS.TypeChecker, sf: TS.SourceFile
     return false;
   };
 
-  // Is this `obj.map(cb, key?)` where obj is a stream and cb returns a component?
-  // Such a call is the imperative way to render a list — lift it to
-  // mapToComponents (keyed reconciliation) rather than a naive array map.
+  // Is this `obj.map(cb, key?)` / `obj.flatMap(cb, key?)` where obj is a stream and
+  // cb returns a component? Such a call is the imperative way to render a list — lift
+  // it to mapToComponents (keyed reconciliation) rather than a naive array map. The
+  // `flatMap` form additionally flattens the source one level first, so its cb maps
+  // each leaf of a nested array (e.g. a 2D grid → keyed cells), not each top-level row.
   const isComponentMapCall = (node: TS.Node): node is TS.CallExpression => {
     if (!ts.isCallExpression(node) || node.arguments.length < 1) return false;
     const ex = node.expression;
-    if (!ts.isPropertyAccessExpression(ex) || ex.name.text !== 'map') return false;
+    if (!ts.isPropertyAccessExpression(ex) || (ex.name.text !== 'map' && ex.name.text !== 'flatMap')) return false;
     const cb = node.arguments[0];
     if (!ts.isArrowFunction(cb) && !ts.isFunctionExpression(cb)) return false;
     return isObservableChain(ex.expression) && returnsComponent(cb);

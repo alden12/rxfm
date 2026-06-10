@@ -80,7 +80,9 @@ Estimated ~half a day of packaging plumbing; no new framework logic.
    output `.ts` + expected diagnostics + expected hover types. Lock this down **before** widening the
    transform.
 3. **Broaden what lifts.** Arithmetic, comparison, logical / ternary, unary, member / index /
-   method access, template literals and array `.map` already lift. Next: more method-chain cases,
+   method access, template literals and array `.map` already lift (`.map` over a stream whose cb
+   returns a component → `mapToComponents`; `.flatMap` does the same but flattens the source one
+   level first, so a 2-D grid maps each leaf cell with its flat index). Next: more method-chain cases,
    assignments, eventually control flow. Each needs a clear "lifts vs. hits the boundary" rule and
    a fixture — guided by the design principle in **section C**, which also covers the next two
    concrete additions (`? : EMPTY` filter, the `accumulate` helper) and the transform fix that
