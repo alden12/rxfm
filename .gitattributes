@@ -1,0 +1,3 @@
+# Reactive TS (.rts) is reinterpreted TypeScript syntax, so tell GitHub's Linguist
+# to syntax-highlight it as TypeScript (and count it as TypeScript in language stats).
+*.rts linguist-language=TypeScript
