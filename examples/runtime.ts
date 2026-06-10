@@ -1,7 +1,9 @@
 // Reactive TS runtime for the examples. The transform emits `import { render } from
-// "./<rel>/runtime"` and the structured examples hand-import `accumulate` /
-// `interval` / `EMPTY` from here too. Both resolve to this file by walking up
-// from each `.rts` to the nearest `runtime.ts` (see ts-plugin/transform.cjs).
+// "./<rel>/runtime"`, resolved to this file by walking up from each `.rts` to the
+// nearest `runtime.ts` (see ts-plugin/transform.cjs). Hand-written helpers
+// (`accumulate` / `interval` / …) are imported from `rxfm` directly now that the
+// runtime sits on the package's public surface — this shim exists only for the
+// transform-emitted `render`.
 //
 // It's a thin re-export so there's a single runtime implementation: the canonical
 // one lives in `reactive-ts/runtime.ts` (also used by the editor extension and the

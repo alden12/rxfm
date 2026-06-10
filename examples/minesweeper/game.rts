@@ -1,8 +1,7 @@
-import { Subject, timer } from 'rxjs';
-import { accumulate, EMPTY } from '../runtime';
+import { EMPTY, Subject, timer } from 'rxjs';
 import { getInitialGame, reduceGame } from './game-logic';
 import { CellAction, GameStage } from './types';
-import { TypeOrObservable } from 'rxfm';
+import { accumulate, TypeOrObservable } from 'rxfm';
 
 export const cellAction = new Subject<CellAction>();
 export const dispatch = (action: CellAction) => cellAction.next(action);

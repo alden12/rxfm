@@ -1,5 +1,5 @@
 import { BehaviorSubject, timer } from 'rxjs';
-import { accumulate } from '../runtime';
+import { accumulate } from 'rxfm';
 import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
 import { TICK_MS } from './constants';
 import { Difficulty, Direction } from './types';
