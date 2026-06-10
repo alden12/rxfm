@@ -42,6 +42,7 @@
     "build:app": "vite build",
     "preview": "vite preview",
     "build:reactive-ts": "tsc -p reactive-ts/ts-plugin/tsconfig.json",
+    "reactive-ts:emit": "yarn build:reactive-ts && node reactive-ts/emit.cjs",
     "dev:reactive-ts": "yarn build:reactive-ts && vite --config reactive-ts/vite.reactive-ts.config.ts",
     "build:reactive-ts-demo": "yarn build:reactive-ts && vite build --config reactive-ts/vite.reactive-ts.config.ts",
     "pretest": "tsc -p reactive-ts/ts-plugin/tsconfig.json",
