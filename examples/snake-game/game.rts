@@ -9,12 +9,13 @@ export const direction = new BehaviorSubject<Direction>('right');
 
 const tick = interval(DIFFICULTY_TICK_PERIOD_MAP[difficulty]);
 
-const state = accumulate(
+const { trail, food, score } = accumulate(
   tick,
   snake => getNewSnakeState(snake, direction.value, difficulty.value) ?? getInitialSnakeState(),
   getInitialSnakeState(),
 ) ?? getInitialSnakeState();
 
-export const board = getBoard(state.trail.coordinates, state.food);
-export const score = state.score;
+export { score };
+
+export const board = getBoard(trail.coordinates, food);
 export const highScore = accumulate(score, (highest, s) => Math.max(highest, s), 0) ?? 0;
