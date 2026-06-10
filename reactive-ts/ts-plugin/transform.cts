@@ -283,11 +283,27 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       if (cond.observable) {
         needed['rxjs/operators'].add('switchMap');
         const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
+        // A branch that IS the condition identifier refers to the *current value* in
+        // the switchMap body — the param shadows the outer stream — not the stream
+        // itself. Re-emit it as `of(param)` (a valid ObservableInput), exactly as the
+        // logical-operator lift re-emits its left value (`keep = of(p)` above). Emitting
+        // it bare leaves a non-stream branch (`flag ? flag : …` → `boolean`), which isn't
+        // switchMap-able and type-errors. Any *other* observable branch is a genuine
+        // stream to switch to (left verbatim); a non-observable branch gets the usual
+        // of() wrap. This is what lets a self-referential `cond ? cond : EMPTY` lift
+        // correctly while still switch-mapping to an external observable branch.
+        const branch = (operand: Operand, branchNode: TS.Expression): Piece[] => {
+          if (ts.isIdentifier(branchNode) && branchNode.text === param) {
+            needed.rxjs.add('of');
+            return ['of(', param, ')'];
+          }
+          return asStream(operand);
+        };
         // switchMap for laziness; the render() wrapper (added at the binding)
         // provides the shareReplay, so we don't add it here.
         const pieces = [
           ...cond.pieces, '.pipe(switchMap(', param, ' => ', param, ' ? ',
-          ...asStream(whenTrue), ' : ', ...asStream(whenFalse), '))',
+          ...branch(whenTrue, node.whenTrue), ' : ', ...branch(whenFalse, node.whenFalse), '))',
         ];
         // `cond ? x : EMPTY` (the filter idiom) can produce no value: flag it so a
         // later combine over this binding can warn about stalling.

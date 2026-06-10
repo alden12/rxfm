@@ -151,6 +151,14 @@ don't give an else-value, downstream waits."
 
 - **Done:** `EMPTY` is re-exported from the runtime (single import); the transform flags a binding
   produced by `? : EMPTY` as maybe-empty.
+- **Done — self-referential branch (`cond ? cond : EMPTY`).** When a ternary branch *is* the condition
+  identifier, it refers to the **current value** in the `switchMap` body (the param shadows the outer
+  stream), not a stream to switch to. It was emitted bare — `flag.pipe(switchMap(flag => flag ? flag :
+  EMPTY))` — leaving a non-stream branch (`boolean`), which isn't a valid `ObservableInput` and
+  type-errored (TS 2322). It's now re-emitted as `of(param)` — `switchMap(flag => flag ? of(flag) :
+  EMPTY)` — exactly as the logical-operator lift already re-emits its left value (`keep = of(p)`). An
+  *external* observable branch (`cond ? other : EMPTY`) is unaffected — it's a genuine stream, still
+  switch-mapped to verbatim. Covered by the `ternary-self-reference` fixture.
 - **Stall guardrail (done):** when a maybe-empty binding feeds a `combineLatest` (e.g. `big + 1`), the
   transform records the span and the tsserver plugin surfaces a **warning** there — "this can be
   empty; the combine waits until it first emits." Standalone use (as a child) is fine and not warned.

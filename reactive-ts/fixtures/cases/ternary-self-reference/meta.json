@@ -1,0 +1,6 @@
+{
+  "description": "A ternary branch that is the condition identifier refers to the current value in the switchMap body (the param shadows the outer stream), so it is re-emitted as of(param) rather than bare (which type-errors, since `flag ? flag : EMPTY` would be a non-stream branch). An external observable branch is still switch-mapped to verbatim. Mirrors the logical-operator lift's of(p) handling of its left value.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}
