@@ -2,7 +2,7 @@
   "name": "reactive-ts-vscode",
   "displayName": "Reactive TS",
   "description": "Live TypeScript types for .rts files (imperative observables).",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "publisher": "alden12",
   "private": true,
   "license": "MIT",
