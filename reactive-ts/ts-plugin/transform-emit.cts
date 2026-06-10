@@ -15,7 +15,7 @@ export interface AssembleInput {
   sourceText: string;
   baseDir: string;
   edits: Edit[];
-  needed: { rxjs: Set<string>; 'rxjs/operators': Set<string>; rxfm: Set<string> };
+  needed: { rxjs: Set<string>; 'rxjs/operators': Set<string>; rxfm: Set<string>; runtime: Set<string> };
   usedRender: boolean;
   declMappings: DeclMapping[];
   rootMappings: RootMapping[];
@@ -56,7 +56,11 @@ export function assembleOutput(
   };
   const newNames = (mod: string, set: Set<string>) => [...set].filter(n => !alreadyImported(mod).has(n));
   const importLines: string[] = [];
-  if (usedRender) importLines.push(`import { render } from "${relativeRuntimeSpecifier(baseDir)}";`);
+  // Runtime-sourced names (render plus any helpers the transform emits, e.g.
+  // coerceToObservable) come from the runtime seam — never `rxfm` directly — so generated
+  // code stays decoupled from rxfm if Reactive TS is split out. One combined import line.
+  const runtimeNames = [...(usedRender ? ['render'] : []), ...needed.runtime];
+  if (runtimeNames.length) importLines.push(`import { ${runtimeNames.join(', ')} } from "${relativeRuntimeSpecifier(baseDir)}";`);
   // Fold the names we need from a module into the source's EXISTING named import for
   // it — an edit splicing `, name` in before the closing brace — rather than emitting
   // a separate generated import line. Why: a separate injected `import { … } from

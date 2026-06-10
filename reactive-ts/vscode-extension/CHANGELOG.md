@@ -2,6 +2,16 @@
 
 All notable changes to the Reactive TS VS Code extension.
 
+## [0.0.26]
+
+### Added
+- Bundled transform now flattens a lookup table of `TypeOrObservable<T>`. Indexing a
+  `Record<K, TypeOrObservable<T>>` (values mixing plain numbers and streams) by an observable key
+  lowers to `key.pipe(switchMap(key => coerceToObservable(MAP[key])))` rather than a plain `map`, so
+  `MAP[key]` resolves to a flat `RenderObservable<T>` instead of a higher-order
+  `Observable<Observable<T>>`. Lets a multi-way ternary be refactored into a dispatch table.
+  `coerceToObservable` is sourced from the runtime, so generated code stays decoupled from `rxfm`.
+
 ## [0.0.25]
 
 ### Fixed
