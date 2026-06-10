@@ -8,7 +8,7 @@ import './snake-styles.css';
 const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
 
 export const SnakeGame = () => {
-  const Cells = board.flat().map(cell =>
+  const cells = board.flatMap(cell =>
     Div
       .class('snake-cell')
       .style({ backgroundColor: CELL_COLOR_MAP[cell] })(),
@@ -23,7 +23,7 @@ export const SnakeGame = () => {
       Div
         .class('snake-game-board')
         .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })(
-          Cells,
+          cells,
         ),
       Div
         .class('score-board')(
@@ -35,7 +35,7 @@ export const SnakeGame = () => {
               .class('difficulty-button')(
                 option,
               ),
-          ),
+            ),
         ),
     );
 };

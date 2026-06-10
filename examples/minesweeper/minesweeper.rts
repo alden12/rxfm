@@ -5,7 +5,7 @@ import { NEIGHBORS_COLOR_MAP, BOARD_HEIGHT, indexToVector } from './constants';
 import './minesweeper-styles.css';
 
 export const Minesweeper = () => {
-  const cells = board.flat().map(({ color, neighbors, symbol, isUndiscovered, isCleared, hasNeighbors }, index) =>
+  const cells = board.flatMap(({ color, neighbors, symbol, isUndiscovered, isCleared, hasNeighbors }, index) =>
     Div
       .style({
         backgroundColor: color,
