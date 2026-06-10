@@ -281,6 +281,17 @@ lookup-helper boilerplate (`cellColor`, `periodFor`) the snake needed as a worka
 `CELL_COLOR_MAP[cell]` and `interval(DIFFICULTY_TICK_PERIOD_MAP[difficulty])` now Just Work (the
 latter composing with C6).
 
+- **Done — flatten a lookup table of `TypeOrObservable<T>`.** When the looked-up *value* can itself
+  be an observable — a table typed `Record<K, TypeOrObservable<T>>` mixing plain values and streams,
+  indexed by a stream key — a plain `map` yields `Observable<Observable<T>>` (higher-order, never
+  flattens). The lift now detects an observable in the value type (inspecting the object's property /
+  index types) and lowers to `key.pipe(switchMap(key => coerceToObservable(MAP[key])))`, coercing a
+  plain value to `of(value)` — so `MAP[key]` resolves to a flat `RenderObservable<T>`. This is the
+  lookup-table analog of the ternary's switchMap lowering, letting a multi-way `cond ? … : …` be
+  refactored into a dispatch table (Minesweeper's `GAME_TIME_MAP[gameStage]`). A plain-valued table
+  keeps the tighter `map`. `coerceToObservable` is emitted from the **runtime** seam (not `rxfm`), so
+  generated code stays decoupled from rxfm. Covered by the `lookup-table-observable-values` fixture.
+
 ### Suggested order for C
 
 **C1 ✅** (filter idiom + stall warning) · **C2 ✅** (operator-style mis-lift fix) · **C3 ✅**

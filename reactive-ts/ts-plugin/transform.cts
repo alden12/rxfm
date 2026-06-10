@@ -72,7 +72,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
 
   // (2) Output-plan accumulators.
   const edits: Edit[] = [];
-  const needed = { rxjs: new Set<string>(), 'rxjs/operators': new Set<string>(), rxfm: new Set<string>() };
+  const needed = { rxjs: new Set<string>(), 'rxjs/operators': new Set<string>(), rxfm: new Set<string>(), runtime: new Set<string>() };
   let usedRender = false;
   // Declaration-site hover for destructured fields: the binding pattern `{ color }`
   // is erased to the synthetic param, so its field tokens map to nothing. We record
@@ -519,8 +519,28 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       // is re-referenced inside the map, which is free for the common case (a constant
       // lookup table named by identifier).
       if (index.observable) {
-        needed['rxjs/operators'].add('map');
         const i = ts.isIdentifier(node.argumentExpression) ? node.argumentExpression.text : '_i';
+        // If a looked-up VALUE can itself be an observable — a table typed
+        // `Record<K, TypeOrObservable<T>>` mixing plain values and streams — a plain
+        // `map` yields Observable<Observable<T>>, a higher-order stream that never
+        // flattens. Flatten it instead: switchMap into the looked-up entry, coercing a
+        // plain value to of(value) via the runtime's coerceToObservable. This is the
+        // lookup-table analog of the ternary's switchMap lowering, so `MAP[key]`
+        // resolves to a flat RenderObservable<T>. A table whose value type has no
+        // Observable keeps the tighter `map` form (e.g. `CELL_COLOR_MAP[cell]`).
+        const objType = checker.getTypeAtLocation(node.expression);
+        const valueTypes = [
+          ...objType.getProperties().map(s => checker.getTypeOfSymbolAtLocation(s, node.expression)),
+          checker.getIndexTypeOfType(objType, ts.IndexKind.String),
+          checker.getIndexTypeOfType(objType, ts.IndexKind.Number),
+        ].filter(Boolean) as TS.Type[];
+        if (valueTypes.some(t => isObservableType(t))) {
+          needed['rxjs/operators'].add('switchMap');
+          needed.runtime.add('coerceToObservable');
+          const pieces = [...index.pieces, '.pipe(switchMap(', i, ' => coerceToObservable(', ...obj.pieces, '[', i, '])))'];
+          return { pieces, observable: true, lifted: true };
+        }
+        needed['rxjs/operators'].add('map');
         const pieces = [...index.pieces, '.pipe(map(', i, ' => ', ...obj.pieces, '[', i, ']))'];
         return { pieces, observable: true, lifted: true };
       }

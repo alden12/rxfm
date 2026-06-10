@@ -23,6 +23,13 @@ import {
 // (the imperative spelling of RxJS `filter`).
 export { EMPTY };
 
+// Re-exported on the runtime surface because the transform emits it: lifting a lookup
+// table whose values are `TypeOrObservable<T>` (mix of plain values and streams) over an
+// observable key flattens with `switchMap(k => coerceToObservable(MAP[k]))`. Sourced from
+// the runtime (not `rxfm` directly) so generated code depends only on the runtime seam —
+// keeping the option open to split Reactive TS out from rxfm later.
+export { coerceToObservable } from "./utils/utils";
+
 /**
  * The observable type produced by imperative Reactive TS syntax — a "RenderObservable".
  *
