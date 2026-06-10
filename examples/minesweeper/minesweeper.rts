@@ -33,9 +33,8 @@ export const Minesweeper = () => {
             `Restart`,
           Div`Time: ${gameTime}s`,
           highScore ? Div`Best: ${highScore}s` : null,
-          gameStage === 'win' ? Div`You Win!`
-            : gameStage === 'gameOver' ? Div`Game Over!`
-            : null,
+          gameStage === 'win' && Div`You Win!`,
+          gameStage === 'gameOver' && Div`Game Over!`,
         )
     );
 };
