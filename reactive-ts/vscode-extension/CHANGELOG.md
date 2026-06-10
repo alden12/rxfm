@@ -2,6 +2,14 @@
 
 All notable changes to the Reactive TS VS Code extension.
 
+## [0.0.23]
+
+### Added
+- Bundled transform now lifts `.flatMap` to `mapToComponents` (flatten the source one level,
+  then a keyed list) — so a 2-D grid renders as a flat, keyed list of leaf components,
+  `board.flatMap((cell, index) => …)`, with the flattened index. Sibling to the existing
+  `.map` → `mapToComponents` lift.
+
 ## [0.0.22]
 
 ### Changed
