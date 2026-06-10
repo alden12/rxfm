@@ -549,3 +549,57 @@ consumer handles the initial case) and a one-time migration of existing folds (s
   a dedicated symbol sentinel would be more rigorous but loses `??` ergonomics.
 - **Follow-up:** this is implemented on the docs/examples branch (runtime + snake/minesweeper). The
   same `accumulate` change + consumer migration must be applied on the Reactive TS implementation branch.
+
+## E. Pain points surfaced by the doc-site build
+
+Building the demo into a live **doc-site** (`docs/rts-corrente`) was another deliberate stress test —
+this time of Reactive TS as the *host of an app* rather than the examples themselves: a `.rts` shell
+(`examples/app.rts`) plus several plain-`.ts` modules consuming `.rts` exports, rendering the markdown
+docs with live demos spliced in. It works well — the shell's `selected === id` active-link highlight
+and the `CONTENT[selected]` page-swap both lift cleanly, and the **C7 lookup-table flatten scales to
+the route map** (`CONTENT[selected]` → `switchMap(s => coerceToObservable(CONTENT[s]))`). A few rough
+edges surfaced.
+
+### E1. `?raw` imports of `.rts` returned compiled JS, not source — ✅ DONE
+
+The doc-site shows each example's real source via Vite `?raw`. But the `reactiveTs()` Vite plugin
+transformed *every* `.rts` id — including the `?raw`/`?url`/`?inline` variants Vite core handles — so
+`import src from './x.rts?raw'` returned compiled JS instead of the file's text. Fixed by guarding the
+plugin to skip those queries ([vite-plugin-reactive-ts.ts](vite-plugin-reactive-ts.ts)). Anyone
+inspecting/displaying `.rts` source would have hit this.
+
+### E2. No headless type-check for a `.rts`-consuming app — reinforces B1 (open)
+
+The doc-site's `.ts` modules (`content.ts`, `demos.ts`) import components from `.rts` files.
+`npx tsc -p examples/tsconfig.json` errors on **every** `.rts` import (`Cannot find module './x.rts'`),
+so there is no CLI/CI step that type-checks the example app — types resolve *only* in-editor via the
+tsserver plugin. A type error in the glue (a wrong component shape passed to a demo, a bad export
+name) would ship silently. This is the consumer-app face of **B1**: the build-time type solution must
+also let plain `.ts` that *imports* `.rts` be checked headlessly, not just `.rts` itself.
+
+### E3. `.rts` as a top-level HTML / Vite entry is untested (open)
+
+The doc-site keeps a thin `main.ts` entry (`addToView(App)`) rather than pointing `index.html` at
+`app.rts`, because using `.rts` as a top-level Vite/HTML script entry is unverified (does the plugin
+transform run on the entry module itself?). Either confirm it works or document "`.ts` entry that
+imports `.rts`" as the supported pattern.
+
+### E4. Lifted callbacks shadow the source variable name — codegen nit (open)
+
+`selected === id && 'active'` emits `selected.pipe(map(selected => selected === id && 'active'))` — the
+`map` parameter reuses the source name, shadowing the outer stream. Harmless, but confusing when
+reading emitted output or stepping through it in a debugger. Consider a distinct generated param name.
+
+### E5. The fluent multiline style isn't lint-clean in `.ts` — DX friction (open; rxfm, not strictly Reactive TS)
+
+The idiomatic `Foo.class(…)` ⏎ `` `text` `` chain trips ESLint `no-unexpected-multiline` in `.ts`
+files (it's fine in `.rts`, which isn't linted). Any rxfm component written in plain `.ts` (glue,
+helpers — e.g. `doc-page.ts` here) must inline the tagged template or restructure. Worth either an
+ESLint tweak for the tagged-template-call pattern or documented guidance, since "drop into `.ts` for
+non-reactive glue" is a normal thing to do in a larger app.
+
+### E6. Rendered-markdown relative links don't navigate — doc-site follow-up (open)
+
+The in-app README/guide render the real markdown, so relative links (`docs/getting-started.md`, the
+roadmap link, etc.) are plain anchors that 404 in the SPA. Intercept link clicks in the doc-page
+composer and map known doc paths to routes (and external links to new tabs).
