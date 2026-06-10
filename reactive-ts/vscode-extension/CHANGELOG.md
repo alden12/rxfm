@@ -2,6 +2,15 @@
 
 All notable changes to the Reactive TS VS Code extension.
 
+## [0.0.25]
+
+### Fixed
+- A self-referential ternary branch (`cond ? cond : EMPTY`) no longer emits invalid code. The branch
+  refers to the current value in the `switchMap` body (the param shadows the outer stream), so it's
+  now re-emitted as `of(cond)` rather than bare — which had type-errored (the bare branch was a
+  non-stream value, not a valid `switchMap` input). External observable branches (`cond ? other :
+  EMPTY`) are unaffected — still switch-mapped to.
+
 ## [0.0.24]
 
 ### Added
