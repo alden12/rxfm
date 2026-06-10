@@ -25,13 +25,11 @@ export const DynamicClasses = Div
 
 export const AttributesExample = Input
   .type('text')
-  .placeholder('We can set element attributes')
-  ``;
+  .placeholder('We can set element attributes');
 
 export const DynamicAttributes = Input
   .type('checkbox')
-  .checked(tick % 2 === 0)
-  ``;
+  .checked(tick % 2 === 0);
 
 export const AttributeExample = Div
   .id('attribute-example')

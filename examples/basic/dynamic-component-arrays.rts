@@ -14,7 +14,7 @@ export const ComponentArraysExample = () => {
   ]);
 
   const ItemComponents = items.map(
-    ({ name, done }) => Div`${name} is ${done ? '' : 'not'} done!`,
+    ({ name, done }) => Div`${name} is ${done && 'not'} done!`,
     'name',
   );
 

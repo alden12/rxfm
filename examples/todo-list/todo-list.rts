@@ -17,22 +17,18 @@ const initialItems: TodoItem[] = [
 export const TodoList = () => {
   const items = new BehaviorSubject<TodoItem[]>(initialItems);
 
-  const addItem = (name: string) => items.next([...items.value, { name, done: false }]);
-
-  const toggleItem = (name: string) => items.next(
-    items.value.map(item => item.name === name ? { ...item, done: !item.done } : item),
-  );
-
   return Div(
     Input
       .type('text')
       .placeholder('Add Item')
-      .onChange(event => {
-        if (event.target instanceof HTMLInputElement) addItem(event.target.value);
-      }),
+      .onChange(({ target }) =>
+        target instanceof HTMLInputElement && items.next([...items.value, { name: target.value, done: false }])
+      ),
     items.map(
       ({ name, done }) => Div
-        .onClick(() => toggleItem(name))
+        .onClick(() => items.next(
+          items.value.map(item => item.name === name ? { ...item, done: !item.done } : item),
+        ))
         .class('todo-item', done ? 'done' : '')(
           name,
           Input
