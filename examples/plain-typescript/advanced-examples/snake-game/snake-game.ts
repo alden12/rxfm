@@ -5,7 +5,7 @@ import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";
 import { snakeGameLoop } from "./game-logic";
 import { SnakeCell, SnakeBoard, Difficulty } from "./types";
 
-import './snake-styles.css';
+import "./snake-styles.css";
 
 const GameCell = (cellType: Observable<SnakeCell>) => Div().pipe(
   classes`snake-cell`,
@@ -29,7 +29,7 @@ const DifficultyButton = (difficulty: Difficulty, setDifficulty: SetDifficulty) 
   classes`difficulty-button`,
 );
 
-const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+const difficulties: Difficulty[] = ["Easy", "Medium", "Hard"];
 
 const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => {
   const highScore = score.pipe(
@@ -46,7 +46,7 @@ const ScoreBoard = (score: Observable<number>, setDifficulty: SetDifficulty) => 
 };
 
 export const SnakeGame = () => {
-  const difficulty = new BehaviorSubject<Difficulty>('Easy');
+  const difficulty = new BehaviorSubject<Difficulty>("Easy");
   const { board, score } = destructure(snakeGameLoop(difficulty));
 
   return Div(

@@ -47,7 +47,7 @@ function basicStyleOperator<T extends ElementType, K extends StyleKeys>(
   externalSymbol?: symbol,
 ): ComponentOperator<T> {
   return componentOperator(element => {
-    const symbol = externalSymbol || Symbol('Style Operator');
+    const symbol = externalSymbol || Symbol("Style Operator");
 
     const setElementStyle = (key: StyleKeys, val: string | null) => setStyle(element, key, val);
 
@@ -92,7 +92,7 @@ type IndividualStyleOperator = {
           return acc;
         }, []);
       const styleObservable = combineLatest(styleObservables).pipe(
-        map(strings => strings.join('')),
+        map(strings => strings.join("")),
       );
       return styleOperator(key, styleObservable);
     }
@@ -130,7 +130,7 @@ export function styles<T extends ElementType>(
 ): ComponentOperator<T> {
   if (stylesDict instanceof Observable) {
     return componentOperator(element => {
-      const symbol = Symbol('Styles Operator');
+      const symbol = Symbol("Styles Operator");
       let previousStyleObject: StyleObject = {};
 
       const setElementStyle = (key: StyleKeys, val: string | null) => setStyle(element, key, val);
@@ -152,7 +152,7 @@ export function styles<T extends ElementType>(
   } else {
 
     return (input: Component<T>) => {
-      const symbol = Symbol('Styles Operator');
+      const symbol = Symbol("Styles Operator");
       return Object.keys(stylesDict).reduce((component, key) => {
         return component.pipe(
           basicStyleOperator(key as StyleKeys, stylesDict[key as StyleKeys], symbol),

@@ -3,15 +3,15 @@
 // .rts files real hover / errors / go-to-def mapped through our transform.
 //
 // `@volar/typescript` turns our Volar LanguagePlugin into a tsserver plugin.
-'use strict';
-import type { Ts } from './transform-types.cjs';
-import { createReactiveTsLanguagePlugin, getTransformResult } from './language-plugin.cjs';
-import { rewriteBoundaryDiagnostic } from './boundary-diagnostics.cjs';
-import { transformWithMappings } from './transform.cjs';
-const path = require('node:path');
+"use strict";
+import type { Ts } from "./transform-types.cjs";
+import { createReactiveTsLanguagePlugin, getTransformResult } from "./language-plugin.cjs";
+import { rewriteBoundaryDiagnostic } from "./boundary-diagnostics.cjs";
+import { transformWithMappings } from "./transform.cjs";
+const path = require("node:path");
 // The quickstart helper isn't re-exported from the package root in Volar 2.4, so
 // require it by subpath. (Volar is external/untyped here — tsserver injects it.)
-const { createLanguageServicePlugin } = require('@volar/typescript/lib/quickstart/createLanguageServicePlugin.js');
+const { createLanguageServicePlugin } = require("@volar/typescript/lib/quickstart/createLanguageServicePlugin.js");
 
 // The transform result for a .rts, computed from its ORIGINAL source. Prefer the
 // one the Volar LanguagePlugin already built (keyed by path) — the host's snapshot
@@ -73,7 +73,7 @@ function higherOrderDiagnostics(ts: Ts, info: any, fileName: string, existingFil
       category: ts.DiagnosticCategory.Warning,
       code: 9002,
       messageText:
-        `${h.name ? `'${h.name}'` : 'This call'} returns a stream, so lifting it over an ` +
+        `${h.name ? `'${h.name}'` : "This call"} returns a stream, so lifting it over an ` +
         `observable argument makes a stream-of-streams (Observable<Observable<…>>) that never ` +
         `flattens — it won't behave as a single reactive value. Use a helper that flattens with ` +
         `switchMap (e.g. \`interval(period)\` for a clock whose rate can change), or write the ` +
@@ -96,11 +96,11 @@ const reactiveTsResolutionPatched = new WeakSet();
 // Returns the resolved-module shape TS expects, served as `.ts` (Volar's
 // getServiceScript maps .rts virtual code to .ts), or undefined if no such file.
 function resolveReactiveTsSibling(ts: Ts, containingFile: string, specifier: string) {
-  if (!specifier.startsWith('.')) return undefined;
+  if (!specifier.startsWith(".")) return undefined;
   const base = path.resolve(path.dirname(containingFile), specifier);
-  const candidate = [base + '.rts', path.join(base, 'index.rts')].find((f: string) => ts.sys.fileExists(f));
+  const candidate = [base + ".rts", path.join(base, "index.rts")].find((f: string) => ts.sys.fileExists(f));
   if (!candidate) return undefined;
-  return { resolvedFileName: candidate, extension: '.ts', isExternalLibraryImport: false };
+  return { resolvedFileName: candidate, extension: ".ts", isExternalLibraryImport: false };
 }
 
 // Volar's own cross-.rts resolution (resolveHiddenExtensions) only kicks in when a
@@ -149,10 +149,10 @@ module.exports = (modules: any) => {
     patchReactiveTsModuleResolution(ts, info.languageServiceHost);
     return new Proxy(languageService, {
       get(target: any, prop: string | symbol) {
-        if (prop === 'getSemanticDiagnostics') {
+        if (prop === "getSemanticDiagnostics") {
           return (fileName: string, ...rest: any[]) => {
             const diagnostics = target.getSemanticDiagnostics(fileName, ...rest);
-            if (typeof fileName !== 'string' || !fileName.endsWith('.rts')) return diagnostics;
+            if (typeof fileName !== "string" || !fileName.endsWith(".rts")) return diagnostics;
             const rewritten = diagnostics.map((d: any) => rewriteBoundaryDiagnostic(ts, d) || d);
             const existing = rewritten[0] && rewritten[0].file;
             return rewritten
@@ -167,9 +167,9 @@ module.exports = (modules: any) => {
         // unimported `Div`/`timer`/… offered no "add import" entry. Force it on (with
         // insert-text, which auto-import entries need) for .rts requests, merging so
         // VS Code's other preferences are preserved. Safe: it only enables suggestions.
-        if (prop === 'getCompletionsAtPosition') {
+        if (prop === "getCompletionsAtPosition") {
           return (fileName: string, position: number, options: any, formattingSettings: any) => {
-            const opts = typeof fileName === 'string' && fileName.endsWith('.rts')
+            const opts = typeof fileName === "string" && fileName.endsWith(".rts")
               ? { ...options, includeCompletionsForModuleExports: true, includeCompletionsWithInsertText: true }
               : options;
             return target.getCompletionsAtPosition(fileName, position, opts, formattingSettings);

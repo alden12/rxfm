@@ -7,16 +7,16 @@
 module.exports = {
   projects: [
     {
-      displayName: 'lib',
-      preset: 'ts-jest',
-      testEnvironment: 'jsdom',
-      roots: ['<rootDir>/src'],
+      displayName: "lib",
+      preset: "ts-jest",
+      testEnvironment: "jsdom",
+      roots: ["<rootDir>/src"],
     },
     {
-      displayName: 'reactive-ts',
-      testEnvironment: 'node',
-      roots: ['<rootDir>/reactive-ts/fixtures'],
-      testMatch: ['**/*.test.cjs'],
+      displayName: "reactive-ts",
+      testEnvironment: "node",
+      roots: ["<rootDir>/reactive-ts/fixtures"],
+      testMatch: ["**/*.test.cjs"],
     },
   ],
 };

@@ -1,6 +1,6 @@
 import { render } from "./runtime";
 import { switchMap, map } from "rxjs/operators";
-import { Observable, of } from 'rxjs';
+import { Observable, of } from "rxjs";
 
 interface Game {
   board: string[];

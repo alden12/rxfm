@@ -1,6 +1,6 @@
 import { render } from "./runtime";
 import { switchMap } from "rxjs/operators";
-import { Observable, EMPTY, of } from 'rxjs';
+import { Observable, EMPTY, of } from "rxjs";
 
 declare const flag: Observable<boolean>;
 declare const other: Observable<string>;

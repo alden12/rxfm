@@ -54,7 +54,7 @@ export function componentCreator<T extends ElementType>(componentFunction: Compo
     // A tagged template call passes a TemplateStringsArray as the first argument, distinguished
     // from an ordinary array child by its `raw` property: interleave the literal strings with the
     // interpolated children. Any other array is a static array of children, handled by `children`.
-    if (Array.isArray(stringsOrFirstChild) && 'raw' in stringsOrFirstChild) {
+    if (Array.isArray(stringsOrFirstChild) && "raw" in stringsOrFirstChild) {
       return componentFunction(
         ...(stringsOrFirstChild as TemplateStringsArray)
           .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null])

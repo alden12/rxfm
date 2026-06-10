@@ -1,7 +1,7 @@
-import { Observable, OperatorFunction, from, of } from 'rxjs';
-import { ElementType, Component } from './components';
-import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
-import { KeysOfValue, selectFrom } from './utils';
+import { Observable, OperatorFunction, from, of } from "rxjs";
+import { ElementType, Component } from "./components";
+import { map, filter, startWith, mergeAll, distinctUntilChanged, switchMap, takeUntil, tap, shareReplay } from "rxjs/operators";
+import { KeysOfValue, selectFrom } from "./utils";
 
 type Id = string | number;
 
@@ -31,7 +31,7 @@ function itemDiffer<T>(idFunction: (item: T, index: number) => Id): OperatorFunc
       map(items => {
         const itemsAndIds = items.map((item, index) => { // Map items to an array of items, indexes, and their corresponding ids.
           const id = idFunction(item, index); // Get item id.
-          if (typeof id !== 'string' && typeof id !== 'number') {
+          if (typeof id !== "string" && typeof id !== "number") {
             throw new TypeError( // If id is not of correct type, throw error.
               `Invalid id function passed to mapToComponents, must return string or number, got: ${typeof id}.`,
             );
@@ -80,8 +80,8 @@ function createComponents<I, T extends ElementType>(
         );
         // Create a new component for the added item and pass it the corresponding item and index observables.
         const componentObservable = creationFunction(
-          selectFrom(itemAndIndexUpdates, 'item'),
-          selectFrom(itemAndIndexUpdates, 'index'),
+          selectFrom(itemAndIndexUpdates, "item"),
+          selectFrom(itemAndIndexUpdates, "index"),
         ).pipe(
           takeUntil(changes.pipe( // Remove the component from the stream when it is removed from the source array.
             filter(diff => diff.removed.has(id)),
@@ -151,7 +151,7 @@ export function mapToComponents<I, T extends ElementType>(
   idPropOrFunction?: ((item: I, index: number) => Id) | KeysOfValue<I, Id>,
 ): OperatorFunction<I[], ElementType[]> {
   const idFunction: (item: I, index: number) => Id = idPropOrFunction ?
-    typeof idPropOrFunction === 'function' ?
+    typeof idPropOrFunction === "function" ?
       idPropOrFunction as (item: I, index: number) => Id :
       (item) => item[idPropOrFunction] as unknown as Id :
     (_, i) => i;

@@ -2,8 +2,8 @@
 // teaching diagnostics. Open this in the editor (with the Reactive TS extension) to see
 // the red squiggles and hover the messages. It is NOT imported by main.ts, so it
 // never runs or breaks the build.
-import { BehaviorSubject, timer } from 'rxjs';
-import { interval } from '../runtime';
+import { BehaviorSubject, timer } from "rxjs";
+import { interval } from "../runtime";
 
 const count = new BehaviorSubject(0);
 const doubled = count * 2; // RenderObservable<number>

@@ -1,4 +1,4 @@
-import { Observable, EMPTY } from 'rxjs';
+import { Observable, EMPTY } from "rxjs";
 
 declare const flag: Observable<boolean>;
 declare const other: Observable<string>;

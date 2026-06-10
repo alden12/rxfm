@@ -1,6 +1,6 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest } from "rxjs";
 declare const count: Observable<number>;
 declare const other: Observable<number>;
 declare const user: Observable<{ active: boolean; name: string }>;
@@ -8,6 +8,6 @@ const clicks = new BehaviorSubject(0);
 const doubled = render(count.pipe(map(count => count * 2)));
 const chained = render(count.pipe(map(count => count % 2 === 0)));
 const negated = render(user.pipe(map(user => !user.active)));
-const fallback = render(user.pipe(map(user => user.name || 'anon')));
+const fallback = render(user.pipe(map(user => user.name || "anon")));
 const combined = render(combineLatest([count, other]).pipe(map(([count, other]) => count + other)));
 const fromValue = clicks.value + 1;

@@ -1,7 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Observable } from 'rxjs';
-import { Div, Input, mapToComponents } from 'rxfm';
+import { Observable } from "rxjs";
+import { Div, Input, mapToComponents } from "rxfm";
 
 interface TodoItem {
   name: string;
@@ -18,11 +18,11 @@ declare function toggle(name: string): void;
 const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) =>
   Div
     .onClick(item.pipe(map(item => () => onToggle(item.name))))
-    .class('todo-item', render(item.pipe(map(item => item.done ? 'done' : ''))))(
+    .class("todo-item", render(item.pipe(map(item => item.done ? "done" : ""))))(
       render(item.pipe(map(item => item.name))),
       Input
-        .type('checkbox')
+        .type("checkbox")
         .checked(item.pipe(map(item => item.done))),
     );
 
-export const list = items.pipe(mapToComponents(item => TodoItem(item, toggle), 'name'));
+export const list = items.pipe(mapToComponents(item => TodoItem(item, toggle), "name"));

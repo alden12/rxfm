@@ -11,22 +11,22 @@
 // transform's getCompilerOptions, plus the `rxfm` path + module resolution), so
 // rxfm/rxjs/runtime imports resolve for real and the generated code type-checks
 // exactly as it would in the editor.
-'use strict';
-const ts = require('typescript');
-const path = require('node:path');
-const { transformWithMappings, mapSourceToGenerated } = require('../ts-plugin/transform.cjs');
-const { rewriteBoundaryDiagnostic } = require('../ts-plugin/boundary-diagnostics.cjs');
+"use strict";
+const ts = require("typescript");
+const path = require("node:path");
+const { transformWithMappings, mapSourceToGenerated } = require("../ts-plugin/transform.cjs");
+const { rewriteBoundaryDiagnostic } = require("../ts-plugin/boundary-diagnostics.cjs");
 
-const REACTIVE_TS_DIR = path.join(__dirname, '..');
+const REACTIVE_TS_DIR = path.join(__dirname, "..");
 
 // The generated file lives in the transform's baseDir so emitted relative imports
 // (the `render` runtime specifier, plus any hand-written `../runtime` in the source)
 // resolve exactly as they would for a real .rts file in that directory.
-const genPathFor = baseDir => path.join(baseDir, '__fixture__.generated.ts');
+const genPathFor = baseDir => path.join(baseDir, "__fixture__.generated.ts");
 
 // Parse reactive-ts/tsconfig.json once — the same compiler options the editor pins.
 const PROJECT_OPTIONS = (() => {
-  const configPath = path.join(REACTIVE_TS_DIR, 'tsconfig.json');
+  const configPath = path.join(REACTIVE_TS_DIR, "tsconfig.json");
   const { config } = ts.readConfigFile(configPath, ts.sys.readFile);
   return ts.parseJsonConfigFileContent(config, ts.sys, REACTIVE_TS_DIR).options;
 })();
@@ -37,7 +37,7 @@ function makeLanguageService(code, genPath) {
   const virtual = new Map([[genPath, code]]);
   const host = {
     getScriptFileNames: () => [genPath],
-    getScriptVersion: () => '1',
+    getScriptVersion: () => "1",
     getScriptKind: f => (virtual.has(f) ? ts.ScriptKind.TS : undefined),
     getScriptSnapshot: f =>
       virtual.has(f)
@@ -61,7 +61,7 @@ function makeLanguageService(code, genPath) {
 const flatten = d => ({
   code: d.code,
   category: ts.DiagnosticCategory[d.category],
-  message: ts.flattenDiagnosticMessageText(d.messageText, ' '),
+  message: ts.flattenDiagnosticMessageText(d.messageText, " "),
 });
 
 /**
@@ -89,8 +89,8 @@ function run(source, baseDir = REACTIVE_TS_DIR) {
         .map(d => ({ d, r: rewriteBoundaryDiagnostic(ts, d) }))
         .filter(x => x.r)
         .map(x => ({
-          headline: ts.flattenDiagnosticMessageText(x.r.messageText, ' '),
-          original: ts.flattenDiagnosticMessageText(x.d.messageText, ' '),
+          headline: ts.flattenDiagnosticMessageText(x.r.messageText, " "),
+          original: ts.flattenDiagnosticMessageText(x.d.messageText, " "),
         })),
     // Resolve a hover type at a SOURCE offset, mapped to the generated file.
     // Returns the quick-info display string (whitespace-collapsed) or null.
@@ -98,7 +98,7 @@ function run(source, baseDir = REACTIVE_TS_DIR) {
       const genOffset = mapSourceToGenerated(segments, srcOffset);
       if (genOffset == null) return null;
       const info = ls.getQuickInfoAtPosition(genPath, genOffset);
-      return info ? ts.displayPartsToString(info.displayParts).replace(/\s+/g, ' ') : null;
+      return info ? ts.displayPartsToString(info.displayParts).replace(/\s+/g, " ") : null;
     },
     ls,
     genPath,

@@ -7,16 +7,16 @@
 // for a .rts path), by reusing the LanguagePlugin's source-derived cache.
 //
 // Sources are the same .rts inputs the fixtures use, read from disk.
-'use strict';
-const fs = require('node:fs');
-const path = require('node:path');
-const ts = require('typescript');
-const { stallDiagnostics, higherOrderDiagnostics } = require('../ts-plugin/index.cjs');
-const { createReactiveTsLanguagePlugin } = require('../ts-plugin/language-plugin.cjs');
-const { transformWithMappings } = require('../ts-plugin/transform.cjs');
+"use strict";
+const fs = require("node:fs");
+const path = require("node:path");
+const ts = require("typescript");
+const { stallDiagnostics, higherOrderDiagnostics } = require("../ts-plugin/index.cjs");
+const { createReactiveTsLanguagePlugin } = require("../ts-plugin/language-plugin.cjs");
+const { transformWithMappings } = require("../ts-plugin/transform.cjs");
 
-const EXAMPLES_DIR = path.join(__dirname, '..', 'examples');
-const readCase = name => fs.readFileSync(path.join(__dirname, 'cases', name, 'input.rts'), 'utf8');
+const EXAMPLES_DIR = path.join(__dirname, "..", "examples");
+const readCase = name => fs.readFileSync(path.join(__dirname, "cases", name, "input.rts"), "utf8");
 
 // A minimal tsserver-plugin `info` whose host serves `text` for any snapshot.
 const mockInfo = text => ({
@@ -24,38 +24,38 @@ const mockInfo = text => ({
 });
 const spanText = (src, d) => src.slice(d.start, d.start + d.length);
 
-describe('plugin: stall warnings', () => {
-  const src = readCase('empty-filter');
-  const fileName = path.join(EXAMPLES_DIR, 'x.rts');
+describe("plugin: stall warnings", () => {
+  const src = readCase("empty-filter");
+  const fileName = path.join(EXAMPLES_DIR, "x.rts");
   const warnings = stallDiagnostics(ts, mockInfo(src), fileName, undefined);
 
-  it('emits exactly one Warning', () => {
+  it("emits exactly one Warning", () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0].category).toBe(ts.DiagnosticCategory.Warning);
   });
-  it('names the maybe-empty binding', () => {
+  it("names the maybe-empty binding", () => {
     expect(warnings[0].messageText).toMatch(/'big' can be empty/);
   });
-  it('spans the source operand', () => {
-    expect(spanText(src, warnings[0])).toBe('big');
+  it("spans the source operand", () => {
+    expect(spanText(src, warnings[0])).toBe("big");
   });
 });
 
-describe('plugin: higher-order warnings', () => {
-  const src = readCase('higher-order');
-  const fileName = path.join(EXAMPLES_DIR, 'x.rts');
+describe("plugin: higher-order warnings", () => {
+  const src = readCase("higher-order");
+  const fileName = path.join(EXAMPLES_DIR, "x.rts");
   const warnings = higherOrderDiagnostics(ts, mockInfo(src), fileName, undefined);
 
-  it('emits exactly one Warning', () => {
+  it("emits exactly one Warning", () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0].category).toBe(ts.DiagnosticCategory.Warning);
   });
-  it('explains the stream-of-streams and points at a flattening helper', () => {
+  it("explains the stream-of-streams and points at a flattening helper", () => {
     expect(warnings[0].messageText).toMatch(/stream-of-streams/);
     expect(warnings[0].messageText).toMatch(/interval/);
   });
-  it('spans the source call', () => {
-    expect(spanText(src, warnings[0])).toBe('timer(0, period)');
+  it("spans the source call", () => {
+    expect(spanText(src, warnings[0])).toBe("timer(0, period)");
   });
 
   // Editor-path regression: in the live editor the host's snapshot for a .rts path
@@ -63,12 +63,12 @@ describe('plugin: higher-order warnings', () => {
   // of the source-level patterns. The plugin must instead reuse the result the
   // LanguagePlugin computed from the ORIGINAL source. Prime that cache, then feed the
   // diagnostic the generated code as the host snapshot and confirm it still fires.
-  it('surfaces via the LanguagePlugin cache when the host serves generated code', () => {
+  it("surfaces via the LanguagePlugin cache when the host serves generated code", () => {
     const { code } = transformWithMappings(ts, src, EXAMPLES_DIR);
     const lp = createReactiveTsLanguagePlugin(ts);
-    lp.createVirtualCode(fileName, 'rts', ts.ScriptSnapshot.fromString(src)); // caches from source
+    lp.createVirtualCode(fileName, "rts", ts.ScriptSnapshot.fromString(src)); // caches from source
     const editorWarnings = higherOrderDiagnostics(ts, mockInfo(code), fileName, undefined);
     expect(editorWarnings).toHaveLength(1);
-    expect(spanText(src, editorWarnings[0])).toBe('timer(0, period)');
+    expect(spanText(src, editorWarnings[0])).toBe("timer(0, period)");
   });
 });

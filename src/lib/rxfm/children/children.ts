@@ -1,10 +1,10 @@
-import { combineLatest, Observable, of } from 'rxjs';
-import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
-import { Component, componentOperator, ComponentOperator, ElementType } from '../components/component';
-import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from './children-operator-isolation';
-import { StringLike, NullLike, coerceToArray } from '../utils';
-import { childDiffer } from './child-differ';
-import { operatorIsolationService } from '../operator-isolation-service';
+import { combineLatest, Observable, of } from "rxjs";
+import { distinctUntilChanged, map, startWith, tap } from "rxjs/operators";
+import { Component, componentOperator, ComponentOperator, ElementType } from "../components/component";
+import { addChildrenToMetadata, removeChildrenFromMetadata, registerChildrenBlockMetadata } from "./children-operator-isolation";
+import { StringLike, NullLike, coerceToArray } from "../utils";
+import { childDiffer } from "./child-differ";
+import { operatorIsolationService } from "../operator-isolation-service";
 
 /**
  * The possible types which may be passed as a component child.
@@ -47,17 +47,17 @@ function coerceChildComponent(childComponent: ComponentChild): Observable<Coerce
         return elements.length > 0 ? elements : null;
       }),
     );
-  } else if (childComponent instanceof Observable || typeof childComponent === 'function') { // If observable or function returning one.
+  } else if (childComponent instanceof Observable || typeof childComponent === "function") { // If observable or function returning one.
     let node: Text; // Create outer reference to text node if it is needed.
-    return (typeof childComponent === 'function' ? childComponent() : childComponent).pipe( // Create observable if applicable.
+    return (typeof childComponent === "function" ? childComponent() : childComponent).pipe( // Create observable if applicable.
       startWith(null),
       distinctUntilChanged(),
       map(child => {
-        if (child && typeof child !== 'string' && typeof child !== 'number') {
+        if (child && typeof child !== "string" && typeof child !== "number") {
           // If child was already a component or component array, coerce to array of elements and return
           return coerceToArray(child);
         } else if (child !== undefined && child !== null && child !== false) { // Else if string like
-          node = node || document.createTextNode(''); // If emission is text-like, create a text node or use existing.
+          node = node || document.createTextNode(""); // If emission is text-like, create a text node or use existing.
           node.nodeValue = child.toString(); // Coerce to string and update text node value.
           return [node]; // Return component in an array.
         }
@@ -119,7 +119,7 @@ function updateElementChildren<T extends ElementType>(
 function startOrEndChildren<T extends ElementType>(childComponents: ComponentChild[], end: boolean): ComponentOperator<T> {
   return componentOperator(element => {
     let previousElements: ChildElement[] = [];
-    const symbol = Symbol('Children Operator');
+    const symbol = Symbol("Children Operator");
 
     // Coerce all child nodes to be most generic type and combine.
     return combineLatest(childComponents.map(coerceChildComponent)).pipe(

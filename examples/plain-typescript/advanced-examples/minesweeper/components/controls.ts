@@ -30,15 +30,15 @@ export const Controls = ({ startTime, endTime, gameStage, dispatch }: ControlsPr
 
   const WinLoseMessage = gameStage.pipe(
     switchMap(stage => {
-      if (stage === 'win') return Div`You Win!`;
-      if (stage === 'gameOver') return Div`Game Over!`;
+      if (stage === "win") return Div`You Win!`;
+      if (stage === "gameOver") return Div`Game Over!`;
       return of(null);
     }),
   );
 
   return Div(
     Button`Restart`.pipe(
-      event.click(() => dispatch({ type: 'start', cell: [0, 0] })),
+      event.click(() => dispatch({ type: "start", cell: [0, 0] })),
     ),
     Div`Time: ${gameTime}s`,
     HighScore,

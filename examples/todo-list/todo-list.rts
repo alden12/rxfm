@@ -1,7 +1,7 @@
-import { Div, Input } from 'rxfm';
-import { BehaviorSubject } from 'rxjs';
+import { Div, Input } from "rxfm";
+import { BehaviorSubject } from "rxjs";
 
-import './todo-list-styles.css';
+import "./todo-list-styles.css";
 
 interface TodoItem {
   name: string;
@@ -9,9 +9,9 @@ interface TodoItem {
 }
 
 const initialItems: TodoItem[] = [
-  { name: 'Buy bananas', done: true },
-  { name: 'Finish RxFM', done: false },
-  { name: 'Start a new project', done: false },
+  { name: "Buy bananas", done: true },
+  { name: "Finish RxFM", done: false },
+  { name: "Start a new project", done: false },
 ];
 
 export const TodoList = () => {
@@ -19,8 +19,8 @@ export const TodoList = () => {
 
   return Div(
     Input
-      .type('text')
-      .placeholder('Add Item')
+      .type("text")
+      .placeholder("Add Item")
       .onChange(({ target }) =>
         target instanceof HTMLInputElement && items.next([...items.value, { name: target.value, done: false }])
       ),
@@ -29,13 +29,13 @@ export const TodoList = () => {
         .onClick(() => items.next(
           items.value.map(item => item.name === name ? { ...item, done: !item.done } : item),
         ))
-        .class('todo-item', done ? 'done' : '')(
+        .class("todo-item", done ? "done" : "")(
           name,
           Input
-            .type('checkbox')
+            .type("checkbox")
             .checked(done)
           ),
-      'name',
+      "name",
     ),
   );
 };

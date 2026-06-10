@@ -60,15 +60,15 @@ const checkTrailCollision = (coords: Vector[]): boolean => {
 };
 
 const getBoard = (trail: Vector[], food?: Vector): SnakeBoard => {
-  const board = Array(BOARD_WIDTH).fill(undefined).map(() => Array(BOARD_HEIGHT).fill('empty'));
-  trail.forEach(([x, y]) => board[x][y] = 'trail');
-  if (food) board[food[0]][food[1]] = 'food';
+  const board = Array(BOARD_WIDTH).fill(undefined).map(() => Array(BOARD_HEIGHT).fill("empty"));
+  trail.forEach(([x, y]) => board[x][y] = "trail");
+  if (food) board[food[0]][food[1]] = "food";
   return board;
 };
 
 const placeRandomFood = (trail: Vector[]): Vector => {
   const emptyCells = getBoard(trail)
-    .map((column, x) => column.map((cell, y): Vector | null => cell === 'empty' ? [x, y] : null))
+    .map((column, x) => column.map((cell, y): Vector | null => cell === "empty" ? [x, y] : null))
     .flat()
     .filter(cell => Array.isArray(cell)) as Vector[];
   return emptyCells[Math.floor(Math.random() * emptyCells.length)];
@@ -94,14 +94,14 @@ const getNewSnakeState = (previousState: SnakeState, direction: Direction, diffi
   } else {
     newState.trail = newState.trail.shrink();
   }
-  if (checkTrailCollision(newState.trail.coordinates)) throw new Error('Game Over!');
+  if (checkTrailCollision(newState.trail.coordinates)) throw new Error("Game Over!");
   return newState;
 };
 
-const keyDirection = fromEvent(document, 'keydown').pipe(
+const keyDirection = fromEvent(document, "keydown").pipe(
   filter(ev => ev instanceof KeyboardEvent && ev.code in KEY_MAP),
   map(ev => KEY_MAP[(ev as KeyboardEvent).code]),
-  startWith('right' as Direction),
+  startWith("right" as Direction),
 );
 
 export const snakeGameLoop = (difficulty: Observable<Difficulty>) => difficulty.pipe(

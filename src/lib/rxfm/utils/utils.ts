@@ -250,8 +250,8 @@ export function log<T = unknown>(message?: string | ((val: T) => string)): Opera
   return (input: Observable<T>): Observable<T extends never ? never : T> => input.pipe(
     tap<T extends never ? never : T>(val => {
       if (!message) console.log(val);
-      else if (typeof message === 'string') console.log(message, val);
-      else if (typeof message === 'function') console.log(message(val));
+      else if (typeof message === "string") console.log(message, val);
+      else if (typeof message === "function") console.log(message(val));
     }),
   );
 }

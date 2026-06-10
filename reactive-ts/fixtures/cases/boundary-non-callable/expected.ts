@@ -1,6 +1,6 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 declare const y: Observable<number>;
 const double = (n: number) => n * 2;
 const sum = render(y.pipe(map(y => y + 1)));

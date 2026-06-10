@@ -8,12 +8,12 @@
 //   (A) stock TS resolution fails  -> "Cannot find module './producer'" (2307)
 //   (B) our fallback resolver makes it resolve, and the cross-file lift type-checks
 // Run: node reactive-ts/editor-resolution.mjs — exits non-zero on failure.
-import ts from 'typescript';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
-import transformCjs from './ts-plugin/transform.cjs';
-import pluginCjs from './ts-plugin/index.cjs';
+import ts from "typescript";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import transformCjs from "./ts-plugin/transform.cjs";
+import pluginCjs from "./ts-plugin/index.cjs";
 
 const { transformWithMappings, getCompilerOptions } = transformCjs;
 const { patchReactiveTsModuleResolution } = pluginCjs;
@@ -23,9 +23,9 @@ const COMPILER_OPTIONS = getCompilerOptions(ts);
 // Self-contained fixtures: a reactive producer and a consumer that derives from its
 // imported stream. Written under reactive-ts/ (so the producer's `../runtime` import
 // resolves) and cleaned up at exit.
-const dir = mkdtempSync(join(here, '.cross-rts-'));
-process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
-writeFileSync(join(dir, 'producer.rts'), `import { interval } from '../runtime';
+const dir = mkdtempSync(join(here, ".cross-rts-"));
+process.on("exit", () => rmSync(dir, { recursive: true, force: true }));
+writeFileSync(join(dir, "producer.rts"), `import { interval } from '../runtime';
 export const seconds = interval(1000);
 `);
 const consumerSrc = `import { seconds } from './producer';
@@ -36,8 +36,8 @@ const doubled = seconds * 2;
 // can't find it — the bug). The consumer is served at a .ts path so it's a valid
 // program root; in the real editor the .rts root is admitted via the program's
 // extraFileExtensions, which is orthogonal to the resolution concern under test.
-const producerPath = join(dir, 'producer.rts');
-const consumerPath = join(dir, 'consumer.ts');
+const producerPath = join(dir, "producer.rts");
+const consumerPath = join(dir, "consumer.ts");
 const readProducer = () => transformWithMappings(ts, ts.sys.readFile(producerPath), dir).code;
 const virtual = new Map([
   [producerPath, readProducer()],
@@ -48,7 +48,7 @@ const virtual = new Map([
 function makeHost({ withFallback }) {
   const host = {
     getScriptFileNames: () => [consumerPath],
-    getScriptVersion: () => '1',
+    getScriptVersion: () => "1",
     getScriptKind: f => (virtual.has(f) ? ts.ScriptKind.TS : undefined),
     getScriptSnapshot: f =>
       virtual.has(f)
@@ -74,11 +74,11 @@ function makeHost({ withFallback }) {
 
 const failures = [];
 const check = (label, ok) => {
-  console.log(`  ${ok ? '✔' : '✘'} ${label}`);
+  console.log(`  ${ok ? "✔" : "✘"} ${label}`);
   if (!ok) failures.push(label);
 };
 
-console.log('=== editor-side cross-.rts resolution ===');
+console.log("=== editor-side cross-.rts resolution ===");
 
 // (A) stock resolution — should fail with 2307 on './producer'
 const stockLs = ts.createLanguageService(makeHost({ withFallback: false }), ts.createDocumentRegistry());
@@ -89,25 +89,25 @@ check('stock resolution reproduces "Cannot find module" (2307)', stock2307);
 // (B) with fallback — should resolve and type-check clean
 const fixLs = ts.createLanguageService(makeHost({ withFallback: true }), ts.createDocumentRegistry());
 const fixDiags = fixLs.getSemanticDiagnostics(consumerPath);
-check('fallback resolver: no errors', fixDiags.length === 0);
-for (const d of fixDiags) console.log('      ✘ ' + ts.flattenDiagnosticMessageText(d.messageText, ' '));
+check("fallback resolver: no errors", fixDiags.length === 0);
+for (const d of fixDiags) console.log("      ✘ " + ts.flattenDiagnosticMessageText(d.messageText, " "));
 
 // Cross-file type really crossed: `doubled` is RenderObservable<number>.
 const prog = fixLs.getProgram();
 const sf = prog.getSourceFile(consumerPath);
 const checker = prog.getTypeChecker();
-let doubledType = '';
+let doubledType = "";
 sf && ts.forEachChild(sf, function walk(node) {
-  if (ts.isVariableDeclaration(node) && node.name.getText() === 'doubled') {
+  if (ts.isVariableDeclaration(node) && node.name.getText() === "doubled") {
     doubledType = checker.typeToString(checker.getTypeAtLocation(node.name));
   }
   ts.forEachChild(node, walk);
 });
 console.log(`  doubled: ${doubledType}`);
-check('cross-file lift typed as RenderObservable<number>', /RenderObservable<number>/.test(doubledType));
+check("cross-file lift typed as RenderObservable<number>", /RenderObservable<number>/.test(doubledType));
 
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed.`);
   process.exit(1);
 }
-console.log('\nAll editor-resolution checks passed.');
+console.log("\nAll editor-resolution checks passed.");

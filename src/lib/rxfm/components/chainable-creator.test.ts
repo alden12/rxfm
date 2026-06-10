@@ -8,154 +8,154 @@ const testComponent = <T extends ElementType>(component: Component<T>) => {
   return { element: element!, unsubscribe: () => subscription.unsubscribe() };
 };
 
-describe('chainable creator', () => {
-  it('should return an observable when a fluent event method is used with children', () => {
+describe("chainable creator", () => {
+  it("should return an observable when a fluent event method is used with children", () => {
     const component = Div.onClick(() => {})`hello`;
     expect(component).toBeInstanceOf(Observable);
   });
 
-  it('should keep the tagged template children when a fluent event method is used', () => {
+  it("should keep the tagged template children when a fluent event method is used", () => {
     const component = Div.onClick(() => {})`+1`;
     const { element, unsubscribe } = testComponent(component);
     expect(element).toBeInstanceOf(HTMLDivElement);
-    expect(element.firstChild?.textContent).toEqual('+1');
+    expect(element.firstChild?.textContent).toEqual("+1");
     unsubscribe();
   });
 
-  it('should invoke the handler with the event when the event fires', () => {
+  it("should invoke the handler with the event when the event fires", () => {
     let received: Event | undefined;
     const component = Button.onClick(ev => { received = ev; })`click me`;
     const { element, unsubscribe } = testComponent(component);
-    const clickEvent = new MouseEvent('click');
+    const clickEvent = new MouseEvent("click");
     element.dispatchEvent(clickEvent);
     expect(received).toBe(clickEvent);
     unsubscribe();
   });
 
-  it('should support the generic on(type, handler) form', () => {
+  it("should support the generic on(type, handler) form", () => {
     let received: Event | undefined;
-    const component = Div.on('click', ev => { received = ev; })`x`;
+    const component = Div.on("click", ev => { received = ev; })`x`;
     const { element, unsubscribe } = testComponent(component);
-    const clickEvent = new MouseEvent('click');
+    const clickEvent = new MouseEvent("click");
     element.dispatchEvent(clickEvent);
     expect(received).toBe(clickEvent);
     unsubscribe();
   });
 
-  it('should register every handler when event methods are chained', () => {
+  it("should register every handler when event methods are chained", () => {
     let clicked = false;
     let entered = false;
     const component = Div
       .onClick(() => { clicked = true; })
       .onMouseenter(() => { entered = true; })`x`;
     const { element, unsubscribe } = testComponent(component);
-    element.dispatchEvent(new MouseEvent('click'));
-    element.dispatchEvent(new MouseEvent('mouseenter'));
+    element.dispatchEvent(new MouseEvent("click"));
+    element.dispatchEvent(new MouseEvent("mouseenter"));
     expect(clicked).toBe(true);
     expect(entered).toBe(true);
     unsubscribe();
   });
 
-  it('should produce a childless element when terminated with an empty call', () => {
+  it("should produce a childless element when terminated with an empty call", () => {
     let clicked = false;
     const component = Div.onClick(() => { clicked = true; })();
     const { element, unsubscribe } = testComponent(component);
     expect(element).toBeInstanceOf(HTMLDivElement);
     expect(element.childNodes.length).toEqual(0);
-    element.dispatchEvent(new MouseEvent('click'));
+    element.dispatchEvent(new MouseEvent("click"));
     expect(clicked).toBe(true);
     unsubscribe();
   });
 
-  it('should apply CSS classes via the class method', () => {
-    const component = Div.class('one', 'two')`x`;
+  it("should apply CSS classes via the class method", () => {
+    const component = Div.class("one", "two")`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.classList.contains('one')).toBe(true);
-    expect(element.classList.contains('two')).toBe(true);
+    expect(element.classList.contains("one")).toBe(true);
+    expect(element.classList.contains("two")).toBe(true);
     unsubscribe();
   });
 
-  it('should reflect a dynamic class from an observable', () => {
-    const active = new BehaviorSubject<string | null>('active');
-    const component = Div.class('base', active)`x`;
+  it("should reflect a dynamic class from an observable", () => {
+    const active = new BehaviorSubject<string | null>("active");
+    const component = Div.class("base", active)`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.classList.contains('base')).toBe(true);
-    expect(element.classList.contains('active')).toBe(true);
+    expect(element.classList.contains("base")).toBe(true);
+    expect(element.classList.contains("active")).toBe(true);
     active.next(null);
-    expect(element.classList.contains('active')).toBe(false);
-    expect(element.classList.contains('base')).toBe(true);
+    expect(element.classList.contains("active")).toBe(false);
+    expect(element.classList.contains("base")).toBe(true);
     unsubscribe();
   });
 
-  it('should chain class with event methods', () => {
+  it("should chain class with event methods", () => {
     let clicked = false;
     const component = Div
       .onClick(() => { clicked = true; })
-      .class('btn')`x`;
+      .class("btn")`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.classList.contains('btn')).toBe(true);
-    element.dispatchEvent(new MouseEvent('click'));
+    expect(element.classList.contains("btn")).toBe(true);
+    element.dispatchEvent(new MouseEvent("click"));
     expect(clicked).toBe(true);
     unsubscribe();
   });
 
-  it('should apply styles via the style method', () => {
-    const component = Div.style({ color: 'blue', fontStyle: 'italic' })`x`;
+  it("should apply styles via the style method", () => {
+    const component = Div.style({ color: "blue", fontStyle: "italic" })`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.style.color).toEqual('blue');
-    expect(element.style.fontStyle).toEqual('italic');
+    expect(element.style.color).toEqual("blue");
+    expect(element.style.fontStyle).toEqual("italic");
     unsubscribe();
   });
 
-  it('should set an attribute via a per-attribute method', () => {
-    const component = Input.type('text')`x`;
+  it("should set an attribute via a per-attribute method", () => {
+    const component = Input.type("text")`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.getAttribute('type')).toEqual('text');
+    expect(element.getAttribute("type")).toEqual("text");
     unsubscribe();
   });
 
-  it('should reflect a dynamic attribute from an observable', () => {
-    const placeholder = new BehaviorSubject('first');
+  it("should reflect a dynamic attribute from an observable", () => {
+    const placeholder = new BehaviorSubject("first");
     const component = Input.placeholder(placeholder)`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.getAttribute('placeholder')).toEqual('first');
-    placeholder.next('second');
-    expect(element.getAttribute('placeholder')).toEqual('second');
+    expect(element.getAttribute("placeholder")).toEqual("first");
+    placeholder.next("second");
+    expect(element.getAttribute("placeholder")).toEqual("second");
     unsubscribe();
   });
 
-  it('should set a custom attribute via the generic attr method', () => {
-    const value = new BehaviorSubject('42');
-    const component = Div.attr('data-id', value).attr('aria-label', 'Row')`x`;
+  it("should set a custom attribute via the generic attr method", () => {
+    const value = new BehaviorSubject("42");
+    const component = Div.attr("data-id", value).attr("aria-label", "Row")`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.getAttribute('data-id')).toEqual('42');
-    expect(element.getAttribute('aria-label')).toEqual('Row');
-    value.next('43');
-    expect(element.getAttribute('data-id')).toEqual('43');
+    expect(element.getAttribute("data-id")).toEqual("42");
+    expect(element.getAttribute("aria-label")).toEqual("Row");
+    value.next("43");
+    expect(element.getAttribute("data-id")).toEqual("43");
     unsubscribe();
   });
 
-  it('should chain attribute, style, class and event methods together', () => {
+  it("should chain attribute, style, class and event methods together", () => {
     let clicked = false;
     const component = Input
-      .type('text')
-      .class('field')
-      .style({ color: 'red' })
+      .type("text")
+      .class("field")
+      .style({ color: "red" })
       .onClick(() => { clicked = true; })`x`;
     const { element, unsubscribe } = testComponent(component);
-    expect(element.getAttribute('type')).toEqual('text');
-    expect(element.classList.contains('field')).toBe(true);
-    expect(element.style.color).toEqual('red');
-    element.dispatchEvent(new MouseEvent('click'));
+    expect(element.getAttribute("type")).toEqual("text");
+    expect(element.classList.contains("field")).toBe(true);
+    expect(element.style.color).toEqual("red");
+    element.dispatchEvent(new MouseEvent("click"));
     expect(clicked).toBe(true);
     unsubscribe();
   });
 
-  it('should not affect the plain creator forms', () => {
-    const component = Div('plain');
+  it("should not affect the plain creator forms", () => {
+    const component = Div("plain");
     const { element, unsubscribe } = testComponent(component);
     expect(element).toBeInstanceOf(HTMLDivElement);
-    expect(element.firstChild?.textContent).toEqual('plain');
+    expect(element.firstChild?.textContent).toEqual("plain");
     unsubscribe();
   });
 });

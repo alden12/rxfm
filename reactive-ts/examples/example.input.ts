@@ -1,6 +1,6 @@
 // Conceptually a `.rts` file. Imperative use of observables.
 // `tsc` would normally reject these — the transform fixes them.
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 
 declare const y: Observable<number>;
 declare const cond: Observable<boolean>;

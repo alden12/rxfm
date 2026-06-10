@@ -1,5 +1,5 @@
-import { Button } from 'rxfm';
-import { BehaviorSubject } from 'rxjs';
+import { Button } from "rxfm";
+import { BehaviorSubject } from "rxjs";
 
 export const ClickCounter = () => {
   const clicks = new BehaviorSubject(0);

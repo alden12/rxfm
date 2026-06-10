@@ -1,6 +1,6 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 declare const game: Observable<{ board: string[]; stage: string }>;
 declare const cell: Observable<{ color: string; size: number }>;
 declare function styles(s: { background: string | Observable<string>; fontSize: string | Observable<number> }): void;
@@ -8,4 +8,4 @@ declare function klass(...names: (string | Observable<string>)[]): void;
 const board = render(game.pipe(map(game => game.board))), stage = render(game.pipe(map(game => game.stage)));
 const len = render(stage.pipe(map(stage => stage.length)));
 styles({ background: render(cell.pipe(map(cell => cell.color))), fontSize: render(cell.pipe(map(cell => cell.size))) });
-klass('base', render(cell.pipe(map(cell => cell.size > 1 ? 'big' : 'small'))));
+klass("base", render(cell.pipe(map(cell => cell.size > 1 ? "big" : "small"))));

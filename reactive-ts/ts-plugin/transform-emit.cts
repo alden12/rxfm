@@ -3,10 +3,10 @@
 // two utilities that consume those segments (source→generated lookup, and the
 // conversion into Volar's CodeMapping format). Pure with respect to the transform's
 // checker state — it only ever sees the plan and the original text.
-'use strict';
-import type * as TS from 'typescript';
-import type { Ts, Edit, Segment, GenTarget, DeclMapping, RootMapping } from './transform-types.cjs';
-import { relativeRuntimeSpecifier } from './transform-program.cjs';
+"use strict";
+import type * as TS from "typescript";
+import type { Ts, Edit, Segment, GenTarget, DeclMapping, RootMapping } from "./transform-types.cjs";
+import { relativeRuntimeSpecifier } from "./transform-program.cjs";
 
 /** Inputs the emit phase needs from the planning phase. */
 export interface AssembleInput {
@@ -15,7 +15,7 @@ export interface AssembleInput {
   sourceText: string;
   baseDir: string;
   edits: Edit[];
-  needed: { rxjs: Set<string>; 'rxjs/operators': Set<string>; rxfm: Set<string> };
+  needed: { rxjs: Set<string>; "rxjs/operators": Set<string>; rxfm: Set<string> };
   usedRender: boolean;
   declMappings: DeclMapping[];
   rootMappings: RootMapping[];
@@ -73,15 +73,15 @@ export function assembleOutput(
     const target = namedImportTarget(mod);
     if (target && target.elements.length) {
       const at = target.elements[target.elements.length - 1].getEnd();
-      edits.push({ start: at, end: at, pieces: [`, ${names.join(', ')}`] });
+      edits.push({ start: at, end: at, pieces: [`, ${names.join(", ")}`] });
     } else {
-      importLines.push(`import { ${names.join(', ')} } from "${mod}";`);
+      importLines.push(`import { ${names.join(", ")} } from "${mod}";`);
     }
   };
-  foldOrLine('rxjs', needed.rxjs);
-  foldOrLine('rxjs/operators', needed['rxjs/operators']);
-  foldOrLine('rxfm', needed.rxfm);
-  const importBlock = importLines.length ? importLines.join('\n') + '\n' : '';
+  foldOrLine("rxjs", needed.rxjs);
+  foldOrLine("rxjs/operators", needed["rxjs/operators"]);
+  foldOrLine("rxfm", needed.rxfm);
+  const importBlock = importLines.length ? importLines.join("\n") + "\n" : "";
 
   edits.sort((a, b) => a.start - b.start);
   let code = importBlock;
@@ -105,9 +105,9 @@ export function assembleOutput(
     // 1:1 identity segments (full language features); synthetic scaffolding is
     // appended as generated-only text with no mapping.
     for (const piece of edit.pieces!) {
-      if (typeof piece === 'string') {
+      if (typeof piece === "string") {
         code += piece;
-      } else if ('gen' in piece) {
+      } else if ("gen" in piece) {
         // Generated-only text whose position is recorded as a mapping target (the
         // outer stream reference of a single-root collapse — D5 root hover).
         if (piece.refKey) aliasGenTarget.set(piece.refKey, { genStart: code.length, len: piece.gen.length });

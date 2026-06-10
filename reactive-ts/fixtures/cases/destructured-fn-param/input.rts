@@ -1,5 +1,5 @@
-import { Observable } from 'rxjs';
-import { Div, Input } from 'rxfm';
+import { Observable } from "rxjs";
+import { Div, Input } from "rxfm";
 
 interface TodoItem {
   name: string;
@@ -16,11 +16,11 @@ declare function toggle(name: string): void;
 const TodoItem = ({ name, done }: Observable<TodoItem>, onToggle: (name: string) => void) =>
   Div
     .onClick(() => onToggle(name))
-    .class('todo-item', done ? 'done' : '')(
+    .class("todo-item", done ? "done" : "")(
       name,
       Input
-        .type('checkbox')
+        .type("checkbox")
         .checked(done),
     );
 
-export const list = items.map(item => TodoItem(item, toggle), 'name');
+export const list = items.map(item => TodoItem(item, toggle), "name");

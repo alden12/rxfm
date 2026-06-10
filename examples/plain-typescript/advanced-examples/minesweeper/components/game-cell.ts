@@ -26,14 +26,14 @@ export const GameCell = ({ cell, index, dispatch }: GameCellProps) => {
 
   return Div(cellText).pipe(
     events({
-      click: handleCellAction('discover'),
-      contextmenu: handleCellAction('flag'),
+      click: handleCellAction("discover"),
+      contextmenu: handleCellAction("flag"),
     }),
     styles({
       backgroundColor: color,
       color: access(NEIGHBORS_COLOR_MAP, neighbors),
-      fontSize: conditional(symbol, '12px', '14px'),
+      fontSize: conditional(symbol, "12px", "14px"),
     }),
-    classes`minesweeper-cell ${conditional(isUndiscovered, 'raised')}`,
+    classes`minesweeper-cell ${conditional(isUndiscovered, "raised")}`,
   );
 };

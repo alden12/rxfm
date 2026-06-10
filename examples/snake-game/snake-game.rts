@@ -1,14 +1,14 @@
-import { Div, Button } from 'rxfm';
-import { board, score, highScore, difficulty, direction } from './game';
-import { CELL_COLOR_MAP, BOARD_HEIGHT, KEY_MAP } from './constants';
-import { Difficulty } from './types';
+import { Div, Button } from "rxfm";
+import { board, score, highScore, difficulty, direction } from "./game";
+import { CELL_COLOR_MAP, BOARD_HEIGHT, KEY_MAP } from "./constants";
+import { Difficulty } from "./types";
 
-import './snake-styles.css';
+import "./snake-styles.css";
 
-const difficulties: Difficulty[] = ['Easy', 'Medium', 'Hard'];
+const difficulties: Difficulty[] = ["Easy", "Medium", "Hard"];
 
 export const SnakeGame = () => Div
-  .class('snake-game')
+  .class("snake-game")
   .tabindex(0)
   .onKeydown(event => {
     if (event instanceof KeyboardEvent && event.code in KEY_MAP) {
@@ -17,22 +17,22 @@ export const SnakeGame = () => Div
     }
   })(
     Div
-      .class('snake-game-board')
+      .class("snake-game-board")
       .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })(
         board.flatMap(cell => Div
-          .class('snake-cell')
+          .class("snake-cell")
           .style({ backgroundColor: CELL_COLOR_MAP[cell] })
           ``,
         ),
       ),
     Div
-      .class('score-board')(
+      .class("score-board")(
         Div`Score: ${score}`,
         Div`High Score: ${highScore}`,
         difficulties.map(option =>
           Button
             .onClick(() => difficulty.next(option))
-            .class('difficulty-button')(
+            .class("difficulty-button")(
               option,
             ),
           ),

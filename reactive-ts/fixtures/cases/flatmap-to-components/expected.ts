@@ -1,7 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Observable } from 'rxjs';
-import { Div, mapToComponents } from 'rxfm';
+import { Observable } from "rxjs";
+import { Div, mapToComponents } from "rxfm";
 
 interface Cell {
   color: string;
@@ -25,4 +25,4 @@ export const cells = board.pipe(map(arr => arr.flat()), mapToComponents((item, i
 // Plain (non-destructured) leaf param also works; `.flat()` is a no-op on an
 // already-flat source, so flatMap over a 1-D stream behaves like the `.map` form.
 declare const grid: Observable<number[]>;
-export const tiles = grid.pipe(map(arr => arr.flat()), mapToComponents(value => Div.class('tile', render(value.pipe(map(value => value > 0 ? 'on' : ''))))()));
+export const tiles = grid.pipe(map(arr => arr.flat()), mapToComponents(value => Div.class("tile", render(value.pipe(map(value => value > 0 ? "on" : ""))))()));

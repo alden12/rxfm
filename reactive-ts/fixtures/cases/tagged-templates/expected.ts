@@ -1,10 +1,10 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { BehaviorSubject } from 'rxjs';
-import { Div } from 'rxfm';
+import { BehaviorSubject } from "rxjs";
+import { Div } from "rxfm";
 declare const user: BehaviorSubject<{ name: string; nickname?: string }>;
 declare const count: BehaviorSubject<number>;
 const a = Div`my name is ${render(user.pipe(map(user => user.name)))}`;
-const b = Div`toggle (${render(user.pipe(map(user => user.nickname ?? 'none')))})`;
+const b = Div`toggle (${render(user.pipe(map(user => user.nickname ?? "none")))})`;
 const c = Div`count = ${count}, doubled = ${render(count.pipe(map(count => count * 2)))}`;
 const d = Div`static ${1 + 1}`;

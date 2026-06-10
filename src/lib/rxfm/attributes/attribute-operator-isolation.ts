@@ -23,8 +23,8 @@ function addAttributesToMetadata<K extends string, T>(
   const newAttributeDictionary = Object.keys(attributeObject).reduce<AttributeMetadataDictionary<K>>((newAttributeDict, key) => {
     const attributeValue = attributeObject[key as K];
     // Coerce attributes to be either string or null.
-    newAttributeDict[key as K] = typeof attributeValue === 'boolean' ?
-      attributeValue ? '' : null :
+    newAttributeDict[key as K] = typeof attributeValue === "boolean" ?
+      attributeValue ? "" : null :
       attributeValue === null ? null : String(attributeValue);
     return newAttributeDict;
   }, {});
@@ -44,7 +44,7 @@ function getAttributeFromMetadata<K extends string>(
 ): string | null {
   // Find the dictionary for the operator with hightest priority containing the attribute name.
   // NOTE: This will mean there is no way to enforce removal of an attribute if it is enabled on an operator with lower priority.
-  const firstMatchingAttributeDict = Array.from(attributesMetadata.values()).find(attributeDict => typeof attributeDict[name] === 'string');
+  const firstMatchingAttributeDict = Array.from(attributesMetadata.values()).find(attributeDict => typeof attributeDict[name] === "string");
   return firstMatchingAttributeDict ? firstMatchingAttributeDict[name]! : null; // Return the attribute value or null.
 }
 

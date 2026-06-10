@@ -1,11 +1,11 @@
-import { BehaviorSubject, timer } from 'rxjs';
-import { accumulate } from '../runtime';
-import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
-import { TICK_MS } from './constants';
-import { Difficulty, Direction } from './types';
+import { BehaviorSubject, timer } from "rxjs";
+import { accumulate } from "../runtime";
+import { getInitialSnakeState, getNewSnakeState, getBoard } from "./game-logic";
+import { TICK_MS } from "./constants";
+import { Difficulty, Direction } from "./types";
 
-export const difficulty = new BehaviorSubject<Difficulty>('Easy');
-export const direction = new BehaviorSubject<Direction>('right');
+export const difficulty = new BehaviorSubject<Difficulty>("Easy");
+export const direction = new BehaviorSubject<Direction>("right");
 
 const tick = timer(0, TICK_MS);
 
