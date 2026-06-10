@@ -1,29 +1,49 @@
 import { test, expect } from '@playwright/test';
 
+// The demo is now a doc-site: a sidebar nav (in an <aside>) switches the content pane
+// between the rendered markdown docs (with live demos spliced in) and the full app
+// examples. Only the selected route is mounted, so most tests navigate via the sidebar
+// first. Nav links are scoped to the <aside> to avoid matching links of the same name
+// inside the rendered docs (e.g. the README's "Guide" table link).
+const nav = (page: import('@playwright/test').Page, name: string) =>
+  page.locator('aside').getByText(name, { exact: true });
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test('renders the example app shell', async ({ page }) => {
+test('renders the doc-site shell with sidebar nav', async ({ page }) => {
   await expect(page).toHaveTitle('RxFM Examples');
-  await expect(page.getByRole('heading', { level: 1, name: 'RxFM Examples' })).toBeVisible();
+  await expect(page.locator('aside').getByText('RxFM').first()).toBeVisible();
+  await expect(nav(page, 'Guide')).toBeVisible();
+  await expect(nav(page, 'Snake')).toBeVisible();
 });
 
-test('click counter increments on click (reactivity)', async ({ page }) => {
+test('overview page renders the live counter demo (markdown + spliced demo)', async ({ page }) => {
+  // The README hero fence is annotated `demo=counter`, so the live counter renders
+  // beneath the snippet on the default (Overview) page.
   const counter = page.getByRole('button', { name: /^Clicks:/ });
-  // The Reactive TS demo's counter also renders a derived value, e.g. "Clicks: 0 (doubled: 0)".
   await expect(counter).toContainText('Clicks: 0');
   await counter.click();
   await counter.click();
   await expect(counter).toContainText('Clicks: 2');
 });
 
-test('todo list renders its initial items', async ({ page }) => {
-  await expect(page.getByText('Finish RxFM')).toBeVisible();
-  await expect(page.getByPlaceholder('Add Item')).toBeVisible();
+test('guide page splices the conditional demo (time-driven reactivity)', async ({ page }) => {
+  await nav(page, 'Guide').click();
+  // Scope to the live demo output — the teaching snippet above it contains the same
+  // text inside a highlighted code block.
+  const message = page.locator('.demo-result').getByText('Now you see me!');
+  await expect(message).toBeVisible();
+  await expect(message).toBeHidden({ timeout: 2000 });
+  await expect(message).toBeVisible({ timeout: 2000 });
 });
 
-test('todo list adds an item from the input (keyed-list reactivity)', async ({ page }) => {
+test('todo list example renders and adds an item (keyed-list reactivity)', async ({ page }) => {
+  await nav(page, 'Todo List').click();
+  const live = page.locator('.demo-result'); // exclude the source-code expander
+  await expect(live.getByText('Finish RxFM')).toBeVisible();
+
   const items = page.locator('.todo-item');
   const initialCount = await items.count();
 
@@ -36,32 +56,35 @@ test('todo list adds an item from the input (keyed-list reactivity)', async ({ p
 });
 
 test('todo item toggles done on click (event → conditional class + checkbox binding)', async ({ page }) => {
+  await nav(page, 'Todo List').click();
   const item = page.locator('.todo-item', { hasText: 'Finish RxFM' });
   const checkbox = item.locator('input[type="checkbox"]');
 
   await expect(item).not.toHaveClass(/\bdone\b/);
   await expect(checkbox).not.toBeChecked();
 
-  await page.getByText('Finish RxFM').click();
+  await page.locator('.demo-result').getByText('Finish RxFM').click();
 
   await expect(item).toHaveClass(/\bdone\b/);
   await expect(checkbox).toBeChecked();
 });
 
-test('conditional child toggles on a timer (time-driven reactivity)', async ({ page }) => {
-  // Reactive TS demo: `interval(1000)` (immediate first tick) gated by `tick % 2 === 0` —
-  // visible at t=0, hidden ~1s, visible ~2s.
-  const message = page.getByText('Now you see me!').first();
-  await expect(message).toBeVisible();
-  await expect(message).toBeHidden({ timeout: 2000 });
-  await expect(message).toBeVisible({ timeout: 2000 });
-});
-
-test('snake game board renders a grid of cells', async ({ page }) => {
+test('snake game example renders a grid of cells', async ({ page }) => {
+  await nav(page, 'Snake').click();
   await expect(page.locator('.snake-game-board')).toBeVisible();
   expect(await page.locator('.snake-cell').count()).toBeGreaterThan(0);
 });
 
-test('minesweeper board renders', async ({ page }) => {
+test('minesweeper example renders its board', async ({ page }) => {
+  await nav(page, 'Minesweeper').click();
   await expect(page.locator('.minesweeper-board')).toBeVisible();
+});
+
+test('view full source expander reveals the real example source', async ({ page }) => {
+  await nav(page, 'Snake').click();
+  const details = page.locator('details', { hasText: 'View full source' });
+  await expect(details.locator('.code-block')).toBeHidden();
+  await details.getByText('View full source').click();
+  await expect(details.locator('.code-block')).toBeVisible();
+  await expect(details.locator('.code-block')).toContainText('SnakeGame');
 });

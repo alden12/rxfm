@@ -1,5 +1,6 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { reactiveTs } from './reactive-ts/vite-plugin-reactive-ts';
 
 // Build/dev config for the demo example app (examples/). The demo is authored in
@@ -7,7 +8,7 @@ import { reactiveTs } from './reactive-ts/vite-plugin-reactive-ts';
 // before Vite's own pipeline; `.rts` is added to resolve.extensions so bare
 // cross-file imports (`from './game'`, `from './runtime'`) resolve to `.rts`/`.ts`.
 export default defineConfig({
-  plugins: [reactiveTs()],
+  plugins: [reactiveTs(), tailwindcss()],
   resolve: {
     extensions: ['.rts', '.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
@@ -16,7 +17,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 3001,
   },
   build: {
     // Keep the demo output separate from the published library's dist/.

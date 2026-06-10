@@ -13,7 +13,7 @@ An experimental web framework built on RxJS. The core idea: **a component is jus
 
 - [src/lib/rxfm/](src/lib/rxfm/) — the framework itself (what gets published). `src/` now holds only `lib/`.
 - [src/lib/index.ts](src/lib/index.ts) — package entry, re-exports `src/lib/rxfm` (named exports only, no default).
-- [examples/](examples/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). As of the Reactive-TS-default switch the demo is authored in **Reactive TS** (`.rts`): basic examples mirror the guide; advanced examples are a todo list, snake game, and minesweeper. Entry is [examples/main.ts](examples/main.ts), loaded by the root [index.html](index.html); [examples/runtime.ts](examples/runtime.ts) re-exports [reactive-ts/runtime.ts](reactive-ts/runtime.ts) so the tree (a sibling of `reactive-ts/`) resolves the runtime; [examples/tsconfig.json](examples/tsconfig.json) governs `.rts` editor types.
+- [examples/](examples/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). As of the Reactive-TS-default switch the demo is authored in **Reactive TS** (`.rts`): basic examples mirror the guide; advanced examples are a todo list, snake game, and minesweeper. The demo is a **doc-site**: a sidebar-nav shell ([examples/app.rts](examples/app.rts)) switches a content pane between the rendered markdown docs (README + `docs/*`) and the full app examples, driven by a `BehaviorSubject<routeId>` and a `CONTENT[selected]` lookup ([examples/content.ts](examples/content.ts)). Markdown is rendered with `marked` + `highlight.js` ([examples/markdown.ts](examples/markdown.ts)); fences annotated `demo=<id>` (inert on GitHub) get the matching **live demo** spliced in beneath the code via [examples/doc-page.ts](examples/doc-page.ts) (it splits the rendered HTML at markers and interleaves real RxFM children, so demo streams tear down on route change — not a manual `addToView`). The `demo=<id>` → component/source map is [examples/demos.ts](examples/demos.ts), pulling each example's real source via `?raw`. Styling is **Tailwind v4** (utilities + `@tailwindcss/typography` `prose`); per-example CSS stays per-example. Entry is the thin [examples/main.ts](examples/main.ts) (`addToView(App)`), loaded by the root [index.html](index.html); [examples/runtime.ts](examples/runtime.ts) re-exports [reactive-ts/runtime.ts](reactive-ts/runtime.ts) so the tree (a sibling of `reactive-ts/`) resolves the runtime; [examples/tsconfig.json](examples/tsconfig.json) governs `.rts` editor types and [examples/vite-env.d.ts](examples/vite-env.d.ts) declares `*?raw`.
 - [examples/plain-typescript/](examples/plain-typescript/) — the previous plain-RxJS demo, demoted to a reference (not wired to a build). Mirrors the [plain-TypeScript docs](docs/plain-typescript.md).
 - [docs/](docs/) — `getting-started.md`, `guide.md` (Reactive TS walkthrough), `plain-typescript.md` (plain reference). The root [README.md](README.md) is a lean landing page linking into them. (Slated to move to the github.io site later.)
 
@@ -42,11 +42,12 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
   The demo config loads the `reactiveTs()` Vite plugin ([reactive-ts/vite-plugin-reactive-ts.ts](reactive-ts/vite-plugin-reactive-ts.ts))
   so it can compile the `.rts` examples, and adds `.rts` to `resolve.extensions` for bare
-  cross-file imports. The plugin `require`s the **compiled** `reactive-ts/ts-plugin/transform.cjs`, so
+  cross-file imports; it also loads `@tailwindcss/vite`. The reactiveTs plugin skips `?raw`/`?url`/`?inline`
+  queries so the doc-site can import a `.rts` example's own source as text. The plugin `require`s the **compiled** `reactive-ts/ts-plugin/transform.cjs`, so
   `dev`/`build:app` run `build:reactive-ts` first (`predev`/`prebuild:app` hooks) to regenerate it from the
   `.cts` sources (the `.cjs` are gitignored build artifacts — see [Library internals] / the Reactive TS
   TypeScript build below).
-- `yarn dev` — Vite dev server (port 3000) serving the Reactive TS demo from `examples/` (entry
+- `yarn dev` — Vite dev server (port 3001) serving the Reactive TS demo from `examples/` (entry
   `examples/main.ts`). The demo's `rxfm` import is aliased to live lib source (`src/lib/rxfm/index.ts`).
 - `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the
   declaration tree (`index.d.ts` + `rxfm/**.d.ts`) via `vite-plugin-dts`. `rxjs` is externalised

@@ -49,7 +49,7 @@ Components in RxFM are simply `Observable`s emitting `HTMLElement`s. Component n
 
 ### Hello World
 
-```typescript
+```typescript demo=hello
 import { Div, addToView } from 'rxfm';
 
 const HelloWorld = Div('Hello, World!');
@@ -65,7 +65,7 @@ component — everything else piggybacks on that one subscription.
 
 Children can be strings, other components, functions returning components, or observables:
 
-```typescript
+```typescript demo=children
 const ChildrenExample = Div(
   'Children can be strings, ',
   B('child components, '),
@@ -78,7 +78,7 @@ const ChildrenExample = Div(
 
 Tagged-template syntax works too, and observable interpolations are reactive out of the box:
 
-```typescript
+```typescript demo=tagged-template
 const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
 ```
 
@@ -89,7 +89,7 @@ const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
 State lives in `BehaviorSubject`s (like React's `useState`, but changes hit the DOM immediately).
 Element creators expose fluent `on<Event>` methods (`onClick`, `onInput`, …) for events:
 
-```typescript
+```typescript demo=state
 import { Div, Button } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
@@ -124,7 +124,7 @@ state.
 Styles, CSS classes, and attributes are set with fluent methods on element creators. Static values
 need no lifting:
 
-```typescript
+```typescript demo=styles
 const StylesExample = Div.style({ color: 'blue', fontStyle: 'italic' })`We can add styles`;
 const ClassExample  = Div.class('example-class')`We can add CSS classes`;
 const AttributesExample = Input.type('text').placeholder('Type here')();
@@ -133,7 +133,7 @@ const AttributesExample = Input.type('text').placeholder('Type here')();
 Values can be observables to make them dynamic — derive them as plain expressions, then pass the
 result in:
 
-```typescript
+```typescript demo=dynamic-styles
 const color = timer(0, 1000) % 2 === 0 ? 'blue' : 'red';   // ⇒ RenderObservable<string>
 const DynamicStyles = Div.style({ color })`Styles can be dynamic`;
 ```
@@ -150,7 +150,7 @@ Derive a boolean stream by expression, and a ternary over it lifts to the same `
 write by hand — emitting the component when the condition holds and `null` (removed from the DOM)
 otherwise:
 
-```typescript
+```typescript demo=conditional
 import { Div } from 'rxfm';
 import { timer } from 'rxjs';
 
@@ -171,7 +171,7 @@ const ConditionalComponentsExample = Div(maybeVisible);
 Inputs are function arguments; outputs are callbacks you pass in. Values derived from inputs — like
 "is this option the selected one?" — are just expressions:
 
-```typescript
+```typescript demo=component-io
 import { Div, Button } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 
@@ -212,7 +212,7 @@ Render a list from an array observable, reusing DOM elements across emissions (k
 `key`). Calling `.map` on an array observable lifts to `mapToComponents`, and the item inside the
 callback behaves like an observable so its fields lift in the template:
 
-```typescript
+```typescript demo=arrays
 import { Div } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 

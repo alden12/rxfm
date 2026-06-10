@@ -31,7 +31,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `try { obs }` reads as "if evaluating `obs` throws now," but an observable errors *later* on
   subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
 
+- **The demo example app is now a live doc-site.** A sidebar-nav shell (authored in Reactive TS,
+  `examples/app.rts`) renders the README and `docs/*` markdown with **live, runnable demos spliced in**:
+  a code fence annotated `` ```ts demo=<id> `` stays an ordinary code block on GitHub but, in the app,
+  mounts the matching example component beneath the snippet (code and result shown together), with a
+  "view full source" expander pulling the example's real `.rts` via Vite `?raw`. Built with `marked` +
+  `highlight.js` and styled with Tailwind v4 (`@tailwindcss/typography`). The example components and the
+  docs they illustrate stay in sync because the running demo *is* the real example. `yarn dev` now serves
+  on **port 3001**.
+
 ### Changed
+- The `reactiveTs()` Vite plugin now skips `?raw`/`?url`/`?inline` queries, so a `.rts` file's source can
+  be imported as text (used by the doc-site to show each example's real source). Previously the plugin
+  compiled even the raw-import variant, returning JS instead of the source.
 - Docs and examples now mount the app root with `addToView(App)` rather than a raw
   `App.subscribe(el => document.body.appendChild(el))`. `addToView` is the safe spelling of that
   single root subscription — it swaps the element if the root component ever re-emits (which a bare

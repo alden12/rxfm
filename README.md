@@ -12,7 +12,7 @@ they're streams, so there's nothing to diff and nothing to re-render — a singl
 root (`addToView`) sets the whole app in motion. With the experimental **Reactive TS** layer, derived state reads like
 ordinary maths (`count * 2`) and is lifted into reactive streams for you, fully typed.
 
-```ts
+```ts demo=counter
 import { Div, Button, addToView } from 'rxfm';
 import { BehaviorSubject } from 'rxjs';
 

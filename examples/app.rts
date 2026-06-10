@@ -1,0 +1,36 @@
+import { Aside, Div, Main, Nav } from 'rxfm';
+import { BehaviorSubject } from 'rxjs';
+import { CONTENT, DEFAULT_ROUTE, NAV } from './content';
+
+import './app-styles.css';
+
+// The selected route id. A plain `BehaviorSubject` — `selected === id` lifts to a
+// boolean stream for the active-link highlight, and `CONTENT[selected]` lifts to a
+// `switchMap` that swaps the content pane whenever the selection changes.
+const selected = new BehaviorSubject<string>(DEFAULT_ROUTE);
+
+const NavLink = (id: string, title: string) => Div
+  .class(
+    'cursor-pointer select-none border-l-[3px] border-transparent px-5 py-1.5 text-sm hover:bg-violet-50',
+    selected === id && 'border-violet-700 bg-violet-50 font-semibold text-violet-700',
+  )
+  .onClick(() => selected.next(id))
+  `${title}`;
+
+const NavSection = (heading: string, items: { id: string; title: string }[]) => Div
+  .class('mb-5')(
+    Div.class('px-5 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-500')`${heading}`,
+    items.map(item => NavLink(item.id, item.title)),
+  );
+
+const Sidebar = Aside
+  .class('w-[248px] shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50 py-5')(
+    Div.class('px-5 pb-4 text-[22px] font-bold tracking-tight text-violet-700')`RxFM`,
+    Nav(
+      NAV.map(group => NavSection(group.title, group.items)),
+    ),
+  );
+
+const Content = Main.class('flex-1 overflow-y-auto px-10 pt-8 pb-20')(CONTENT[selected]);
+
+export const App = Div.class('flex h-screen overflow-hidden')(Sidebar, Content);
