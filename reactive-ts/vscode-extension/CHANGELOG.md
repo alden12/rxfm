@@ -2,6 +2,14 @@
 
 All notable changes to the Reactive TS VS Code extension.
 
+## [0.0.24]
+
+### Added
+- Bundled transform now destructures an observable **expression**, not just a bare identifier:
+  `const { board, gameStage, duration } = accumulate(…) ?? getInitialGame()` hoists the source into
+  one shared binding and fans each field off it (subscribed once), where before only
+  `const { … } = game` (an identifier source) was supported.
+
 ## [0.0.23]
 
 ### Added

@@ -1,0 +1,6 @@
+{
+  "description": "Destructure an observable whose initializer is a larger expression, not a bare identifier (`accumulate(…) ?? getInitialGame()`). The source is hoisted into one synthetic binding (`item = render(<expr>)`) so it's subscribed once and shared, and each field fans off it (`item.pipe(map(item => item.field))`) — the same per-field shape the identifier case emits. A destructured field is then itself an observable binding, so a later read of it lifts.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

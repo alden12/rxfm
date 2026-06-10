@@ -777,25 +777,45 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       // → `const board = render(game.pipe(map(game => game.board))), gameStage = …`.
       // Each field becomes its own lifted member-access binding (the same shape the
       // member-access lift produces), so it reads like ordinary destructuring.
-      // Limited to an identifier source — a non-identifier would be re-subscribed
-      // once per field.
-      if (ts.isObjectBindingPattern(node.name) && ts.isIdentifier(node.initializer)
-        && transformExpression(node.initializer).observable) {
-        const src = node.initializer;
-        const param = src.text;
-        needed['rxjs/operators'].add('map');
-        usedRender = true;
-        const groups = node.name.elements.map(el => {
-          if (el.dotDotDotToken || !ts.isIdentifier(el.name)) return null;
-          const prop = (el.propertyName || el.name).getText(sf);
-          observableBindings.add(el.name.text);
-          return [V(el.name), ' = render(', V(src), `.pipe(map(${param} => ${param}.${prop})))`];
-        });
-        if (groups.every(Boolean)) {
+      //
+      // A bare-identifier source (`= game`) is read directly. A larger expression
+      // (`= accumulate(…) ?? getInitialGame()`) can't be: textually repeating it in
+      // every field would subscribe it once per field (each re-running its own scan).
+      // So it's first hoisted into one synthetic binding — `item = render(<expr>)` —
+      // and the fields fan off that (shared via render, subscribed once). render is
+      // idempotent, so an expression that's already a RenderObservable isn't re-wrapped.
+      if (ts.isObjectBindingPattern(node.name)) {
+        const initR = transformExpression(node.initializer);
+        // Only plain-field patterns qualify (no rest, defaults, computed, or nesting).
+        const fieldsQualify = node.name.elements.every(el =>
+          !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name)
+          && (!el.propertyName || ts.isIdentifier(el.propertyName)));
+        if (initR.observable && fieldsQualify) {
+          needed['rxjs/operators'].add('map');
+          usedRender = true;
+          const isId = ts.isIdentifier(node.initializer);
+          // The map param and the in-field source reference. For an identifier source
+          // both are the source itself (mapped back so hover resolves it); otherwise a
+          // fresh synthetic name bound to the hoisted `render(<expr>)`.
+          const param = isId ? (node.initializer as TS.Identifier).text : freshItemName(node);
+          const ref: Piece = isId ? V(node.initializer) : param;
+          const fields = node.name.elements.map(el => {
+            const prop = (el.propertyName || el.name).getText(sf);
+            observableBindings.add((el.name as TS.Identifier).text);
+            return [V(el.name), ' = render(', ref, `.pipe(map(${param} => ${param}.${prop})))`];
+          });
+          // For a non-identifier source, prepend the hoisted binding and reserve its
+          // name (so a sibling destructure picks a distinct synthetic, not a redeclare).
+          let groups: Piece[][] = fields;
+          if (!isId) {
+            observableBindings.add(param);
+            const srcPieces = initR.lifted || initR.rewritten ? initR.pieces : [V(node.initializer)];
+            groups = [[param, ' = render(', ...srcPieces, ')'], ...fields];
+          }
           edits.push({
             start: node.name.getStart(sf),
             end: node.initializer.getEnd(),
-            pieces: joinPieces(groups as Piece[][], ', '),
+            pieces: joinPieces(groups, ', '),
           });
           return;
         }

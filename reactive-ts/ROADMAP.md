@@ -365,6 +365,18 @@ but it's a sharp, surprising edge when a value works in one position and not ano
   `lifted` (observable-involving) expressions are touched, so constants are untouched and C6's
   operator-style arg lifting / component-`.map` list rendering are unaffected. Minesweeper drops all
   its forced intermediate bindings. Covered by `d1.mjs`.
+- **Done — destructure an observable *expression*, not just an identifier.** The
+  object-binding-pattern lift originally required a bare-identifier source (`= game`); a larger
+  initializer (`const { board, gameStage, duration } = accumulate(…) ?? getInitialGame()`) was
+  rejected because repeating the expression in each field's `pipe` would subscribe it once per field
+  (each re-running its own `scan`). It now hoists a non-identifier observable initializer into one
+  synthetic binding — `item = render(<expr>)` — and fans the fields off that (`item.pipe(map(item =>
+  item.field))`), so the expression is subscribed once and shared (`render` is idempotent, so an
+  already-`RenderObservable` source isn't double-wrapped). The synthetic name is reserved in
+  `observableBindings` so a sibling destructure picks a distinct one rather than redeclaring. Covered
+  by the `destructure-from-expression` fixture. (Doesn't change the Minesweeper `game.rts`: it wants
+  `board`/`gameStage` exported but `duration` private, and a single destructuring statement can't mix
+  export visibility — a plain-JS limitation, not the transform's — so the explicit split stays.)
 - **Related finding — `EMPTY` vs `null` in a child slot:** `cond ? Div`…` : EMPTY` as a *child*
   doesn't hide the element when the condition flips false — `EMPTY` emits nothing, so rxfm's children
   operator never gets a signal to remove the previous element (it lingers, e.g. a stale "You Win!").
