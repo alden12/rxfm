@@ -1,7 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
 import { BehaviorSubject } from 'rxjs';
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 declare const user: BehaviorSubject<{ name: string; nickname?: string }>;
 declare const count: BehaviorSubject<number>;
 const a = Div`my name is ${render(user.pipe(map(user => user.name)))}`;

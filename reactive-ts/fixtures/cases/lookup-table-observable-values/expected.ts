@@ -1,7 +1,7 @@
 import { render, coerceToObservable } from "./runtime";
 import { switchMap, map } from "rxjs/operators";
 import { Observable, timer } from 'rxjs';
-import { TypeOrObservable } from 'rxfm';
+import { TypeOrObservable } from 'corrente';
 
 type Stage = 'idle' | 'running' | 'done';
 

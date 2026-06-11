@@ -1,4 +1,4 @@
-import { Div, Button } from 'rxfm';
+import { Div, Button } from 'corrente';
 import { board, gameStage, gameTime, highScore, dispatch } from './game';
 import { NEIGHBORS_COLOR_MAP, BOARD_HEIGHT, indexToVector } from './constants';
 

@@ -1,13 +1,13 @@
-# RxFM Guide
+# Corrente Guide
 
-> The full walkthrough of RxFM in the **Reactive TS** style — components, state & events, attributes,
+> The full walkthrough of Corrente in the **Reactive TS** style — components, state & events, attributes,
 > conditional rendering, inputs/outputs, and dynamic lists. New here? Start with the
 > [README](../README.md) for the pitch and a quick example, then [Getting started](getting-started.md)
 > to set up your editor and build. Prefer plain RxJS with no build step? See the
 > [plain-TypeScript reference](plain-typescript.md). Reactive TS is experimental — see
 > [How Reactive TS works](#how-reactive-ts-works) below and the [roadmap](../reactive-ts/ROADMAP.md).
 
-RxFM is an experimental web framework built on [RxJS](https://github.com/ReactiveX/rxjs): a
+Corrente is an experimental web framework built on [RxJS](https://github.com/ReactiveX/rxjs): a
 **component is just an `Observable<HTMLElement>`**. There's no virtual DOM and no re-render cycle —
 elements are reactive simply because they're observable streams, and a single mount at the app root
 (`addToView`) sets the whole app in motion.
@@ -35,7 +35,7 @@ Why it's nice:
   you'd have written, so there's no new runtime model and nothing hidden.
 - **Fully typed** — your editor shows real inferred types live
   (`const doubled: RenderObservable<number>`), with no `any` and no false errors on `count * 2`.
-- **Incremental** — it's plain RxFM with extra ergonomics, so you can lift a single expression or a
+- **Incremental** — it's plain Corrente with extra ergonomics, so you can lift a single expression or a
   whole app, and freely mix lifted and hand-written streams.
 
 > Reactive TS is experimental — see [How Reactive TS works](#how-reactive-ts-works) at the end for the mechanics and
@@ -45,12 +45,12 @@ Why it's nice:
 
 ## Components
 
-Components in RxFM are simply `Observable`s emitting `HTMLElement`s. Component names are PascalCase.
+Components in Corrente are simply `Observable`s emitting `HTMLElement`s. Component names are PascalCase.
 
 ### Hello World
 
 ```typescript demo=hello
-import { Div, addToView } from 'rxfm';
+import { Div, addToView } from 'corrente';
 
 const HelloWorld = Div('Hello, World!');
 
@@ -90,7 +90,7 @@ State lives in `BehaviorSubject`s (like React's `useState`, but changes hit the 
 Element creators expose fluent `on<Event>` methods (`onClick`, `onInput`, …) for events:
 
 ```typescript demo=state
-import { Div, Button } from 'rxfm';
+import { Div, Button } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 const Counter = () => {
@@ -151,7 +151,7 @@ write by hand — emitting the component when the condition holds and `null` (re
 otherwise:
 
 ```typescript demo=conditional
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 import { timer } from 'rxjs';
 
 const flipFlop = timer(0, 1000) % 2 === 0;                    // ⇒ RenderObservable<boolean>
@@ -172,7 +172,7 @@ Inputs are function arguments; outputs are callbacks you pass in. Values derived
 "is this option the selected one?" — are just expressions:
 
 ```typescript demo=component-io
-import { Div, Button } from 'rxfm';
+import { Div, Button } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
@@ -213,7 +213,7 @@ Render a list from an array observable, reusing DOM elements across emissions (k
 callback behaves like an observable so its fields lift in the template:
 
 ```typescript demo=arrays
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 interface TodoItem { name: string; done: boolean; }
@@ -232,7 +232,7 @@ The second argument (`'name'`) is the id/key — a property name or an id functi
 array index. If `items` emits a new array, the list updates in place, reusing existing DOM elements
 for items whose id is unchanged.
 
-The plain-RxFM equivalent — a per-item component over `Observable<TodoItem>` passed to
+The plain-Corrente equivalent — a per-item component over `Observable<TodoItem>` passed to
 `mapToComponents(Item, 'name')` — is documented in the
 [plain-TypeScript reference](plain-typescript.md#dynamic-component-arrays).
 
@@ -255,9 +255,9 @@ live on their own lines rather than buried inside call arguments:
 - **array `.map` calls** — ``items.map(item => Div`…`, 'id')`` lifts to `mapToComponents`
 
 **Reactive TS vs. the fluent API.** The fluent component methods (`onClick`, `.style`, `.class`,
-`Input.type()`) and reactive tagged templates are plain RxFM features that work with or without
+`Input.type()`) and reactive tagged templates are plain Corrente features that work with or without
 Reactive TS. Reactive TS only adds the derived-value ergonomics on top — everything else on this page is ordinary
-RxFM.
+Corrente.
 
 > **Status.** Reactive TS is a spike. It needs the [Reactive TS transform / editor extension](reactive-ts/), and its
 > build-time story is still being worked out (see [reactive-ts/ROADMAP.md](reactive-ts/ROADMAP.md)). For anything

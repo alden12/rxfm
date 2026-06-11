@@ -1,4 +1,4 @@
-import { Button, Div } from 'rxfm';
+import { Button, Div } from 'corrente';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 const Card = Div.class('card');

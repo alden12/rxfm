@@ -5,7 +5,7 @@
 // CONTENT is keyed by route id and typed `TypeOrObservable<HTMLElement>` so app.rts can
 // switch on it with a plain lookup — `CONTENT[selected]` — which Reactive TS lifts to a
 // `switchMap` over the selected-route stream (the lookup-table flattening).
-import { Component } from "rxfm";
+import { Component } from "corrente";
 import { AppPage, DocPage } from "./doc-page";
 
 import overviewMd from "../README.md?raw";

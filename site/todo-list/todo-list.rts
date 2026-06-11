@@ -1,4 +1,4 @@
-import { Div, Input } from 'rxfm';
+import { Div, Input } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 import './todo-list-styles.css';
@@ -10,7 +10,7 @@ interface TodoItem {
 
 const initialItems: TodoItem[] = [
   { name: 'Buy bananas', done: true },
-  { name: 'Finish RxFM', done: false },
+  { name: 'Finish Corrente', done: false },
   { name: 'Start a new project', done: false },
 ];
 

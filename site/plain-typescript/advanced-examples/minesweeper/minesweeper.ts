@@ -1,4 +1,4 @@
-import { classes, destructure, Div } from 'rxfm';
+import { classes, destructure, Div } from 'corrente';
 import { Subject } from 'rxjs';
 import { minesweeperGameLoop } from './game-logic/minesweeper-game';
 import { CellAction } from './types';

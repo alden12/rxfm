@@ -1,4 +1,4 @@
-import { conditional, Div } from 'rxfm';
+import { conditional, Div } from 'corrente';
 import { of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 

@@ -15,10 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   time, keep emitting an `ElementType[]` from an observable — see `mapToComponents`.)
 - The Reactive TS runtime now ships with the package and is exported from the root: `render`,
   `RenderObservable`, `accumulate`, `interval`, and `EMPTY` are importable via
-  `import { accumulate, interval } from 'rxfm'`. These are useful with plain rxfm too — a
+  `import { accumulate, interval } from 'corrente'`. These are useful with plain corrente too — a
   shared/replaying derived value (`render`/`RenderObservable`), a running fold (`accumulate`), and a
   reactive-period clock (`interval`). The Reactive TS transform still injects `render` from a local
-  `runtime.ts`, which can now be a one-line `export * from 'rxfm'`.
+  `runtime.ts`, which can now be a one-line `export * from 'corrente'`.
 - `fallback(source, handler)` runtime helper (with the `RETRY` sentinel) — stream error handling that
   reads like a `try/catch` body, folding `catchError` *and* `retry` into one. When `source` errors,
   `handler` runs with `(error, attempt)` and its **return value** decides what happens, the way a `catch`
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`e => console.error(e)`) to swallow and complete, return a plain value (`() => "error"`, `() => null`)
   to emit it once, or return an `Observable` (`() => of(0)`) to switch to it. So retry-then-recover is a
   single call: `fallback(x, (e, n) => n < 3 ? RETRY : 0)`. It sits alongside `accumulate`/`interval` on
-  the `rxfm` runtime surface and, being operator-style (it takes the stream as a parameter), the Reactive
+  the `corrente` runtime surface and, being operator-style (it takes the stream as a parameter), the Reactive
   TS transform leaves the call untouched in `.rts`. A named helper rather than `try/catch` sugar:
   `try { obs }` reads as "if evaluating `obs` throws now," but an observable errors *later* on
   subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
@@ -57,6 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   top-level `site/` directory and is now authored in Reactive TS (`.rts`) — `yarn dev` /
   `yarn build:app` compile it via the Reactive TS Vite plugin. The previous plain-TypeScript demo is
   preserved as a reference at `site/plain-typescript/`. No library/runtime code changed.
+- **Renamed the framework `rxfm` → `corrente`.** The published package is now `corrente`
+  (`import { Div } from 'corrente'`); the source moved to `src/corrente/` and the redundant `src/lib/`
+  layer was dropped, so the package entry is now `src/index.ts`; the Vite alias / tsconfig path and the
+  library declaration tree (`dist/corrente/**`) follow suit; and the Reactive TS transform now emits its
+  component imports (`mapToComponents`, …) from `corrente`. The GitHub repo and github.io demo URLs are
+  intentionally left as `rxfm` for now (the repository itself isn't renamed yet).
 
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and

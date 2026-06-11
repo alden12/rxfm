@@ -1,9 +1,9 @@
-// The Reactive TS runtime, shipped as part of rxfm. The Reactive TS transform emits `render(...)`
+// The Reactive TS runtime, shipped as part of corrente. The Reactive TS transform emits `render(...)`
 // around lifted expressions and leaves `accumulate` / `interval` / `fallback` / `EMPTY` for
-// you to call by hand; all of them live here. They're useful with plain rxfm too — a
+// you to call by hand; all of them live here. They're useful with plain corrente too — a
 // shared/replaying derived value (`render`), a running fold (`accumulate`), a
 // reactive-period clock (`interval`), and an error boundary (`fallback`) — so they sit on
-// the public `rxfm` surface.
+// the public `corrente` surface.
 //
 // A single indirection point also lets the underlying observable implementation
 // (RxJS today, possibly a native/RxJS-8 Observable later) change without touching
@@ -26,8 +26,8 @@ export { EMPTY };
 // Re-exported on the runtime surface because the transform emits it: lifting a lookup
 // table whose values are `TypeOrObservable<T>` (mix of plain values and streams) over an
 // observable key flattens with `switchMap(k => coerceToObservable(MAP[k]))`. Sourced from
-// the runtime (not `rxfm` directly) so generated code depends only on the runtime seam —
-// keeping the option open to split Reactive TS out from rxfm later.
+// the runtime (not `corrente` directly) so generated code depends only on the runtime seam —
+// keeping the option open to split Reactive TS out from corrente later.
 export { coerceToObservable } from "./utils/utils";
 
 /**

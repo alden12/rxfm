@@ -15,7 +15,7 @@ export interface AssembleInput {
   sourceText: string;
   baseDir: string;
   edits: Edit[];
-  needed: { rxjs: Set<string>; 'rxjs/operators': Set<string>; rxfm: Set<string>; runtime: Set<string> };
+  needed: { rxjs: Set<string>; 'rxjs/operators': Set<string>; corrente: Set<string>; runtime: Set<string> };
   usedRender: boolean;
   declMappings: DeclMapping[];
   rootMappings: RootMapping[];
@@ -57,8 +57,8 @@ export function assembleOutput(
   const newNames = (mod: string, set: Set<string>) => [...set].filter(n => !alreadyImported(mod).has(n));
   const importLines: string[] = [];
   // Runtime-sourced names (render plus any helpers the transform emits, e.g.
-  // coerceToObservable) come from the runtime seam — never `rxfm` directly — so generated
-  // code stays decoupled from rxfm if Reactive TS is split out. One combined import line.
+  // coerceToObservable) come from the runtime seam — never `corrente` directly — so generated
+  // code stays decoupled from corrente if Reactive TS is split out. One combined import line.
   const runtimeNames = [...(usedRender ? ['render'] : []), ...needed.runtime];
   if (runtimeNames.length) importLines.push(`import { ${runtimeNames.join(', ')} } from "${relativeRuntimeSpecifier(baseDir)}";`);
   // Fold the names we need from a module into the source's EXISTING named import for
@@ -84,7 +84,7 @@ export function assembleOutput(
   };
   foldOrLine('rxjs', needed.rxjs);
   foldOrLine('rxjs/operators', needed['rxjs/operators']);
-  foldOrLine('rxfm', needed.rxfm);
+  foldOrLine('corrente', needed.corrente);
   const importBlock = importLines.length ? importLines.join('\n') + '\n' : '';
 
   edits.sort((a, b) => a.start - b.start);

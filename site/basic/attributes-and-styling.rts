@@ -1,4 +1,4 @@
-import { Div, Input } from 'rxfm';
+import { Div, Input } from 'corrente';
 
 import './example-styles.css';
 import { timer } from 'rxjs';

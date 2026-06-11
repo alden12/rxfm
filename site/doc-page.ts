@@ -1,17 +1,17 @@
-// Composes a rendered markdown doc into an RxFM component, with live demos spliced in
+// Composes a rendered markdown doc into an Corrente component, with live demos spliced in
 // where the markdown carried a `demo=<id>` fence.
 //
-// Key design point: the live demos are real RxFM *children*, not elements poked into
+// Key design point: the live demos are real Corrente *children*, not elements poked into
 // innerHTML with a manual `addToView`. The rendered HTML is split at the demo markers
 // into runs of plain HTML, each wrapped as a `rawHtml` component, and the live
 // `DemoPanel`s are interleaved between them. Handing the whole sequence to `Div(...)`
-// lets RxFM's `children` operator own every subscription — so when the content pane
+// lets Corrente's `children` operator own every subscription — so when the content pane
 // swaps pages, the demos' streams (timers, etc.) are torn down with the page instead of
 // leaking. (A manual `addToView` into an innerHTML placeholder would not be.)
 //
 // Styling: Tailwind utilities for the chrome; `prose` (typography plugin) for the
 // rendered markdown chunks. Markdown gets bespoke typography, demos sit outside `prose`.
-import { Component, ComponentChild, Details, Div, H1, Summary } from 'rxfm';
+import { Component, ComponentChild, Details, Div, H1, Summary } from 'corrente';
 import { DEMOS } from './demos';
 import { DEMO_MARKER, codeBlock, rawHtml, renderMarkdownHtml } from './markdown';
 

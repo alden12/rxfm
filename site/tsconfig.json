@@ -5,9 +5,9 @@
   // `paths`, unreliable extraFileExtensions wiring), so the Reactive TS tsserver
   // plugin's virtual TypeScript never type-checked properly. This pins the same
   // options the transform itself uses (see reactive-ts/ts-plugin/transform.cjs
-  // `getCompilerOptions`) plus the `rxfm` path. The transform-emitted `render` import
+  // `getCompilerOptions`) plus the `corrente` path. The transform-emitted `render` import
   // resolves to `site/runtime.ts`; hand-written helpers (`accumulate`/…) are
-  // imported from `rxfm`, which the `paths` entry resolves to the library source.
+  // imported from `corrente`, which the `paths` entry resolves to the library source.
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
@@ -17,7 +17,7 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "rxfm": ["../src/lib/rxfm/index"]
+      "corrente": ["../src/corrente/index"]
     }
   },
   "include": ["**/*.rts", "**/*.ts"],

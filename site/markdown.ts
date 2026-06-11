@@ -1,7 +1,7 @@
 // Markdown + source-code rendering for the demo doc-site. Plain `.ts` (not `.rts`):
 // ordinary string/DOM code with no reactive expressions to lift. Markdown and
 // highlighted source are rendered to an HTML string, dropped into a detached element,
-// and handed to RxFM as a one-shot component (`Observable<HTMLElement>`).
+// and handed to Corrente as a one-shot component (`Observable<HTMLElement>`).
 //
 // The custom `code` renderer is the seam that makes the docs "read the same way" as
 // the README: a fence annotated `demo=<id>` (e.g. ```ts demo=counter) renders its code
@@ -51,10 +51,10 @@ const highlight = (source: string, lang: string): string =>
   hljs.highlight(source, { language: resolveLanguage(lang) }).value;
 
 /** Marker emitted after a `demo=<id>` fence; the doc-page composer splits on it. */
-const demoMarker = (id: string): string => `<!--rxfm-demo:${id}-->`;
+const demoMarker = (id: string): string => `<!--corrente-demo:${id}-->`;
 
 /** Matches {@link demoMarker} output; `g`-less so it works as a split delimiter capture. */
-export const DEMO_MARKER = /<!--rxfm-demo:([\w-]+)-->/;
+export const DEMO_MARKER = /<!--corrente-demo:([\w-]+)-->/;
 
 const marked = new Marked({
   renderer: {
@@ -68,8 +68,8 @@ const marked = new Marked({
 });
 
 /**
- * Wrap a raw HTML string as a one-shot RxFM component. `defer` so each subscription
- * gets a fresh element (RxFM swaps elements by reference at the root).
+ * Wrap a raw HTML string as a one-shot Corrente component. `defer` so each subscription
+ * gets a fresh element (Corrente swaps elements by reference at the root).
  */
 export const rawHtml = (html: string, className?: string): Observable<HTMLElement> =>
   defer(() => {

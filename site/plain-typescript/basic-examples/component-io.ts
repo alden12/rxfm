@@ -1,4 +1,4 @@
-import { Button, classes, ComponentChild, conditional, Div, event } from "rxfm";
+import { Button, classes, ComponentChild, conditional, Div, event } from "corrente";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 

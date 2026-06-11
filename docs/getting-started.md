@@ -1,29 +1,29 @@
 # Getting started
 
-RxFM works in two styles. Pick the one that suits you — they interoperate, so you can mix them in
+Corrente works in two styles. Pick the one that suits you — they interoperate, so you can mix them in
 one app.
 
-- **Plain RxFM** — ordinary RxJS, no build step. `npm install` and go. Best for trying RxFM out or
+- **Plain Corrente** — ordinary RxJS, no build step. `npm install` and go. Best for trying Corrente out or
   shipping today.
 - **Reactive TS** *(experimental)* — write derived values as plain expressions (`count * 2`) and have them
   lifted into reactive streams, with live editor types. Needs a small build + editor setup.
 
 ---
 
-## Track A — plain RxFM (no build step)
+## Track A — plain Corrente (no build step)
 
-Install RxFM and its `rxjs` peer dependency:
+Install Corrente and its `rxjs` peer dependency:
 
 ```sh
-npm install rxfm rxjs@^7
-# or: yarn add rxfm rxjs@^7
+npm install corrente rxjs@^7
+# or: yarn add corrente rxjs@^7
 ```
 
 Write a component (a component is just an `Observable<HTMLElement>`) and mount it once at the root
 with `addToView`:
 
 ```ts
-import { Div, addToView } from 'rxfm';
+import { Div, addToView } from 'corrente';
 
 const HelloWorld = Div('Hello, World!');
 
@@ -80,7 +80,7 @@ binding. See the extension's own [README](../reactive-ts/vscode-extension/README
 rebuild it.
 
 For the editor to resolve real types, `.rts` files need a tsconfig pinning the transform's compiler
-options plus your `rxfm` path — see [site/tsconfig.json](../site/tsconfig.json) (mirrored from
+options plus your `corrente` path — see [site/tsconfig.json](../site/tsconfig.json) (mirrored from
 [reactive-ts/tsconfig.json](../reactive-ts/tsconfig.json)) for the reference. The root `tsconfig.json` should
 **exclude** the `.rts` directory so it doesn't get type-checked as plain TS with default options.
 
@@ -106,20 +106,20 @@ The helpers Reactive TS leaves for you to call by hand — `accumulate`, `interv
 exported from the package root, so you import them like anything else:
 
 ```ts
-import { accumulate, interval, EMPTY } from 'rxfm';
+import { accumulate, interval, EMPTY } from 'corrente';
 ```
 
 The transform also emits `import { render } from "./…/runtime"` around lifted expressions, so it
 needs a `runtime.ts` reachable by walking up from your `.rts` files; make it a one-line re-export
-of the rxfm runtime:
+of the corrente runtime:
 
 ```ts
 // runtime.ts
-export * from 'rxfm';
+export * from 'corrente';
 ```
 
 (In this repo the examples re-export from the library source via [site/runtime.ts](../site/runtime.ts)
-rather than the published package — the same reason the demo aliases `rxfm` to `src/` — but a real
+rather than the published package — the same reason the demo aliases `corrente` to `src/` — but a real
 consumer's `runtime.ts` is just the one-liner above.)
 
 ### Run the examples

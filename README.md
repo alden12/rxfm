@@ -1,19 +1,19 @@
-# RxFM
+# Corrente
 
 [![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
-[![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
-[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
-[![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
+[![NPM](https://img.shields.io/npm/v/corrente)](https://www.npmjs.com/package/corrente)
+[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/corrente?label=gzipped)](https://bundlephobia.com/result?p=corrente@latest)
+[![MIT license](https://img.shields.io/npm/l/corrente)](https://opensource.org/licenses/MIT)
 
 **Build reactive web apps as plain RxJS streams — no virtual DOM, no re-render cycle.**
 
-In RxFM a **component is just an `Observable<HTMLElement>`**. Elements are reactive simply because
+In Corrente a **component is just an `Observable<HTMLElement>`**. Elements are reactive simply because
 they're streams, so there's nothing to diff and nothing to re-render — a single mount at the app
 root (`addToView`) sets the whole app in motion. With the experimental **Reactive TS** layer, derived state reads like
 ordinary maths (`count * 2`) and is lifted into reactive streams for you, fully typed.
 
 ```ts demo=counter
-import { Div, Button, addToView } from 'rxfm';
+import { Div, Button, addToView } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 const Counter = () => {
@@ -37,7 +37,7 @@ const doubled = count.pipe(map(c => c * 2)); // the plain-RxJS equivalent it com
 
 No new runtime model, nothing hidden — just less ceremony.
 
-## Why RxFM
+## Why Corrente
 
 - **Streams *are* the components.** No virtual DOM, no reconciliation, no render scheduling — state
   changes hit the DOM immediately.
@@ -51,7 +51,7 @@ No new runtime model, nothing hidden — just less ceremony.
 ## Quick start
 
 ```sh
-npm install rxfm rxjs@^7
+npm install corrente rxjs@^7
 ```
 
 …then see **[Getting started](docs/getting-started.md)**. To run the example app locally:
@@ -70,7 +70,7 @@ Or browse the [**live demo**](https://alden12.github.io/rxfm/).
 | 🚀 [Getting started](docs/getting-started.md) | Install, editor setup, and the Reactive TS build. |
 | 📖 [Guide](docs/guide.md) | The full walkthrough — components, state, attributes, lists. |
 | 🧩 [Examples](site/) | The Reactive TS example suite that powers the live demo. |
-| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | RxFM in plain RxJS, no build step. |
+| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | Corrente in plain RxJS, no build step. |
 | 🧪 [Reactive TS roadmap](reactive-ts/ROADMAP.md) | Status of the experimental Reactive TS layer. |
 
 > ⚠️ **Alpha.** This is the `3.0.0-alpha` line — an in-progress redesign (Vite build, no JSX, a new
@@ -79,7 +79,7 @@ Or browse the [**live demo**](https://alden12.github.io/rxfm/).
 > [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
 >
 > 🧪 **Reactive TS is experimental.** The transform, Vite plugin, and editor extension are a spike that
-> currently lives in this repo (not yet on npm) — see the [roadmap](reactive-ts/ROADMAP.md). Plain RxFM
+> currently lives in this repo (not yet on npm) — see the [roadmap](reactive-ts/ROADMAP.md). Plain Corrente
 > needs none of it.
 
 I'd love to hear whether this style holds any interest for you — feedback and ideas are very welcome.

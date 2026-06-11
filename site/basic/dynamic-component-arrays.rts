@@ -1,4 +1,4 @@
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 interface TodoItem {

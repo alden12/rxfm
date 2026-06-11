@@ -6,7 +6,7 @@
 // The teaching snippet in the docs is deliberately a simplified version of the example
 // (it reads better inline); `component` runs the real exported example, and `source`
 // is its full file — so the running code and its true source are both one glance away.
-import { ComponentChild, Component, Div } from "rxfm";
+import { ComponentChild, Component, Div } from "corrente";
 
 import {
   HelloWorld,

@@ -1,4 +1,4 @@
-import { Div, Button } from 'rxfm';
+import { Div, Button } from 'corrente';
 import { board, score, highScore, difficulty, direction } from './game';
 import { CELL_COLOR_MAP, BOARD_HEIGHT, KEY_MAP } from './constants';
 import { Difficulty } from './types';

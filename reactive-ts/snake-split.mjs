@@ -1,6 +1,6 @@
 // Full-output check of the split snake, mirroring the editor as closely as headless
 // allows: the generated TS of both .rts files is type-checked under the SAME
-// tsconfig options the editor uses (reactive-ts/tsconfig.json — incl. the `rxfm` path),
+// tsconfig options the editor uses (reactive-ts/tsconfig.json — incl. the `corrente` path),
 // with the REAL plugin fallback resolving the cross-file `./game` import. Proves the
 // split snake type-checks end-to-end with editor-side cross-.rts resolution.
 // Run: node reactive-ts/snake-split.mjs — exits non-zero on failure.

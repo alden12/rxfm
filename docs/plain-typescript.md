@@ -1,8 +1,8 @@
-# RxFM — Plain-TypeScript Reference
+# Corrente — Plain-TypeScript Reference
 
-> 📘 **Plain RxJS style (no build step).** This is the plain-TypeScript reference for RxFM, where
+> 📘 **Plain RxJS style (no build step).** This is the plain-TypeScript reference for Corrente, where
 > derived values are written explicitly with RxJS operators (`count.pipe(map(c => c * 2))`). It's a
-> complete guide and needs nothing beyond `rxfm` + `rxjs`. The project's default style is now
+> complete guide and needs nothing beyond `corrente` + `rxjs`. The project's default style is now
 > **Reactive TS** — see the [README](../README.md) and the [Reactive TS guide](guide.md), where those same
 > derivations are written as plain expressions (`count * 2`) and lifted to streams for you.
 
@@ -11,18 +11,18 @@
 > **stable release** and its **JSX/TSX syntax**, see the
 > [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
 
-RxFM is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
+Corrente is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
 
 I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
 
-Aside from native RxJS integration, RxFM has several advantages over existing frameworks like React. Firstly, we don't need to worry about managing a virtual DOM because elements can be added directly to their parents as observable streams. Second, we don't have to worry about any strange render logic, as components do not need to be re-rendered, they are reactive simply by virtue of being observables.
+Aside from native RxJS integration, Corrente has several advantages over existing frameworks like React. Firstly, we don't need to worry about managing a virtual DOM because elements can be added directly to their parents as observable streams. Second, we don't have to worry about any strange render logic, as components do not need to be re-rendered, they are reactive simply by virtue of being observables.
 
 I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
 
 * Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/site/plain-typescript) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Works best with [TypeScript](https://www.typescriptlang.org/).
 
-> **Note:** As of the `3.0.0` alpha line RxFM no longer ships JSX/TSX support — components are
+> **Note:** As of the `3.0.0` alpha line Corrente no longer ships JSX/TSX support — components are
 > written with the plain function API documented below. For JSX/TSX, use the stable
 > [v2.1.1 release](https://github.com/alden12/rxfm/blob/v2.1.1/README.md). JSX may return in a
 > redesigned form in a future release.
@@ -30,29 +30,29 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 ---
 
 ## Installation
-You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `rxfm` (along with its `rxjs` peer dependency) into an existing project using:
+You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `corrente` (along with its `rxjs` peer dependency) into an existing project using:
 
 ```sh
-npm install rxfm rxjs@^7.0.0
+npm install corrente rxjs@^7.0.0
 ```
 
 ```sh
-yarn add rxfm rxjs@^7.0.0
+yarn add corrente rxjs@^7.0.0
 ```
-If you already have `rxjs` installed, make sure it is using the same version as `rxfm`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
+If you already have `rxjs` installed, make sure it is using the same version as `corrente`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
 
 ---
 
 ## Components
 
-Components in RxFM are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
+Components in Corrente are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
 
 ### Hello World:
 
-Below we can see how to display a simple hello world. Basic component creators can be imported from `rxfm`:
+Below we can see how to display a simple hello world. Basic component creators can be imported from `corrente`:
 
 ```typescript
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 ```
 
 These may take any number of children as arguments, including strings, observables and other components:
@@ -64,7 +64,7 @@ const HelloWorld = Div('Hello, World!');
 The root component can be added to the DOM with `addToView`, which subscribes to it and adds its element to the document:
 
 ```typescript
-import { addToView } from 'rxfm';
+import { addToView } from 'corrente';
 
 addToView(HelloWorld); // mounts to document.body; returns a teardown function
 ```
@@ -100,7 +100,7 @@ const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
 State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. Element creators expose fluent methods for handling events — for every DOM event there's a matching `on<Event>` method (`onClick`, `onInput`, …):
 
 ```typescript
-import { Button } from 'rxfm';
+import { Button } from 'corrente';
 import { BehaviorSubject } from 'rxjs';
 
 const ClickCounter = () => {
@@ -113,7 +113,7 @@ const ClickCounter = () => {
 These fluent methods are sugar for "component operators" applied via `.pipe`. A component operator is an operator function taking a component observable, processing its element in some way (here, adding an event listener), and returning the same component observable. The example above is equivalent to using the `event` operator directly:
 
 ```typescript
-import { Button, event } from 'rxfm';
+import { Button, event } from 'corrente';
 
 Button`Clicks: ${clicks}`.pipe(
   event.click(() => clicks.next(clicks.value + 1)),
@@ -134,7 +134,7 @@ Using Subjects to store state gives us an advantage over React in that we don't 
 Element styles, CSS classes, and attributes can be set using fluent methods on element creators:
 
 ```typescript
-import { Div, Input } from 'rxfm';
+import { Div, Input } from 'corrente';
 ```
 
 ```typescript
@@ -209,7 +209,7 @@ const ConditionalComponentsExample = Div(
 );
 ```
 
-This may also be written more simply using the `conditional` helper function from rxfm:
+This may also be written more simply using the `conditional` helper function from corrente:
 
 ```typescript
 conditional(flipFlop, Div`Now you see me!`)
@@ -266,7 +266,7 @@ const Card = (...children: ComponentChild[]) => Div.class('card')(...children);
 ---
 
 ## Dynamic Component Arrays
-We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `rxfm`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
+We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `corrente`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
 
 We'll start with an observable emitting an array of items:
 
@@ -314,7 +314,7 @@ If our `items` subject were to then emit a new array, this would immediately be 
 
 ## Advanced Examples
 
-You can check out a few more complex RxFM examples at the links below to see how it might be used in a larger app. [Live Demo](https://alden12.github.io/rxfm/)
+You can check out a few more complex Corrente examples at the links below to see how it might be used in a larger app. [Live Demo](https://alden12.github.io/rxfm/)
 
 * [Todo List Example](https://github.com/alden12/rxfm/tree/master/site/plain-typescript/advanced-examples/todo-list)
 * [Snake Game Example](https://github.com/alden12/rxfm/tree/master/site/plain-typescript/advanced-examples/snake-game)

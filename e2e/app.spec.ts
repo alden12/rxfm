@@ -13,8 +13,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('renders the doc-site shell with sidebar nav', async ({ page }) => {
-  await expect(page).toHaveTitle('RxFM Examples');
-  await expect(page.locator('aside').getByText('RxFM').first()).toBeVisible();
+  await expect(page).toHaveTitle('Corrente Examples');
+  await expect(page.locator('aside').getByText('Corrente').first()).toBeVisible();
   await expect(nav(page, 'Guide')).toBeVisible();
   await expect(nav(page, 'Snake')).toBeVisible();
 });
@@ -42,7 +42,7 @@ test('guide page splices the conditional demo (time-driven reactivity)', async (
 test('todo list example renders and adds an item (keyed-list reactivity)', async ({ page }) => {
   await nav(page, 'Todo List').click();
   const live = page.locator('.demo-result'); // exclude the source-code expander
-  await expect(live.getByText('Finish RxFM')).toBeVisible();
+  await expect(live.getByText('Finish Corrente')).toBeVisible();
 
   const items = page.locator('.todo-item');
   const initialCount = await items.count();
@@ -57,13 +57,13 @@ test('todo list example renders and adds an item (keyed-list reactivity)', async
 
 test('todo item toggles done on click (event → conditional class + checkbox binding)', async ({ page }) => {
   await nav(page, 'Todo List').click();
-  const item = page.locator('.todo-item', { hasText: 'Finish RxFM' });
+  const item = page.locator('.todo-item', { hasText: 'Finish Corrente' });
   const checkbox = item.locator('input[type="checkbox"]');
 
   await expect(item).not.toHaveClass(/\bdone\b/);
   await expect(checkbox).not.toBeChecked();
 
-  await page.locator('.demo-result').getByText('Finish RxFM').click();
+  await page.locator('.demo-result').getByText('Finish Corrente').click();
 
   await expect(item).toHaveClass(/\bdone\b/);
   await expect(checkbox).toBeChecked();

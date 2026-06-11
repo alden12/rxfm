@@ -13,7 +13,7 @@ export default defineConfig({
     extensions: ['.rts', '.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       // Run the demo against the live library source rather than the built package.
-      rxfm: resolve(__dirname, 'src/lib/rxfm/index.ts'),
+      corrente: resolve(__dirname, 'src/corrente/index.ts'),
     },
   },
   server: {
