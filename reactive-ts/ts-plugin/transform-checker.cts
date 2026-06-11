@@ -128,7 +128,7 @@ export function createChecker(ts: Ts, checker: TS.TypeChecker, sf: TS.SourceFile
     return !STREAM_MEMBERS.has(name);
   };
 
-  // Structural test for a DOM element type — RxFM components emit these.
+  // Structural test for a DOM element type — Corrente components emit these.
   const isElementValueType = (type: TS.Type | undefined) =>
     Boolean(type && type.getProperty && type.getProperty('nodeType') &&
       (type.getProperty('tagName') || type.getProperty('nodeName')));

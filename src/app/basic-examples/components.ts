@@ -1,4 +1,4 @@
-import { Div, B, Span } from 'rxfm';
+import { Div, B, Span } from 'corrente';
 import { timer } from 'rxjs';
 
 export const HelloWorld = Div('Hello, World!');

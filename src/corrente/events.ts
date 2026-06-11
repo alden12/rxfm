@@ -4,18 +4,18 @@ import { Component, componentOperator, ComponentOperator, ElementType } from "./
 import { coerceToObservable } from "./utils";
 
 /**
- * A map of the possible event names to event types for an RxFM element.
+ * A map of the possible event names to event types for an Corrente element.
  */
 export type ElementEventMap = HTMLElementEventMap & SVGElementEventMap;
 
 /**
- * The event type for a given rxfm element type and event name.
+ * The event type for a given corrente element type and event name.
  */
 export type EventType<T extends ElementType, E extends keyof ElementEventMap> =
   T extends HTMLInputElement ? ElementEventMap[E] & { target: HTMLInputElement } : ElementEventMap[E];
 
 /**
- * A function to handle an element event in rxfm, or an observable emitting a handler function.
+ * A function to handle an element event in corrente, or an observable emitting a handler function.
  */
 export type EventHandler<T extends ElementType, E extends keyof ElementEventMap> =
   ((event: EventType<T, E>) => void) | Observable<(event: EventType<T, E>) => void>;
@@ -52,7 +52,7 @@ export const event = new Proxy(basicEventOperator, {
 }) as EventOperator;
 
 /**
- * An object where keys are rxfm element event names and values are event handler functions.
+ * An object where keys are corrente element event names and values are event handler functions.
  */
 export type EventHandlers<T extends ElementType> = {
   [E in keyof ElementEventMap]?: EventHandler<T, E>;

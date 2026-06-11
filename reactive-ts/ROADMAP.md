@@ -14,7 +14,7 @@ Three layers are built:
 - **The editor path** — a Volar `LanguagePlugin` ([ts-plugin/language-plugin.cjs](ts-plugin/language-plugin.cjs))
   wrapped as a tsserver plugin ([ts-plugin/index.cjs](ts-plugin/index.cjs)), giving live hover /
   errors / go-to-def on `.rts` files mapped back to source. It rides VS Code's **real** tsserver
-  project, so it already resolves the user's own `rxfm` / `rxjs`.
+  project, so it already resolves the user's own `corrente` / `rxjs`.
 - **The build path** — [vite-plugin-reactive-ts.ts](vite-plugin-reactive-ts.ts) + [runtime.ts](runtime.ts).
 - **The extension scaffold** — [vscode-extension/](vscode-extension/): contributes the `.rts`
   language, a (copied) TS grammar, and registers the tsserver plugin. Currently **F5-only** (runs in
@@ -89,9 +89,9 @@ Estimated ~half a day of packaging plumbing; no new framework logic.
    unblocks them.
 4. **Source maps in build output**, so debugging `.rts` in the browser maps back to source. (Editor
    mappings already exist; confirm the Vite plugin emits source maps on the emit path.)
-5. **Decide Reactive TS's relationship to rxfm.** The new fluent API removed one original motivation (events
-   no longer need the boundary). Be explicit about what Reactive TS still buys over fluent rxfm — mainly
-   arithmetic / derived-value ergonomics — and whether `runtime.ts` should fold into rxfm core or
+5. **Decide Reactive TS's relationship to corrente.** The new fluent API removed one original motivation (events
+   no longer need the boundary). Be explicit about what Reactive TS still buys over fluent corrente — mainly
+   arithmetic / derived-value ergonomics — and whether `runtime.ts` should fold into corrente core or
    stay a separate published package.
 6. **Editor polish.** Reactive TS-specific syntax highlighting (currently a copied TS grammar); verify
    cross-file go-to-def / rename work through the Volar mappings.
@@ -289,8 +289,8 @@ latter composing with C6).
   plain value to `of(value)` — so `MAP[key]` resolves to a flat `RenderObservable<T>`. This is the
   lookup-table analog of the ternary's switchMap lowering, letting a multi-way `cond ? … : …` be
   refactored into a dispatch table (Minesweeper's `GAME_TIME_MAP[gameStage]`). A plain-valued table
-  keeps the tighter `map`. `coerceToObservable` is emitted from the **runtime** seam (not `rxfm`), so
-  generated code stays decoupled from rxfm. Covered by the `lookup-table-observable-values` fixture.
+  keeps the tighter `map`. `coerceToObservable` is emitted from the **runtime** seam (not `corrente`), so
+  generated code stays decoupled from corrente. Covered by the `lookup-table-observable-values` fixture.
 
 ### Suggested order for C
 
@@ -315,7 +315,7 @@ arg lifting) · **C7 ✅** (element-access by stream index). All of section C is
   `interval(periodFor(difficulty))` works (no need to lift at a separate binding first).
 - **C7 ✅** — element access over a static object with a stream index lifts; the snake game dropped
   its `cellColor` / `periodFor` lookup helpers and indexes the lookup tables directly.
-- **Reactive TS works outside rxfm** (the reactive engine `examples/snake-game/game.rts` has ZERO rxfm
+- **Reactive TS works outside corrente** (the reactive engine `examples/snake-game/game.rts` has ZERO corrente
   imports — `accumulate` + `interval` + derived lifts — and type-checks on its own). Reactive TS is just
   RxJS + the tiny runtime; the pure game rules stay pure (no observables to lift). So the natural
   decomposition is: **reactive glue → Reactive TS; pure algorithms → plain functions.** For tightly-coupled
@@ -397,9 +397,9 @@ but it's a sharp, surprising edge when a value works in one position and not ano
   `board`/`gameStage` exported but `duration` private, and a single destructuring statement can't mix
   export visibility — a plain-JS limitation, not the transform's — so the explicit split stays.)
 - **Related finding — `EMPTY` vs `null` in a child slot:** `cond ? Div`…` : EMPTY` as a *child*
-  doesn't hide the element when the condition flips false — `EMPTY` emits nothing, so rxfm's children
+  doesn't hide the element when the condition flips false — `EMPTY` emits nothing, so corrente's children
   operator never gets a signal to remove the previous element (it lingers, e.g. a stale "You Win!").
-  Use `: null` for conditional children (rxfm treats `null` as "clear this child"); reserve `EMPTY`
+  Use `: null` for conditional children (corrente treats `null` as "clear this child"); reserve `EMPTY`
   for value streams feeding `accumulate`/filters where you genuinely want no emission. The C1 idiom
   text should call this out. (Minesweeper now uses `null` for its conditional messages.)
 
@@ -418,7 +418,7 @@ way to express that imperatively yet. Minesweeper sidesteps it with a fixed grid
 `[x, y]` coordinates, so handlers capture plain numbers — clean, but it forced the whole
 board-rendering shape.
 
-- **Done:** a handler argument in a parameter that accepts an `Observable` (rxfm's `EventHandler` is
+- **Done:** a handler argument in a parameter that accepts an `Observable` (corrente's `EventHandler` is
   `handler | Observable<handler>`) is lifted to a stream of handlers —
   `stream.pipe(map(v => () => …v…))`, `combineLatest([…])` for several captures — with the body left
   verbatim. A capture counts only when the stream is read as a *value*; streams touched via their API

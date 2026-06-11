@@ -1,4 +1,4 @@
-import { Div, Button, classes, event } from "rxfm";
+import { Div, Button, classes, event } from "corrente";
 import { Observable, combineLatest, of, timer } from "rxjs";
 import { switchMap, filter, map, scan, startWith, distinctUntilChanged } from "rxjs/operators";
 import { GameStage, CellAction } from "../types";

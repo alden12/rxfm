@@ -1,4 +1,4 @@
-import { Div, mapToComponents } from 'rxfm';
+import { Div, mapToComponents } from 'corrente';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 

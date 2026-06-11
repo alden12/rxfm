@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 
 interface Cell {
   color: string;

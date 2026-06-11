@@ -5,8 +5,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('renders the example app shell', async ({ page }) => {
-  await expect(page).toHaveTitle('RxFM Examples');
-  await expect(page.getByRole('heading', { level: 1, name: 'RxFM Examples' })).toBeVisible();
+  await expect(page).toHaveTitle('Corrente Examples');
+  await expect(page.getByRole('heading', { level: 1, name: 'Corrente Examples' })).toBeVisible();
 });
 
 test('click counter increments on click (reactivity)', async ({ page }) => {
@@ -18,7 +18,7 @@ test('click counter increments on click (reactivity)', async ({ page }) => {
 });
 
 test('todo list renders its initial items', async ({ page }) => {
-  await expect(page.getByText('Finish RxFM')).toBeVisible();
+  await expect(page.getByText('Finish Corrente')).toBeVisible();
   await expect(page.getByPlaceholder('Add Item')).toBeVisible();
 });
 
@@ -35,13 +35,13 @@ test('todo list adds an item from the input (keyed-list reactivity)', async ({ p
 });
 
 test('todo item toggles done on click (event → conditional class + checkbox binding)', async ({ page }) => {
-  const item = page.locator('.todo-item', { hasText: 'Finish RxFM' });
+  const item = page.locator('.todo-item', { hasText: 'Finish Corrente' });
   const checkbox = item.locator('input[type="checkbox"]');
 
   await expect(item).not.toHaveClass(/\bdone\b/);
   await expect(checkbox).not.toBeChecked();
 
-  await page.getByText('Finish RxFM').click();
+  await page.getByText('Finish Corrente').click();
 
   await expect(item).toHaveClass(/\bdone\b/);
   await expect(checkbox).toBeChecked();
