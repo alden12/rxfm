@@ -16,8 +16,8 @@ import { DEMOS } from './demos';
 import { DEMO_MARKER, codeBlock, rawHtml, renderMarkdownHtml } from './markdown';
 
 const sourceExpander = (source: string): ComponentChild => Details
-  .class('border-t border-gray-200')(
-    Summary.class('cursor-pointer select-none px-3.5 py-2 text-sm text-gray-500 hover:text-violet-700')`View full source`,
+  .class('border-t border-border')(
+    Summary.class('cursor-pointer select-none px-3.5 py-2 text-sm text-muted hover:text-primary-strong')`View full source`,
     codeBlock(source),
   );
 
@@ -25,11 +25,11 @@ const DemoPanel = (id: string): ComponentChild => {
   const demo = DEMOS[id];
   if (!demo) {
     return rawHtml(
-      `<div class="not-prose my-5 rounded-lg bg-red-50 px-4 py-3 text-red-700">Unknown demo: <code>${id}</code></div>`,
+      `<div class="not-prose my-5 rounded-lg bg-danger-surface px-4 py-3 text-danger">Unknown demo: <code>${id}</code></div>`,
     );
   }
-  return Div.class('my-5 overflow-hidden rounded-lg border border-gray-200')(
-    Div.class('border-b border-gray-200 bg-gray-50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-500')`Result`,
+  return Div.class('my-5 overflow-hidden rounded-lg border border-border')(
+    Div.class('border-b border-border bg-surface px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted')`Result`,
     Div.class('demo-result p-4')(demo.component),
     demo.source ? sourceExpander(demo.source) : null,
   );
@@ -45,16 +45,16 @@ export const DocPage = (markdown: string): Component => {
   // odd indices are demo ids.
   const parts = renderMarkdownHtml(markdown).split(DEMO_MARKER);
   const children = parts.map((part, i) =>
-    i % 2 === 0 ? rawHtml(part, 'prose prose-slate max-w-none') : DemoPanel(part),
+    i % 2 === 0 ? rawHtml(part, 'prose prose-invert max-w-none') : DemoPanel(part),
   );
-  return Div.class('mx-auto max-w-[820px]')(children);
+  return Div.class('mx-auto max-w-[var(--content-width)]')(children);
 };
 
 /** A page for a full app example: a heading, the live app, and its source. */
 export const AppPage = (title: string, app: ComponentChild, source: string): Component => Div
-  .class('mx-auto max-w-[820px]')(
+  .class('mx-auto max-w-[var(--content-width)]')(
     H1.class('mb-4 text-2xl font-bold')`${title}`,
-    Div.class('overflow-hidden rounded-lg border border-gray-200')(
+    Div.class('overflow-hidden rounded-lg border border-border')(
       Div.class('demo-result p-4')(app),
       sourceExpander(source),
     ),

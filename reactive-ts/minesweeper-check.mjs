@@ -13,7 +13,7 @@ import pluginCjs from './ts-plugin/index.cjs';
 const { transformWithMappings } = transformCjs;
 const { patchReactiveTsModuleResolution } = pluginCjs;
 const here = dirname(fileURLToPath(import.meta.url));
-const dir = join(here, '..', 'examples', 'minesweeper');
+const dir = join(here, '..', 'site', 'minesweeper');
 
 const parsed = ts.parseJsonConfigFileContent(
   ts.readConfigFile(join(here, 'tsconfig.json'), ts.sys.readFile).config, ts.sys, here,

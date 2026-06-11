@@ -1,12 +1,12 @@
 {
-  // Governs the example sources, including `.rts` files in the editor. Mirrors
-  // reactive-ts/tsconfig.json: the root tsconfig excludes `examples/`, which would
+  // Governs the doc-site sources, including `.rts` files in the editor. Mirrors
+  // reactive-ts/tsconfig.json: the root tsconfig excludes `site/`, which would
   // otherwise leave `.rts` files in an inferred project with default options (no
   // `paths`, unreliable extraFileExtensions wiring), so the Reactive TS tsserver
   // plugin's virtual TypeScript never type-checked properly. This pins the same
   // options the transform itself uses (see reactive-ts/ts-plugin/transform.cjs
   // `getCompilerOptions`) plus the `rxfm` path. The transform-emitted `render` import
-  // resolves to `examples/runtime.ts`; hand-written helpers (`accumulate`/…) are
+  // resolves to `site/runtime.ts`; hand-written helpers (`accumulate`/…) are
   // imported from `rxfm`, which the `paths` entry resolves to the library source.
   "compilerOptions": {
     "target": "ES2020",

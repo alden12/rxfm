@@ -19,7 +19,7 @@ Aside from native RxJS integration, RxFM has several advantages over existing fr
 
 I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
 
-* Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/examples/plain-typescript) and check out the [live demo here](https://alden12.github.io/rxfm/).
+* Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/site/plain-typescript) and check out the [live demo here](https://alden12.github.io/rxfm/).
 * Works best with [TypeScript](https://www.typescriptlang.org/).
 
 > **Note:** As of the `3.0.0` alpha line RxFM no longer ships JSX/TSX support — components are
@@ -92,7 +92,7 @@ We can also use the tagged template syntax:
 const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
 ```
 
-[Code](https://github.com/alden12/rxfm/blob/master/examples/plain-typescript/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+[Code](https://github.com/alden12/rxfm/blob/master/site/plain-typescript/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ---
 
@@ -126,7 +126,7 @@ When components store state like this, they should be declared as functions as a
 
 Using Subjects to store state gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
 
-[Code](https://github.com/alden12/rxfm/blob/master/examples/plain-typescript/basic-examples/state-and-events.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+[Code](https://github.com/alden12/rxfm/blob/master/site/plain-typescript/basic-examples/state-and-events.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ---
 
@@ -178,7 +178,7 @@ const AttributeExample = Div`We access attributes as properties and use tagged t
 );
 ```
 
-[Code](https://github.com/alden12/rxfm/blob/master/examples/plain-typescript/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+[Code](https://github.com/alden12/rxfm/blob/master/site/plain-typescript/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ---
 
@@ -217,7 +217,7 @@ conditional(flipFlop, Div`Now you see me!`)
 
 You may also be tempted to use `switchMap` to transform an array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the [Dynamic Component Arrays](#dynamic-component-arrays) section).
 
-[Code](https://github.com/alden12/rxfm/blob/master/examples/plain-typescript/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+[Code](https://github.com/alden12/rxfm/blob/master/site/plain-typescript/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ---
 
@@ -261,7 +261,7 @@ Component children can be passed in using the `ComponentChild` type. A variable 
 const Card = (...children: ComponentChild[]) => Div.class('card')(...children);
 ```
 
-[Code](https://github.com/alden12/rxfm/blob/master/examples/plain-typescript/basic-examples/component-io.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+[Code](https://github.com/alden12/rxfm/blob/master/site/plain-typescript/basic-examples/component-io.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ---
 
@@ -308,7 +308,7 @@ const ComponentArraysExample = Div(ItemComponents);
 
 If our `items` subject were to then emit a new array, this would immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements.
 
-[Code](https://github.com/alden12/rxfm/blob/master/examples/plain-typescript/basic-examples/dynamic-component-arrays.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+[Code](https://github.com/alden12/rxfm/blob/master/site/plain-typescript/basic-examples/dynamic-component-arrays.ts) | [Live Demo](https://alden12.github.io/rxfm/)
 
 ---
 
@@ -316,6 +316,6 @@ If our `items` subject were to then emit a new array, this would immediately be 
 
 You can check out a few more complex RxFM examples at the links below to see how it might be used in a larger app. [Live Demo](https://alden12.github.io/rxfm/)
 
-* [Todo List Example](https://github.com/alden12/rxfm/tree/master/examples/plain-typescript/advanced-examples/todo-list)
-* [Snake Game Example](https://github.com/alden12/rxfm/tree/master/examples/plain-typescript/advanced-examples/snake-game)
-* [Minesweeper Example](https://github.com/alden12/rxfm/tree/master/examples/plain-typescript/advanced-examples/minesweeper)
+* [Todo List Example](https://github.com/alden12/rxfm/tree/master/site/plain-typescript/advanced-examples/todo-list)
+* [Snake Game Example](https://github.com/alden12/rxfm/tree/master/site/plain-typescript/advanced-examples/snake-game)
+* [Minesweeper Example](https://github.com/alden12/rxfm/tree/master/site/plain-typescript/advanced-examples/minesweeper)

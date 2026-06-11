@@ -269,8 +269,8 @@ RxFM.
 ## Advanced Examples
 
 The full Reactive TS example suite — the basics covered on this page plus a todo list, snake game, and
-minesweeper — lives in [examples/](../examples/) and powers the
+minesweeper — lives in [site/](../site/) and powers the
 [live demo](https://alden12.github.io/rxfm/) (`yarn dev` to run it locally). A condensed,
 single-file Reactive TS showcase is in [reactive-ts/examples/app.rts](../reactive-ts/examples/app.rts). The
 plain-TypeScript equivalents are in
-[examples/plain-typescript](../examples/plain-typescript/).
+[site/plain-typescript](../site/plain-typescript/).

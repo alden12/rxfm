@@ -3,7 +3,7 @@
   justify-content: space-between;
   cursor: pointer;
   padding: 5px 0;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #30363d;
 }
 
 .todo-item input {
@@ -11,7 +11,7 @@
 }
 
 .todo-item:hover {
-  background-color: lightgrey;
+  background-color: #1f2937;
 }
 
 .todo-item.done {

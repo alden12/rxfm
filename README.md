@@ -69,7 +69,7 @@ Or browse the [**live demo**](https://alden12.github.io/rxfm/).
 | --- | --- |
 | 🚀 [Getting started](docs/getting-started.md) | Install, editor setup, and the Reactive TS build. |
 | 📖 [Guide](docs/guide.md) | The full walkthrough — components, state, attributes, lists. |
-| 🧩 [Examples](examples/) | The Reactive TS example suite that powers the live demo. |
+| 🧩 [Examples](site/) | The Reactive TS example suite that powers the live demo. |
 | 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | RxFM in plain RxJS, no build step. |
 | 🧪 [Reactive TS roadmap](reactive-ts/ROADMAP.md) | Status of the experimental Reactive TS layer. |
 

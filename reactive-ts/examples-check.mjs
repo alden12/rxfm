@@ -13,9 +13,9 @@ import pluginCjs from './ts-plugin/index.cjs';
 const { transformWithMappings } = transformCjs;
 const { patchReactiveTsModuleResolution } = pluginCjs;
 const here = dirname(fileURLToPath(import.meta.url));
-// The structured example suite was promoted to the top-level `examples/` (sibling
-// of `reactive-ts/`) when Reactive TS became the default style; loose transform fixtures stay here.
-const examples = join(here, '..', 'examples');
+// The structured example suite lives in the top-level doc-site `site/` (sibling
+// of `reactive-ts/`); loose transform fixtures stay here.
+const examples = join(here, '..', 'site');
 
 const parsed = ts.parseJsonConfigFileContent(
   ts.readConfigFile(join(here, 'tsconfig.json'), ts.sys.readFile).config, ts.sys, here,

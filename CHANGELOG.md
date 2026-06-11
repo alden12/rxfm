@@ -32,13 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
 
 - **The demo example app is now a live doc-site.** A sidebar-nav shell (authored in Reactive TS,
-  `examples/app.rts`) renders the README and `docs/*` markdown with **live, runnable demos spliced in**:
+  `site/app.rts`) renders the README and `docs/*` markdown with **live, runnable demos spliced in**:
   a code fence annotated `` ```ts demo=<id> `` stays an ordinary code block on GitHub but, in the app,
   mounts the matching example component beneath the snippet (code and result shown together), with a
   "view full source" expander pulling the example's real `.rts` via Vite `?raw`. Built with `marked` +
-  `highlight.js` and styled with Tailwind v4 (`@tailwindcss/typography`). The example components and the
-  docs they illustrate stay in sync because the running demo *is* the real example. `yarn dev` now serves
-  on **port 3001**.
+  `highlight.js` and styled with a **dark** Tailwind v4 theme (`@tailwindcss/typography` `prose` for the
+  rendered markdown, github-dark for code) whose colours and sizing are centralized as CSS-variable design
+  tokens (`@theme` + `:root` in `site/app-styles.css`) so the whole site can be re-themed in one place. The
+  example components and the docs they illustrate stay in sync because the running demo *is* the real
+  example. The demo folder is `site/` (it's a doc-site, not just examples). `yarn dev` now serves on
+  **port 3001**.
 
 ### Changed
 - The `reactiveTs()` Vite plugin now skips `?raw`/`?url`/`?inline` queries, so a `.rts` file's source can
@@ -51,9 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Docs & examples restructured around Reactive TS as the default style.** The README is now a lean
   landing page; the full docs live in `docs/` (`getting-started.md`, `guide.md` for the Reactive TS
   walkthrough, `plain-typescript.md` for the plain-RxJS reference). The demo example app moved to a
-  top-level `examples/` directory and is now authored in Reactive TS (`.rts`) — `yarn dev` /
+  top-level `site/` directory and is now authored in Reactive TS (`.rts`) — `yarn dev` /
   `yarn build:app` compile it via the Reactive TS Vite plugin. The previous plain-TypeScript demo is
-  preserved as a reference at `examples/plain-typescript/`. No library/runtime code changed.
+  preserved as a reference at `site/plain-typescript/`. No library/runtime code changed.
 
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and

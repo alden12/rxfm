@@ -1,7 +1,7 @@
 import { EMPTY, Subject, timer } from 'rxjs';
 import { getInitialGame, reduceGame } from './game-logic';
 import { CellAction, GameStage } from './types';
-import { accumulate, TypeOrObservable } from 'rxfm';
+import { accumulate, ComponentChild, TypeOrObservable } from 'rxfm';
 
 export const cellAction = new Subject<CellAction>();
 export const dispatch = (action: CellAction) => cellAction.next(action);
@@ -9,12 +9,12 @@ export const dispatch = (action: CellAction) => cellAction.next(action);
 const { board, gameStage, duration } = accumulate(cellAction, reduceGame, getInitialGame()) ?? getInitialGame();
 export { board, gameStage };
 
-const GAME_TIME_MAP: Record<GameStage, TypeOrObservable<number>> = {
+const GAME_TIME_MAP: Record<GameStage, ComponentChild> = {
   pregame: 0,
   playing: timer(0, 1000),
   win: duration,
   gameOver: duration,
-}
+};
 export const gameTime = GAME_TIME_MAP[gameStage];
 
 const winTime = gameStage === 'win' ? duration : EMPTY;

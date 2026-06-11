@@ -14,7 +14,7 @@ import pluginCjs from './ts-plugin/index.cjs';
 const { transformWithMappings } = transformCjs;
 const { patchReactiveTsModuleResolution } = pluginCjs;
 const here = dirname(fileURLToPath(import.meta.url));
-const dir = join(here, '..', 'examples', 'snake-game');
+const dir = join(here, '..', 'site', 'snake-game');
 
 // Editor options, straight from the tsconfig that governs .rts files.
 const parsed = ts.parseJsonConfigFileContent(

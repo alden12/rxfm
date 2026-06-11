@@ -58,7 +58,7 @@ the mechanics. Two pieces give you the experience: **live editor types** and a *
 > ⚠️ **Status.** The Reactive TS tooling (the transform, the Vite plugin, the runtime, and the editor
 > extension) is a spike and is **not yet published to npm or the VS Code Marketplace**. Today it
 > lives in this repository — the most reliable way to use it is to run it from a clone of this repo
-> (the demo under [examples/](../examples/) is wired up and ready). Packaging it for external
+> (the demo under [site/](../site/) is wired up and ready). Packaging it for external
 > projects is on the [roadmap](../reactive-ts/ROADMAP.md).
 
 ### 1. Live editor types (VS Code extension)
@@ -80,7 +80,7 @@ binding. See the extension's own [README](../reactive-ts/vscode-extension/README
 rebuild it.
 
 For the editor to resolve real types, `.rts` files need a tsconfig pinning the transform's compiler
-options plus your `rxfm` path — see [examples/tsconfig.json](../examples/tsconfig.json) (mirrored from
+options plus your `rxfm` path — see [site/tsconfig.json](../site/tsconfig.json) (mirrored from
 [reactive-ts/tsconfig.json](../reactive-ts/tsconfig.json)) for the reference. The root `tsconfig.json` should
 **exclude** the `.rts` directory so it doesn't get type-checked as plain TS with default options.
 
@@ -118,7 +118,7 @@ of the rxfm runtime:
 export * from 'rxfm';
 ```
 
-(In this repo the examples re-export from the library source via [examples/runtime.ts](../examples/runtime.ts)
+(In this repo the examples re-export from the library source via [site/runtime.ts](../site/runtime.ts)
 rather than the published package — the same reason the demo aliases `rxfm` to `src/` — but a real
 consumer's `runtime.ts` is just the one-liner above.)
 
@@ -131,5 +131,5 @@ yarn          # install
 yarn dev      # Reactive TS demo on http://localhost:3000
 ```
 
-The demo entry is [examples/main.ts](../examples/main.ts); every example it renders is authored in
-Reactive TS under [examples/](../examples/). `yarn build:app` produces the static demo in `dist-demo/`.
+The demo entry is [site/main.ts](../site/main.ts); every example it renders is authored in
+Reactive TS under [site/](../site/). `yarn build:app` produces the static demo in `dist-demo/`.
