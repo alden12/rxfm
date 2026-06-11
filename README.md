@@ -5,6 +5,10 @@
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/corrente?label=gzipped)](https://bundlephobia.com/result?p=corrente@latest)
 [![MIT license](https://img.shields.io/npm/l/corrente)](https://opensource.org/licenses/MIT)
 
+<p align="center">
+  <img src="branding/corrente-logo.svg" alt="Corrente" width="500" height="500">
+</p>
+
 **Build reactive web apps as plain RxJS streams — no virtual DOM, no re-render cycle.**
 
 In Corrente a **component is just an `Observable<HTMLElement>`**. Elements are reactive simply because
@@ -13,15 +17,15 @@ root (`addToView`) sets the whole app in motion. With the experimental **Reactiv
 ordinary maths (`count * 2`) and is lifted into reactive streams for you, fully typed.
 
 ```ts demo=counter
-import { Div, Button, addToView } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, Button, addToView } from "corrente";
+import { BehaviorSubject } from "rxjs";
 
 const Counter = () => {
   const count = new BehaviorSubject(0);
 
   return Div(
     Button.onClick(() => count.next(count.value + 1))`+1`,
-    Div`${count} clicks · doubled ${count * 2}`,   // count * 2 stays reactive — no map, no pipe
+    Div`${count} clicks · doubled ${count * 2}`, // count * 2 stays reactive — no map, no pipe
   );
 };
 
@@ -31,15 +35,15 @@ addToView(Counter()); // the one subscription your app needs — mounts to docum
 That `count * 2` is the whole pitch. Reactive TS lifts it to the exact RxJS you'd otherwise write by hand:
 
 ```ts
-const doubled = count * 2;                  // with Reactive TS
-const doubled = count.pipe(map(c => c * 2)); // the plain-RxJS equivalent it compiles to
+const doubled = count * 2; // with Reactive TS
+const doubled = count.pipe(map((c) => c * 2)); // the plain-RxJS equivalent it compiles to
 ```
 
 No new runtime model, nothing hidden — just less ceremony.
 
 ## Why Corrente
 
-- **Streams *are* the components.** No virtual DOM, no reconciliation, no render scheduling — state
+- **Streams _are_ the components.** No virtual DOM, no reconciliation, no render scheduling — state
   changes hit the DOM immediately.
 - **It's just RxJS.** Everything composes with the operators and patterns you already know; `rxjs` is
   the only dependency.
@@ -65,13 +69,13 @@ Or browse the [**live demo**](https://alden12.github.io/rxfm/).
 
 ## Documentation
 
-| | |
-| --- | --- |
-| 🚀 [Getting started](docs/getting-started.md) | Install, editor setup, and the Reactive TS build. |
-| 📖 [Guide](docs/guide.md) | The full walkthrough — components, state, attributes, lists. |
-| 🧩 [Examples](site/) | The Reactive TS example suite that powers the live demo. |
-| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | Corrente in plain RxJS, no build step. |
-| 🧪 [Reactive TS roadmap](reactive-ts/ROADMAP.md) | Status of the experimental Reactive TS layer. |
+|                                                           |                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------ |
+| 🚀 [Getting started](docs/getting-started.md)             | Install, editor setup, and the Reactive TS build.            |
+| 📖 [Guide](docs/guide.md)                                 | The full walkthrough — components, state, attributes, lists. |
+| 🧩 [Examples](site/)                                      | The Reactive TS example suite that powers the live demo.     |
+| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | Corrente in plain RxJS, no build step.                       |
+| 🧪 [Reactive TS roadmap](reactive-ts/ROADMAP.md)          | Status of the experimental Reactive TS layer.                |
 
 > ⚠️ **Alpha.** This is the `3.0.0-alpha` line — an in-progress redesign (Vite build, no JSX, a new
 > fluent component API). The API may change between alpha versions. For the current **stable
