@@ -353,6 +353,10 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       if (isElementValueType(observableValueType(checker.getTypeAtLocation(node)))) {
         return { pieces: [V(node)], observable: true, lifted: false };
       }
+      // A value-returning array method (`.filter`/`.find`/`.some`/…) whose callback
+      // captures an observable → lift the whole call over the capture(s).
+      const arrLift = liftArrayCallbackCall(node);
+      if (arrLift) return arrLift;
       // Method call on a stream: obj.method(args) where obj is observable and
       // method targets the emitted value → call it ON the emitted value (so
       // `this` is preserved), rather than extracting the method off the stream.
@@ -848,6 +852,41 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // The captured streams are both the sources and the map params (re-bound to
     // their current values inside the handler body).
     return combineMap(sources.map(s => [s]), sources, expandAliases(fnNode));
+  };
+
+  // Value-returning array methods whose RESULT depends on the whole array via a
+  // synchronous callback (a predicate / comparator). When that callback captures an
+  // observable as a VALUE — `FRUITS.filter(f => f.includes(query))` — the result is a
+  // function of the stream, so the WHOLE call lifts over the capture(s):
+  // `query.pipe(map(query => FRUITS.filter(f => f.includes(query))))`. The callback stays
+  // a plain synchronous predicate (it can't consume a stream per element), with the
+  // captured names re-bound to current values inside the map — the same closure-capture
+  // shape as the D2 handler lift. `.map`/`.flatMap` are deliberately excluded: those
+  // produce per-element components, handled by mapToComponents (observable receiver) or
+  // the C8 per-element lift (plain array). The downstream `.map` over a lifted result is
+  // then an ordinary stream-`.map` → mapToComponents.
+  const ARRAY_VALUE_METHODS = new Set(['filter', 'find', 'findIndex', 'findLast', 'findLastIndex', 'some', 'every']);
+  const liftArrayCallbackCall = (node: TS.CallExpression): Operand | null => {
+    if (!ts.isPropertyAccessExpression(node.expression)) return null;
+    if (!ARRAY_VALUE_METHODS.has(node.expression.name.text)) return null;
+    const recv = node.expression.expression;
+    if (isObservableExpr(recv)) return null;                                   // observable receiver: not this case
+    const cb = node.arguments[0];
+    if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return null;
+    if (!checker.getIndexTypeOfType(checker.getTypeAtLocation(recv), ts.IndexKind.Number)) return null; // array-like
+    const names = [...collectHandlerCaptures(cb).keys()];
+    if (!names.length) return null;                                            // no captured stream → ordinary call
+    // Dedup captures through their item-param source (D4 aliases), exactly as the
+    // handler-closure lift does; the whole call is re-emitted verbatim in the map body.
+    const sources: string[] = [];
+    const seen = new Set<string>();
+    for (const name of names) {
+      const src = aliasInfo.has(name) ? aliasInfo.get(name)!.param : name;
+      if (seen.has(src)) continue;
+      seen.add(src);
+      sources.push(src);
+    }
+    return { pieces: combineMap(sources.map(s => [s]), sources, expandAliases(node)), observable: true, lifted: true };
   };
 
   // Lift variable initializers anywhere — including inside function bodies, since

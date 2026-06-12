@@ -1,0 +1,18 @@
+import { Observable } from 'rxjs';
+
+const FRUITS = ['apple', 'banana', 'cherry'];
+declare const query: Observable<string>;
+
+// A value-returning array method (`.filter`) whose synchronous callback captures an
+// observable as a value. The predicate can't consume a stream per element, so the WHOLE
+// call lifts over the capture — `query.pipe(map(query => FRUITS.filter(...)))` — emitting
+// a fresh filtered array per query. (A downstream `.map` over the lifted result is then an
+// ordinary stream-`.map` → mapToComponents.) This is the closure-capture shape the D2
+// handler lift uses, applied to a value-returning array call.
+export const matching = FRUITS.filter(fruit => fruit.includes(query));
+
+// `.some` lifts the same way — a boolean derived from the whole array over the stream.
+export const anyMatch = FRUITS.some(fruit => fruit.includes(query));
+
+// A filter whose callback captures NO observable is left completely untouched.
+export const longOnes = FRUITS.filter(fruit => fruit.length > 4);

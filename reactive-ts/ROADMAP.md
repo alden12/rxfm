@@ -321,12 +321,34 @@ the `array-map-observable-callback` fixture and the live-search example.
   block-bodied array map is recursed into normally (nested children still lift) but its `return` value
   isn't lifted as a whole.
 
+### C9. Lift a value-returning array method over a callback-captured observable — ✅ DONE
+
+C8 handles `.map` (per-element children). The complement is `.filter` and friends: a `.filter`
+predicate has to return a *synchronous* boolean, so an observable captured inside it can't be lifted
+per element — the membership decision needs the stream's *current* value. So the **whole call** lifts
+over the capture(s) instead, exactly the closure-capture shape the D2 handler lift uses:
+
+```ts
+const matching = FRUITS.filter(fruit => fruit.includes(query));
+// → render(query.pipe(map(query => FRUITS.filter(fruit => fruit.includes(query)))))   // Observable<string[]>
+matching.map(fruit => Div`${fruit}`)
+// → matching.pipe(mapToComponents(fruit => Div`${fruit}`))   // downstream stream-`.map`, unchanged
+```
+
+The predicate stays an ordinary synchronous callback; the captured name is re-bound to its current
+value inside the `map` (so it's a plain string there), and the result is a stream of filtered arrays —
+a genuinely filtered, keyed list once the downstream `.map` becomes `mapToComponents`. Applies to the
+value-returning array methods (`filter`, `find`, `findIndex`, `findLast`, `findLastIndex`, `some`,
+`every`); `.map`/`.flatMap` stay with C8 / mapToComponents. A callback capturing no observable is left
+untouched. Covered by the `array-filter-observable-callback` fixture and the live-search example.
+
 ### Suggested order for C
 
 **C1 ✅** (filter idiom + stall warning) · **C2 ✅** (operator-style mis-lift fix) · **C3 ✅**
 (`accumulate`) · **C4 ✅** (chained-member collapse) · **C5 ✅** (`interval`) · **C6 ✅** (recursive
 arg lifting) · **C7 ✅** (element-access by stream index) · **C8 ✅** (descend into plain-array `.map`
-callbacks; block bodies follow-up open). All of section C is shipped.
+callbacks; block bodies follow-up open) · **C9 ✅** (lift `.filter`/`.find`/… over a callback-captured
+observable). All of section C is shipped.
 
 ### Status
 
