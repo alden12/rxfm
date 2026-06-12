@@ -6,7 +6,7 @@
 // switch on it with a plain lookup — `CONTENT[selected]` — which Reactive TS lifts to a
 // `switchMap` over the selected-route stream (the lookup-table flattening).
 import { Component } from "corrente";
-import { AppPage, DocPage } from "./doc-page";
+import { AppPage, DocPage, SourceFile } from "./doc-page.rts";
 
 import overviewMd from "../README.md?raw";
 import gettingStartedMd from "../docs/getting-started.md?raw";
@@ -26,8 +26,46 @@ import { SnakeGame } from "./snake-game/snake-game.rts";
 import { Minesweeper } from "./minesweeper/minesweeper.rts";
 
 import todoSrc from "./todo-list/todo-list.rts?raw";
-import snakeSrc from "./snake-game/snake-game.rts?raw";
+import todoStylesSrc from "./todo-list/todo-list-styles.css?raw";
+
+import snakeGameSrc from "./snake-game/snake-game.rts?raw";
+import snakeStateSrc from "./snake-game/game.rts?raw";
+import snakeLogicSrc from "./snake-game/game-logic.ts?raw";
+import snakeConstantsSrc from "./snake-game/constants.ts?raw";
+import snakeTypesSrc from "./snake-game/types.ts?raw";
+import snakeStylesSrc from "./snake-game/snake-styles.css?raw";
+
 import minesweeperSrc from "./minesweeper/minesweeper.rts?raw";
+import minesweeperStateSrc from "./minesweeper/game.rts?raw";
+import minesweeperLogicSrc from "./minesweeper/game-logic.ts?raw";
+import minesweeperConstantsSrc from "./minesweeper/constants.ts?raw";
+import minesweeperTypesSrc from "./minesweeper/types.ts?raw";
+import minesweeperStylesSrc from "./minesweeper/minesweeper-styles.css?raw";
+
+// Multi-file examples surface every relevant file as a tab in "View full source",
+// entry component first, then state/logic/constants/types, with the stylesheet last.
+const todoSources: SourceFile[] = [
+  { name: "todo-list.rts", source: todoSrc },
+  { name: "todo-list-styles.css", source: todoStylesSrc, lang: "css" },
+];
+
+const snakeSources: SourceFile[] = [
+  { name: "snake-game.rts", source: snakeGameSrc },
+  { name: "game.rts", source: snakeStateSrc },
+  { name: "game-logic.ts", source: snakeLogicSrc },
+  { name: "constants.ts", source: snakeConstantsSrc },
+  { name: "types.ts", source: snakeTypesSrc },
+  { name: "snake-styles.css", source: snakeStylesSrc, lang: "css" },
+];
+
+const minesweeperSources: SourceFile[] = [
+  { name: "minesweeper.rts", source: minesweeperSrc },
+  { name: "game.rts", source: minesweeperStateSrc },
+  { name: "game-logic.ts", source: minesweeperLogicSrc },
+  { name: "constants.ts", source: minesweeperConstantsSrc },
+  { name: "types.ts", source: minesweeperTypesSrc },
+  { name: "minesweeper-styles.css", source: minesweeperStylesSrc, lang: "css" },
+];
 
 export interface NavItem {
   id: string;
@@ -66,7 +104,7 @@ export const CONTENT = {
   "getting-started": DocPage(gettingStartedMd),
   guide: DocPage(guideMd),
   "plain-typescript": DocPage(plainTsMd),
-  todo: AppPage("Todo List", TodoList(), todoSrc),
-  snake: AppPage("Snake", SnakeGame(), snakeSrc),
-  minesweeper: AppPage("Minesweeper", Minesweeper(), minesweeperSrc),
+  todo: AppPage("Todo List", TodoList(), todoSources),
+  snake: AppPage("Snake", SnakeGame(), snakeSources),
+  minesweeper: AppPage("Minesweeper", Minesweeper(), minesweeperSources),
 } satisfies Record<string, Component>;

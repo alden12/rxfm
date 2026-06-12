@@ -1,5 +1,5 @@
 // The demo registry — the link between a `demo=<id>` fence in the markdown and the
-// live component shown beneath it (see markdown.ts / doc-page.ts). Ids are referenced
+// live component shown beneath it (see markdown.ts / doc-page.rts). Ids are referenced
 // from README.md and docs/guide.md; each maps to the real example component plus the
 // `.rts` source for the optional "view full source" expander.
 //

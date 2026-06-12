@@ -1,9 +1,9 @@
-# Corrente
+# 🛶 Corrente
 
 [![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
-[![NPM](https://img.shields.io/npm/v/corrente)](https://www.npmjs.com/package/corrente)
-[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/corrente?label=gzipped)](https://bundlephobia.com/result?p=corrente@latest)
-[![MIT license](https://img.shields.io/npm/l/corrente)](https://opensource.org/licenses/MIT)
+[![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
+[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
+[![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
 <p align="center">
   <img src="branding/corrente-logo.svg" alt="Corrente" width="500" height="500">
