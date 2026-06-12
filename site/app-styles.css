@@ -22,8 +22,8 @@
   --color-border: #1f2937; /* hairline borders */
   --color-foreground: #e5e7eb; /* primary text */
   --color-muted: #9ca3af; /* secondary / label text */
-  --color-primary: #a78bfa; /* brand accent (violet) */
-  --color-primary-strong: #c4b5fd; /* active accent text */
+  --color-primary: #c7a7e1; /* brand accent — the moon violet from the logo */
+  --color-primary-strong: #dcc6ef; /* active accent text — a lighter tint of the moon */
   --color-danger-surface: #450a0a; /* error-panel background */
   --color-danger: #fca5a5; /* error-panel text */
   --color-code: #0d1117; /* code-block frame (matches github-dark) */
