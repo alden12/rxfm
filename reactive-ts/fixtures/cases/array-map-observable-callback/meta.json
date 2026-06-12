@@ -1,0 +1,6 @@
+{
+  "description": "A plain (non-stream) array `.map(cb)` whose callback body captures an observable: the transform descends into the callback and lifts the returned expression per element (the receiver stays an ordinary array), so each element is a RenderObservable the children operator renders. A map whose callback uses no observable is left untouched.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

@@ -744,6 +744,54 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // The key arg (if any) operates on the plain item value — left verbatim.
   };
 
+  // A plain (non-stream) array `.map(cb)` whose callback BODY captures an observable —
+  // e.g. live-search's `FRUITS.map(fruit => fruit.includes(query) ? Div`…` : null)`. The
+  // stream-`.map` → mapToComponents path (isComponentMapCall) handles an observable
+  // RECEIVER; this handles an observable used INSIDE an ordinary array map. The receiver
+  // stays a plain array; we only descend into the callback so its body lifts like any
+  // child expression — each element becomes a RenderObservable the children operator
+  // renders reactively. Gated on an array-like (numeric-indexed) receiver and an
+  // arrow/function callback.
+  const isPlainArrayMapCall = (node: TS.Node): node is TS.CallExpression => {
+    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return false;
+    if (node.expression.name.text !== 'map') return false;
+    const cb = node.arguments[0];
+    if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return false;
+    if (isObservableExpr(node.expression.expression)) return false; // stream map → mapToComponents
+    const recvType = checker.getTypeAtLocation(node.expression.expression);
+    return Boolean(checker.getIndexTypeOfType(recvType, ts.IndexKind.Number));
+  };
+
+  const handlePlainArrayMap = (node: TS.CallExpression) => {
+    const recv = (node.expression as TS.PropertyAccessExpression).expression;
+    const cb = node.arguments[0] as TS.ArrowFunction | TS.FunctionExpression;
+    visit(recv); // the array receiver may itself hold observables / nested maps
+    for (let i = 1; i < node.arguments.length; i++) visit(node.arguments[i]);
+    // Callback params are plain locals (array element / index). If one shadows an outer
+    // observable binding, treat it as plain inside the body; restore after.
+    const shadowed: string[] = [];
+    for (const p of cb.parameters) {
+      const name = p.name.getText(sf);
+      if (observableBindings.has(name)) { observableBindings.delete(name); shadowed.push(name); }
+    }
+    // Expression-bodied: lift the returned expression in place (block bodies are a
+    // follow-up — see ROADMAP; for now just recurse so nested children still lift).
+    let handled = false;
+    if (!ts.isBlock(cb.body)) {
+      const r = transformExpression(cb.body);
+      if (r.lifted) {
+        usedRender = true;
+        edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: ['render(', ...r.pieces, ')'] });
+        handled = true;
+      } else if (r.rewritten) {
+        edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: r.pieces });
+        handled = true;
+      }
+    }
+    if (!handled) visit(cb.body);
+    shadowed.forEach(n => observableBindings.add(n));
+  };
+
   // D2: an event handler is a closure that runs *later*, so a stream referenced
   // inside it is the stream, not its current value. When a handler captures
   // observable bindings, lift it to a stream of handlers — the handler text is left
@@ -809,6 +857,12 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // Component-list map in any expression position (e.g. a child argument).
     if (isComponentMapCall(node)) {
       handleComponentMap(node);
+      return;
+    }
+    // Plain-array `.map(cb)` whose callback captures an observable: descend into the
+    // callback and lift its body (the receiver stays an ordinary array).
+    if (isPlainArrayMapCall(node)) {
+      handlePlainArrayMap(node);
       return;
     }
     if (ts.isVariableDeclaration(node) && node.initializer) {

@@ -292,11 +292,41 @@ latter composing with C6).
   keeps the tighter `map`. `coerceToObservable` is emitted from the **runtime** seam (not `rxfm`), so
   generated code stays decoupled from rxfm. Covered by the `lookup-table-observable-values` fixture.
 
+### C8. Descend into plain-array `.map` callbacks — ✅ DONE (expression-bodied)
+
+Lifting a call/method over an observable value (`fruit.includes(query)` → `query.pipe(map(q => fruit.includes(q)))`)
+already worked — but only where the transform *processed* the expression. A plain (non-stream) array
+`.map(cb)` was a blind spot: the stream-`.map` → `mapToComponents` path (D4) handles an observable
+*receiver*, but the body of an ordinary array map was never visited, so an observable captured inside
+it (live-search's `FRUITS.map(fruit => fruit.includes(query) ? Div\`${fruit}\` : null)`) stayed verbatim
+— a type error that silently always-missed at runtime.
+
+The transform now descends into a plain-array `.map` callback (array-like receiver + arrow/function
+callback) and lifts its returned expression like any child, leaving the receiver an ordinary array:
+
+```ts
+FRUITS.map(fruit => fruit.includes(query) ? Div`${fruit}` : null)
+// → FRUITS.map(fruit => render(query.pipe(map(query => fruit.includes(query)))
+//                                   .pipe(switchMap(c => c ? Div`${fruit}` : of(null)))))
+```
+
+Each element becomes a `RenderObservable<Component | null>`; the children operator renders the array,
+so the list filters reactively. A callback that captures no observable is left untouched. Covered by
+the `array-map-observable-callback` fixture and the live-search example.
+
+- **Follow-up (open): block-bodied callbacks.** Only expression-bodied callbacks (`fruit => expr`)
+  lift today. A block body (`fruit => { … return expr }`) needs statement-level transformation of the
+  callback (lifting the `return` expression, and any intermediate `const`s that capture streams) — the
+  same machinery `visit` already runs for a component body, applied to the callback block. Until then a
+  block-bodied array map is recursed into normally (nested children still lift) but its `return` value
+  isn't lifted as a whole.
+
 ### Suggested order for C
 
 **C1 ✅** (filter idiom + stall warning) · **C2 ✅** (operator-style mis-lift fix) · **C3 ✅**
 (`accumulate`) · **C4 ✅** (chained-member collapse) · **C5 ✅** (`interval`) · **C6 ✅** (recursive
-arg lifting) · **C7 ✅** (element-access by stream index). All of section C is shipped.
+arg lifting) · **C7 ✅** (element-access by stream index) · **C8 ✅** (descend into plain-array `.map`
+callbacks; block bodies follow-up open). All of section C is shipped.
 
 ### Status
 
