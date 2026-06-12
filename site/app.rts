@@ -19,7 +19,11 @@ const NavLink = (id: string, title: string) => Div
     'cursor-pointer select-none border-l-[3px] border-transparent px-5 py-1.5 text-sm text-muted hover:bg-elevated hover:text-foreground',
     selected === id && 'border-primary bg-elevated font-semibold text-primary-strong',
   )
-  .onClick(() => selected.next(id))
+  .onClick(() => {
+    selected.next(id);
+    // Reset the content pane to the top on section change (until there's a real router).
+    document.querySelector('main')?.scrollTo({ top: 0 });
+  })
   `${title}`;
 
 const NavSection = (heading: string, items: { id: string; title: string }[]) => Div
@@ -30,7 +34,7 @@ const NavSection = (heading: string, items: { id: string; title: string }[]) => 
 
 const Sidebar = Aside
   .class('w-[var(--sidebar-width)] shrink-0 overflow-y-auto border-r border-border bg-surface py-5')(
-    Div.class('flex items-center gap-2 px-5 pb-4 text-[22px] font-bold tracking-tight text-primary')(
+    Div.class('flex items-center gap-2 px-5 pb-4 text-[22px] font-normal tracking-tight text-primary')(
       Img.src(LOGO_SRC).class('h-8 w-8'),
       'Corrente',
     ),
