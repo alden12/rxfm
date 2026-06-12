@@ -94,7 +94,14 @@ export function createProgramFromText(
     const standard = ts.resolveModuleName(name, containingFile, options, host).resolvedModule;
     if (standard) return standard;
     if (name.startsWith('.')) {
-      const candidate = path.resolve(path.dirname(containingFile), `${name}.rts`);
+      // A relative `.rts` import (standard resolution can't — `.rts` isn't a known
+      // extension). The specifier may OMIT the extension (`./game`, the convention
+      // inside `.rts` files) or include it (`./table.rts`, the convention when a `.ts`
+      // file imports a `.rts` one). Both must resolve, so don't blindly append `.rts`
+      // (that turned `./table.rts` into a non-existent `table.rts.rts` and collapsed the
+      // import to `any` — silently degrading dependent lifts).
+      const base = path.resolve(path.dirname(containingFile), name);
+      const candidate = name.endsWith('.rts') ? base : `${base}.rts`;
       if (ts.sys.fileExists(candidate)) return { resolvedFileName: candidate, extension: ts.Extension.Ts };
     }
     return undefined;

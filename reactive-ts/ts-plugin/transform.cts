@@ -534,7 +534,16 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           checker.getIndexTypeOfType(objType, ts.IndexKind.String),
           checker.getIndexTypeOfType(objType, ts.IndexKind.Number),
         ].filter(Boolean) as TS.Type[];
-        if (valueTypes.some(t => isObservableType(t))) {
+        // Flatten when a value MIGHT be an observable. That's the proven case (some value
+        // type is observable), but ALSO the unprovable case: no value types at all, or any
+        // value typed `any`/`unknown` — e.g. when the table's type couldn't be resolved
+        // across a module boundary. A plain `map` over a higher-order value silently leaks
+        // Observable<Observable<T>> into the DOM, so "unsure" must bias to the flattening
+        // form (safe for plain values too — coerceToObservable wraps them). The tight `map`
+        // is kept only when every value is provably a non-observable type.
+        const unprovable = valueTypes.length === 0 ||
+          valueTypes.some(t => (t.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) !== 0);
+        if (unprovable || valueTypes.some(t => isObservableType(t))) {
           needed['rxjs/operators'].add('switchMap');
           needed.runtime.add('coerceToObservable');
           const pieces = [...index.pieces, '.pipe(switchMap(', i, ' => coerceToObservable(', ...obj.pieces, '[', i, '])))'];
