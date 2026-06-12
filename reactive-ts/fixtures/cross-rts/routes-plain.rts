@@ -1,0 +1,9 @@
+// Sibling .rts imported (with explicit `.rts` extension) by the cross-rts-import test.
+// Its value type is a plain `number`. A consumer indexing it by an observable key should
+// keep the tighter `map` — which only happens if the import RESOLVED and the real value
+// type was seen. (If resolution failed, the type would be `any` and the defensive rule
+// would switchMap instead — so a tight `map` here is proof the resolver did its job.)
+export const ROUTES: Record<string, number> = {
+  a: 1,
+  b: 2,
+};
