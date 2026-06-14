@@ -5,6 +5,6 @@ export const ClickCounter = () => {
   const doubled = clicks * 2;
 
   return Button
-    .onClick(() => clicks.next(clicks.value + 1))
+    .onClick(() => clicks.update(count => count + 1))
     `Clicks: ${clicks} (doubled: ${doubled})`;
 };

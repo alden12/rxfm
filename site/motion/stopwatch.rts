@@ -11,7 +11,7 @@ export const Stopwatch = () => {
   return Div.class('stopwatch')(
     Button
       .class('stopwatch-button')
-      .onClick(() => running.next(!running.value))
+      .onClick(() => running.update(on => !on))
       `${running ? 'Stop' : 'Start'}`,
     Div.class('stopwatch-time')`${time.toFixed(1)}s`,
   );
