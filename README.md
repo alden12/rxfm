@@ -5,16 +5,21 @@
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
 [![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
+**A component is just an `Observable<HTMLElement>`. That's the whole framework.**
+
 <p align="center">
   <img src="branding/corrente-logo.svg" alt="Corrente" width="500" height="500">
 </p>
 
-**Build reactive web apps as plain RxJS streams — no virtual DOM, no re-render cycle.**
+A user interface is a pile of values that change over time. Corrente takes that literally: an element
+is reactive because it _is_ a stream. There's no virtual DOM, nothing to diff, no re-render cycle - a
+single mount at the root (`addToView`) sets the whole app in motion, and state changes hit the DOM
+immediately. No `useState`, no dependency arrays, no memoization, and none of the bugs that come with
+a render cycle, because there isn't one.
 
-In Corrente a **component is just an `Observable<HTMLElement>`**. Elements are reactive simply because
-they're streams, so there's nothing to diff and nothing to re-render — a single mount at the app
-root (`addToView`) sets the whole app in motion. With the experimental **Reactive TS** layer, derived state reads like
-ordinary maths (`count * 2`) and is lifted into reactive streams for you, fully typed.
+The catch with reactive streams has always been that they're intimidating to write. So the optional
+**Reactive TS** layer lets you write the plain expression - `count * 2` - and lifts it into the exact
+reactive stream for you, fully typed.
 
 ```ts demo=counter
 import { Div, Button, addToView } from "corrente";
@@ -40,6 +45,26 @@ const doubled = count.pipe(map((c) => c * 2)); // the plain-RxJS equivalent it c
 ```
 
 No new runtime model, nothing hidden — just less ceremony.
+
+It works over time, too. Here a clock drives a hue with ordinary maths, dropped straight into a
+style, so the gradient animates forever with no animation loop, no `requestAnimationFrame`, and no
+state:
+
+```ts demo=breathing-gradient
+import { Div } from "corrente";
+import { timer } from "rxjs";
+
+const tick = timer(0, 50); // a clock, ticking every 50ms
+const hue = (tick * 2) % 360; // a number stream, derived with ordinary maths
+
+export const BreathingGradient = Div.style({
+  background: `linear-gradient(135deg, hsl(${hue} 85% 55%), hsl(${hue + 60} 85% 60%))`,
+})`Reactive by default`;
+```
+
+`hue` is a stream because `tick` is; the moment it lands in the style string the element is bound to
+it and repaints on every tick. There's no render cycle to schedule the animation, because there isn't
+one anywhere in Corrente.
 
 ## Why Corrente
 

@@ -23,6 +23,7 @@ import { ClickCounter } from "./basic/state-and-events.rts";
 import { ConditionalComponentsExample } from "./basic/conditional-components.rts";
 import { ComponentIOExample } from "./basic/component-io.rts";
 import { ComponentArraysExample } from "./basic/dynamic-component-arrays.rts";
+import { BreathingGradient } from "./motion/breathing-gradient.rts";
 
 import componentsSrc from "./basic/components.rts?raw";
 import attributesSrc from "./basic/attributes-and-styling.rts?raw";
@@ -30,6 +31,7 @@ import stateSrc from "./basic/state-and-events.rts?raw";
 import conditionalSrc from "./basic/conditional-components.rts?raw";
 import componentIoSrc from "./basic/component-io.rts?raw";
 import arraysSrc from "./basic/dynamic-component-arrays.rts?raw";
+import breathingGradientSrc from "./motion/breathing-gradient.rts?raw";
 
 export interface Demo {
   /** The live component rendered beneath the fenced snippet. */
@@ -46,6 +48,12 @@ export const DEMOS: Record<string, Demo> = {
   // README hero + the guide's State & Events section both show a counter.
   counter: { component: ClickCounter, source: stateSrc },
   state: { component: ClickCounter, source: stateSrc },
+
+  // README: a clock-driven animation with no animation loop.
+  "breathing-gradient": {
+    component: BreathingGradient,
+    source: breathingGradientSrc,
+  },
 
   // Components section.
   hello: { component: HelloWorld, source: componentsSrc },
