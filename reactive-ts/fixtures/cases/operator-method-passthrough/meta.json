@@ -1,0 +1,7 @@
+{
+  "description": "WICG-style operator methods on an observable receiver (scan/take/drop/takeUntil/catch/finally/debounce/throttle) pass through as stream operators - emitted verbatim, not lifted over each emission - and are render-wrapped at the binding so a multi-use/chained result is shared. Deriving over a scan result lifts (total * 2). Operators chain with one render wrap. map/filter/flatMap are deliberately excluded (element-wise mapToComponents / array-filter / the C1 ternary idiom own those in .rts).",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [],
+  "hovers": []
+}

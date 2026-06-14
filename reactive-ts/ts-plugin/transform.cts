@@ -17,7 +17,7 @@ import type * as TS from 'typescript';
 // The transform's data model lives in transform-types (a types-only module).
 import type {
   Ts, SrcSlice, Piece, Operand, AliasInfo, Edit,
-  Stall, HigherOrder, RootMapping, DeclMapping,
+  Stall, HigherOrder, ObservableMember, RootMapping, DeclMapping,
 } from './transform-types.cjs';
 import { operatorTables } from './transform-operators.cjs';
 import { getCompilerOptions, createProgramFromText } from './transform-program.cjs';
@@ -90,6 +90,15 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // mapping over a lifted arg nests it: Observable<Observable<…>>). Surfaced as a
   // warning, since it type-checks and would otherwise be a silent footgun.
   const higherOrder: HigherOrder[] = [];
+  // Source spans of member accesses lifted over an observable receiver (`stream.field`).
+  // The editor offers the stream's operator methods (scan/take/…) in completion within
+  // these spans, since the lifted generated code otherwise resolves completion against
+  // the emitted value (e.g. string members), hiding the operators.
+  const observableMembers: ObservableMember[] = [];
+  const recordObservableMember = (node: TS.PropertyAccessExpression) => {
+    const start = node.expression.getEnd();
+    observableMembers.push({ start, length: node.getEnd() - start });
+  };
 
   // The checker predicates (see transform-checker), bound to this run's checker and
   // the slice of state above they read/write. Destructured so the planning code
@@ -246,6 +255,26 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     return { pieces: [{ gen: x, refKey: key }, '.pipe(map(', x, ' => ', ...body, '))'], observable: true, lifted: true, callable };
   };
 
+  // WICG-style operator methods we add to `Observable` (see src/corrente/observable-operators.ts).
+  // On an observable receiver these are stream OPERATORS - `stream.scan(fn, seed)`,
+  // `stream.takeUntil(stop)`, `stream.debounce(ms)` - not value-methods to lift over each emission,
+  // so the call passes through verbatim (the method is real on Observable) and its result is itself
+  // a stream.
+  //
+  // Only operators that DON'T collide with an array method are listed. `map`/`flatMap`/`filter` are
+  // excluded because on an `Observable<T[]>` they have an established element-wise meaning in .rts:
+  // `.map`/`.flatMap` over a component callback are the mapToComponents list path (handled in
+  // `visit`), and `.filter(el => …)` lifts the Array filter over the emitted array (filter the
+  // list, then render it). Scalar-stream filtering in .rts is the C1 `cond ? value : EMPTY` idiom,
+  // not `.filter`. The WICG `.map`/`.filter`/`.flatMap` methods still exist for hand-written .ts.
+  //
+  // The set is hardcoded rather than inferred from the augmented `Observable` type: the throwaway
+  // inference Program doesn't pull in corrente's side-effect-imported augmentation, so the checker
+  // there can't be relied on to know these are stream methods.
+  const OPERATOR_METHODS = new Set([
+    'scan', 'take', 'drop', 'takeUntil', 'catch', 'finally', 'debounce', 'throttle',
+  ]);
+
   function transformExpression(node: TS.Node): Operand {
     // A destructured field (D4) read as a value lifts exactly like the member
     // access it stands for: `color` → `item.pipe(map(item => item.color))`.
@@ -357,6 +386,26 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       // captures an observable → lift the whole call over the capture(s).
       const arrLift = liftArrayCallbackCall(node);
       if (arrLift) return arrLift;
+      // A WICG-style operator method on an observable receiver (`stream.scan(fn, seed)`,
+      // `stream.filter(p)`, `stream.takeUntil(stop)`, …) is a stream operator: pass the call
+      // through verbatim and mark the result a stream so the binding render-wraps it once
+      // (shared, so chained/multi-use derivations don't resubscribe the operator). Callback args
+      // (scan reducer, filter predicate) stay inline and verbatim - a stream captured inside a
+      // reducer must be sampled with `.value`, never silently lifted (that would change the fold's
+      // clock); a non-callback arg (e.g. takeUntil's notifier) keeps its own transform, so a
+      // derived-stream notifier still lifts.
+      const opEx = node.expression;
+      if (ts.isPropertyAccessExpression(opEx) && OPERATOR_METHODS.has(opEx.name.text)) {
+        const recv = transformExpression(opEx.expression);
+        if (recv.observable) {
+          const argGroups = node.arguments.map(argNode =>
+            ts.isArrowFunction(argNode) || ts.isFunctionExpression(argNode)
+              ? [V(argNode)]
+              : transformExpression(argNode).pieces);
+          const pieces = [...recv.pieces, '.', V(opEx.name), '(', ...joinPieces(argGroups, ', '), ')'];
+          return { pieces, observable: true, lifted: true };
+        }
+      }
       // Method call on a stream: obj.method(args) where obj is observable and
       // method targets the emitted value → call it ON the emitted value (so
       // `this` is preserved), rather than extracting the method off the stream.
@@ -379,6 +428,11 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
             return [p];
           });
           const body = [objParam, '.', V(ex.name), '(', ...joinPieces(callArgs, ', '), ')'];
+          // Offer the stream's operators in completion at the method name too — covers a
+          // value-method call (`count.toFixed(…)`) and the mid-edit `stream.(args)` parse
+          // (e.g. `tick.` left in front of a leftover `(snake, i) => …`), which lands here
+          // rather than in the property-access branch.
+          recordObservableMember(ex);
           return { pieces: combineMap(sources, params, body), observable: true, lifted: true };
         }
       }
@@ -484,6 +538,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         // so hover / go-to-def on each property still resolves.
         const path = { srcStart: root.getEnd(), srcEnd: node.getEnd() };
         const pieces = [...rootR.pieces, '.pipe(map(', p, ' => ', p, path, '))'];
+        recordObservableMember(node);
         return { pieces, observable: true, lifted: true };
       }
       const obj = transformExpression(node.expression);
@@ -491,6 +546,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         needed['rxjs/operators'].add('map');
         const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
         const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '.', V(node.name), '))'];
+        recordObservableMember(node);
         return { pieces, observable: true, lifted: true };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
@@ -1103,7 +1159,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   });
 
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
-  return { code, segments, sourceDiagnostics, stalls, higherOrder };
+  return { code, segments, sourceDiagnostics, stalls, higherOrder, observableMembers };
 }
 
 // Re-export the public API (transformWithMappings is exported inline above). The
