@@ -98,7 +98,7 @@ const Counter = () => {
   const doubled = clicks * 2;   // ⇒ RenderObservable<number>
 
   return Div(
-    Button.onClick(() => clicks.next(clicks.value + 1))`+1`,
+    Button.onClick(() => clicks.update((c) => c + 1))`+1`,
     Div`doubled = ${doubled}`,
     Div`${clicks} clicks · doubled ${clicks * 2} · ${clicks > 5 ? 'high' : 'low'}`,
   );

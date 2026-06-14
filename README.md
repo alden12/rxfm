@@ -28,7 +28,7 @@ const Counter = () => {
   const count = new State(0);
 
   return Div(
-    Button.onClick(() => count.next(count.value + 1))`+1`,
+    Button.onClick(() => count.update((c) => c + 1))`+1`,
     Div`${count} clicks · doubled ${count * 2}`, // count * 2 stays reactive — no map, no pipe
   );
 };
@@ -68,7 +68,8 @@ one anywhere in Corrente.
 ## Fluent operators, straight from the proposal
 
 `State` (used above) is Corrente's name for an RxJS `BehaviorSubject`: a writable value you read with
-`.value` and update with `.next(...)`. Every stream also carries the fluent operator methods from the
+`.value` and update with `.next(...)` (or `.update((c) => c + 1)` when the next value is derived from
+the current one, as above). Every stream also carries the fluent operator methods from the
 [WICG Observable proposal](https://github.com/WICG/observable), so chaining reads the way the platform
 itself is heading:
 
