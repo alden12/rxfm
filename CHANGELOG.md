@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value it always emits on subscription (a fold or derived view shows something on load), unlike a
   plain `Subject`, which stays silent until its first `.next()`. It is a `BehaviorSubject` subclass
   (no behavioural change, full RxJS interop); the class name is pinned so it surfaces as `State` in
-  stack traces, devtools, and error logs.
+  stack traces, devtools, and error logs. Adds one method, `update(current => next)`, sugar for
+  `next(value-derived-from-current)` (`count.update(c => c + 1)`) so the common read-then-write no
+  longer repeats the variable three times.
 - Fluent operator methods on `Observable`, mirroring the [WICG Observable proposal](https://github.com/WICG/observable):
   `map`, `filter`, `take`, `drop`, `takeUntil`, `catch`, `finally`, `flatMap`, plus `scan` (running
   fold) and `debounce`/`throttle`. `source.map(...).filter(...)` now reads as a chain alongside
