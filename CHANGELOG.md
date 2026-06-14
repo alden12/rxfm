@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `State<T>` — Corrente's name for RxJS's `BehaviorSubject`, exported from the root
+  (`import { State } from 'corrente'`). Clearer for newcomers, and because it requires an initial
+  value it always emits on subscription (a fold or derived view shows something on load), unlike a
+  plain `Subject`, which stays silent until its first `.next()`. It is a `BehaviorSubject` subclass
+  (no behavioural change, full RxJS interop); the class name is pinned so it surfaces as `State` in
+  stack traces, devtools, and error logs.
+- Fluent operator methods on `Observable`, mirroring the [WICG Observable proposal](https://github.com/WICG/observable):
+  `map`, `filter`, `take`, `drop`, `takeUntil`, `catch`, `finally`, `flatMap`, plus `scan` (running
+  fold) and `debounce`/`throttle`. `source.map(...).filter(...)` now reads as a chain alongside
+  `source.pipe(...)`. Importing `corrente` augments `Observable.prototype` (each method guarded, so a
+  future native/RxJS method takes precedence). The proposal's terminal, Promise-returning operators
+  (`reduce`, `toArray`, `some`, `every`, `find`, `forEach`) are intentionally omitted: they fire on
+  completion, and Corrente streams never complete, so the Promise would never resolve.
 - Static arrays of children may now be passed directly to a component, without spreading:
   `Div(items.map(Item))` (and nested arrays) work the same as `Div(...items.map(Item))`. Arrays may
   be mixed with other children and used inside tagged templates (`` Div`${items.map(Item)}` ``).

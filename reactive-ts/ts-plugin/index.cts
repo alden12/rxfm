@@ -84,6 +84,49 @@ function higherOrderDiagnostics(ts: Ts, info: any, fileName: string, existingFil
   }
 }
 
+// The stream operators offered in .rts member completion on an observable receiver.
+// Exactly the transform's pass-through set (transform.cts OPERATOR_METHODS) — the ones
+// that behave as real stream operators in .rts. map/filter/flatMap are omitted: in .rts
+// those are the mapToComponents / element-filter / C1 paths, so offering them as stream
+// operators would mislead.
+const OBSERVABLE_OPERATOR_COMPLETIONS = [
+  'scan', 'take', 'drop', 'takeUntil', 'catch', 'finally', 'debounce', 'throttle',
+];
+
+// In a .rts file, `stream.field` lifts to `stream.pipe(map(s => s.field))`, so TS resolves
+// completion at `stream.|` against the EMITTED VALUE (e.g. string members) and the stream's
+// own operator methods never enter the list. When the cursor sits in a recorded
+// observable-member span (the transform reports them), merge those operators back in — on
+// top of the emitted-value members, which stay useful for field extraction.
+function augmentObservableOperatorCompletions(ts: Ts, info: any, fileName: string, position: number, result: any) {
+  try {
+    const transformed = reactiveTsTransformFor(ts, info, fileName);
+    const members = transformed && (transformed.result as any).observableMembers;
+    if (!members || !members.some((m: any) => position > m.start && position <= m.start + m.length)) {
+      return result;
+    }
+    const existing = result ? result.entries : [];
+    const have = new Set(existing.map((e: any) => e.name));
+    const opEntries = OBSERVABLE_OPERATOR_COMPLETIONS.filter(n => !have.has(n)).map(name => ({
+      name,
+      kind: ts.ScriptElementKind.memberFunctionElement,
+      kindModifiers: '',
+      // Sort ahead of the emitted-value members (TS gives those sortText '11'), so the
+      // operators are prominent at the top of the list for any observable rather than
+      // buried below dozens of value members.
+      sortText: `10_${name}`,
+      labelDetails: { description: 'stream operator' },
+    }));
+    if (!opEntries.length) return result;
+    if (!result) {
+      return { isGlobalCompletion: false, isMemberCompletion: true, isNewIdentifierLocation: false, entries: opEntries };
+    }
+    return { ...result, entries: [...existing, ...opEntries] };
+  } catch {
+    return result;
+  }
+}
+
 const base = createLanguageServicePlugin((ts: Ts /*, info */) => ({
   languagePlugins: [createReactiveTsLanguagePlugin(ts)],
 }));
@@ -169,10 +212,12 @@ module.exports = (modules: any) => {
         // VS Code's other preferences are preserved. Safe: it only enables suggestions.
         if (prop === 'getCompletionsAtPosition') {
           return (fileName: string, position: number, options: any, formattingSettings: any) => {
-            const opts = typeof fileName === 'string' && fileName.endsWith('.rts')
+            const isRts = typeof fileName === 'string' && fileName.endsWith('.rts');
+            const opts = isRts
               ? { ...options, includeCompletionsForModuleExports: true, includeCompletionsWithInsertText: true }
               : options;
-            return target.getCompletionsAtPosition(fileName, position, opts, formattingSettings);
+            const result = target.getCompletionsAtPosition(fileName, position, opts, formattingSettings);
+            return isRts ? augmentObservableOperatorCompletions(ts, info, fileName, position, result) : result;
           };
         }
         return target[prop];
@@ -186,6 +231,8 @@ module.exports = (modules: any) => {
 module.exports.stallDiagnostics = stallDiagnostics;
 // Exposed for headless testing of the higher-order-lift warning surfacing.
 module.exports.higherOrderDiagnostics = higherOrderDiagnostics;
+// Exposed for headless testing of the observable-operator completion augmentation.
+module.exports.augmentObservableOperatorCompletions = augmentObservableOperatorCompletions;
 // Exposed for headless testing of cross-.rts module resolution.
 module.exports.patchReactiveTsModuleResolution = patchReactiveTsModuleResolution;
 module.exports.resolveReactiveTsSibling = resolveReactiveTsSibling;
