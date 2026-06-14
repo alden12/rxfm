@@ -1,0 +1,14 @@
+import { Div } from 'corrente';
+import { BehaviorSubject } from 'rxjs';
+
+import './mouse-follower-styles.css';
+
+export const MouseFollower = () => {
+  const pos = new BehaviorSubject({ x: 0, y: 0 });
+
+  return Div
+    .class('follower-pad')
+    .onMousemove(e => pos.next({ x: e.offsetX, y: e.offsetY }))(
+      Div.class('follower-dot').style({ transform: `translate(${pos.x}px, ${pos.y}px)` })``,
+    );
+};

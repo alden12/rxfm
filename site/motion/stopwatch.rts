@@ -1,0 +1,18 @@
+import { Div, Button } from 'corrente';
+import { BehaviorSubject, timer } from 'rxjs';
+
+import './stopwatch-styles.css';
+
+export const Stopwatch = () => {
+  const running = new BehaviorSubject(false);
+  const time = running ? timer(0, 100) / 10 : 0;
+  // TODO: Create previous operator.
+
+  return Div.class('stopwatch')(
+    Button
+      .class('stopwatch-button')
+      .onClick(() => running.next(!running.value))
+      `${running ? 'Stop' : 'Start'}`,
+    Div.class('stopwatch-time')`${time.toFixed(1)}s`,
+  );
+};

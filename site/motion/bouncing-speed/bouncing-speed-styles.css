@@ -1,0 +1,66 @@
+.speed-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 360px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.speed-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: #0f172a;
+  background-image: url(./logo-background.svg);
+  background-size: cover;
+  background-position: center;
+}
+
+.speed-badge {
+  position: absolute;
+  height: 3.5rem;
+  width: 3.5rem;
+  background-image: url(./logo-foreground.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 6px 16px rgba(56, 189, 248, 0.55));
+}
+
+.speed-start {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 0.5rem;
+  border: 1px solid #38bdf8;
+  background-color: rgba(15, 23, 42, 0.85);
+  padding: 0.625rem 1rem;
+  color: #bae6fd;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.speed-start:hover {
+  background-color: rgba(56, 189, 248, 0.25);
+}
+
+.speed-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.speed-slider {
+  flex: 1;
+  accent-color: #38bdf8;
+}
+
+.speed-value {
+  min-width: 6rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}

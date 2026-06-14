@@ -25,6 +25,56 @@ import { TodoList } from "./todo-list/todo-list.rts";
 import { SnakeGame } from "./snake-game/snake-game.rts";
 import { Minesweeper } from "./minesweeper/minesweeper.rts";
 
+import { MouseFollower } from "./motion/mouse-follower.rts";
+import { BouncingLogo } from "./motion/bouncing-logo.rts";
+import { BouncingSpeed } from "./motion/bouncing-speed/bouncing-speed.rts";
+import { Stopwatch } from "./motion/stopwatch.rts";
+import { BreathingGradient } from "./motion/breathing-gradient.rts";
+import { LiveSearch } from "./motion/live-search.rts";
+
+import mouseFollowerSrc from "./motion/mouse-follower.rts?raw";
+import mouseFollowerStylesSrc from "./motion/mouse-follower-styles.css?raw";
+import bouncingLogoSrc from "./motion/bouncing-logo.rts?raw";
+import bouncingLogoStylesSrc from "./motion/bouncing-logo-styles.css?raw";
+import bouncingSpeedSrc from "./motion/bouncing-speed/bouncing-speed.rts?raw";
+import bouncingSpeedStylesSrc from "./motion/bouncing-speed/bouncing-speed-styles.css?raw";
+import stopwatchSrc from "./motion/stopwatch.rts?raw";
+import stopwatchStylesSrc from "./motion/stopwatch-styles.css?raw";
+import breathingGradientSrc from "./motion/breathing-gradient.rts?raw";
+import breathingGradientStylesSrc from "./motion/breathing-gradient-styles.css?raw";
+import liveSearchSrc from "./motion/live-search.rts?raw";
+import liveSearchStylesSrc from "./motion/live-search-styles.css?raw";
+
+const mouseFollowerSources: SourceFile[] = [
+  { name: "mouse-follower.rts", source: mouseFollowerSrc },
+  { name: "mouse-follower-styles.css", source: mouseFollowerStylesSrc, lang: "css" },
+];
+
+const bouncingLogoSources: SourceFile[] = [
+  { name: "bouncing-logo.rts", source: bouncingLogoSrc },
+  { name: "bouncing-logo-styles.css", source: bouncingLogoStylesSrc, lang: "css" },
+];
+
+const bouncingSpeedSources: SourceFile[] = [
+  { name: "bouncing-speed.rts", source: bouncingSpeedSrc },
+  { name: "bouncing-speed-styles.css", source: bouncingSpeedStylesSrc, lang: "css" },
+];
+
+const stopwatchSources: SourceFile[] = [
+  { name: "stopwatch.rts", source: stopwatchSrc },
+  { name: "stopwatch-styles.css", source: stopwatchStylesSrc, lang: "css" },
+];
+
+const breathingGradientSources: SourceFile[] = [
+  { name: "breathing-gradient.rts", source: breathingGradientSrc },
+  { name: "breathing-gradient-styles.css", source: breathingGradientStylesSrc, lang: "css" },
+];
+
+const liveSearchSources: SourceFile[] = [
+  { name: "live-search.rts", source: liveSearchSrc },
+  { name: "live-search-styles.css", source: liveSearchStylesSrc, lang: "css" },
+];
+
 import todoSrc from "./todo-list/todo-list.rts?raw";
 import todoStylesSrc from "./todo-list/todo-list-styles.css?raw";
 
@@ -95,6 +145,17 @@ export const NAV: NavGroup[] = [
       { id: "minesweeper", title: "Minesweeper" },
     ],
   },
+  {
+    title: "Motion",
+    items: [
+      { id: "mouse-follower", title: "Mouse Follower" },
+      { id: "bouncing-logo", title: "Bouncing Logo" },
+      { id: "bouncing-speed", title: "Speed Slider" },
+      { id: "stopwatch", title: "Stopwatch" },
+      { id: "breathing-gradient", title: "Breathing Gradient" },
+      { id: "live-search", title: "Live Search" },
+    ],
+  },
 ];
 
 export const DEFAULT_ROUTE = "overview";
@@ -107,4 +168,10 @@ export const CONTENT = {
   todo: AppPage("Todo List", TodoList(), todoSources),
   snake: AppPage("Snake", SnakeGame(), snakeSources),
   minesweeper: AppPage("Minesweeper", Minesweeper(), minesweeperSources),
+  "mouse-follower": AppPage("Mouse Follower", MouseFollower(), mouseFollowerSources),
+  "bouncing-logo": AppPage("Bouncing Logo", BouncingLogo(), bouncingLogoSources),
+  "bouncing-speed": AppPage("Speed Slider", BouncingSpeed(), bouncingSpeedSources),
+  stopwatch: AppPage("Stopwatch", Stopwatch(), stopwatchSources),
+  "breathing-gradient": AppPage("Breathing Gradient", BreathingGradient, breathingGradientSources),
+  "live-search": AppPage("Live Search", LiveSearch(), liveSearchSources),
 } satisfies Record<string, Component>;

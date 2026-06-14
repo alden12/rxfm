@@ -1,0 +1,24 @@
+import { Div, Input } from 'corrente';
+import { BehaviorSubject } from 'rxjs';
+
+import './live-search-styles.css';
+
+const FRUITS = [
+  'apple', 'banana', 'blueberry', 'cherry', 'grape', 'mango', 'orange', 'peach', 'pear', 'pineapple',
+];
+
+export const LiveSearch = () => {
+  const searchQuery = new BehaviorSubject('');
+  const matchingFruits = FRUITS.filter(fruit => fruit.includes(searchQuery));
+
+  return Div.class('live-search')(
+    Input
+      .type('text')
+      .placeholder('Search fruit…')
+      .class('live-search-input')
+      .onInput(({ target }) => searchQuery.next(target.value)),
+    Div.class('live-search-results')(
+      matchingFruits.map(fruit => Div.class('live-search-chip')`${fruit}`),
+    ),
+  );
+};

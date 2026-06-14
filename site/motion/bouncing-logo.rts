@@ -1,0 +1,19 @@
+import { Div } from 'corrente';
+import { timer } from 'rxjs';
+
+import './bouncing-logo-styles.css';
+
+const WIDTH = 400;
+const HEIGHT = 168;
+
+// A triangle wave: ramps up to size and back to zero, forever, so the logo bounces off each edge.
+const bounce = (frame: number, size: number) => size - Math.abs((frame % (2 * size)) - size);
+
+export const BouncingLogo = () => {
+  const frame = timer(0, 16) * 4;
+
+  return Div.class('bounce-screen')(
+    Div.class('bounce-badge')
+      .style({ transform: `translate(${bounce(frame, WIDTH)}px, ${bounce(frame, HEIGHT)}px)` })``,
+  );
+};
