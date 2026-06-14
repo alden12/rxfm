@@ -1,5 +1,4 @@
-import { Div, Input } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, Input, State } from 'corrente';
 
 import './todo-list-styles.css';
 
@@ -15,7 +14,7 @@ const initialItems: TodoItem[] = [
 ];
 
 export const TodoList = () => {
-  const items = new BehaviorSubject<TodoItem[]>(initialItems);
+  const items = new State<TodoItem[]>(initialItems);
 
   return Div(
     Input

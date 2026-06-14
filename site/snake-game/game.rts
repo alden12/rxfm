@@ -1,21 +1,20 @@
-import { BehaviorSubject, timer } from 'rxjs';
-import { accumulate } from 'corrente';
+import { timer } from 'rxjs';
+import { State } from 'corrente';
 import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
 import { TICK_MS } from './constants';
 import { Difficulty, Direction } from './types';
 
-export const difficulty = new BehaviorSubject<Difficulty>('Easy');
-export const direction = new BehaviorSubject<Direction>('right');
+export const difficulty = new State<Difficulty>('Easy');
+export const direction = new State<Direction>('right');
 
 const tick = timer(0, TICK_MS);
 
-const { trail, food, score } = accumulate(
-  tick,
+const { trail, food, score } = tick.scan(
   (snake, i) => getNewSnakeState(snake, direction.value, difficulty.value, i) ?? getInitialSnakeState(),
   getInitialSnakeState(),
-) ?? getInitialSnakeState();
+);
 
 export { score };
 
 export const board = getBoard(trail.coordinates, food);
-export const highScore = accumulate(score, (highest, s) => Math.max(highest, s), 0) ?? 0;
+export const highScore = score.scan((highest, s) => Math.max(highest, s), 0);

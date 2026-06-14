@@ -1,10 +1,9 @@
-import { Div } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, State } from 'corrente';
 
 import './mouse-follower-styles.css';
 
 export const MouseFollower = () => {
-  const pos = new BehaviorSubject({ x: 0, y: 0 });
+  const pos = new State({ x: 0, y: 0 });
 
   return Div
     .class('follower-pad')

@@ -22,11 +22,10 @@ The catch with reactive streams has always been that they're intimidating to wri
 reactive stream for you, fully typed.
 
 ```ts demo=counter
-import { Div, Button, addToView } from "corrente";
-import { BehaviorSubject } from "rxjs";
+import { Div, Button, addToView, State } from "corrente";
 
 const Counter = () => {
-  const count = new BehaviorSubject(0);
+  const count = new State(0);
 
   return Div(
     Button.onClick(() => count.next(count.value + 1))`+1`,
@@ -65,6 +64,27 @@ export const BreathingGradient = Div.style({
 `hue` is a stream because `tick` is; the moment it lands in the style string the element is bound to
 it and repaints on every tick. There's no render cycle to schedule the animation, because there isn't
 one anywhere in Corrente.
+
+## Fluent operators, straight from the proposal
+
+`State` (used above) is Corrente's name for an RxJS `BehaviorSubject`: a writable value you read with
+`.value` and update with `.next(...)`. Every stream also carries the fluent operator methods from the
+[WICG Observable proposal](https://github.com/WICG/observable), so chaining reads the way the platform
+itself is heading:
+
+```ts
+import { State } from "corrente";
+
+const query = new State("");
+const settled = query.debounce(200); // wait for a 200ms pause, then emit the latest value
+```
+
+The set mirrors the proposal (`map`, `filter`, `take`, `drop`, `takeUntil`, `catch`, `finally`,
+`flatMap`), plus `scan` (a running fold) and `debounce` / `throttle`. The proposal's terminal,
+Promise-returning operators (`reduce`, `toArray`, …) are intentionally left out, since Corrente streams
+never complete and the Promise would never resolve. They're real methods on `Observable`, so the same
+code is one polyfill away from running on the platform's native `Observable` if it ships, and in a
+`.rts` file they're offered in autocomplete and lift as genuine stream operators.
 
 ## Why Corrente
 

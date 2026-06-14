@@ -1,10 +1,10 @@
-import { Div, Button } from 'corrente';
-import { BehaviorSubject, timer } from 'rxjs';
+import { Div, Button, State } from 'corrente';
+import { timer } from 'rxjs';
 
 import './stopwatch-styles.css';
 
 export const Stopwatch = () => {
-  const running = new BehaviorSubject(false);
+  const running = new State(false);
   const time = running ? timer(0, 100) / 10 : 0;
   // TODO: Create previous operator.
 

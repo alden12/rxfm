@@ -1,5 +1,5 @@
-import { Div, Button, Input, accumulate } from 'corrente';
-import { BehaviorSubject, timer } from 'rxjs';
+import { Div, Button, Input, State } from 'corrente';
+import { timer } from 'rxjs';
 
 import './bouncing-speed-styles.css';
 
@@ -10,10 +10,10 @@ const RANGE = SCREEN - BADGE; // how far the badge can travel and stay fully ins
 const bounce = (distance: number, size: number) => size - Math.abs((distance % (2 * size)) - size);
 
 export const BouncingSpeed = () => {
-  const running = new BehaviorSubject(false);
-  const speed = new BehaviorSubject(4);
+  const running = new State(false);
+  const speed = new State(4);
   const start = () => running.next(true);
-  const distance = accumulate(timer(0, 16), d => running.value ? d + speed.value : d, RANGE / 2) ?? 0;
+  const distance = timer(0, 16).scan(d => running.value ? d + speed.value : d, RANGE / 2);
 
   const x = bounce(distance, RANGE);
   const y = bounce(distance * 3, RANGE);

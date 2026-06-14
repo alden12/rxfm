@@ -86,15 +86,14 @@ const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
 
 ## State & Events
 
-State lives in `BehaviorSubject`s (like React's `useState`, but changes hit the DOM immediately).
+State lives in `State` (Corrente's name for RxJS's `BehaviorSubject`; like React's `useState`, but changes hit the DOM immediately).
 Element creators expose fluent `on<Event>` methods (`onClick`, `onInput`, …) for events:
 
 ```typescript demo=state
-import { Div, Button } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, Button, State } from 'corrente';
 
 const Counter = () => {
-  const clicks = new BehaviorSubject(0);
+  const clicks = new State(0);
 
   const doubled = clicks * 2;   // ⇒ RenderObservable<number>
 
@@ -172,13 +171,12 @@ Inputs are function arguments; outputs are callbacks you pass in. Values derived
 "is this option the selected one?" — are just expressions:
 
 ```typescript demo=component-io
-import { Div, Button } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, Button, State } from 'corrente';
 
 const options = ['Option 1', 'Option 2', 'Option 3'];
 
 const ComponentIOExample = () => {
-  const selectedOption = new BehaviorSubject('Option 1');
+  const selectedOption = new State('Option 1');
   const setOption = (option: string) => selectedOption.next(option);
 
   const Options = options.map(option =>
@@ -213,12 +211,11 @@ Render a list from an array observable, reusing DOM elements across emissions (k
 callback behaves like an observable so its fields lift in the template:
 
 ```typescript demo=arrays
-import { Div } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, State } from 'corrente';
 
 interface TodoItem { name: string; done: boolean; }
 
-const items = new BehaviorSubject<TodoItem[]>([
+const items = new State<TodoItem[]>([
   { name: 'Item 1', done: true },
   { name: 'Item 2', done: false },
 ]);

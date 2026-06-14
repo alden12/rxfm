@@ -18,9 +18,9 @@ import {
   Details,
   Div,
   H1,
+  State,
   Summary,
 } from "corrente";
-import { BehaviorSubject } from "rxjs";
 import { DEMOS } from "./demos";
 import {
   DEMO_MARKER,
@@ -44,13 +44,13 @@ const toFiles = (source: ExampleSource): SourceFile[] =>
 
 // A multi-file example renders its files as tabs: a header row of file-name buttons over
 // a stack of highlighted code panels, with the non-selected panels hidden. A plain
-// `BehaviorSubject<number>` holds the active index; `selected === i` lifts to a boolean
+// `State<number>` holds the active index; `selected === i` lifts to a boolean
 // stream (Reactive TS) that drives both the active-tab styling and each panel's `hidden`
 // toggle. A single-file source skips the tab row entirely.
 const sourceTabs = (files: SourceFile[]): ComponentChild => {
   if (files.length === 1) return codeBlock(files[0].source, files[0].lang);
 
-  const selected = new BehaviorSubject(0);
+  const selected = new State(0);
   return Div(
     Div.class("flex flex-wrap gap-1 border-b border-border bg-code px-2 pt-2")(
       files.map((file, i) =>

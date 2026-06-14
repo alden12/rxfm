@@ -1,5 +1,4 @@
-import { Aside, Div, Img, Main, Nav } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Aside, Div, Img, Main, Nav, State } from 'corrente';
 import { CONTENT, DEFAULT_ROUTE, NAV } from './content';
 import logoSmall from '../branding/corrente-logo-icon.svg?raw';
 
@@ -9,10 +8,10 @@ import './app-styles.css';
 // URI for the sidebar mark — the same approach content.ts uses for the Overview logo.
 const LOGO_SRC = `data:image/svg+xml,${encodeURIComponent(logoSmall)}`;
 
-// The selected route id. A plain `BehaviorSubject` — `selected === id` lifts to a
+// The selected route id. A `State`; `selected === id` lifts to a
 // boolean stream for the active-link highlight, and `CONTENT[selected]` lifts to a
 // `switchMap` that swaps the content pane whenever the selection changes.
-const selected = new BehaviorSubject<string>(DEFAULT_ROUTE);
+const selected = new State<string>(DEFAULT_ROUTE);
 
 const NavLink = (id: string, title: string) => Div
   .class(

@@ -1,5 +1,4 @@
-import { Div } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+import { Div, State } from 'corrente';
 
 interface TodoItem {
   name: string;
@@ -7,7 +6,7 @@ interface TodoItem {
 }
 
 export const ComponentArraysExample = () => {
-  const items = new BehaviorSubject<TodoItem[]>([
+  const items = new State<TodoItem[]>([
     { name: 'Item 1', done: true },
     { name: 'Item 2', done: false },
     { name: 'Item 3', done: true },
