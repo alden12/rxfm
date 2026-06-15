@@ -1,4 +1,4 @@
-import { attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'corrente';
+import { addToView, attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'corrente';
 import {
   HelloWorld,
   ChildrenExample,
@@ -64,4 +64,4 @@ const App = Div(Title,  Examples).pipe(
   attribute.id`app`,
 );
 
-App.subscribe(element => document.body.appendChild(element));
+addToView(App);

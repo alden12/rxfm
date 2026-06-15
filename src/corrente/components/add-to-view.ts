@@ -16,7 +16,7 @@ export function addToView(
   component: Component,
   host: ElementType = document.body,
 ): RemoveComponent {
-  let oldNode: ElementType; // The node already in the view, if it exists.
+  let oldNode: ElementType | undefined; // The node already in the view, if it exists.
   const subscription = component.pipe(
     distinctUntilChanged(),
   ).subscribe(element => {
@@ -30,6 +30,6 @@ export function addToView(
 
   return () => { // Return a function to remove the node and clean up subscription.
     subscription.unsubscribe();
-    host.removeChild(oldNode);
+    if (oldNode) host.removeChild(oldNode); // Guard: the component may never have emitted.
   };
 }
