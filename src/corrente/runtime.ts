@@ -8,7 +8,7 @@
 // A single indirection point also lets the underlying observable implementation
 // (RxJS today, possibly a native/RxJS-8 Observable later) change without touching
 // emitted code shape.
-import { EMPTY, Observable, isObservable, of, timer } from "rxjs";
+import { EMPTY, Observable, combineLatest, isObservable, of, timer as rxTimer } from "rxjs";
 import {
   catchError,
   distinctUntilChanged,
@@ -17,6 +17,7 @@ import {
   startWith,
   switchMap,
 } from "rxjs/operators";
+import { coerceToObservable } from "./utils/utils";
 
 // Re-exported so the filter idiom `cond ? value : EMPTY` needs only one Reactive TS import:
 // a ternary whose else-branch is EMPTY drops the value when the condition is false
@@ -27,8 +28,9 @@ export { EMPTY };
 // table whose values are `TypeOrObservable<T>` (mix of plain values and streams) over an
 // observable key flattens with `switchMap(k => coerceToObservable(MAP[k]))`. Sourced from
 // the runtime (not `corrente` directly) so generated code depends only on the runtime seam —
-// keeping the option open to split Reactive TS out from corrente later.
-export { coerceToObservable } from "./utils/utils";
+// keeping the option open to split Reactive TS out from corrente later. (Imported above
+// rather than re-exported in place, since `interval` now uses it locally too.)
+export { coerceToObservable };
 
 /**
  * The observable type produced by imperative Reactive TS syntax — a "RenderObservable".
@@ -95,6 +97,7 @@ export function render<T>(source: Observable<T>): RenderObservable<T> {
  * const game = accumulate(actions, reduceGame, getInitialGame()) ?? getInitialGame();
  * // Or leave null and hide until the first win (seed `Infinity` stays internal):
  * const best = accumulate(winTimes, Math.min, Infinity);  // best ? `Best: ${best}` : null
+ * @deprecated Use the new `scan` method on observables instead.
  */
 export function accumulate<T, A>(
   source: Observable<T>,
@@ -105,28 +108,76 @@ export function accumulate<T, A>(
 }
 
 /**
- * A clock: emits `0, 1, 2, …`, ticking immediately and then every `period` ms
- * (i.e. `timer(0, period)`, so the first tick fires now rather than after a delay).
+ * A clock: emits `0, 1, 2, …` every `period` ms, with the first tick arriving after
+ * the first `period` (RxJS `interval` semantics, not an immediate one). For a clock
+ * that fires now and then repeats, use {@link timer} with a `0` initial delay
+ * (`timer(0, period)`).
  *
  * The point is the reactive overload: pass an `Observable<number>` and the clock
- * restarts at the new rate whenever the period changes — a difficulty-driven game
+ * restarts at the new rate whenever the period changes, so a difficulty-driven game
  * speed Just Works. That restart-on-change is a stream-of-streams switch (build a
- * fresh timer per period, switch to it) — the one shape that lifting fundamentally
- * can't express — so it lives here as a named helper rather than an inline
- * `switchMap(p => timer(0, p))`. A plain `number` behaves like RxJS `interval` but
- * with the immediate first tick.
+ * fresh timer per period, switch to it), the one shape lifting fundamentally can't
+ * express, so it lives here as a named helper rather than an inline
+ * `switchMap(p => timer(p, p))`. Passing `null` (or a stream that emits `null`) turns
+ * the clock off (`EMPTY`), so the filter idiom `running ? rate : null` gates it.
  *
  * @example
- * const period = periodFor(difficulty);  // RenderObservable<number>
- * const tick = interval(period);         // restarts when difficulty changes
+ * const period = periodFor(difficulty);          // RenderObservable<number>
+ * const tick = interval(period);                 // restarts when difficulty changes
+ * const ticking = interval(running ? 100 : null); // stops when `running` is false
  */
 export function interval(
-  period: number | Observable<number>,
-): Observable<number> {
-  const periods = typeof period === "number" ? of(period) : period;
-  return periods.pipe(
-    distinctUntilChanged(),
-    switchMap((ms) => timer(0, ms)),
+  period: number | null | Observable<number | null>,
+): RenderObservable<number> {
+  return render(
+    coerceToObservable(period).pipe(
+      distinctUntilChanged(),
+      switchMap((ms) => (ms === null ? EMPTY : rxTimer(ms, ms))),
+    ),
+  );
+}
+
+/**
+ * RxJS `timer`, with liftable inputs: fires its first tick after `due` ms, then (when
+ * a `period` is given) every `period` ms, emitting `0, 1, 2, …`. Either argument may
+ * be a plain `number` or an `Observable<number | null>`; when one is a stream the
+ * clock rebuilds at the new timing whenever it changes (the stream-of-streams switch
+ * lifting can't express). Omit `period` for a one-shot timer that fires once and
+ * completes, exactly like RxJS.
+ *
+ * Whenever `due` or `period` resolves to `null`, the clock turns off (`EMPTY`); push a
+ * number again to restart it. So `timer(0, running ? 100 : null)` is an
+ * immediate-start clock you toggle by flipping the period, the companion to
+ * {@link interval}'s delayed-start gate. The common case is `due = 0` set once and
+ * forgotten, with the period carrying the reactive rate.
+ *
+ * @example
+ * timer(1000);                     // fire once after 1s, then complete
+ * timer(0, 100);                   // immediate, then every 100ms
+ * timer(0, running ? 100 : null);  // immediate clock, off when not running
+ * timer(0, periodFor(difficulty)); // immediate clock that changes speed
+ */
+export function timer(
+  due: number | null | Observable<number | null>,
+  period?: number | null | Observable<number | null>,
+): RenderObservable<number> {
+  const due$ = coerceToObservable(due);
+  // No `period` argument at all: a one-shot timer (fire once after `due`, complete),
+  // matching RxJS `timer(due)`. A `null` *value* (below) means "off", which is a
+  // distinct case from "no repeat".
+  if (period === undefined) {
+    return render(
+      due$.pipe(
+        distinctUntilChanged(),
+        switchMap((ms) => (ms === null ? EMPTY : rxTimer(ms))),
+      ),
+    );
+  }
+  return render(
+    combineLatest([due$, coerceToObservable(period)]).pipe(
+      distinctUntilChanged((a, b) => a[0] === b[0] && a[1] === b[1]),
+      switchMap(([d, p]) => (d === null || p === null ? EMPTY : rxTimer(d, p))),
+    ),
   );
 }
 
@@ -145,13 +196,14 @@ export const RETRY: unique symbol = Symbol("RETRY");
  * nothing for a void/undefined return (the error is swallowed and the stream completes),
  * the inner value for an `Observable` return (it's switched to), or the value itself.
  */
-type Recovered<R> = Exclude<R, typeof RETRY> extends infer V
-  ? V extends void | undefined
-    ? never
-    : V extends Observable<infer U>
-      ? U
-      : V
-  : never;
+type Recovered<R> =
+  Exclude<R, typeof RETRY> extends infer V
+    ? V extends void | undefined
+      ? never
+      : V extends Observable<infer U>
+        ? U
+        : V
+    : never;
 
 /**
  * An error boundary for a stream — the legible, `catch`-block-shaped form of stream error
