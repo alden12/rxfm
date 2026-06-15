@@ -14,7 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (no behavioural change, full RxJS interop); the class name is pinned so it surfaces as `State` in
   stack traces, devtools, and error logs. Adds one method, `update(current => next)`, sugar for
   `next(value-derived-from-current)` (`count.update(c => c + 1)`) so the common read-then-write no
-  longer repeats the variable three times.
+  longer repeats the variable three times. Its `next` also de-duplicates by reference (`===`):
+  re-emitting the value it already holds is a no-op, so a `State` wired to the DOM doesn't trigger
+  redundant updates when a write doesn't actually change anything (the same distinct-by-reference
+  behaviour the Reactive TS `render` boundary gives derived streams).
 - Fluent operator methods on `Observable`, mirroring the [WICG Observable proposal](https://github.com/WICG/observable):
   `map`, `filter`, `take`, `drop`, `takeUntil`, `catch`, `finally`, `flatMap`, plus `scan` (running
   fold) and `debounce`/`throttle`. `source.map(...).filter(...)` now reads as a chain alongside
@@ -29,11 +32,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   text. `ComponentChild` now includes `ComponentChild[]`. (For a list whose membership changes over
   time, keep emitting an `ElementType[]` from an observable — see `mapToComponents`.)
 - The Reactive TS runtime now ships with the package and is exported from the root: `render`,
-  `RenderObservable`, `accumulate`, `interval`, and `EMPTY` are importable via
-  `import { accumulate, interval } from 'corrente'`. These are useful with plain corrente too — a
-  shared/replaying derived value (`render`/`RenderObservable`), a running fold (`accumulate`), and a
-  reactive-period clock (`interval`). The Reactive TS transform still injects `render` from a local
-  `runtime.ts`, which can now be a one-line `export * from 'corrente'`.
+  `RenderObservable`, `accumulate`, `interval`, `timer`, `frames`, `animate`, and `EMPTY` are
+  importable via `import { accumulate, interval } from 'corrente'`. These are useful with plain
+  corrente too: a shared/replaying derived value (`render`/`RenderObservable`), a running fold
+  (`accumulate`), reactive clocks (`interval`/`timer`/`frames`), and a tween (`animate`). The
+  Reactive TS transform still injects `render` from a local `runtime.ts`, which can now be a one-line
+  `export * from 'corrente'`.
+- `frames()` and `animate(target, { duration, easing?, from? })` animation helpers, driven by the
+  browser's animation frames. `frames()` is the `requestAnimationFrame` sibling of `interval`/`timer`:
+  it emits the elapsed milliseconds since subscription, once per display frame, and runs until you stop
+  listening - the open-ended workhorse for continuous motion (`frames().map(ms => (ms * 0.06) % 360)`
+  spins forever). `animate` is that clock plus an easing curve and a stop time: it eases a value to a
+  `target` (a number or a stream of targets, e.g. a `State`) over `duration`, from its current position
+  so a moving target retargets smoothly mid-flight (the `useSpring`/`animate` shape), then **completes**
+  on the final frame. Pin `from` for a one-shot `animate(360, { from: 0, duration: 1000 })`. Being
+  frame-driven (not a fixed `timer`) progress is read from real elapsed time, so the duration is correct
+  at any refresh rate; both pause in background tabs; and both cancel their `requestAnimationFrame` on
+  teardown with the rest of the graph - no leak, no stop condition to write. `animate` hides the
+  per-target stream-of-streams switch the same way `interval`/`timer` hide the reactive-period switch.
+- `interval(period)` and `timer(due, period?)` clock helpers, keeping RxJS's shapes but with
+  **liftable inputs**. `interval` fires after each `period` (the first tick is delayed); `timer`
+  fires after `due` then every `period`, so `timer(0, p)` is the immediate-start companion to
+  `interval(p)`'s delayed start, and `timer(due)` (no period) is a one-shot. Any argument may be a
+  `number` or an `Observable<number | null>`: when it's a stream the clock rebuilds at the new
+  timing whenever it changes (a difficulty-driven game speed Just Works), and resolving to `null`
+  turns the clock off (`EMPTY`), so the filter idiom `running ? rate : null` gates it. That
+  restart-on-change is a stream-of-streams switch, the one shape lifting fundamentally can't
+  express, so it lives here as a named helper rather than an inline `switchMap`.
 - `fallback(source, handler)` runtime helper (with the `RETRY` sentinel) — stream error handling that
   reads like a `try/catch` body, folding `catchError` *and* `retry` into one. When `source` errors,
   `handler` runs with `(error, attempt)` and its **return value** decides what happens, the way a `catch`
@@ -78,6 +103,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   library declaration tree (`dist/corrente/**`) follow suit; and the Reactive TS transform now emits its
   component imports (`mapToComponents`, …) from `corrente`. The GitHub repo and github.io demo URLs are
   intentionally left as `rxfm` for now (the repository itself isn't renamed yet).
+
+### Fixed
+- Reactive TS now guards a lifted ternary's condition with `distinctUntilChanged` before the
+  `switchMap`, so `cond ? a : b` only switches branches when the condition actually flips rather
+  than re-subscribing on every upstream emission. This keeps a gated clock such as
+  `interval(running ? 100 : null)` from being torn down and rebuilt while `running` stays the same,
+  which previously dropped or restarted ticks.
 
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and

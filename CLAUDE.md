@@ -47,6 +47,17 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
   `dev`/`build:app` run `build:reactive-ts` first (`predev`/`prebuild:app` hooks) to regenerate it from the
   `.cts` sources (the `.cjs` are gitignored build artifacts — see [Library internals] / the Reactive TS
   TypeScript build below).
+  - **`dev`/`build:app` also run `yarn build` (the library) first**, via the same `predev`/`prebuild:app`
+    hooks. This is load-bearing, not just tidiness: the Reactive TS transform's **type inference resolves
+    a bare `corrente` import to the published `dist/`** (the package `exports` map, via plain node
+    resolution — it deliberately uses no tsconfig `paths` so it works the same in the bundled editor
+    extension). So a runtime export that's newer in `src/corrente/runtime.ts` than in `dist/` is invisible
+    to the transform: a new helper's stream parameter is read as a plain value and silently lifted into a
+    stream-of-streams (`Observable<Observable<…>>`) instead of passed through. Keeping `dist` fresh before
+    every `.rts` compile avoids that. (Resolving the transform to `src` instead is **not** a fix — it would
+    activate the `declare module "rxjs"` augmentation in `observable-operators.ts`, which breaks the
+    `obsArray.map(cb)` → array-map lifting. The editor resolves to `src` and so already has this latent
+    issue; after changing a runtime export's *signature*, run `yarn build` once so the editor picks it up.)
 - `yarn dev` — Vite dev server (port 3001) serving the Reactive TS demo from `site/` (entry
   `site/main.ts`). The demo's `corrente` import is aliased to live lib source (`src/corrente/index.ts`).
 - `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the

@@ -1,9 +1,9 @@
-import { Div, timer } from 'corrente';
+import { Div, frames } from 'corrente';
 
 import './breathing-gradient-styles.css';
 
-const tick = timer(0, 50);
-const hue = (tick * 2) % 360;
+// `frames()` ticks every animation frame with the elapsed time; 0.04deg/ms is 40deg/sec.
+const hue = (frames() * 0.04) % 360;
 
 export const BreathingGradient = () => Div
   .class('breathing-gradient')

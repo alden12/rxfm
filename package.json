@@ -37,10 +37,10 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
-    "predev": "yarn build:reactive-ts",
+    "predev": "yarn build:reactive-ts && yarn build",
     "dev": "vite",
     "build": "vite build --config vite.lib.config.ts",
-    "prebuild:app": "yarn build:reactive-ts",
+    "prebuild:app": "yarn build:reactive-ts && yarn build",
     "build:app": "vite build",
     "preview": "vite preview",
     "build:reactive-ts": "tsc -p reactive-ts/ts-plugin/tsconfig.json",

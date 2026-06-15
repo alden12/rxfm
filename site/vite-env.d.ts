@@ -5,3 +5,10 @@ declare module '*?raw' {
   const content: string;
   export default content;
 }
+
+// A plain asset import (Vite) returns the asset's resolved URL as a string. Used to load the
+// static prize-wheel SVG as an `<img>` source.
+declare module '*.svg' {
+  const url: string;
+  export default url;
+}

@@ -30,6 +30,7 @@ import { BouncingLogo } from "./motion/bouncing-logo.rts";
 import { BouncingSpeed } from "./motion/bouncing-speed/bouncing-speed.rts";
 import { Stopwatch } from "./motion/stopwatch.rts";
 import { BreathingGradient } from "./motion/breathing-gradient.rts";
+import { Spinner } from "./motion/spinner.rts";
 import { LiveSearch } from "./motion/live-search.rts";
 
 import mouseFollowerSrc from "./motion/mouse-follower.rts?raw";
@@ -42,6 +43,9 @@ import stopwatchSrc from "./motion/stopwatch.rts?raw";
 import stopwatchStylesSrc from "./motion/stopwatch-styles.css?raw";
 import breathingGradientSrc from "./motion/breathing-gradient.rts?raw";
 import breathingGradientStylesSrc from "./motion/breathing-gradient-styles.css?raw";
+import spinnerSrc from "./motion/spinner.rts?raw";
+import spinnerWheelSrc from "./motion/wheel.svg?raw";
+import spinnerStylesSrc from "./motion/spinner-styles.css?raw";
 import liveSearchSrc from "./motion/live-search.rts?raw";
 import liveSearchStylesSrc from "./motion/live-search-styles.css?raw";
 
@@ -84,6 +88,12 @@ const breathingGradientSources: SourceFile[] = [
     source: breathingGradientStylesSrc,
     lang: "css",
   },
+];
+
+const spinnerSources: SourceFile[] = [
+  { name: "spinner.rts", source: spinnerSrc },
+  { name: "wheel.svg", source: spinnerWheelSrc, lang: "xml" },
+  { name: "spinner-styles.css", source: spinnerStylesSrc, lang: "css" },
 ];
 
 const liveSearchSources: SourceFile[] = [
@@ -169,6 +179,7 @@ export const NAV: NavGroup[] = [
       { id: "bouncing-speed", title: "Speed Slider" },
       { id: "stopwatch", title: "Stopwatch" },
       { id: "breathing-gradient", title: "Breathing Gradient" },
+      { id: "spinner", title: "Spin the Wheel" },
       { id: "live-search", title: "Live Search" },
     ],
   },
@@ -201,5 +212,6 @@ export const CONTENT = {
     BreathingGradient,
     breathingGradientSources,
   ),
+  spinner: AppPage("Spin the Wheel", Spinner, spinnerSources),
   "live-search": AppPage("Live Search", LiveSearch, liveSearchSources),
 } satisfies Record<string, Component>;
