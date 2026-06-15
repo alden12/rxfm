@@ -1,5 +1,13 @@
 import { combineLatest, MonoTypeOperatorFunction, Observable, of, OperatorFunction } from "rxjs";
-import { distinctUntilChanged, ignoreElements, map, pluck, shareReplay, startWith, switchMap, tap } from "rxjs/operators";
+import { distinctUntilChanged, ignoreElements, map, shareReplay, startWith, switchMap, tap } from "rxjs/operators";
+
+/**
+ * Read a (possibly nested) sequence of keys from a value, short-circuiting to `undefined` if an
+ * intermediate value is nullish. Replaces RxJS's deprecated `pluck` operator.
+ */
+function pluckKeys(value: unknown, keys: string[]): unknown {
+  return keys.reduce<any>((accumulator, key) => accumulator?.[key], value);
+}
 
 export function coerceToObservable<T>(value: T | Observable<T>): Observable<T> {
   return value instanceof Observable ? value : of(value);
@@ -34,7 +42,7 @@ export function select<T, K0 extends keyof T, K1 extends keyof T[K0], K2 extends
 export function select<T>(...keys: string[]): OperatorFunction<T, any> {
   return (input: Observable<T>) => input.pipe(
     distinctUntilChanged(),
-    pluck(...keys),
+    map(value => pluckKeys(value, keys)),
     distinctUntilChanged(),
   );
 }
@@ -51,7 +59,7 @@ export function selectFrom<T>(
 ): Observable<any> {
   return input.pipe(
     distinctUntilChanged(),
-    pluck(...keys),
+    map(value => pluckKeys(value, keys)),
     distinctUntilChanged(),
   );
 }
