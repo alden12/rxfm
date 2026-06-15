@@ -29,7 +29,52 @@ export interface IChildDiff {
 }
 
 /**
+ * Given a sequence of numbers, return the set of array positions which form a longest
+ * strictly-increasing subsequence. Computed in O(n log n) via patience sorting, keeping predecessor
+ * links so the subsequence itself can be reconstructed.
+ */
+function longestIncreasingSubsequence(sequence: number[]): Set<number> {
+  const kept = new Set<number>();
+  if (sequence.length === 0) return kept;
+
+  const predecessors = new Array<number>(sequence.length); // predecessors[i] = previous position in the subsequence ending at i.
+  const tails: number[] = []; // tails[k] = position of the smallest tail value of an increasing subsequence of length k + 1.
+
+  for (let i = 0; i < sequence.length; i++) {
+    // Binary search for the first tail whose value is >= sequence[i] (strictly increasing).
+    let low = 0;
+    let high = tails.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (sequence[tails[mid]] < sequence[i]) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    predecessors[i] = low > 0 ? tails[low - 1] : -1; // The position this one extends, if any.
+    if (low === tails.length) {
+      tails.push(i); // Extends the longest subsequence found so far.
+    } else {
+      tails[low] = i; // Improves the tail of an existing length.
+    }
+  }
+
+  // Walk the predecessor links back from the end of the longest subsequence to collect its positions.
+  for (let k = tails[tails.length - 1]; k >= 0; k = predecessors[k]) {
+    kept.add(k);
+  }
+  return kept;
+}
+
+/**
  * Find the difference between two arrays of nodes.
+ *
+ * Nodes are matched by identity. Any node present in both arrays but in a different relative order
+ * may need to move; to minimise DOM operations we keep the *longest* run of common nodes that is
+ * already in the correct relative order in place (the longest increasing subsequence of their old
+ * positions) and only move the rest. Runs in O(n log n).
+ *
  * @returns An object containing all updated (and added) nodes as well as all removed nodes in the new children array
  * compared to the old children array.
  */
@@ -37,60 +82,36 @@ export function childDiffer(
   oldChildren: ChildElement[],
   newChildren: ChildElement[]
 ): IChildDiff {
-  const oldSet = new Set(oldChildren); // Create sets of both new and old children.
   const newSet = new Set(newChildren);
+  const removed = oldChildren.filter(node => !newSet.has(node)); // Nodes no longer present.
 
-  // Find the common nodes between the old and new children, ordered as they are in both the new and old arrays.
-  const remainingOldOrder = oldChildren.filter(node => newSet.has(node));
-  const remainingNewOrder = newChildren.filter(node => oldSet.has(node));
+  // Map each old node to its index so the new order can be described as a sequence of old positions.
+  const oldIndexByNode = new Map(oldChildren.map((node, i) => [node, i]));
 
-  // Find if the common nodes have not changed order between the new and old arrays.
-  const orderUnchanged = remainingNewOrder.every(
-    (node, i) => remainingOldOrder[i] === node
-  );
+  // The nodes common to both states, in their new order, and their corresponding old positions.
+  const commonNodes = newChildren.filter(node => oldIndexByNode.has(node));
+  const oldPositions = commonNodes.map(node => oldIndexByNode.get(node)!);
 
-  let unchangedNodes: Set<ChildElement>; // Create a set of all nodes which are common and have not changed order.
-  if (orderUnchanged) {
-    unchangedNodes = new Set(remainingNewOrder); // If order has not changed, create set from common nodes.
+  // The common nodes whose old positions form a longest increasing subsequence are already in the
+  // correct relative order and can stay put; every other node will be (re)inserted.
+  const keptPositions = longestIncreasingSubsequence(oldPositions);
+  const keptNodes = new Set<ChildElement>();
+  keptPositions.forEach(position => keptNodes.add(commonNodes[position]));
 
-  } else { // Otherwise find nodes whose order has not changed.
-    const oldNodeAndNext = new Map( // Create a map of each common node to its next common node in the old order.
-      remainingOldOrder.map((node, i) => [node, remainingOldOrder[i + 1]])
-    );
-    const newElementsAndIndex = new Map( // Create a map of each common node to its index in the new order.
-      remainingNewOrder.map((node, i) => [node, i])
-    );
-
-    const reordered = new Set( // Create a set of all common nodes which have changed order.
-      remainingNewOrder.filter((node, i) => {
-        const oldNext = oldNodeAndNext.get(node); // Get the node which used to follow this one in the old order.
-        const newIndexOfNext = (oldNext && newElementsAndIndex.get(oldNext)) || Infinity; // Find the new index of that node.
-        return newIndexOfNext < i; // Node is reordered if the old next element now comes before this element.
-      })
-    );
-
-    unchangedNodes = new Set( // Unchanged nodes is inverse of reordered nodes.
-      remainingNewOrder.filter(node => !reordered.has(node))
-    );
-  }
-
-  // Create an array of node updates (an update is a node and the node to insert it before if applicable).
+  // Walk the new children from right to left. Each kept node becomes the reference that following
+  // (new or moved) nodes are inserted before; nodes after the last kept node are appended (the
+  // insertBefore reference starts undefined and is overwritten by each kept node encountered).
   let insertBefore: ChildElement | undefined;
   const updated: INodeUpdate[] = [];
-  for (let i = newChildren.length - 1; i >= 0; i--) { // Loop through the new nodes in reverse order
+  for (let i = newChildren.length - 1; i >= 0; i--) {
     const node = newChildren[i];
-    if (unchangedNodes.has(node)) { // If the current node already existed and has not changed order:
-      // Any future nodes should be inserted before this one so store as the current insert before reference. This will
-      // start as undefined so if no unchanged nodes have yet been passed then nodes will be inserted at the end, this
-      // value will be overwritten by any future unchanged nodes.
+    if (keptNodes.has(node)) {
       insertBefore = node;
-    } else { // If this is a new node or has changed order:
-      updated.push({ node, insertBefore }); // Add to the updated array along with the node to insert before if present.
+    } else {
+      updated.push({ node, insertBefore });
     }
   }
-  updated.reverse(); // Reverse the updated array to put it in the correct order of the new nodes.
-
-  const removed = oldChildren.filter(child => !newSet.has(child)); // Find any nodes which have been removed.
+  updated.reverse(); // Put the updates back into new-children order.
 
   return { updated, removed };
 }

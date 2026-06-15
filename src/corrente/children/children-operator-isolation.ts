@@ -52,8 +52,9 @@ export function addChildrenToMetadata(
   let newMetadata = registerChildrenBlockMetadata(currentMetadata, blockSymbol, end);
   // Clone metadata if it was not already.
   newMetadata = newMetadata === currentMetadata ? [...newMetadata] : newMetadata;
-  // Find index of our block.
-  const index = currentMetadata.findIndex((({ symbol }) => symbol === blockSymbol));
+  // Find index of our block. Derived from newMetadata (not currentMetadata) so it is correct even
+  // when the block was only just registered above and so is absent from currentMetadata.
+  const index = newMetadata.findIndex((({ symbol }) => symbol === blockSymbol));
   // Find element to insert before if available.
   const insertBeforeIndex = newMetadata.slice(0, index + 1).reduce((count, { length }) => count + length, 0);
   // Update metadata by incrementing the block length by the number of added elements.

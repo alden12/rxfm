@@ -47,6 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is now redundant — use the native `array.flat()` instead. (`recursiveFlatten`, for arbitrary
   depth, is unchanged.)
 
+### Fixed
+- Reordering keyed child elements (e.g. via `mapToComponents` when a list re-sorts or items move)
+  now patches the DOM correctly. The child-diff algorithm previously kept nodes in place that had
+  actually swapped relative order, leaving the DOM in the wrong order — and a falsy-zero bug meant a
+  node moving to the very front was treated as not having moved. Additions, removals, and
+  truncations were unaffected. The diff now keeps the longest already-in-order run of nodes in place
+  (its longest increasing subsequence) and moves only the rest, which is both correct and minimal in
+  DOM operations. Covered by a new exhaustive `childDiffer` test suite.
+
 ## [3.0.0-alpha.1] - 2026-06-05
 
 ### Added
