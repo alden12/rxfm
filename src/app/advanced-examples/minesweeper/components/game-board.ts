@@ -1,4 +1,4 @@
-import { Div, flatten, mapToComponents, classes, event, style } from "rxfm";
+import { Div, mapToComponents, classes, event, style } from "rxfm";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { BOARD_HEIGHT } from "../constants";
@@ -13,7 +13,7 @@ interface GameBoardProps {
 
 export const GameBoard = ({ board, dispatch }: GameBoardProps) => Div(
   board.pipe(
-    map(flatten),
+    map(board => board.flat()),
     mapToComponents((cell, index) => GameCell({ cell, index, dispatch })),
   ),
 ).pipe(

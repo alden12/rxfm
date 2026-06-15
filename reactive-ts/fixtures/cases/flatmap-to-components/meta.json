@@ -1,0 +1,10 @@
+{
+  "description": "`obs.flatMap(cb)` with a component-returning cb lifts to `obs.pipe(map(a => a.flat()), mapToComponents(cb))` — the same keyed list as the `.map` form, but flattening the source one level first so the cb maps each leaf (with its flat index). A destructured leaf param is rebound like the `.map` item; a plain leaf param works too (`.flat()` is a no-op on an already-flat stream).",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [],
+  "hovers": [
+    { "find": "{ color, neighbors }", "token": "color", "expect": ": string" },
+    { "find": "{ color, neighbors }", "token": "neighbors", "expect": ": number" }
+  ]
+}

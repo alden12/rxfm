@@ -1,0 +1,13 @@
+{
+  "name": "reactive-ts-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "tsserver plugin giving .rts files live TypeScript types via the Reactive TS transform.",
+  "main": "index.cjs",
+  "peerDependencies": {
+    "typescript": "*"
+  },
+  "dependencies": {
+    "@volar/typescript": "^2.4.0"
+  }
+}

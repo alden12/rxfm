@@ -2,7 +2,6 @@ import { BehaviorSubject, Observable, of, Subject, Subscription } from 'rxjs';
 import {
   coerceToObservable,
   coerceToArray,
-  flatten,
   recursiveFlatten,
   select,
   selectFrom,
@@ -48,12 +47,6 @@ describe('coerceToArray', () => {
   it('passes an array through unchanged', () => {
     const array = [1, 2];
     expect(coerceToArray(array)).toBe(array);
-  });
-});
-
-describe('flatten', () => {
-  it('flattens one level, leaving scalars in place', () => {
-    expect(flatten([1, [2, 3], 4])).toEqual([1, 2, 3, 4]);
   });
 });
 

@@ -54,4 +54,23 @@ describe('component', () => {
     expect(element.childNodes[1]).toBeInstanceOf(HTMLSpanElement);
     unsubscribe();
   });
+
+  it('should be possible to pass a static array of children without spreading', () => {
+    const component = Div(Span`a`, [Span`b`, Span`c`], Span`d`);
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.childNodes.length).toEqual(4);
+    Array.from(element.childNodes).forEach(node => expect(node).toBeInstanceOf(HTMLSpanElement));
+    expect(element.textContent).toEqual('abcd');
+    unsubscribe();
+  });
+
+  it('should reflect updates to an observable nested within a static child array', () => {
+    const source = new BehaviorSubject('hello');
+    const component = Div([Span(source), Span`!`]);
+    const { element, unsubscribe } = testComponent(component);
+    expect(element.textContent).toEqual('hello!');
+    source.next('world');
+    expect(element.textContent).toEqual('world!');
+    unsubscribe();
+  });
 });

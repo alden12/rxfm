@@ -1,0 +1,22 @@
+import { Observable, timer } from 'rxjs';
+import { TypeOrObservable } from 'rxfm';
+
+type Stage = 'idle' | 'running' | 'done';
+
+declare const stage: Observable<Stage>;
+declare const elapsed: Observable<number>;
+
+// A lookup table whose values mix plain numbers and streams (TypeOrObservable<number>),
+// indexed by an observable key. A plain `map` would yield Observable<Observable<number>>
+// (higher-order, never flattens), so the lift switchMaps into the looked-up entry and
+// coerces a plain value to of(value) — giving a flat RenderObservable<number>.
+const TIME_MAP: Record<Stage, TypeOrObservable<number>> = {
+  idle: 0,
+  running: timer(0, 1000),
+  done: elapsed,
+};
+export const time = TIME_MAP[stage];
+
+// A plain-valued table (no Observable in the value type) keeps the tighter `map` form.
+const COLOR_MAP: Record<Stage, string> = { idle: 'grey', running: 'green', done: 'blue' };
+export const color = COLOR_MAP[stage];

@@ -1,0 +1,11 @@
+import { Observable, Subject } from 'rxjs';
+declare const index: Observable<number>;
+declare const a: Observable<number>;
+declare const b: Observable<string>;
+declare const subj: Subject<number>;
+declare function onClick(handler: (() => void) | Observable<() => void>): void;
+declare function sink(n: number): void;
+declare function sink2(n: number, s: string): void;
+onClick(() => sink(index));
+onClick(() => sink2(a, b));
+onClick(() => subj.next(1));

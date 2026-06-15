@@ -18,6 +18,7 @@
         "node_modules",
         "dist",
         "dist-demo",
+        "reactive-ts",
         "**/*.test.ts"
     ]
 }

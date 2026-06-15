@@ -1,0 +1,26 @@
+import { Observable } from 'rxjs';
+import { Div, Input } from 'rxfm';
+
+interface TodoItem {
+  name: string;
+  done: boolean;
+}
+
+declare const items: Observable<TodoItem[]>;
+declare function toggle(name: string): void;
+
+// A standalone component function whose item param is an explicitly typed
+// `Observable<T>` destructured in place: each field lifts to `item.field`, a handler
+// capturing a field lifts as a closure, and an `Observable<T>` param passed at the call
+// site flows through verbatim (so this composes with the mapToComponents the `.map` emits).
+const TodoItem = ({ name, done }: Observable<TodoItem>, onToggle: (name: string) => void) =>
+  Div
+    .onClick(() => onToggle(name))
+    .class('todo-item', done ? 'done' : '')(
+      name,
+      Input
+        .type('checkbox')
+        .checked(done),
+    );
+
+export const list = items.map(item => TodoItem(item, toggle), 'name');

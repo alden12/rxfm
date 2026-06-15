@@ -1,0 +1,6 @@
+import { Observable } from 'rxjs';
+declare const x: Observable<number | undefined>;
+declare const cell: Observable<{ symbol?: string; n: number }>;
+const elapsed = x === undefined ? 0 : x + 1;
+const guarded = !x ? 0 : x + 1;
+const size = cell.symbol ? '12px' : '14px';

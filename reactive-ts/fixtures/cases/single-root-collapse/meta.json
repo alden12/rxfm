@@ -1,0 +1,10 @@
+{
+  "description": "Single-root operator chains collapse to one map (not nested combineLatest); multi-stream still combineLatest; stream-API use (.value) left alone.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [],
+  "hovers": [
+    { "find": "count * 2", "token": "count", "expect": "count: Observable<number>" },
+    { "find": "user.name || ", "token": "user", "expect": "user: Observable<" }
+  ]
+}

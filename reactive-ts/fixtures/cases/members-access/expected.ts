@@ -1,0 +1,15 @@
+import { render } from "./runtime";
+import { map } from "rxjs/operators";
+import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
+declare const user: Observable<{ name: string; address: { city: string } }>;
+declare const count: Observable<number>;
+declare const items: Observable<string[]>;
+declare const idx: Observable<number>;
+const subject = new BehaviorSubject(0);
+const name = render(user.pipe(map(user => user.name)));
+const city = render(user.pipe(map(user => user.address.city)));
+const fixed = render(combineLatest([count, of(2)]).pipe(map(([count, _a0]) => count.toFixed(_a0))));
+const first = render(items.pipe(map(items => items[0])));
+const dyn = render(combineLatest([items, idx]).pipe(map(([items, _i]) => items[_i])));
+const cur = subject.value;
+const piped = count.pipe();

@@ -1,0 +1,6 @@
+{
+  "description": "Lifting event-handler closures that capture streams. Single capture → index.pipe(map(...)); multi capture → combineLatest; stream-API use (subj.next) left alone.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

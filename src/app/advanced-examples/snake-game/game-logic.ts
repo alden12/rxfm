@@ -1,4 +1,3 @@
-import { flatten } from "rxfm";
 import { fromEvent, Observable, timer } from "rxjs";
 import { filter, map, startWith, switchMap, withLatestFrom, scan, retry } from "rxjs/operators";
 import {
@@ -68,9 +67,10 @@ const getBoard = (trail: Vector[], food?: Vector): SnakeBoard => {
 };
 
 const placeRandomFood = (trail: Vector[]): Vector => {
-  const emptyCells = flatten(
-    getBoard(trail).map((column, x) => column.map((cell, y): Vector | null => cell === 'empty' ? [x, y] : null)),
-  ).filter(cell => Array.isArray(cell)) as Vector[];
+  const emptyCells = getBoard(trail)
+    .map((column, x) => column.map((cell, y): Vector | null => cell === 'empty' ? [x, y] : null))
+    .flat()
+    .filter(cell => Array.isArray(cell)) as Vector[];
   return emptyCells[Math.floor(Math.random() * emptyCells.length)];
 };
 

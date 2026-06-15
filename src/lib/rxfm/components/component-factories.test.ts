@@ -55,8 +55,11 @@ describe('sideEffect', () => {
 });
 
 describe('componentCreator', () => {
-  it('throws if a non-template array of children is passed directly', () => {
-    // A real array (not a tagged-template strings array) containing a non-string is rejected.
-    expect(() => Div([Span()] as never)).toThrow(TypeError);
+  it('accepts a static array of children passed directly (without spreading)', () => {
+    // A real array of children (not a tagged-template strings array) is now accepted and
+    // rendered, so children built elsewhere can be passed as one array.
+    const element = render(Div([Span(), Span()]));
+    expect(element).toBeInstanceOf(HTMLDivElement);
+    expect(element.childNodes.length).toBe(2);
   });
 });

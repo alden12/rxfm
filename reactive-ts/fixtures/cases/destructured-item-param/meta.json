@@ -1,0 +1,12 @@
+{
+  "description": "Destructure an observable item param of a component .map in place. Fields become aliases that lift to item.field; multi-field expressions share the item param → one map; a captured field/index in a handler is sourced from that item. Uses real rxfm types.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [],
+  "hovers": [
+    { "find": "backgroundColor: color", "token": "color", "expect": ": string" },
+    { "find": "COLORS[neighbors", "token": "neighbors", "expect": ": number" },
+    { "find": "? neighbors : symbol", "token": "symbol", "expect": ": string" },
+    { "find": "{ color", "token": "color", "expect": ": string" }
+  ]
+}

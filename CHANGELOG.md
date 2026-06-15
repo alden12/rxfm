@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `fallback(source, handler)` runtime helper (with the `RETRY` sentinel) — stream error handling that
+  reads like a `try/catch` body, folding `catchError` *and* `retry` into one. When `source` errors,
+  `handler` runs with `(error, attempt)` and its **return value** decides what happens, the way a `catch`
+  block does: return `RETRY` to resubscribe and try again (`attempt` increments), return nothing
+  (`e => console.error(e)`) to swallow and complete, return a plain value (`() => "error"`, `() => null`)
+  to emit it once, or return an `Observable` (`() => of(0)`) to switch to it. So retry-then-recover is a
+  single call: `fallback(x, (e, n) => n < 3 ? RETRY : 0)`. It sits alongside `accumulate`/`interval` on
+  the `rxfm` runtime surface and, being operator-style (it takes the stream as a parameter), the Reactive
+  TS transform leaves the call untouched in `.rts`. A named helper rather than `try/catch` sugar:
+  `try { obs }` reads as "if evaluating `obs` throws now," but an observable errors *later* on
+  subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
+
+### Removed
+- Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and
+  is now redundant — use the native `array.flat()` instead. (`recursiveFlatten`, for arbitrary
+  depth, is unchanged.)
+
 ### Fixed
 - Reordering keyed child elements (e.g. via `mapToComponents` when a list re-sorts or items move)
   now patches the DOM correctly. The child-diff algorithm previously kept nodes in place that had

@@ -1,0 +1,14 @@
+# Dev-only files
+.vscode/**
+.gitignore
+build.mjs
+*.tgz
+*.vsix
+
+# Ship nothing from node_modules EXCEPT the bundled tsserver plugin. The plugin
+# must stay in node_modules because tsserver resolves it by name; everything else
+# (esbuild, vsce, their trees) is build-time only and is inlined into the bundle.
+# The dir is un-ignored before its contents so the negation survives the parent rule.
+node_modules/**
+!node_modules/reactive-ts-plugin
+!node_modules/reactive-ts-plugin/**

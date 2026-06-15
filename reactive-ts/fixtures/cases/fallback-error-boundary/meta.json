@@ -1,0 +1,6 @@
+{
+  "description": "`fallback(source, handler)` is operator-style (takes the stream as a parameter), so the transform leaves the call untouched — like `accumulate`/`interval`. A derivation over the guarded result still lifts.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

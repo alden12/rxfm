@@ -41,10 +41,19 @@
     "build": "vite build --config vite.lib.config.ts",
     "build:app": "vite build",
     "preview": "vite preview",
+    "build:reactive-ts": "tsc -p reactive-ts/ts-plugin/tsconfig.json",
+    "reactive-ts:emit": "yarn build:reactive-ts && node reactive-ts/emit.cjs",
+    "dev:reactive-ts": "yarn build:reactive-ts && vite --config reactive-ts/vite.reactive-ts.config.ts",
+    "build:reactive-ts-demo": "yarn build:reactive-ts && vite build --config reactive-ts/vite.reactive-ts.config.ts",
+    "pretest": "tsc -p reactive-ts/ts-plugin/tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "extension:install-deps": "cd reactive-ts/vscode-extension && npm install",
+    "extension:build": "cd reactive-ts/vscode-extension && npm run package",
+    "extension:build-and-install": "cd reactive-ts/vscode-extension && npm run reinstall",
+    "extension:bump-version": "cd reactive-ts/vscode-extension && npm run bump"
   },
   "peerDependencies": {
     "rxjs": "^7.0.0"

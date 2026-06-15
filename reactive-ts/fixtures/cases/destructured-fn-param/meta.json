@@ -1,0 +1,10 @@
+{
+  "description": "Destructure an explicitly typed `Observable<T>` param of a standalone function in place. The binding pattern is rebound to a synthetic stream param (keeping the `: Observable<T>` annotation) and each field lifts to `item.field` — the same rebind a component-`.map` item param gets, but gated on the annotation since a named function can be called from anywhere. The field-typed param passed at the call site flows through verbatim, so it composes with the emitted mapToComponents.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": [],
+  "hovers": [
+    { "find": "{ name, done }", "token": "name", "expect": ": string" },
+    { "find": "{ name, done }", "token": "done", "expect": ": boolean" }
+  ]
+}

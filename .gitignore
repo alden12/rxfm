@@ -1,8 +1,17 @@
 node_modules
+.DS_Store
 /dist/*
 /dist-demo/*
-/experiments/tsrx/dist-tsrx/
+/reactive-ts/dist-reactive-ts/
+# Compiled Reactive TS plugin output. The .cts sources are the source of truth; every
+# consumer regenerates these (pretest + build:reactive-ts for tests, build.mjs for the
+# extension bundle), so tracking them only invites stale-artifact drift.
+/reactive-ts/ts-plugin/*.cjs
 *.tgz
+*.vsix
+# …except the published Reactive TS extension build, committed so it can be sideloaded
+# straight from a clone (see reactive-ts/vscode-extension/README.md).
+!/reactive-ts/vscode-extension/*.vsix
 
 # Playwright
 /test-results/

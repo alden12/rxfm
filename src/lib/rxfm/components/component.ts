@@ -1,7 +1,7 @@
 import { defer, MonoTypeOperatorFunction, Observable, of } from "rxjs";
 import { tap } from "rxjs/operators";
 import { children, ComponentChild } from "../children/children";
-import { flatten, switchTap } from "../utils";
+import { switchTap } from "../utils";
 
 /**
  * The possible DOM element types which can be used in RxFM. These are HTML and SVG elements.
@@ -51,15 +51,15 @@ export function componentFunction<T extends ElementType>(createElement: () => T)
  */
 export function componentCreator<T extends ElementType>(componentFunction: ComponentFunction<T>): ComponentCreator<T> {
   return (stringsOrFirstChild: TemplateStringsArray | ComponentChild, ...componentChildren: ComponentChild[]) => {
-    if (Array.isArray(stringsOrFirstChild)) {
-      if (stringsOrFirstChild.every(val => typeof val === 'string')) {
-        return componentFunction(
-          ...flatten((stringsOrFirstChild as TemplateStringsArray)
-            .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null]),
-          ),
-        );
-      }
-      throw new TypeError('Arrays may only be passed as component children when using the tagged templates form eg: "div`hello world`".');
+    // A tagged template call passes a TemplateStringsArray as the first argument, distinguished
+    // from an ordinary array child by its `raw` property: interleave the literal strings with the
+    // interpolated children. Any other array is a static array of children, handled by `children`.
+    if (Array.isArray(stringsOrFirstChild) && 'raw' in stringsOrFirstChild) {
+      return componentFunction(
+        ...(stringsOrFirstChild as TemplateStringsArray)
+          .map((str, i) => [str, componentChildren[i] ? componentChildren[i] : null])
+          .flat(),
+      );
     }
     return componentFunction(stringsOrFirstChild as ComponentChild, ...componentChildren);
   };

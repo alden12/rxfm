@@ -1,0 +1,8 @@
+import { Observable } from 'rxjs';
+declare const y: Observable<number>;
+const double = (n: number) => n * 2;
+const sum = y + 1;
+const c = sum(1);
+const called = double(y);
+const d = called(1);
+const bad: string = 123;

@@ -1,0 +1,9 @@
+import { Observable } from 'rxjs';
+declare const game: Observable<{ board: string[]; stage: string }>;
+declare const cell: Observable<{ color: string; size: number }>;
+declare function styles(s: { background: string | Observable<string>; fontSize: string | Observable<number> }): void;
+declare function klass(...names: (string | Observable<string>)[]): void;
+const { board, stage } = game;
+const len = stage.length;
+styles({ background: cell.color, fontSize: cell.size });
+klass('base', cell.size > 1 ? 'big' : 'small');
