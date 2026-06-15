@@ -8,15 +8,28 @@
 // A single indirection point also lets the underlying observable implementation
 // (RxJS today, possibly a native/RxJS-8 Observable later) change without touching
 // emitted code shape.
-import { EMPTY, Observable, isObservable, of, timer } from "rxjs";
+import {
+  EMPTY,
+  Observable,
+  animationFrames,
+  combineLatest,
+  isObservable,
+  of,
+  timer as rxTimer,
+} from "rxjs";
 import {
   catchError,
   distinctUntilChanged,
+  map,
   scan,
   shareReplay,
   startWith,
   switchMap,
+  takeWhile,
+  tap,
+  withLatestFrom,
 } from "rxjs/operators";
+import { coerceToObservable } from "./utils/utils";
 
 // Re-exported so the filter idiom `cond ? value : EMPTY` needs only one Reactive TS import:
 // a ternary whose else-branch is EMPTY drops the value when the condition is false
@@ -27,8 +40,9 @@ export { EMPTY };
 // table whose values are `TypeOrObservable<T>` (mix of plain values and streams) over an
 // observable key flattens with `switchMap(k => coerceToObservable(MAP[k]))`. Sourced from
 // the runtime (not `corrente` directly) so generated code depends only on the runtime seam —
-// keeping the option open to split Reactive TS out from corrente later.
-export { coerceToObservable } from "./utils/utils";
+// keeping the option open to split Reactive TS out from corrente later. (Imported above
+// rather than re-exported in place, since `interval` now uses it locally too.)
+export { coerceToObservable };
 
 /**
  * The observable type produced by imperative Reactive TS syntax — a "RenderObservable".
@@ -95,6 +109,7 @@ export function render<T>(source: Observable<T>): RenderObservable<T> {
  * const game = accumulate(actions, reduceGame, getInitialGame()) ?? getInitialGame();
  * // Or leave null and hide until the first win (seed `Infinity` stays internal):
  * const best = accumulate(winTimes, Math.min, Infinity);  // best ? `Best: ${best}` : null
+ * @deprecated Use the new `scan` method on observables instead.
  */
 export function accumulate<T, A>(
   source: Observable<T>,
@@ -105,28 +120,170 @@ export function accumulate<T, A>(
 }
 
 /**
- * A clock: emits `0, 1, 2, …`, ticking immediately and then every `period` ms
- * (i.e. `timer(0, period)`, so the first tick fires now rather than after a delay).
+ * A clock: emits `0, 1, 2, …` every `period` ms, with the first tick arriving after
+ * the first `period` (RxJS `interval` semantics, not an immediate one). For a clock
+ * that fires now and then repeats, use {@link timer} with a `0` initial delay
+ * (`timer(0, period)`).
  *
  * The point is the reactive overload: pass an `Observable<number>` and the clock
- * restarts at the new rate whenever the period changes — a difficulty-driven game
+ * restarts at the new rate whenever the period changes, so a difficulty-driven game
  * speed Just Works. That restart-on-change is a stream-of-streams switch (build a
- * fresh timer per period, switch to it) — the one shape that lifting fundamentally
- * can't express — so it lives here as a named helper rather than an inline
- * `switchMap(p => timer(0, p))`. A plain `number` behaves like RxJS `interval` but
- * with the immediate first tick.
+ * fresh timer per period, switch to it), the one shape lifting fundamentally can't
+ * express, so it lives here as a named helper rather than an inline
+ * `switchMap(p => timer(p, p))`. Passing `null` (or a stream that emits `null`) turns
+ * the clock off (`EMPTY`), so the filter idiom `running ? rate : null` gates it.
  *
  * @example
- * const period = periodFor(difficulty);  // RenderObservable<number>
- * const tick = interval(period);         // restarts when difficulty changes
+ * const period = periodFor(difficulty);          // RenderObservable<number>
+ * const tick = interval(period);                 // restarts when difficulty changes
+ * const ticking = interval(running ? 100 : null); // stops when `running` is false
  */
 export function interval(
-  period: number | Observable<number>,
-): Observable<number> {
-  const periods = typeof period === "number" ? of(period) : period;
-  return periods.pipe(
-    distinctUntilChanged(),
-    switchMap((ms) => timer(0, ms)),
+  period: number | null | Observable<number | null>,
+): RenderObservable<number> {
+  return render(
+    coerceToObservable(period).pipe(
+      distinctUntilChanged(),
+      switchMap((ms) => (ms === null ? EMPTY : rxTimer(ms, ms))),
+    ),
+  );
+}
+
+/**
+ * RxJS `timer`, with liftable inputs: fires its first tick after `due` ms, then (when
+ * a `period` is given) every `period` ms, emitting `0, 1, 2, …`. Either argument may
+ * be a plain `number` or an `Observable<number | null>`; when one is a stream the
+ * clock rebuilds at the new timing whenever it changes (the stream-of-streams switch
+ * lifting can't express). Omit `period` for a one-shot timer that fires once and
+ * completes, exactly like RxJS.
+ *
+ * Whenever `due` or `period` resolves to `null`, the clock turns off (`EMPTY`); push a
+ * number again to restart it. So `timer(0, running ? 100 : null)` is an
+ * immediate-start clock you toggle by flipping the period, the companion to
+ * {@link interval}'s delayed-start gate. The common case is `due = 0` set once and
+ * forgotten, with the period carrying the reactive rate.
+ *
+ * @example
+ * timer(1000);                     // fire once after 1s, then complete
+ * timer(0, 100);                   // immediate, then every 100ms
+ * timer(0, running ? 100 : null);  // immediate clock, off when not running
+ * timer(0, periodFor(difficulty)); // immediate clock that changes speed
+ */
+export function timer(
+  due: number | null | Observable<number | null>,
+  period?: number | null | Observable<number | null>,
+): RenderObservable<number> {
+  const due$ = coerceToObservable(due);
+  // No `period` argument at all: a one-shot timer (fire once after `due`, complete),
+  // matching RxJS `timer(due)`. A `null` *value* (below) means "off", which is a
+  // distinct case from "no repeat".
+  if (period === undefined) {
+    return render(
+      due$.pipe(
+        distinctUntilChanged(),
+        switchMap((ms) => (ms === null ? EMPTY : rxTimer(ms))),
+      ),
+    );
+  }
+  return render(
+    combineLatest([due$, coerceToObservable(period)]).pipe(
+      distinctUntilChanged((a, b) => a[0] === b[0] && a[1] === b[1]),
+      switchMap(([d, p]) => (d === null || p === null ? EMPTY : rxTimer(d, p))),
+    ),
+  );
+}
+
+/** Linear (no-op) easing - the default for {@link animate}. */
+const linear = (t: number) => t;
+
+/**
+ * A frame clock: emits the **elapsed milliseconds since subscription**, once per browser
+ * animation frame, and keeps going until you stop listening. It's the `requestAnimationFrame`
+ * sibling of {@link interval}/{@link timer} - a clock, but paced to the display (60Hz, 120Hz,
+ * whatever the screen runs at) and stamped with real elapsed time rather than a fixed period.
+ *
+ * This is the open-ended workhorse: drive a continuous, never-ending animation by mapping
+ * elapsed time to a value (`frames().map(ms => (ms * 0.06) % 360)` spins 60deg/sec forever).
+ * The browser pauses frames in background tabs, so an off-screen animation costs nothing, and
+ * because it's an ordinary stream it stops - cancelling the underlying `requestAnimationFrame` -
+ * when its subscriber goes away (i.e. when the component leaves the view), with no manual
+ * teardown. {@link animate} is this clock plus an easing curve and a stop time.
+ *
+ * @example
+ * const angle = frames().map((ms) => (ms * 0.06) % 360);  // continuous 60deg/sec spin
+ */
+export function frames(): RenderObservable<number> {
+  return render(animationFrames().pipe(map(({ elapsed }) => elapsed)));
+}
+
+/** Options for {@link animate}: how long the tween runs, its easing, and an optional fixed start. */
+export interface AnimateOptions {
+  /**
+   * Tween length in milliseconds. May be a stream (e.g. a `State`), in which case its latest
+   * value is sampled at the start of each tween - so a moving `target` can ease over a different
+   * duration each time (a longer jump taking longer, say). Changing it alone doesn't disturb a
+   * tween already in flight; the new value applies to the next target.
+   */
+  duration: number | Observable<number>;
+  /** Maps linear progress `0..1` to eased progress `0..1`. Defaults to linear. */
+  easing?: (t: number) => number;
+  /**
+   * The value to ease *from*. Omit it (the usual case) and the tween starts from wherever the
+   * value currently is - so a moving `target` retargets smoothly from its current position.
+   * Pin it for a one-shot tween with a known start (`animate(360, { from: 0, duration: 1000 })`).
+   */
+  from?: number;
+}
+
+/**
+ * A value that eases toward a **target** over a duration - the finite tween, and the shape you
+ * usually want for a value bound into the view. Give it a target (a number, or a stream of
+ * targets like a `State`) and it animates from its current position to the latest target,
+ * easing as it goes; set a new target mid-flight and it smoothly retargets. "The wheel eases
+ * toward `target`; clicking moves the target" - the way `useSpring`/`animate` read in React
+ * animation libraries: no clocks, no stop condition, no teardown to think about.
+ *
+ * Built on {@link frames}: a tween is just the frame clock mapped through `easing` between two
+ * endpoints, stopped once `duration` elapses (the final frame emits the exact target, then the
+ * stream completes - so it tears down with the graph, leak-free). It also hides the one piece
+ * imperative syntax can't express: switching to a fresh tween on each target change is a
+ * stream-of-streams switch, the same reason {@link interval}/{@link timer} are helpers.
+ *
+ * @example
+ * const target = new State(0);
+ * const angle = animate(target, { duration: 4000, easing: easeOutCubic }); // chases target
+ * const nudge = () => target.update((a) => a + 360);                       // each call eases a turn
+ * animate(360, { from: 0, duration: 1000 });                              // one-shot 0 -> 360
+ */
+export function animate(
+  target: number | Observable<number>,
+  { duration, easing = linear, from }: AnimateOptions,
+): RenderObservable<number> {
+  // The position we ease the next target FROM. Seeded by `from` when pinned, otherwise tracked
+  // from the last emitted value so a moving target continues from where it currently is. A
+  // closure (one per call, i.e. one per component instance), updated as the tween emits - an
+  // internal detail the caller never sees.
+  let current = from;
+  return render(
+    coerceToObservable(target).pipe(
+      distinctUntilChanged(),
+      // Sample the latest duration at each target change (`withLatestFrom`, not `combineLatest`):
+      // a duration change alone shouldn't restart an in-flight tween, only re-time the next one.
+      withLatestFrom(coerceToObservable(duration)),
+      switchMap(([to, durationMs]) => {
+        const start = current;
+        const tween =
+          start === undefined
+            ? of(to) // nothing to ease from yet: show the first target immediately
+            : frames().pipe(
+                map((elapsed) => Math.min(elapsed / durationMs, 1)),
+                // Inclusive: emit the final `t === 1` (the exact target), then complete.
+                takeWhile((t) => t < 1, true),
+                map((t) => start + (to - start) * easing(t)),
+              );
+        return tween.pipe(tap((value) => (current = value)));
+      }),
+    ),
   );
 }
 
@@ -145,13 +302,14 @@ export const RETRY: unique symbol = Symbol("RETRY");
  * nothing for a void/undefined return (the error is swallowed and the stream completes),
  * the inner value for an `Observable` return (it's switched to), or the value itself.
  */
-type Recovered<R> = Exclude<R, typeof RETRY> extends infer V
-  ? V extends void | undefined
-    ? never
-    : V extends Observable<infer U>
-      ? U
-      : V
-  : never;
+type Recovered<R> =
+  Exclude<R, typeof RETRY> extends infer V
+    ? V extends void | undefined
+      ? never
+      : V extends Observable<infer U>
+        ? U
+        : V
+    : never;
 
 /**
  * An error boundary for a stream — the legible, `catch`-block-shaped form of stream error
