@@ -11,7 +11,7 @@
         "forceConsistentCasingInFileNames": true,
         "baseUrl": ".",
         "paths": {
-            "rxfm": ["src/lib/rxfm/index"]
+            "corrente": ["src/corrente/index"]
         }
     },
     "exclude": [
@@ -19,7 +19,7 @@
         "dist",
         "dist-demo",
         "reactive-ts",
-        "examples",
+        "site",
         "**/*.test.ts"
     ]
 }

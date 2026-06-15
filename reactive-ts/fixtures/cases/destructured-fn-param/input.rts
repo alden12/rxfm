@@ -1,5 +1,5 @@
 import { Observable } from "rxjs";
-import { Div, Input } from "rxfm";
+import { Div, Input } from "corrente";
 
 interface TodoItem {
   name: string;

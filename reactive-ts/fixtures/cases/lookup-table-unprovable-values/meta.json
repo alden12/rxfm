@@ -1,0 +1,6 @@
+{
+  "description": "A static lookup table indexed by an observable key whose value type can't be proven non-observable (any/unknown — e.g. an unresolved cross-module type) flattens defensively via switchMap + coerceToObservable, so a value that turns out to be a stream can't leak as a higher-order Observable<Observable<T>>. A provably plain-valued table (Record<K, number>) keeps the tighter map form.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

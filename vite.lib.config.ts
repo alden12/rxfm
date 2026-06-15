@@ -2,13 +2,13 @@ import { resolve } from "path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 
-// Build config for the published `rxfm` library.
+// Build config for the published `corrente` library.
 export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: true,
     lib: {
-      entry: resolve(__dirname, "src/lib/index.ts"),
+      entry: resolve(__dirname, "src/index.ts"),
       formats: ["es", "cjs"],
       fileName: format => `index.${format === "es" ? "mjs" : "cjs"}`,
     },
@@ -19,8 +19,8 @@ export default defineConfig({
   },
   plugins: [
     dts({
-      // Emit the declaration tree (dist/index.d.ts + dist/rxfm/**) mirroring src/lib.
-      include: ["src/lib"],
+      // Emit the declaration tree (dist/index.d.ts + dist/corrente/**) mirroring src.
+      include: ["src/index.ts", "src/corrente"],
     }),
   ],
 });

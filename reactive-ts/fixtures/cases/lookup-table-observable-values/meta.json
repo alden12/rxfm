@@ -1,0 +1,6 @@
+{
+  "description": "A static lookup table indexed by an observable key whose value type can itself be an observable (Record<K, TypeOrObservable<T>>) lifts via switchMap + coerceToObservable (sourced from the runtime, not corrente) so it flattens to RenderObservable<T> instead of a higher-order Observable<Observable<T>>. A plain-valued table keeps the tighter map form.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

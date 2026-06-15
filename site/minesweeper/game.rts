@@ -1,0 +1,26 @@
+import { EMPTY, Subject, timer } from "rxjs";
+import { getInitialGame, reduceGame } from "./game-logic";
+import { CellAction, GameStage } from "./types";
+import { accumulate, ComponentChild, TypeOrObservable } from "corrente";
+
+// A factory, not module-level singletons: each call builds a fresh, independent game so that
+// remounting (e.g. leaving and returning to the example) starts over rather than resuming shared state.
+export const createGame = () => {
+  const cellAction = new Subject<CellAction>();
+  const dispatch = (action: CellAction) => cellAction.next(action);
+
+  const { board, gameStage, duration } = accumulate(cellAction, reduceGame, getInitialGame()) ?? getInitialGame();
+
+  const GAME_TIME_MAP: Record<GameStage, ComponentChild> = {
+    pregame: 0,
+    playing: timer(0, 1000),
+    win: duration,
+    gameOver: duration,
+  };
+  const gameTime = GAME_TIME_MAP[gameStage];
+
+  const winTime = gameStage === "win" ? duration : EMPTY;
+  const highScore = accumulate(winTime, (best, time) => Math.min(best, time), Infinity);
+
+  return { board, gameStage, gameTime, highScore, dispatch };
+};

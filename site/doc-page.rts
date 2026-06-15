@@ -1,0 +1,142 @@
+// Composes a rendered markdown doc into an Corrente component, with live demos spliced in
+// where the markdown carried a `demo=<id>` fence.
+//
+// Key design point: the live demos are real Corrente *children*, not elements poked into
+// innerHTML with a manual `addToView`. The rendered HTML is split at the demo markers
+// into runs of plain HTML, each wrapped as a `rawHtml` component, and the live
+// `DemoPanel`s are interleaved between them. Handing the whole sequence to `Div(...)`
+// lets Corrente's `children` operator own every subscription — so when the content pane
+// swaps pages, the demos' streams (timers, etc.) are torn down with the page instead of
+// leaking. (A manual `addToView` into an innerHTML placeholder would not be.)
+//
+// Styling: Tailwind utilities for the chrome; `prose` (typography plugin) for the
+// rendered markdown chunks. Markdown gets bespoke typography, demos sit outside `prose`.
+import {
+  Button,
+  Component,
+  ComponentChild,
+  Details,
+  Div,
+  H1,
+  State,
+  Summary,
+} from "corrente";
+import { DEMOS } from "./demos";
+import {
+  DEMO_MARKER,
+  codeBlock,
+  rawHtml,
+  renderMarkdownHtml,
+} from "./markdown";
+
+/** A single source file in a (possibly multi-file) example. `lang` defaults to TypeScript. */
+export interface SourceFile {
+  name: string;
+  source: string;
+  lang?: string;
+}
+
+/** Sources accepted by an example page: one file's text, or a labelled multi-file set. */
+export type ExampleSource = string | SourceFile[];
+
+const toFiles = (source: ExampleSource): SourceFile[] =>
+  typeof source === "string" ? [{ name: "", source }] : source;
+
+// A multi-file example renders its files as tabs: a header row of file-name buttons over
+// a stack of highlighted code panels, with the non-selected panels hidden. A plain
+// `State<number>` holds the active index; `selected === i` lifts to a boolean
+// stream (Reactive TS) that drives both the active-tab styling and each panel's `hidden`
+// toggle. A single-file source skips the tab row entirely.
+const sourceTabs = (files: SourceFile[]): ComponentChild => {
+  if (files.length === 1) return codeBlock(files[0].source, files[0].lang);
+
+  const selected = new State(0);
+  return Div(
+    Div.class("flex flex-wrap gap-1 border-b border-border bg-code px-2 pt-2")(
+      files.map((file, i) =>
+        Button.class(
+          "rounded-t-md px-3 py-1.5 font-mono text-xs",
+          selected === i
+            ? "bg-elevated text-primary-strong"
+            : "text-muted hover:text-foreground",
+        )
+        .onClick(() => selected.next(i))
+        `${file.name}`,
+      ),
+    ),
+    files.map((file, i) =>
+      Div.class("not-prose", selected === i ? "" : "hidden")(
+        codeBlock(file.source, file.lang),
+      ),
+    ),
+  );
+};
+
+// `open` renders the `<details>` expanded from the start — used by the full-app example
+// pages (the source is the point there), while the inline doc demos stay collapsed.
+const sourceExpander = (source: ExampleSource, open = false): ComponentChild =>
+  Details.class("border-t border-border").open(open)(
+    Summary.class(
+      "cursor-pointer select-none px-3.5 py-2 text-sm text-muted hover:text-primary-strong",
+    )`View full source`,
+    sourceTabs(toFiles(source)),
+  );
+
+const DemoPanel = (id: string): ComponentChild => {
+  const demo = DEMOS[id];
+  if (!demo) {
+    return rawHtml(
+      `<div class="not-prose my-5 rounded-lg bg-danger-surface px-4 py-3 text-danger">Unknown demo: <code>${id}</code></div>`,
+    );
+  }
+  return Div.class("my-5 overflow-hidden rounded-lg border border-border")(
+    Div.class(
+      "border-b border-border bg-surface px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted",
+    )`Result`,
+    Div.class("demo-result p-4 min-h-15")(demo.component),
+    demo.source ? sourceExpander(demo.source) : null,
+  );
+};
+
+/**
+ * Render a markdown string to a doc component, splicing the live demo for each
+ * `demo=<id>` fence in just after its code block.
+ */
+export const DocPage = (markdown: string): Component => {
+  // `split` with the single-capture marker regex yields [html, id, html, id, …]:
+  // even indices are HTML runs (complete block elements — markers sit after a <pre>),
+  // odd indices are demo ids.
+  const parts = renderMarkdownHtml(markdown).split(DEMO_MARKER);
+  const children = parts.map((part, i) =>
+    i % 2 === 0
+      ? rawHtml(part, "prose prose-invert max-w-none")
+      : DemoPanel(part),
+  );
+  return Div.class("mx-auto max-w-[var(--content-width)]")(children);
+};
+
+/**
+ * A page for a full app example: a heading, the live app, and its source (one or many files).
+ *
+ * `app` is a *factory* (`() => ComponentChild`), not a built component, on purpose: the
+ * content pane tears the page's streams down when you navigate away, so a built instance
+ * would keep its `state` subjects across visits while its derived streams reset - leaving,
+ * say, a running stopwatch that's lost its elapsed time. Passing the component function
+ * lets `children` rebuild a fresh instance on each visit, so leaving and returning resets
+ * the demo cleanly. (The type makes the old `AppPage("X", X(), …)` shape a compile error.)
+ */
+export const AppPage = (
+  title: string,
+  app: () => Component,
+  source: ExampleSource,
+): Component =>
+  Div.class("mx-auto max-w-[var(--content-width)]")(
+    H1.class("mb-4 text-2xl font-bold")`${title}`,
+    Div.class("overflow-hidden rounded-lg border border-border")(
+      // Pass the factory itself (not `app()`): `children` invokes a function child on each
+      // subscription, so navigating back to this page rebuilds a fresh instance rather than
+      // re-subscribing the one built at module load (which would keep its state across visits).
+      Div.class("demo-result p-4 min-h-15")(app),
+      sourceExpander(source, true),
+    ),
+  );

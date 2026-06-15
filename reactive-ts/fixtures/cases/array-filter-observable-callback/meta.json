@@ -1,0 +1,6 @@
+{
+  "description": "A value-returning array method (.filter/.some/.every/.find/…) whose synchronous callback captures an observable as a value lifts the WHOLE call over the capture(s): query.pipe(map(query => FRUITS.filter(...))). The predicate stays a plain sync boolean (a stream can't be consumed per element), the captured name is re-bound to its current value inside the map (the D2 closure-capture shape), and the result is a stream of filtered arrays. .map/.flatMap are excluded (mapToComponents / C8 own those). A callback capturing no observable is untouched.",
+  "diagnostics": [],
+  "stalls": [],
+  "higherOrder": []
+}

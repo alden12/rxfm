@@ -1,0 +1,17 @@
+import { render } from "./runtime";
+import { map } from "rxjs/operators";
+import { Observable } from "rxjs";
+
+const FRUITS = ["apple", "banana", "cherry"];
+declare const query: Observable<string>;
+
+// A plain (non-stream) array `.map` whose callback BODY captures an observable. The
+// stream-`.map` → mapToComponents path handles an observable RECEIVER; this handles an
+// observable used INSIDE an ordinary array map. The receiver stays a plain array; the
+// transform descends into the callback and lifts the returned expression per element
+// (`fruit.includes(query)` lifts, the ternary switchMaps), so each element becomes a
+// RenderObservable a children operator can render.
+export const matches = FRUITS.map(fruit => render(query.pipe(map(query => fruit.includes(query) ? fruit : null))));
+
+// A plain array map with NO observable in the callback is left completely untouched.
+export const upper = FRUITS.map(fruit => fruit.toUpperCase());

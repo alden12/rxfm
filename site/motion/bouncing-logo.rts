@@ -1,0 +1,19 @@
+import { Div, frames } from "corrente";
+
+import "./bouncing-logo-styles.css";
+
+const WIDTH = 400;
+const HEIGHT = 168;
+const SPEED = 0.25; // px/ms
+
+// A triangle wave: ramps up to size and back to zero, forever, so the logo bounces off each edge.
+const bounce = (position: number, size: number) => size - Math.abs((position % (2 * size)) - size);
+
+export const BouncingLogo = () => {
+  const position = frames() * SPEED
+
+  return Div.class("bounce-screen")(
+    Div.class("bounce-badge")
+      .style({ transform: `translate(${bounce(position, WIDTH)}px, ${bounce(position, HEIGHT)}px)` })``,
+  );
+};

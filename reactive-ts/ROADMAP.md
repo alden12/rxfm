@@ -14,7 +14,7 @@ Three layers are built:
 - **The editor path** — a Volar `LanguagePlugin` ([ts-plugin/language-plugin.cjs](ts-plugin/language-plugin.cjs))
   wrapped as a tsserver plugin ([ts-plugin/index.cjs](ts-plugin/index.cjs)), giving live hover /
   errors / go-to-def on `.rts` files mapped back to source. It rides VS Code's **real** tsserver
-  project, so it already resolves the user's own `rxfm` / `rxjs`.
+  project, so it already resolves the user's own `corrente` / `rxjs`.
 - **The build path** — [vite-plugin-reactive-ts.ts](vite-plugin-reactive-ts.ts) + [runtime.ts](runtime.ts).
 - **The extension scaffold** — [vscode-extension/](vscode-extension/): contributes the `.rts`
   language, a (copied) TS grammar, and registers the tsserver plugin. Currently **F5-only** (runs in
@@ -89,17 +89,17 @@ Estimated ~half a day of packaging plumbing; no new framework logic.
    unblocks them.
 4. **Source maps in build output**, so debugging `.rts` in the browser maps back to source. (Editor
    mappings already exist; confirm the Vite plugin emits source maps on the emit path.)
-5. **Decide Reactive TS's relationship to rxfm.** The new fluent API removed one original motivation (events
-   no longer need the boundary). Be explicit about what Reactive TS still buys over fluent rxfm — mainly
-   arithmetic / derived-value ergonomics — and whether `runtime.ts` should fold into rxfm core or
+5. **Decide Reactive TS's relationship to corrente.** The new fluent API removed one original motivation (events
+   no longer need the boundary). Be explicit about what Reactive TS still buys over fluent corrente — mainly
+   arithmetic / derived-value ergonomics — and whether `runtime.ts` should fold into corrente core or
    stay a separate published package.
 6. **Editor polish.** Reactive TS-specific syntax highlighting (currently a copied TS grammar); verify
    cross-file go-to-def / rename work through the Volar mappings.
 7. **Runtime-import distribution (needed before Reactive TS merges).** The transform auto-emits the
    `render` import via a walk-up to the nearest `runtime.ts`, but the helpers Reactive TS leaves for you to
    call by hand — `accumulate`, `interval`, `EMPTY` — are imported with **brittle relative paths**
-   (`from '../runtime'`). Relocating the examples to the top-level `examples/` exposed this: every
-   such path had to be hand-edited, and a `examples/runtime.ts` re-export shim was added so the tree
+   (`from '../runtime'`). Relocating the examples to the top-level `site/` exposed this: every
+   such path had to be hand-edited, and a `site/runtime.ts` re-export shim was added so the tree
    (a sibling of `reactive-ts/`) could resolve the canonical `reactive-ts/runtime.ts`. Decide a durable story —
    auto-inject these the way `render` is, resolve a stable bare specifier (e.g. `reactive-ts/runtime`), or
    fold the runtime into a published package — so users don't write fragile `../../runtime` paths.
@@ -281,11 +281,74 @@ lookup-helper boilerplate (`cellColor`, `periodFor`) the snake needed as a worka
 `CELL_COLOR_MAP[cell]` and `interval(DIFFICULTY_TICK_PERIOD_MAP[difficulty])` now Just Work (the
 latter composing with C6).
 
+- **Done — flatten a lookup table of `TypeOrObservable<T>`.** When the looked-up *value* can itself
+  be an observable — a table typed `Record<K, TypeOrObservable<T>>` mixing plain values and streams,
+  indexed by a stream key — a plain `map` yields `Observable<Observable<T>>` (higher-order, never
+  flattens). The lift now detects an observable in the value type (inspecting the object's property /
+  index types) and lowers to `key.pipe(switchMap(key => coerceToObservable(MAP[key])))`, coercing a
+  plain value to `of(value)` — so `MAP[key]` resolves to a flat `RenderObservable<T>`. This is the
+  lookup-table analog of the ternary's switchMap lowering, letting a multi-way `cond ? … : …` be
+  refactored into a dispatch table (Minesweeper's `GAME_TIME_MAP[gameStage]`). A plain-valued table
+  keeps the tighter `map`. `coerceToObservable` is emitted from the **runtime** seam (not `corrente`), so
+  generated code stays decoupled from corrente. Covered by the `lookup-table-observable-values` fixture.
+
+### C8. Descend into plain-array `.map` callbacks — ✅ DONE (expression-bodied)
+
+Lifting a call/method over an observable value (`fruit.includes(query)` → `query.pipe(map(q => fruit.includes(q)))`)
+already worked — but only where the transform *processed* the expression. A plain (non-stream) array
+`.map(cb)` was a blind spot: the stream-`.map` → `mapToComponents` path (D4) handles an observable
+*receiver*, but the body of an ordinary array map was never visited, so an observable captured inside
+it (live-search's `FRUITS.map(fruit => fruit.includes(query) ? Div\`${fruit}\` : null)`) stayed verbatim
+— a type error that silently always-missed at runtime.
+
+The transform now descends into a plain-array `.map` callback (array-like receiver + arrow/function
+callback) and lifts its returned expression like any child, leaving the receiver an ordinary array:
+
+```ts
+FRUITS.map(fruit => fruit.includes(query) ? Div`${fruit}` : null)
+// → FRUITS.map(fruit => render(query.pipe(map(query => fruit.includes(query)))
+//                                   .pipe(switchMap(c => c ? Div`${fruit}` : of(null)))))
+```
+
+Each element becomes a `RenderObservable<Component | null>`; the children operator renders the array,
+so the list filters reactively. A callback that captures no observable is left untouched. Covered by
+the `array-map-observable-callback` fixture and the live-search example.
+
+- **Follow-up (open): block-bodied callbacks.** Only expression-bodied callbacks (`fruit => expr`)
+  lift today. A block body (`fruit => { … return expr }`) needs statement-level transformation of the
+  callback (lifting the `return` expression, and any intermediate `const`s that capture streams) — the
+  same machinery `visit` already runs for a component body, applied to the callback block. Until then a
+  block-bodied array map is recursed into normally (nested children still lift) but its `return` value
+  isn't lifted as a whole.
+
+### C9. Lift a value-returning array method over a callback-captured observable — ✅ DONE
+
+C8 handles `.map` (per-element children). The complement is `.filter` and friends: a `.filter`
+predicate has to return a *synchronous* boolean, so an observable captured inside it can't be lifted
+per element — the membership decision needs the stream's *current* value. So the **whole call** lifts
+over the capture(s) instead, exactly the closure-capture shape the D2 handler lift uses:
+
+```ts
+const matching = FRUITS.filter(fruit => fruit.includes(query));
+// → render(query.pipe(map(query => FRUITS.filter(fruit => fruit.includes(query)))))   // Observable<string[]>
+matching.map(fruit => Div`${fruit}`)
+// → matching.pipe(mapToComponents(fruit => Div`${fruit}`))   // downstream stream-`.map`, unchanged
+```
+
+The predicate stays an ordinary synchronous callback; the captured name is re-bound to its current
+value inside the `map` (so it's a plain string there), and the result is a stream of filtered arrays —
+a genuinely filtered, keyed list once the downstream `.map` becomes `mapToComponents`. Applies to the
+value-returning array methods (`filter`, `find`, `findIndex`, `findLast`, `findLastIndex`, `some`,
+`every`); `.map`/`.flatMap` stay with C8 / mapToComponents. A callback capturing no observable is left
+untouched. Covered by the `array-filter-observable-callback` fixture and the live-search example.
+
 ### Suggested order for C
 
 **C1 ✅** (filter idiom + stall warning) · **C2 ✅** (operator-style mis-lift fix) · **C3 ✅**
 (`accumulate`) · **C4 ✅** (chained-member collapse) · **C5 ✅** (`interval`) · **C6 ✅** (recursive
-arg lifting) · **C7 ✅** (element-access by stream index). All of section C is shipped.
+arg lifting) · **C7 ✅** (element-access by stream index) · **C8 ✅** (descend into plain-array `.map`
+callbacks; block bodies follow-up open) · **C9 ✅** (lift `.filter`/`.find`/… over a callback-captured
+observable). All of section C is shipped.
 
 ### Status
 
@@ -304,7 +367,7 @@ arg lifting) · **C7 ✅** (element-access by stream index). All of section C is
   `interval(periodFor(difficulty))` works (no need to lift at a separate binding first).
 - **C7 ✅** — element access over a static object with a stream index lifts; the snake game dropped
   its `cellColor` / `periodFor` lookup helpers and indexes the lookup tables directly.
-- **Reactive TS works outside rxfm** (the reactive engine `examples/snake-game/game.rts` has ZERO rxfm
+- **Reactive TS works outside corrente** (the reactive engine `site/snake-game/game.rts` has ZERO corrente
   imports — `accumulate` + `interval` + derived lifts — and type-checks on its own). Reactive TS is just
   RxJS + the tiny runtime; the pure game rules stay pure (no observables to lift). So the natural
   decomposition is: **reactive glue → Reactive TS; pure algorithms → plain functions.** For tightly-coupled
@@ -339,7 +402,7 @@ arg lifting) · **C7 ✅** (element-access by stream index). All of section C is
 
 ## D. Pain points surfaced by the Minesweeper conversion
 
-Converting the Minesweeper example (`examples/minesweeper/`) was a deliberate stress test — a
+Converting the Minesweeper example (`site/minesweeper/`) was a deliberate stress test — a
 component-heavy app with per-cell event handlers and reactive timers. It type-checks end-to-end, but
 only after working around three real rough edges. Each is a place where the "treat streams as
 variables" illusion leaks. **Tackle order: D1, then D2, then D3.**
@@ -386,9 +449,9 @@ but it's a sharp, surprising edge when a value works in one position and not ano
   `board`/`gameStage` exported but `duration` private, and a single destructuring statement can't mix
   export visibility — a plain-JS limitation, not the transform's — so the explicit split stays.)
 - **Related finding — `EMPTY` vs `null` in a child slot:** `cond ? Div`…` : EMPTY` as a *child*
-  doesn't hide the element when the condition flips false — `EMPTY` emits nothing, so rxfm's children
+  doesn't hide the element when the condition flips false — `EMPTY` emits nothing, so corrente's children
   operator never gets a signal to remove the previous element (it lingers, e.g. a stale "You Win!").
-  Use `: null` for conditional children (rxfm treats `null` as "clear this child"); reserve `EMPTY`
+  Use `: null` for conditional children (corrente treats `null` as "clear this child"); reserve `EMPTY`
   for value streams feeding `accumulate`/filters where you genuinely want no emission. The C1 idiom
   text should call this out. (Minesweeper now uses `null` for its conditional messages.)
 
@@ -407,7 +470,7 @@ way to express that imperatively yet. Minesweeper sidesteps it with a fixed grid
 `[x, y]` coordinates, so handlers capture plain numbers — clean, but it forced the whole
 board-rendering shape.
 
-- **Done:** a handler argument in a parameter that accepts an `Observable` (rxfm's `EventHandler` is
+- **Done:** a handler argument in a parameter that accepts an `Observable` (corrente's `EventHandler` is
   `handler | Observable<handler>`) is lifted to a stream of handlers —
   `stream.pipe(map(v => () => …v…))`, `combineLatest([…])` for several captures — with the body left
   verbatim. A capture counts only when the stream is read as a *value*; streams touched via their API
@@ -538,3 +601,121 @@ consumer handles the initial case) and a one-time migration of existing folds (s
   a dedicated symbol sentinel would be more rigorous but loses `??` ergonomics.
 - **Follow-up:** this is implemented on the docs/examples branch (runtime + snake/minesweeper). The
   same `accumulate` change + consumer migration must be applied on the Reactive TS implementation branch.
+
+## E. Pain points surfaced by the doc-site build
+
+Building the demo into a live **doc-site** (`docs/rts-corrente`) was another deliberate stress test —
+this time of Reactive TS as the *host of an app* rather than the examples themselves: a `.rts` shell
+(`site/app.rts`) plus several plain-`.ts` modules consuming `.rts` exports, rendering the markdown
+docs with live demos spliced in. It works well — the shell's `selected === id` active-link highlight
+and the `CONTENT[selected]` page-swap both lift cleanly, and the **C7 lookup-table flatten scales to
+the route map** (`CONTENT[selected]` → `switchMap(s => coerceToObservable(CONTENT[s]))`). A few rough
+edges surfaced.
+
+### E1. `?raw` imports of `.rts` returned compiled JS, not source — ✅ DONE
+
+The doc-site shows each example's real source via Vite `?raw`. But the `reactiveTs()` Vite plugin
+transformed *every* `.rts` id — including the `?raw`/`?url`/`?inline` variants Vite core handles — so
+`import src from './x.rts?raw'` returned compiled JS instead of the file's text. Fixed by guarding the
+plugin to skip those queries ([vite-plugin-reactive-ts.ts](vite-plugin-reactive-ts.ts)). Anyone
+inspecting/displaying `.rts` source would have hit this.
+
+### E2. No headless type-check for a `.rts`-consuming app — reinforces B1 (open)
+
+The doc-site's `.ts` modules (`content.ts`, `demos.ts`) import components from `.rts` files.
+`npx tsc -p site/tsconfig.json` errors on **every** `.rts` import (`Cannot find module './x.rts'`),
+so there is no CLI/CI step that type-checks the example app — types resolve *only* in-editor via the
+tsserver plugin. A type error in the glue (a wrong component shape passed to a demo, a bad export
+name) would ship silently. This is the consumer-app face of **B1**: the build-time type solution must
+also let plain `.ts` that *imports* `.rts` be checked headlessly, not just `.rts` itself.
+
+### E3. `.rts` as a top-level HTML / Vite entry is untested (open)
+
+The doc-site keeps a thin `main.ts` entry (`addToView(App)`) rather than pointing `index.html` at
+`app.rts`, because using `.rts` as a top-level Vite/HTML script entry is unverified (does the plugin
+transform run on the entry module itself?). Either confirm it works or document "`.ts` entry that
+imports `.rts`" as the supported pattern.
+
+### E4. Lifted callbacks shadow the source variable name — codegen nit (open)
+
+`selected === id && 'active'` emits `selected.pipe(map(selected => selected === id && 'active'))` — the
+`map` parameter reuses the source name, shadowing the outer stream. Harmless, but confusing when
+reading emitted output or stepping through it in a debugger. Consider a distinct generated param name.
+
+### E5. The fluent multiline style isn't lint-clean in `.ts` — DX friction (open; corrente, not strictly Reactive TS)
+
+The idiomatic `Foo.class(…)` ⏎ `` `text` `` chain trips ESLint `no-unexpected-multiline` in `.ts`
+files (it's fine in `.rts`, which isn't linted). Any corrente component written in plain `.ts` (glue,
+helpers — e.g. `doc-page.ts` here) must inline the tagged template or restructure. Worth either an
+ESLint tweak for the tagged-template-call pattern or documented guidance, since "drop into `.ts` for
+non-reactive glue" is a normal thing to do in a larger app.
+
+### E6. Rendered-markdown relative links don't navigate — doc-site follow-up (open)
+
+The in-app README/guide render the real markdown, so relative links (`docs/getting-started.md`, the
+roadmap link, etc.) are plain anchors that 404 in the SPA. Intercept link clicks in the doc-page
+composer and map known doc paths to routes (and external links to new tabs).
+
+## F. SSR, data prefetch & chunking (future — design direction)
+
+Forward-looking design for Corrente (the renamed runtime), not scoped to any current branch. Captured
+from a design discussion; **revisit when SSR / data-loading becomes a real requirement.** The summary:
+build a data registry first, do **data-prefetch** SSR rather than HTML-hydration matching, and chunk
+*feature components* while keeping the data core eager.
+
+### Why HTML-hydration SSR is especially hard here (defer it)
+
+"SSR" bundles four separate wins: (1) server-rendered markup → fast first paint, (2) SEO without JS,
+(3) no data waterfall → first data present immediately, (4) works with JS off. True HTML matching
+delivers (1)(2)(4) but fights Corrente's model on three fronts:
+
+- **No server DOM.** A component *is* `Observable<HTMLElement>` built via `document.createElement`;
+  running one server-side needs linkedom/jsdom.
+- **No natural settle point** — the real blocker. Element streams are live and don't *complete*, but
+  SSR needs a snapshot. You'd have to define "the component has settled" (all sync + flagged-async
+  data resolved, take that tick) — a new semantic the framework doesn't have.
+- **The core operators would need a hydration mode.** `children` / `attributes` / `styles` / `events`
+  all *create* and patch DOM; hydration means rewriting them to *adopt* existing server nodes on first
+  run. That's surgery on the render core for the win-set (LCP / no-JS) least likely to be a hard
+  requirement.
+
+Park unless SEO-without-JS becomes mandatory — and note the data-registry work below is a prerequisite
+for it anyway, so prefetch-first is on the path, not a detour.
+
+### F1. Data registry — the keystone (build first)
+
+Route all async data through a registry keyed by a stable request identity:
+`data(key, fetcher) => Observable<T>`, backed by a shareReplay (we already have `reuse`). This gives
+request identity (the same idea behind Relay query ids / React Query keys / Apollo's normalized cache /
+RSC flight data), and pays off **independent of SSR**: dedup, caching, the serialization seam, and the
+chunk-sharing seam. The registry is an **app-level singleton** (same discipline as
+`operator-isolation-service`), hoisted into the eager core — not living inside a lazily-loaded chunk
+that multiple features import (that would give two caches).
+
+### F2. Prefer data-prefetch SSR over HTML matching
+
+Deliver win (3) — no waterfall — which composes with the streams model instead of fighting it. The
+clean shape (correcting "construct without rendering": in RxJS a fetch only fires on *subscription*,
+and subscription is also what builds the DOM, so you can't cleanly separate them):
+
+> Run the **real** component against a throwaway linkedom DOM, wait for request quiescence (no pending
+> fetches in the registry), snapshot `{key: latestValue}`, **discard the markup**, embed the JSON.
+
+Accurate request capture for free, because it's the real code path — not a parallel model that can
+drift. Client: seed each key's subject from the embedded JSON (BehaviorSubject / `startWith`), then
+mount normally — seeded fetches resolve synchronously, no waterfall, no spinner flash. A
+`serverData` / `hydrate` pair would sit on the runtime surface alongside `accumulate` / `interval` /
+`fallback`. Honest about scope: markup is still client-rendered (no LCP / no-JS win).
+
+### F3. Chunk feature components, keep the data core eager
+
+Lazy services work with RxJS — `from(import('./feature')).pipe(switchMap(m => m.data(key)))`, and Vite
+splits on the dynamic-import boundary automatically. Two cautions:
+
+- **Lazy + prefetch pull opposite ways for the *data* layer.** A service behind a dynamic import means
+  the server must `await` the chunk before it can enumerate the request, and the client must load it
+  before replaying the seed. So chunk by **feature/route component** (the big stuff — components, heavy
+  deps) and keep the **data registry + keys eager** (small: fetch logic + identity). Don't lazy-load
+  the thing you need synchronously to know what to prefetch.
+- **Shared + lazy ⇒ singleton.** Two lazy features importing the same service must share one registry
+  instance — hoist it to the eager core (see F1), don't bury it in a chunk.

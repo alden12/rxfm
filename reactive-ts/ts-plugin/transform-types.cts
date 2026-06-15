@@ -65,6 +65,10 @@ export interface Segment {
 
 export interface Stall { start: number; length: number; name: string; }
 export interface HigherOrder { start: number; length: number; name: string | null; }
+// Source span of a member access lifted over an observable receiver (`stream.field`).
+// The editor uses these to offer the stream's operator methods (scan/take/…) in
+// completion there, alongside the emitted-value members the lifted code resolves to.
+export interface ObservableMember { start: number; length: number; }
 /** A recorded generated position a later mapping points back at (for hover/nav). */
 export interface GenTarget { genStart: number; len: number; }
 export interface RootMapping { srcStart: number; len: number; key: string; }

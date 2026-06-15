@@ -5,7 +5,7 @@
 // expression actually compiles to (cold-vs-shared sources, combineLatest vs map,
 // switchMap filter idioms, …).
 //
-//   yarn reactive-ts:emit examples/snake-game/game.rts
+//   yarn reactive-ts:emit site/snake-game/game.rts
 //
 // The transform builds its own program anchored at the file's directory, so the
 // file's imports (rxjs, ../runtime, ./constants, …) resolve from disk exactly as

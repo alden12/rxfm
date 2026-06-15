@@ -1,0 +1,17 @@
+import { render, coerceToObservable } from "./runtime";
+import { switchMap, map } from "rxjs/operators";
+import { Observable } from "rxjs";
+
+// A lookup table indexed by an observable key whose VALUE type the checker can't pin
+// down — here `any` (the shape you get when the table's type crosses a module boundary
+// the transform couldn't resolve). Observability can't be ruled out, so a plain `map`
+// risks leaking Observable<Observable<T>> into the consumer. The lift defensively
+// switchMaps + coerces — flat whether the value turns out to be a stream or a plain value.
+declare const TABLE: Record<string, any>;
+declare const key: Observable<string>;
+
+export const picked = render(key.pipe(switchMap(key => coerceToObservable(TABLE[key]))));
+
+// A table with a provably non-observable value type keeps the tighter `map` form.
+declare const PLAIN: Record<string, number>;
+export const plain = render(key.pipe(map(key => PLAIN[key])));

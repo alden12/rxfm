@@ -1,0 +1,40 @@
+import { Div, Input, State } from "corrente";
+
+import "./todo-list-styles.css";
+
+interface TodoItem {
+  name: string;
+  done: boolean;
+}
+
+const initialItems: TodoItem[] = [
+  { name: "Buy bananas", done: true },
+  { name: "Finish Corrente", done: false },
+  { name: "Start a new project", done: false },
+];
+
+export const TodoList = () => {
+  const items = new State<TodoItem[]>(initialItems);
+
+  return Div(
+    Input
+      .type("text")
+      .placeholder("Add Item")
+      .onChange(({ target }) =>
+        target instanceof HTMLInputElement && items.update(list => [...list, { name: target.value, done: false }])
+      ),
+    items.map(
+      ({ name, done }) => Div
+        .onClick(() => items.update(
+          list => list.map(item => item.name === name ? { ...item, done: !item.done } : item),
+        ))
+        .class("todo-item", done ? "done" : "")(
+          name,
+          Input
+            .type("checkbox")
+            .checked(done)
+          ),
+      "name",
+    ),
+  );
+};

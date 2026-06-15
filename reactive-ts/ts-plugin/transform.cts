@@ -17,7 +17,7 @@ import type * as TS from "typescript";
 // The transform's data model lives in transform-types (a types-only module).
 import type {
   Ts, SrcSlice, Piece, Operand, AliasInfo, Edit,
-  Stall, HigherOrder, RootMapping, DeclMapping,
+  Stall, HigherOrder, ObservableMember, RootMapping, DeclMapping,
 } from "./transform-types.cjs";
 import { operatorTables } from "./transform-operators.cjs";
 import { getCompilerOptions, createProgramFromText } from "./transform-program.cjs";
@@ -72,7 +72,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
 
   // (2) Output-plan accumulators.
   const edits: Edit[] = [];
-  const needed = { rxjs: new Set<string>(), "rxjs/operators": new Set<string>(), rxfm: new Set<string>() };
+  const needed = { rxjs: new Set<string>(), "rxjs/operators": new Set<string>(), corrente: new Set<string>(), runtime: new Set<string>() };
   let usedRender = false;
   // Declaration-site hover for destructured fields: the binding pattern `{ color }`
   // is erased to the synthetic param, so its field tokens map to nothing. We record
@@ -90,6 +90,15 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // mapping over a lifted arg nests it: Observable<Observable<…>>). Surfaced as a
   // warning, since it type-checks and would otherwise be a silent footgun.
   const higherOrder: HigherOrder[] = [];
+  // Source spans of member accesses lifted over an observable receiver (`stream.field`).
+  // The editor offers the stream's operator methods (scan/take/…) in completion within
+  // these spans, since the lifted generated code otherwise resolves completion against
+  // the emitted value (e.g. string members), hiding the operators.
+  const observableMembers: ObservableMember[] = [];
+  const recordObservableMember = (node: TS.PropertyAccessExpression) => {
+    const start = node.expression.getEnd();
+    observableMembers.push({ start, length: node.getEnd() - start });
+  };
 
   // The checker predicates (see transform-checker), bound to this run's checker and
   // the slice of state above they read/write. Destructured so the planning code
@@ -246,6 +255,26 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     return { pieces: [{ gen: x, refKey: key }, ".pipe(map(", x, " => ", ...body, "))"], observable: true, lifted: true, callable };
   };
 
+  // WICG-style operator methods we add to `Observable` (see src/corrente/observable-operators.ts).
+  // On an observable receiver these are stream OPERATORS - `stream.scan(fn, seed)`,
+  // `stream.takeUntil(stop)`, `stream.debounce(ms)` - not value-methods to lift over each emission,
+  // so the call passes through verbatim (the method is real on Observable) and its result is itself
+  // a stream.
+  //
+  // Only operators that DON'T collide with an array method are listed. `map`/`flatMap`/`filter` are
+  // excluded because on an `Observable<T[]>` they have an established element-wise meaning in .rts:
+  // `.map`/`.flatMap` over a component callback are the mapToComponents list path (handled in
+  // `visit`), and `.filter(el => …)` lifts the Array filter over the emitted array (filter the
+  // list, then render it). Scalar-stream filtering in .rts is the C1 `cond ? value : EMPTY` idiom,
+  // not `.filter`. The WICG `.map`/`.filter`/`.flatMap` methods still exist for hand-written .ts.
+  //
+  // The set is hardcoded rather than inferred from the augmented `Observable` type: the throwaway
+  // inference Program doesn't pull in corrente's side-effect-imported augmentation, so the checker
+  // there can't be relied on to know these are stream methods.
+  const OPERATOR_METHODS = new Set([
+    "scan", "take", "drop", "takeUntil", "catch", "finally", "debounce", "throttle",
+  ]);
+
   function transformExpression(node: TS.Node): Operand {
     // A destructured field (D4) read as a value lifts exactly like the member
     // access it stands for: `color` → `item.pipe(map(item => item.color))`.
@@ -282,6 +311,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       const whenFalse = transformExpression(node.whenFalse);
       if (cond.observable) {
         needed["rxjs/operators"].add("switchMap");
+        needed["rxjs/operators"].add("distinctUntilChanged");
         const param = ts.isIdentifier(node.condition) ? node.condition.text : "_cond";
         // A branch that IS the condition identifier refers to the *current value* in
         // the switchMap body — the param shadows the outer stream — not the stream
@@ -299,10 +329,15 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           }
           return asStream(operand);
         };
-        // switchMap for laziness; the render() wrapper (added at the binding)
-        // provides the shareReplay, so we don't add it here.
+        // distinctUntilChanged so the taken branch only re-subscribes when the
+        // condition's value actually changes: a condition that re-emits an equal value
+        // (a boolean staying false while its underlying source changes) shouldn't restart
+        // the chosen branch (e.g. a timer). It compares by value (===), which for a
+        // boolean condition (the common case) is exactly "did the chosen branch change".
+        // switchMap gives laziness; the render() wrapper (added at the binding) provides
+        // the shareReplay, so we don't add it here.
         const pieces = [
-          ...cond.pieces, ".pipe(switchMap(", param, " => ", param, " ? ",
+          ...cond.pieces, ".pipe(distinctUntilChanged(), switchMap(", param, " => ", param, " ? ",
           ...branch(whenTrue, node.whenTrue), " : ", ...branch(whenFalse, node.whenFalse), "))",
         ];
         // `cond ? x : EMPTY` (the filter idiom) can produce no value: flag it so a
@@ -348,10 +383,34 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // and apply the emitted function to the emitted args.
     if (ts.isCallExpression(node)) {
       // A component call (Div(...), Span(...), …) is a structure, not a value to
-      // lift: its observable arguments are reactive children RxFM renders, and any
+      // lift: its observable arguments are reactive children Corrente renders, and any
       // nested component-map is handled by `visit`. Leave it verbatim.
       if (isElementValueType(observableValueType(checker.getTypeAtLocation(node)))) {
         return { pieces: [V(node)], observable: true, lifted: false };
+      }
+      // A value-returning array method (`.filter`/`.find`/`.some`/…) whose callback
+      // captures an observable → lift the whole call over the capture(s).
+      const arrLift = liftArrayCallbackCall(node);
+      if (arrLift) return arrLift;
+      // A WICG-style operator method on an observable receiver (`stream.scan(fn, seed)`,
+      // `stream.filter(p)`, `stream.takeUntil(stop)`, …) is a stream operator: pass the call
+      // through verbatim and mark the result a stream so the binding render-wraps it once
+      // (shared, so chained/multi-use derivations don't resubscribe the operator). Callback args
+      // (scan reducer, filter predicate) stay inline and verbatim - a stream captured inside a
+      // reducer must be sampled with `.value`, never silently lifted (that would change the fold's
+      // clock); a non-callback arg (e.g. takeUntil's notifier) keeps its own transform, so a
+      // derived-stream notifier still lifts.
+      const opEx = node.expression;
+      if (ts.isPropertyAccessExpression(opEx) && OPERATOR_METHODS.has(opEx.name.text)) {
+        const recv = transformExpression(opEx.expression);
+        if (recv.observable) {
+          const argGroups = node.arguments.map(argNode =>
+            ts.isArrowFunction(argNode) || ts.isFunctionExpression(argNode)
+              ? [V(argNode)]
+              : transformExpression(argNode).pieces);
+          const pieces = [...recv.pieces, ".", V(opEx.name), "(", ...joinPieces(argGroups, ", "), ")"];
+          return { pieces, observable: true, lifted: true };
+        }
       }
       // Method call on a stream: obj.method(args) where obj is observable and
       // method targets the emitted value → call it ON the emitted value (so
@@ -375,6 +434,11 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
             return [p];
           });
           const body = [objParam, ".", V(ex.name), "(", ...joinPieces(callArgs, ", "), ")"];
+          // Offer the stream's operators in completion at the method name too — covers a
+          // value-method call (`count.toFixed(…)`) and the mid-edit `stream.(args)` parse
+          // (e.g. `tick.` left in front of a leftover `(snake, i) => …`), which lands here
+          // rather than in the property-access branch.
+          recordObservableMember(ex);
           return { pieces: combineMap(sources, params, body), observable: true, lifted: true };
         }
       }
@@ -458,7 +522,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
-    // Property access on a stream → map out the field (the RxFM "extract a field
+    // Property access on a stream → map out the field (the Corrente "extract a field
     // from an object observable" pattern), unless the member is a stream-API one.
     if (ts.isPropertyAccessExpression(node)) {
       // Collapse a chain of property accesses rooted in a single stream into ONE map
@@ -480,6 +544,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         // so hover / go-to-def on each property still resolves.
         const path = { srcStart: root.getEnd(), srcEnd: node.getEnd() };
         const pieces = [...rootR.pieces, ".pipe(map(", p, " => ", p, path, "))"];
+        recordObservableMember(node);
         return { pieces, observable: true, lifted: true };
       }
       const obj = transformExpression(node.expression);
@@ -487,6 +552,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         needed["rxjs/operators"].add("map");
         const p = ts.isIdentifier(node.expression) ? node.expression.text : "_o";
         const pieces = [...obj.pieces, ".pipe(map(", p, " => ", p, ".", V(node.name), "))"];
+        recordObservableMember(node);
         return { pieces, observable: true, lifted: true };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
@@ -519,8 +585,37 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       // is re-referenced inside the map, which is free for the common case (a constant
       // lookup table named by identifier).
       if (index.observable) {
-        needed["rxjs/operators"].add("map");
         const i = ts.isIdentifier(node.argumentExpression) ? node.argumentExpression.text : "_i";
+        // If a looked-up VALUE can itself be an observable — a table typed
+        // `Record<K, TypeOrObservable<T>>` mixing plain values and streams — a plain
+        // `map` yields Observable<Observable<T>>, a higher-order stream that never
+        // flattens. Flatten it instead: switchMap into the looked-up entry, coercing a
+        // plain value to of(value) via the runtime's coerceToObservable. This is the
+        // lookup-table analog of the ternary's switchMap lowering, so `MAP[key]`
+        // resolves to a flat RenderObservable<T>. A table whose value type has no
+        // Observable keeps the tighter `map` form (e.g. `CELL_COLOR_MAP[cell]`).
+        const objType = checker.getTypeAtLocation(node.expression);
+        const valueTypes = [
+          ...objType.getProperties().map(s => checker.getTypeOfSymbolAtLocation(s, node.expression)),
+          checker.getIndexTypeOfType(objType, ts.IndexKind.String),
+          checker.getIndexTypeOfType(objType, ts.IndexKind.Number),
+        ].filter(Boolean) as TS.Type[];
+        // Flatten when a value MIGHT be an observable. That's the proven case (some value
+        // type is observable), but ALSO the unprovable case: no value types at all, or any
+        // value typed `any`/`unknown` — e.g. when the table's type couldn't be resolved
+        // across a module boundary. A plain `map` over a higher-order value silently leaks
+        // Observable<Observable<T>> into the DOM, so "unsure" must bias to the flattening
+        // form (safe for plain values too — coerceToObservable wraps them). The tight `map`
+        // is kept only when every value is provably a non-observable type.
+        const unprovable = valueTypes.length === 0 ||
+          valueTypes.some(t => (t.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) !== 0);
+        if (unprovable || valueTypes.some(t => isObservableType(t))) {
+          needed["rxjs/operators"].add("switchMap");
+          needed.runtime.add("coerceToObservable");
+          const pieces = [...index.pieces, ".pipe(switchMap(", i, " => coerceToObservable(", ...obj.pieces, "[", i, "])))"];
+          return { pieces, observable: true, lifted: true };
+        }
+        needed["rxjs/operators"].add("map");
         const pieces = [...index.pieces, ".pipe(map(", i, " => ", ...obj.pieces, "[", i, "]))"];
         return { pieces, observable: true, lifted: true };
       }
@@ -674,7 +769,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     const obj = ex.expression;                                  // obj
     const cb = node.arguments[0] as TS.ArrowFunction | TS.FunctionExpression;
     const isFlat = ex.name.text === "flatMap";
-    needed.rxfm.add("mapToComponents");
+    needed.corrente.add("mapToComponents");
     // Lift the receiver if it's itself an imperative expression (e.g. a filter).
     const objR = transformExpression(obj);
     if (objR.lifted) edits.push({ start: obj.getStart(sf), end: obj.getEnd(), pieces: objR.pieces });
@@ -715,6 +810,54 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // The key arg (if any) operates on the plain item value — left verbatim.
   };
 
+  // A plain (non-stream) array `.map(cb)` whose callback BODY captures an observable —
+  // e.g. live-search's `FRUITS.map(fruit => fruit.includes(query) ? Div`…` : null)`. The
+  // stream-`.map` → mapToComponents path (isComponentMapCall) handles an observable
+  // RECEIVER; this handles an observable used INSIDE an ordinary array map. The receiver
+  // stays a plain array; we only descend into the callback so its body lifts like any
+  // child expression — each element becomes a RenderObservable the children operator
+  // renders reactively. Gated on an array-like (numeric-indexed) receiver and an
+  // arrow/function callback.
+  const isPlainArrayMapCall = (node: TS.Node): node is TS.CallExpression => {
+    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return false;
+    if (node.expression.name.text !== "map") return false;
+    const cb = node.arguments[0];
+    if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return false;
+    if (isObservableExpr(node.expression.expression)) return false; // stream map → mapToComponents
+    const recvType = checker.getTypeAtLocation(node.expression.expression);
+    return Boolean(checker.getIndexTypeOfType(recvType, ts.IndexKind.Number));
+  };
+
+  const handlePlainArrayMap = (node: TS.CallExpression) => {
+    const recv = (node.expression as TS.PropertyAccessExpression).expression;
+    const cb = node.arguments[0] as TS.ArrowFunction | TS.FunctionExpression;
+    visit(recv); // the array receiver may itself hold observables / nested maps
+    for (let i = 1; i < node.arguments.length; i++) visit(node.arguments[i]);
+    // Callback params are plain locals (array element / index). If one shadows an outer
+    // observable binding, treat it as plain inside the body; restore after.
+    const shadowed: string[] = [];
+    for (const p of cb.parameters) {
+      const name = p.name.getText(sf);
+      if (observableBindings.has(name)) { observableBindings.delete(name); shadowed.push(name); }
+    }
+    // Expression-bodied: lift the returned expression in place (block bodies are a
+    // follow-up — see ROADMAP; for now just recurse so nested children still lift).
+    let handled = false;
+    if (!ts.isBlock(cb.body)) {
+      const r = transformExpression(cb.body);
+      if (r.lifted) {
+        usedRender = true;
+        edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: ["render(", ...r.pieces, ")"] });
+        handled = true;
+      } else if (r.rewritten) {
+        edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: r.pieces });
+        handled = true;
+      }
+    }
+    if (!handled) visit(cb.body);
+    shadowed.forEach(n => observableBindings.add(n));
+  };
+
   // D2: an event handler is a closure that runs *later*, so a stream referenced
   // inside it is the stream, not its current value. When a handler captures
   // observable bindings, lift it to a stream of handlers — the handler text is left
@@ -722,7 +865,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   //   () => f(index)            →  index.pipe(map(index => () => f(index)))
   //   () => f(index, current)   →  combineLatest([index, current]).pipe(
   //                                  map(([index, current]) => () => f(index, current)))
-  // rxfm's event operators already accept an Observable<handler> (EventHandler<T,E>).
+  // corrente's event operators already accept an Observable<handler> (EventHandler<T,E>).
   const within = (node: TS.Node, ancestor: TS.Node) => node.getStart(sf) >= ancestor.getStart(sf) && node.getEnd() <= ancestor.getEnd();
   const collectHandlerCaptures = (fnNode: TS.ArrowFunction | TS.FunctionExpression) => {
     // A captured stream is lifted only if the handler reads it as a *value*. If it's
@@ -773,6 +916,41 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     return combineMap(sources.map(s => [s]), sources, expandAliases(fnNode));
   };
 
+  // Value-returning array methods whose RESULT depends on the whole array via a
+  // synchronous callback (a predicate / comparator). When that callback captures an
+  // observable as a VALUE — `FRUITS.filter(f => f.includes(query))` — the result is a
+  // function of the stream, so the WHOLE call lifts over the capture(s):
+  // `query.pipe(map(query => FRUITS.filter(f => f.includes(query))))`. The callback stays
+  // a plain synchronous predicate (it can't consume a stream per element), with the
+  // captured names re-bound to current values inside the map — the same closure-capture
+  // shape as the D2 handler lift. `.map`/`.flatMap` are deliberately excluded: those
+  // produce per-element components, handled by mapToComponents (observable receiver) or
+  // the C8 per-element lift (plain array). The downstream `.map` over a lifted result is
+  // then an ordinary stream-`.map` → mapToComponents.
+  const ARRAY_VALUE_METHODS = new Set(["filter", "find", "findIndex", "findLast", "findLastIndex", "some", "every"]);
+  const liftArrayCallbackCall = (node: TS.CallExpression): Operand | null => {
+    if (!ts.isPropertyAccessExpression(node.expression)) return null;
+    if (!ARRAY_VALUE_METHODS.has(node.expression.name.text)) return null;
+    const recv = node.expression.expression;
+    if (isObservableExpr(recv)) return null;                                   // observable receiver: not this case
+    const cb = node.arguments[0];
+    if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return null;
+    if (!checker.getIndexTypeOfType(checker.getTypeAtLocation(recv), ts.IndexKind.Number)) return null; // array-like
+    const names = [...collectHandlerCaptures(cb).keys()];
+    if (!names.length) return null;                                            // no captured stream → ordinary call
+    // Dedup captures through their item-param source (D4 aliases), exactly as the
+    // handler-closure lift does; the whole call is re-emitted verbatim in the map body.
+    const sources: string[] = [];
+    const seen = new Set<string>();
+    for (const name of names) {
+      const src = aliasInfo.has(name) ? aliasInfo.get(name)!.param : name;
+      if (seen.has(src)) continue;
+      seen.add(src);
+      sources.push(src);
+    }
+    return { pieces: combineMap(sources.map(s => [s]), sources, expandAliases(node)), observable: true, lifted: true };
+  };
+
   // Lift variable initializers anywhere — including inside function bodies, since
   // a component is a function. Walk top-down so declarations are seen in source
   // order (so a binding is known observable before later statements use it).
@@ -780,6 +958,12 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // Component-list map in any expression position (e.g. a child argument).
     if (isComponentMapCall(node)) {
       handleComponentMap(node);
+      return;
+    }
+    // Plain-array `.map(cb)` whose callback captures an observable: descend into the
+    // callback and lift its body (the receiver stays an ordinary array).
+    if (isPlainArrayMapCall(node)) {
+      handlePlainArrayMap(node);
       return;
     }
     if (ts.isVariableDeclaration(node) && node.initializer) {
@@ -863,11 +1047,11 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         return;
       }
     }
-    // Tagged template (RxFM's children syntax, e.g. Div`hi ${user.name}`): each
-    // ${…} interpolation is a child, and RxFM renders observables as reactive
+    // Tagged template (Corrente's children syntax, e.g. Div`hi ${user.name}`): each
+    // ${…} interpolation is a child, and Corrente renders observables as reactive
     // children — so lift each imperative interpolation *individually* (rather
     // than combining into one string like the untagged template literal case),
-    // leaving the template structure intact for RxFM to handle.
+    // leaving the template structure intact for Corrente to handle.
     if (ts.isTaggedTemplateExpression(node) && ts.isTemplateExpression(node.template)) {
       visit(node.tag);
       for (const span of node.template.templateSpans) {
@@ -981,7 +1165,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   });
 
   const sourceDiagnostics = ts.getPreEmitDiagnostics(program).filter(d => d.file && d.file.fileName === fileName);
-  return { code, segments, sourceDiagnostics, stalls, higherOrder };
+  return { code, segments, sourceDiagnostics, stalls, higherOrder, observableMembers };
 }
 
 // Re-export the public API (transformWithMappings is exported inline above). The

@@ -1,0 +1,23 @@
+import { Div, Button, State, interval } from "corrente";
+
+import "./stopwatch-styles.css";
+
+type StopwatchState = "stopped" | "running" | "paused";
+
+export const Stopwatch = () => {
+  const state = new State<StopwatchState>("stopped");
+  const tick = interval(state === "running" ? 100 : null); // Only tick when running
+  const time = state !== "stopped" ? tick.scan(acc => acc + 0.1, 0) : 0; // Count time only when not stopped
+
+  const StopwatchButton = Button.class("stopwatch-button");
+
+  return Div.class("stopwatch")(
+    StopwatchButton
+      .onClick(() => state.update(current => current === "running" ? "paused" : "running"))
+      `${state === "running" ? "Pause" : "Start"}`,
+    StopwatchButton
+      .onClick(() => state.next("stopped"))
+      `Reset`,
+    Div.class("stopwatch-time")`${time.toFixed(1)}s`,
+  );
+};

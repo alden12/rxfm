@@ -1,0 +1,42 @@
+import { Div, Button } from "corrente";
+import { createGame } from "./game";
+import { NEIGHBORS_COLOR_MAP, BOARD_HEIGHT, indexToVector } from "./constants";
+
+import "./minesweeper-styles.css";
+
+export const Minesweeper = () => {
+  const { board, gameStage, gameTime, highScore, dispatch } = createGame();
+
+  const cells = board.flatMap(({ color, neighbors, symbol, isUndiscovered, isCleared, hasNeighbors }, index) =>
+    Div
+      .style({
+        backgroundColor: color,
+        color: NEIGHBORS_COLOR_MAP[neighbors],
+        fontSize: symbol ? "12px" : "14px",
+      })
+      .class("minesweeper-cell", isUndiscovered ? "raised" : "")
+      .onClick(() => dispatch({ type: "discover", cell: indexToVector(index) }))
+      .onContextmenu(() => dispatch({ type: "flag", cell: indexToVector(index) }))
+      `${isCleared && hasNeighbors ? neighbors : symbol}`,
+  );
+
+  return Div
+    .class("minesweeper")(
+      Div
+        .class("minesweeper-board")
+        .style({ gridTemplateRows: `repeat(${BOARD_HEIGHT}, max-content)` })
+        .onContextmenu(event => event.preventDefault())(
+          cells,
+        ),
+      Div
+        .class("minesweeper-controls")(
+          Button
+            .onClick(() => dispatch({ type: "restart" }))
+            `Restart`,
+          Div`Time: ${gameTime}s`,
+          highScore ? Div`Best: ${highScore}s` : null,
+          gameStage === "win" && Div`You Win!`,
+          gameStage === "gameOver" && Div`Game Over!`,
+        )
+    );
+};

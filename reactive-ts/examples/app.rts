@@ -6,7 +6,7 @@
 // Note: lifting happens on variable initializers, so the rendered lines below
 // are bound to consts (line1..line4) and then passed to Div.
 import { BehaviorSubject } from "rxjs";
-import { Div, Button } from "rxfm";
+import { Div, Button } from "corrente";
 
 const Showcase = () => {
   const count = new BehaviorSubject(1);
