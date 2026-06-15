@@ -94,14 +94,14 @@ export function chainable<T extends ElementType>(
     get(target, prop, receiver) {
       // Only string keys which aren't already function members (name, length, bind, …) are treated
       // as fluent methods. `then` is excluded so the builder is never mistaken for a thenable.
-      if (typeof prop === 'string' && prop !== 'then' && !(prop in target)) {
-        if (prop === 'class') {
+      if (typeof prop === "string" && prop !== "then" && !(prop in target)) {
+        if (prop === "class") {
           return (...classNames: ClassType[]) => next(classes<T>(...classNames));
         }
-        if (prop === 'style') {
+        if (prop === "style") {
           return (styleDict: Styles | Observable<StyleObject>) => next(styles<T>(styleDict));
         }
-        if (prop === 'on') {
+        if (prop === "on") {
           return (type: keyof ElementEventMap, handler: EventHandler<T, keyof ElementEventMap>) =>
             next(event(type, handler));
         }
@@ -109,7 +109,7 @@ export function chainable<T extends ElementType>(
           const type = (prop[2].toLowerCase() + prop.slice(3)) as keyof ElementEventMap;
           return (handler: EventHandler<T, keyof ElementEventMap>) => next(event(type, handler));
         }
-        if (prop === 'attr') {
+        if (prop === "attr") {
           return (name: string, value?: TypeOrObservable<AttributeType>) =>
             next(attribute(name, value));
         }

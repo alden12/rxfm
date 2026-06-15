@@ -1,6 +1,6 @@
-import { conditional, Div } from 'corrente';
-import { of, timer } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { conditional, Div } from "corrente";
+import { of, timer } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
 
 const flipFlop = timer(0, 1000).pipe(
   map(i => i % 2 === 0)

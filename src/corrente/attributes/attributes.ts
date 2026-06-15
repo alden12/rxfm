@@ -38,8 +38,8 @@ export type AttributeObject = AttributeMetadataObject<string, AttributeType>;
  * Set an attribute on an element.
  */
 const setAttribute = (element: ElementType, key: string, val: string | null) => {
-  if (key === 'value' && element instanceof HTMLInputElement) {
-    const stringValue = val || ''; // Make sure 'value' attribute of input elements is always a string.
+  if (key === "value" && element instanceof HTMLInputElement) {
+    const stringValue = val || ""; // Make sure 'value' attribute of input elements is always a string.
     if (element.value !== stringValue) {
       element.value = stringValue;
     }
@@ -56,11 +56,11 @@ type BasicAttributeOperator = {
 
 function basicAttributeOperator<T extends ElementType>(
   type: string,
-  value: TypeOrObservable<AttributeType> = '',
+  value: TypeOrObservable<AttributeType> = "",
   externalSymbol?: symbol,
 ): ComponentOperator<T> {
   return componentOperator(element => {
-    const symbol = externalSymbol || Symbol('Attribute Operator');
+    const symbol = externalSymbol || Symbol("Attribute Operator");
 
     const setElementAttribute = (key: string, val: string | null) => setAttribute(element, key, val);
 
@@ -104,7 +104,7 @@ type IndividualAttributeOperator = {
           return acc;
         }, []);
       const attributeObservable = combineLatest(attributeObservables).pipe(
-        map(strings => strings.join('')),
+        map(strings => strings.join("")),
       );
       return attributeOperator(key, attributeObservable);
     }
@@ -151,7 +151,7 @@ export function attributes<T extends ElementType>(
 ): ComponentOperator<T> {
   if (attributesDict instanceof Observable) {
     return componentOperator(element => {
-      const symbol = Symbol('Attributes Operator');
+      const symbol = Symbol("Attributes Operator");
       let previousAttributeObject: AttributeObject = {};
 
       const setElementAttribute = (key: string, val: string | null) => setAttribute(element, key, val);
@@ -173,7 +173,7 @@ export function attributes<T extends ElementType>(
   } else {
 
     return (input: Component<T>) => {
-      const symbol = Symbol('Attributes Operator');
+      const symbol = Symbol("Attributes Operator");
       return Object.keys(attributesDict).reduce((component, key) => {
         return component.pipe(
           basicAttributeOperator(key, attributesDict[key as AttributeKeys], symbol),

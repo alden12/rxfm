@@ -30,11 +30,11 @@ class MinesweeperGame {
     public startTime: number | undefined,
     public gameStage: GameStage,
   ) {
-    if (gameStage === 'win') this.endTime = Date.now();
+    if (gameStage === "win") this.endTime = Date.now();
   }
 
   public dispatch(action: CellAction) {
-    if (isOneOf<GameStage>(this.gameStage, ['win', 'gameOver'])) return this;
+    if (isOneOf<GameStage>(this.gameStage, ["win", "gameOver"])) return this;
     const { type, cell } = action;
     return this.actionMap[type](cell);
   }
@@ -42,9 +42,9 @@ class MinesweeperGame {
   private startGame(startingCell: Vector) {
     const board = getEmptyBoard();
     const mines = placeRandomMines(MINE_COUNT, startingCell);
-    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('unflaggedMine'));
+    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell("unflaggedMine"));
     board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])));
-    return new MinesweeperGame(board, Date.now(), 'playing').clearCells(startingCell);
+    return new MinesweeperGame(board, Date.now(), "playing").clearCells(startingCell);
   }
 
   private clearCells([x, y]: Vector) {
@@ -84,15 +84,15 @@ class MinesweeperGame {
   }
 
   private updateBoard(newBoard: MinesweeperBoard) {
-    return new MinesweeperGame(newBoard, this.startTime, 'playing');
+    return new MinesweeperGame(newBoard, this.startTime, "playing");
   }
 
   private gameOver() {
-    return new MinesweeperGame(revealMines(this.board, true), undefined, 'gameOver');
+    return new MinesweeperGame(revealMines(this.board, true), undefined, "gameOver");
   }
 
   private win(newBoard: MinesweeperBoard) {
-    return new MinesweeperGame(revealMines(newBoard, false), this.startTime, 'win');
+    return new MinesweeperGame(revealMines(newBoard, false), this.startTime, "win");
   }
 }
 
@@ -107,15 +107,15 @@ const getStartingState = (): MinesweeperGameState => ({
   board: getEmptyBoard(),
   startTime: undefined,
   endTime: undefined,
-  gameStage: 'pregame',
+  gameStage: "pregame",
 });
 
 export const minesweeperGameLoop = (action: Observable<CellAction>): Observable<MinesweeperGameState> => action.pipe(
   tap(({ type }) => {
-    if (type === 'start') throw new Error('Restart Game');
+    if (type === "start") throw new Error("Restart Game");
   }),
-  map((action, i) => i === 0 ? { type: 'start' as const, cell: action.cell } : action),
-  scan((board, action) => board.dispatch(action), new MinesweeperGame(getEmptyBoard(), undefined, 'pregame')),
+  map((action, i) => i === 0 ? { type: "start" as const, cell: action.cell } : action),
+  scan((board, action) => board.dispatch(action), new MinesweeperGame(getEmptyBoard(), undefined, "pregame")),
   map(({ board, startTime, endTime, gameStage }) => ({ board, startTime, endTime, gameStage })),
   startWith(getStartingState()),
   retry(),

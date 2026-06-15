@@ -1,1 +1,1 @@
-export * from './corrente';
+export * from "./corrente";

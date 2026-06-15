@@ -1,7 +1,7 @@
-import { Button, Div, State } from 'corrente';
-import { Observable } from 'rxjs';
+import { Button, Div, State } from "corrente";
+import { Observable } from "rxjs";
 
-const Card = Div.class('card');
+const Card = Div.class("card");
 
 interface OptionButtonProps {
   option: string;
@@ -12,13 +12,13 @@ interface OptionButtonProps {
 const OptionButton = ({ option, setOption, active }: OptionButtonProps) =>
   Button
     .onClick(() => setOption(option))
-    .class('option-button', active && 'active')
+    .class("option-button", active && "active")
     `${option}`;
 
-const options = ['Option 1', 'Option 2', 'Option 3'];
+const options = ["Option 1", "Option 2", "Option 3"];
 
 export const ComponentIOExample = () => {
-  const selected = new State<string>('Option 1');
+  const selected = new State<string>("Option 1");
   const setOption = (option: string) => selected.next(option);
 
   const Options = options.map(option =>

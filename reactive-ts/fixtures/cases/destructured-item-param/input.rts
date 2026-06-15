@@ -1,12 +1,12 @@
-import { Observable } from 'rxjs';
-import { Div } from 'corrente';
+import { Observable } from "rxjs";
+import { Div } from "corrente";
 declare const cells: Observable<{ color: string; symbol?: string; neighbors: number; cleared: boolean }[]>;
 declare const COLORS: Record<number, string>;
 declare function dispatch(index: number): void;
 export const list = cells.map(({ color, symbol, neighbors, cleared }, index) =>
   Div
     .style({ backgroundColor: color, color: COLORS[neighbors] })
-    .class('cell', cleared ? 'cleared' : '')
+    .class("cell", cleared ? "cleared" : "")
     .onClick(() => dispatch(index))
     (cleared && neighbors > 0 ? neighbors : symbol),
 );

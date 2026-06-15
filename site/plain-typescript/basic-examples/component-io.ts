@@ -14,13 +14,13 @@ interface OptionButtonProps {
 
 const OptionButton = ({ option, setOption, active }: OptionButtonProps) => Button(option).pipe(
   event.click(() => setOption(option)),
-  classes('option-button', conditional(active, 'active')),
+  classes("option-button", conditional(active, "active")),
 );
 
-const options = ['Option 1', 'Option 2', 'Option 3'];
+const options = ["Option 1", "Option 2", "Option 3"];
 
 export const ComponentIOExample = () => {
-  const selectedOption = new BehaviorSubject<string>('Option 1');
+  const selectedOption = new BehaviorSubject<string>("Option 1");
   const setOption = (option: string) => selectedOption.next(option);
 
   const Options = options.map(option => {

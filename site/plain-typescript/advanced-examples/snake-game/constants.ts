@@ -6,9 +6,9 @@ export const BOARD_HEIGHT = 10;
 export const STARTING_SNAKE_COORDS: [Vector, ...Vector[]] = [[8, 4], [9, 4]];
 
 export const CELL_COLOR_MAP: Record<SnakeCell, string> = {
-  empty: 'lightgrey',
-  trail: 'black',
-  food: 'red',
+  empty: "lightgrey",
+  trail: "black",
+  food: "red",
 };
 
 export const DIRECTION_MAP: Record<Direction, Vector> = {
@@ -19,14 +19,14 @@ export const DIRECTION_MAP: Record<Direction, Vector> = {
 };
 
 export const KEY_MAP: Record<string, Direction> = {
-  KeyW: 'up',
-  KeyS: 'down',
-  KeyA: 'left',
-  KeyD: 'right',
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
+  KeyW: "up",
+  KeyS: "down",
+  KeyA: "left",
+  KeyD: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
 };
 
 export const DIFFICULTY_TICK_PERIOD_MAP: Record<Difficulty, number> = {

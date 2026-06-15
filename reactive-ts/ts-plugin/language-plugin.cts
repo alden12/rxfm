@@ -6,14 +6,14 @@
 //
 // Pure factory (no Volar import — returns plain objects matching Volar's shape),
 // so it can be exercised headlessly. `ts` is injected by the caller.
-'use strict';
-import type * as TS from 'typescript';
-import type { Ts } from './transform-types.cjs';
-import { transformWithMappings, segmentsToVolarMappings } from './transform.cjs';
-const path = require('node:path');
+"use strict";
+import type * as TS from "typescript";
+import type { Ts } from "./transform-types.cjs";
+import { transformWithMappings, segmentsToVolarMappings } from "./transform.cjs";
+const path = require("node:path");
 
-const uriPath = (uri: any): string => (typeof uri === 'string' ? uri : uri.path || uri.fsPath || String(uri));
-const normPath = (p: any): string => uriPath(p).replace(/^file:\/\//, '');
+const uriPath = (uri: any): string => (typeof uri === "string" ? uri : uri.path || uri.fsPath || String(uri));
+const normPath = (p: any): string => uriPath(p).replace(/^file:\/\//, "");
 
 // The latest transform result per .rts path, computed from the ORIGINAL source
 // (the snapshot Volar hands createVirtualCode). The tsserver-plugin diagnostics
@@ -42,8 +42,8 @@ export function createReactiveTsLanguagePlugin(ts: Ts) {
     const { code, segments } = result;
     transformResults.set(normPath(filePath), { text, result });
     return {
-      id: 'root',
-      languageId: 'typescript',
+      id: "root",
+      languageId: "typescript",
       snapshot: {
         getText: (start: number, end: number) => code.slice(start, end),
         getLength: () => code.length,
@@ -56,11 +56,11 @@ export function createReactiveTsLanguagePlugin(ts: Ts) {
 
   return {
     getLanguageId(uri: any) {
-      if (uriPath(uri).endsWith('.rts')) return 'rts';
+      if (uriPath(uri).endsWith(".rts")) return "rts";
       return undefined;
     },
     createVirtualCode(uri: any, languageId: string, snapshot: TS.IScriptSnapshot) {
-      if (languageId !== 'rts') return undefined;
+      if (languageId !== "rts") return undefined;
       return makeVirtualCode(uriPath(uri), snapshot);
     },
     updateVirtualCode(uri: any, _oldCode: any, newSnapshot: TS.IScriptSnapshot) {
@@ -68,7 +68,7 @@ export function createReactiveTsLanguagePlugin(ts: Ts) {
     },
     typescript: {
       extraFileExtensions: [
-        { extension: 'rts', isMixedContent: false, scriptKind: ts.ScriptKind.Deferred },
+        { extension: "rts", isMixedContent: false, scriptKind: ts.ScriptKind.Deferred },
       ],
       // Let a bare `import … from './game'` resolve to a sibling `./game.rts`: TS
       // probes for `./game.d.ts`, and Volar remaps that to the .rts's virtual TS.
@@ -78,7 +78,7 @@ export function createReactiveTsLanguagePlugin(ts: Ts) {
       // Our whole file maps to one TS document, so the root virtual code IS the
       // script tsserver should analyse.
       getServiceScript(rootVirtualCode: any) {
-        return { code: rootVirtualCode, extension: '.ts', scriptKind: ts.ScriptKind.TS };
+        return { code: rootVirtualCode, extension: ".ts", scriptKind: ts.ScriptKind.TS };
       },
     },
   };

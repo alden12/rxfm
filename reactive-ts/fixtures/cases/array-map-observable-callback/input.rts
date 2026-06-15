@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 
-const FRUITS = ['apple', 'banana', 'cherry'];
+const FRUITS = ["apple", "banana", "cherry"];
 declare const query: Observable<string>;
 
 // A plain (non-stream) array `.map` whose callback BODY captures an observable. The

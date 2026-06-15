@@ -1,7 +1,7 @@
 import { attributes, classes, Div, event, mapToComponents, Input, using, destructure, conditional } from "corrente";
 import { BehaviorSubject, Observable } from "rxjs";
 
-import './todo-list-styles.css';
+import "./todo-list-styles.css";
 
 interface TodoItem {
   name: string;
@@ -9,7 +9,7 @@ interface TodoItem {
 }
 
 const Checkbox = (checked: Observable<boolean>) => Input().pipe(
-  attributes({ type: 'checkbox', checked }),
+  attributes({ type: "checkbox", checked }),
 );
 
 const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) => {
@@ -18,22 +18,22 @@ const TodoItem = (item: Observable<TodoItem>, onToggle: (name: string) => void) 
 
   return Div(name, Checkbox(done)).pipe(
     event.click(toggle),
-    classes`todo-item ${conditional(done, 'done')}`,
+    classes`todo-item ${conditional(done, "done")}`,
   );
 };
 
 const ItemInput = (onChange: (value: string) => void) => Input().pipe(
   attributes({
-    type: 'text',
-    placeholder: 'Add Item',
+    type: "text",
+    placeholder: "Add Item",
   }),
   event.change(ev => onChange(ev.target.value)),
 );
 
 const initialItems: TodoItem[] = [
-  { name: 'Buy bananas', done: true },
-  { name: 'Finish Corrente', done: false },
-  { name: 'Start a new project', done: false },
+  { name: "Buy bananas", done: true },
+  { name: "Finish Corrente", done: false },
+  { name: "Start a new project", done: false },
 ];
 
 export const TodoList = () => {
@@ -48,7 +48,7 @@ export const TodoList = () => {
   );
 
   const TodoItems = items.pipe(
-    mapToComponents(item => TodoItem(item, toggleItem), 'name'),
+    mapToComponents(item => TodoItem(item, toggleItem), "name"),
   );
 
   return Div(

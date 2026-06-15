@@ -1,7 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Div } from 'corrente';
-import { Observable } from 'rxjs';
+import { Div } from "corrente";
+import { Observable } from "rxjs";
 
 declare const nums: Observable<number>;
 declare const stop: Observable<unknown>;

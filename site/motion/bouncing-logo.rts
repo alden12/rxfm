@@ -1,6 +1,6 @@
-import { Div, frames } from 'corrente';
+import { Div, frames } from "corrente";
 
-import './bouncing-logo-styles.css';
+import "./bouncing-logo-styles.css";
 
 const WIDTH = 400;
 const HEIGHT = 168;
@@ -12,8 +12,8 @@ const bounce = (position: number, size: number) => size - Math.abs((position % (
 export const BouncingLogo = () => {
   const position = frames() * SPEED
 
-  return Div.class('bounce-screen')(
-    Div.class('bounce-badge')
+  return Div.class("bounce-screen")(
+    Div.class("bounce-badge")
       .style({ transform: `translate(${bounce(position, WIDTH)}px, ${bounce(position, HEIGHT)}px)` })``,
   );
 };

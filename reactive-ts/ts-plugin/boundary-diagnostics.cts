@@ -11,9 +11,9 @@
 // which breaks the "just write imperative code" illusion exactly when you hit the
 // wall. This module recognises those boundary violations and rewrites the message
 // into one that teaches the fix, keeping the original TS text nested for precision.
-'use strict';
-import type * as TS from 'typescript';
-import type { Ts } from './transform-types.cjs';
+"use strict";
+import type * as TS from "typescript";
+import type { Ts } from "./transform-types.cjs";
 
 // Pull the (Render)Observable type token out of a flattened message. Non-greedy
 // up to the `>'` that closes the quoted type, so nested generics
@@ -30,7 +30,7 @@ const NOT_CONSTRUCTABLE = 2351; // This expression is not constructable.
 const NOT_INDEXABLE = 7053; // Element implicitly has 'any' … can't be used to index type 'T'.
 export const BOUNDARY_CODES = new Set([PROPERTY, NOT_CALLABLE, NOT_CONSTRUCTABLE, NOT_INDEXABLE]);
 
-const labelFor = (kind: string) => (kind === 'RenderObservable' ? 'a reactive value' : 'a stream');
+const labelFor = (kind: string) => (kind === "RenderObservable" ? "a reactive value" : "a stream");
 
 // Build the teaching headline for a boundary violation, or null if this isn't one.
 function teachingHeadline(flat: string, code: number, kind: string, inner: string): string | null {
@@ -39,7 +39,7 @@ function teachingHeadline(flat: string, code: number, kind: string, inner: strin
 
   if (code === PROPERTY) {
     const prop = /Property '([^']+)' does not exist/.exec(flat);
-    const name = prop ? prop[1] : 'that';
+    const name = prop ? prop[1] : "that";
     return (
       `'${name}' isn't available here — this is ${label} (${type}), not a ${inner}, ` +
       `so there's no value to read '.${name}' off synchronously. Map over the stream to ` +
@@ -50,19 +50,19 @@ function teachingHeadline(flat: string, code: number, kind: string, inner: strin
     return (
       `You're calling ${label} (${type}) directly, but it's a stream of future values, ` +
       `not a function to invoke now. Map over it instead, e.g. ` +
-      '`value.pipe(map(v => v(/* … */)))`.'
+      "`value.pipe(map(v => v(/* … */)))`."
     );
   }
   if (code === NOT_CONSTRUCTABLE) {
     return (
       `You're using \`new\` on ${label} (${type}), but it's a stream, not a constructor. ` +
-      'Construct inside a map instead, e.g. `value.pipe(map(v => new v(/* … */)))`.'
+      "Construct inside a map instead, e.g. `value.pipe(map(v => new v(/* … */)))`."
     );
   }
   if (code === NOT_INDEXABLE) {
     return (
       `You're indexing ${label} (${type}) directly, but it has no value to index ` +
-      'synchronously. Map over it, e.g. `value.pipe(map(v => v[/* … */]))`.'
+      "synchronously. Map over it, e.g. `value.pipe(map(v => v[/* … */]))`."
     );
   }
   return null;
@@ -71,7 +71,7 @@ function teachingHeadline(flat: string, code: number, kind: string, inner: strin
 // Wrap whatever `messageText` a diagnostic already has (string or chain) as a
 // nested chain entry, so the precise TS text stays visible under the headline.
 function asChainEntry(ts: Ts, d: TS.Diagnostic): TS.DiagnosticMessageChain {
-  if (typeof d.messageText === 'string') {
+  if (typeof d.messageText === "string") {
     return { messageText: d.messageText, category: d.category, code: d.code };
   }
   return d.messageText; // already a DiagnosticMessageChain
@@ -84,7 +84,7 @@ function asChainEntry(ts: Ts, d: TS.Diagnostic): TS.DiagnosticMessageChain {
  */
 export function rewriteBoundaryDiagnostic(ts: Ts, diagnostic: TS.Diagnostic): TS.Diagnostic | null {
   if (!diagnostic || !BOUNDARY_CODES.has(diagnostic.code)) return null;
-  const flat = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+  const flat = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
   const m = TYPE_RE.exec(flat);
   if (!m) return null;
   const [, kind, inner] = m;

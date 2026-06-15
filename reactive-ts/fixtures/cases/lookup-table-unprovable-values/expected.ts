@@ -1,6 +1,6 @@
 import { render, coerceToObservable } from "./runtime";
 import { switchMap, map } from "rxjs/operators";
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 
 // A lookup table indexed by an observable key whose VALUE type the checker can't pin
 // down — here `any` (the shape you get when the table's type crosses a module boundary

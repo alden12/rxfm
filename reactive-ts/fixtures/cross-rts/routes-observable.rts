@@ -1,7 +1,7 @@
 // Sibling .rts imported (with explicit `.rts` extension) by the cross-rts-import test.
 // Its value type is an Observable, so a consumer indexing it by an observable key must
 // flatten (switchMap + coerce) to avoid a higher-order stream.
-import { Observable, of } from 'rxjs';
+import { Observable, of } from "rxjs";
 
 export const ROUTES: Record<string, Observable<number>> = {
   a: of(1),

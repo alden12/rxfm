@@ -1,7 +1,7 @@
-import { Div, Button, Input, State } from 'corrente';
-import { timer } from 'rxjs';
+import { Div, Button, Input, State } from "corrente";
+import { timer } from "rxjs";
 
-import './bouncing-speed-styles.css';
+import "./bouncing-speed-styles.css";
 
 const SCREEN = 360; // square, sized to match the background art
 const BADGE = 56; // the logo badge is 3.5rem across
@@ -18,15 +18,15 @@ export const BouncingSpeed = () => {
   const x = bounce(distance, RANGE);
   const y = bounce(distance * 3, RANGE);
 
-  return Div.class('speed-demo')(
-    Div.class('speed-screen')(
-      Div.class('speed-badge').style({ transform: `translate(${x}px, ${y}px)` })``,
-      running ? null : Button.class('speed-start').onClick(start)`Commence physically accurate canoeing`,
+  return Div.class("speed-demo")(
+    Div.class("speed-screen")(
+      Div.class("speed-badge").style({ transform: `translate(${x}px, ${y}px)` })``,
+      running ? null : Button.class("speed-start").onClick(start)`Commence physically accurate canoeing`,
     ),
-    Div.class('speed-controls')(
-      Input.type('range').attr('max', '12').attr('value', '4').class('speed-slider')
+    Div.class("speed-controls")(
+      Input.type("range").attr("max", "12").attr("value", "4").class("speed-slider")
         .onInput(({ target }) => speed.next(Number(target.value))),
-      Div.class('speed-value')`Fun level: ${speed}`,
+      Div.class("speed-value")`Fun level: ${speed}`,
     ),
   );
 };

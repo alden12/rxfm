@@ -1,4 +1,4 @@
-import { Button, State } from 'corrente';
+import { Button, State } from "corrente";
 
 export const ClickCounter = () => {
   const clicks = new State(0);

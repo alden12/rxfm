@@ -12,9 +12,9 @@
 // mutable state. The state is held by reference, so bindings the planning phase adds
 // later (and stalls it records) are visible here — the orchestrator destructures the
 // returned object so call sites read as plain predicates.
-'use strict';
-import type * as TS from 'typescript';
-import type { Ts, AliasInfo, Stall } from './transform-types.cjs';
+"use strict";
+import type * as TS from "typescript";
+import type { Ts, AliasInfo, Stall } from "./transform-types.cjs";
 
 /** The slice of the transform's mutable state the predicates read/write. Passed by
  *  reference: `observableBindings` grows as the planning phase descends, and
@@ -33,7 +33,7 @@ export function createChecker(ts: Ts, checker: TS.TypeChecker, sf: TS.SourceFile
   const isObservableType = (type: TS.Type | undefined): boolean => {
     if (!type) return false;
     if (type.isUnion && type.isUnion()) return type.types.some(isObservableType);
-    return Boolean(type.getProperty && type.getProperty('subscribe') && type.getProperty('pipe'));
+    return Boolean(type.getProperty && type.getProperty("subscribe") && type.getProperty("pipe"));
   };
   const isObservableExpr = (node: TS.Node): boolean =>
     (ts.isIdentifier(node) && (observableBindings.has(node.text) || aliasInfo.has(node.text))) ||
@@ -113,9 +113,9 @@ export function createChecker(ts: Ts, checker: TS.TypeChecker, sf: TS.SourceFile
   // are asked directly. (A tracked binding emitting an object with a field named
   // like one of these — e.g. `.value` — would be read as a stream op; rare.)
   const STREAM_MEMBERS = new Set([
-    'subscribe', 'pipe', 'forEach', 'lift', 'toPromise', 'asObservable', 'source', 'operator',
-    'next', 'error', 'complete', 'value', 'getValue', 'closed', 'observed',
-    'hasError', 'thrownError', 'unsubscribe', 'observers',
+    "subscribe", "pipe", "forEach", "lift", "toPromise", "asObservable", "source", "operator",
+    "next", "error", "complete", "value", "getValue", "closed", "observed",
+    "hasError", "thrownError", "unsubscribe", "observers",
   ]);
 
   // For `obj.member` where obj is a stream: does `member` target the emitted
@@ -130,8 +130,8 @@ export function createChecker(ts: Ts, checker: TS.TypeChecker, sf: TS.SourceFile
 
   // Structural test for a DOM element type — Corrente components emit these.
   const isElementValueType = (type: TS.Type | undefined) =>
-    Boolean(type && type.getProperty && type.getProperty('nodeType') &&
-      (type.getProperty('tagName') || type.getProperty('nodeName')));
+    Boolean(type && type.getProperty && type.getProperty("nodeType") &&
+      (type.getProperty("tagName") || type.getProperty("nodeName")));
 
   // Does this function expression return a component (an Observable of a DOM
   // element)? Excludes `any` (which a value-mapping callback gets, since its item
@@ -170,7 +170,7 @@ export function createChecker(ts: Ts, checker: TS.TypeChecker, sf: TS.SourceFile
   const isComponentMapCall = (node: TS.Node): node is TS.CallExpression => {
     if (!ts.isCallExpression(node) || node.arguments.length < 1) return false;
     const ex = node.expression;
-    if (!ts.isPropertyAccessExpression(ex) || (ex.name.text !== 'map' && ex.name.text !== 'flatMap')) return false;
+    if (!ts.isPropertyAccessExpression(ex) || (ex.name.text !== "map" && ex.name.text !== "flatMap")) return false;
     const cb = node.arguments[0];
     if (!ts.isArrowFunction(cb) && !ts.isFunctionExpression(cb)) return false;
     return isObservableChain(ex.expression) && returnsComponent(cb);

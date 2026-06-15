@@ -1,24 +1,24 @@
-import { childDiffer, IChildDiff } from './child-differ';
-import { ChildElement } from './children';
+import { childDiffer, IChildDiff } from "./child-differ";
+import { ChildElement } from "./children";
 
 /**
  * Create a distinct element whose text content is its label, so the order of a parent's children
  * can be read back as a list of labels.
  */
 function element(label: string): HTMLElement {
-  const el = document.createElement('div');
+  const el = document.createElement("div");
   el.textContent = label;
   return el;
 }
 
 /** An empty parent element to apply diffs to. */
 function parentElement(): HTMLElement {
-  return document.createElement('div');
+  return document.createElement("div");
 }
 
 /** Read a parent's current child order back as a list of labels. */
 function labelsOf(parent: HTMLElement): string[] {
-  return Array.from(parent.childNodes).map(node => node.textContent ?? '');
+  return Array.from(parent.childNodes).map(node => node.textContent ?? "");
 }
 
 /**
@@ -45,29 +45,29 @@ function permutations<T>(items: T[]): T[][] {
   );
 }
 
-describe('childDiffer', () => {
-  it('reports no updates or removals when the children are unchanged', () => {
-    const [a, b, c] = [element('a'), element('b'), element('c')];
+describe("childDiffer", () => {
+  it("reports no updates or removals when the children are unchanged", () => {
+    const [a, b, c] = [element("a"), element("b"), element("c")];
     const diff = childDiffer([a, b, c], [a, b, c]);
     expect(diff.updated).toEqual([]);
     expect(diff.removed).toEqual([]);
   });
 
-  it('reports added nodes with the node to insert them before', () => {
-    const [a, b, c] = [element('a'), element('b'), element('c')];
+  it("reports added nodes with the node to insert them before", () => {
+    const [a, b, c] = [element("a"), element("b"), element("c")];
     const diff = childDiffer([a, c], [a, b, c]); // Insert b between a and c.
     expect(diff.removed).toEqual([]);
     expect(diff.updated).toEqual([{ node: b, insertBefore: c }]);
   });
 
-  it('appends added nodes with no reference when they go at the end', () => {
-    const [a, b] = [element('a'), element('b')];
+  it("appends added nodes with no reference when they go at the end", () => {
+    const [a, b] = [element("a"), element("b")];
     const diff = childDiffer([a], [a, b]);
     expect(diff.updated).toEqual([{ node: b, insertBefore: undefined }]);
   });
 
-  it('reports removed nodes', () => {
-    const [a, b, c] = [element('a'), element('b'), element('c')];
+  it("reports removed nodes", () => {
+    const [a, b, c] = [element("a"), element("b"), element("c")];
     const diff = childDiffer([a, b, c], [a, c]);
     expect(diff.updated).toEqual([]);
     expect(diff.removed).toEqual([b]);
@@ -75,33 +75,33 @@ describe('childDiffer', () => {
 
   // Regression: the previous heuristic kept both a and c in place even though they had swapped
   // relative order, producing [a, c, b] instead of [c, a, b].
-  it('handles a rotation that swaps the relative order of kept nodes', () => {
-    const [a, b, c] = [element('a'), element('b'), element('c')];
+  it("handles a rotation that swaps the relative order of kept nodes", () => {
+    const [a, b, c] = [element("a"), element("b"), element("c")];
     const parent = parentElement();
     [a, b, c].forEach(el => parent.appendChild(el));
     applyDiff(parent, childDiffer([a, b, c], [c, a, b]));
-    expect(labelsOf(parent)).toEqual(['c', 'a', 'b']);
+    expect(labelsOf(parent)).toEqual(["c", "a", "b"]);
   });
 
   // Regression: a simple two-element swap previously produced no moves at all.
-  it('handles a simple swap of two nodes', () => {
-    const [a, b] = [element('a'), element('b')];
+  it("handles a simple swap of two nodes", () => {
+    const [a, b] = [element("a"), element("b")];
     const parent = parentElement();
     [a, b].forEach(el => parent.appendChild(el));
     applyDiff(parent, childDiffer([a, b], [b, a]));
-    expect(labelsOf(parent)).toEqual(['b', 'a']);
+    expect(labelsOf(parent)).toEqual(["b", "a"]);
   });
 
-  it('moves only the nodes that are out of order, keeping the longest in-order run in place', () => {
-    const [a, b, c, d] = [element('a'), element('b'), element('c'), element('d')];
+  it("moves only the nodes that are out of order, keeping the longest in-order run in place", () => {
+    const [a, b, c, d] = [element("a"), element("b"), element("c"), element("d")];
     // a, b, c stay in order; only d moves to the front.
     const diff = childDiffer([a, b, c, d], [d, a, b, c]);
     expect(diff.removed).toEqual([]);
     expect(diff.updated).toEqual([{ node: d, insertBefore: a }]);
   });
 
-  it('transforms old into new for every add / remove / reorder permutation of up to five nodes', () => {
-    const base = ['a', 'b', 'c', 'd', 'e'];
+  it("transforms old into new for every add / remove / reorder permutation of up to five nodes", () => {
+    const base = ["a", "b", "c", "d", "e"];
     let caseCount = 0;
 
     for (let oldLength = 1; oldLength <= base.length; oldLength++) {

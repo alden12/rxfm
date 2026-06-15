@@ -1,8 +1,8 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 
-const FRUITS = ['apple', 'banana', 'cherry'];
+const FRUITS = ["apple", "banana", "cherry"];
 declare const query: Observable<string>;
 
 // A value-returning array method (`.filter`) whose synchronous callback captures an

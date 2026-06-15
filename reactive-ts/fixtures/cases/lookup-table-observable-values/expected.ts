@@ -1,9 +1,9 @@
 import { render, coerceToObservable } from "./runtime";
 import { switchMap, map } from "rxjs/operators";
-import { Observable, timer } from 'rxjs';
-import { TypeOrObservable } from 'corrente';
+import { Observable, timer } from "rxjs";
+import { TypeOrObservable } from "corrente";
 
-type Stage = 'idle' | 'running' | 'done';
+type Stage = "idle" | "running" | "done";
 
 declare const stage: Observable<Stage>;
 declare const elapsed: Observable<number>;
@@ -20,5 +20,5 @@ const TIME_MAP: Record<Stage, TypeOrObservable<number>> = {
 export const time = render(stage.pipe(switchMap(stage => coerceToObservable(TIME_MAP[stage]))));
 
 // A plain-valued table (no Observable in the value type) keeps the tighter `map` form.
-const COLOR_MAP: Record<Stage, string> = { idle: 'grey', running: 'green', done: 'blue' };
+const COLOR_MAP: Record<Stage, string> = { idle: "grey", running: "green", done: "blue" };
 export const color = render(stage.pipe(map(stage => COLOR_MAP[stage])));

@@ -1,13 +1,13 @@
-import { State, timer } from 'corrente';
-import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
-import { TICK_MS } from './constants';
-import { Difficulty, Direction } from './types';
+import { State, timer } from "corrente";
+import { getInitialSnakeState, getNewSnakeState, getBoard } from "./game-logic";
+import { TICK_MS } from "./constants";
+import { Difficulty, Direction } from "./types";
 
 // A factory, not module-level singletons: each call builds a fresh, independent game so that
 // remounting (e.g. leaving and returning to the example) starts over rather than resuming shared state.
 export const createGame = () => {
-  const difficulty = new State<Difficulty>('Easy');
-  const direction = new State<Direction>('right');
+  const difficulty = new State<Difficulty>("Easy");
+  const direction = new State<Direction>("right");
 
   const tick = timer(0, TICK_MS);
 

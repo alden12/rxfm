@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject } from "rxjs";
 declare const index: Observable<number>;
 declare const a: Observable<number>;
 declare const b: Observable<string>;

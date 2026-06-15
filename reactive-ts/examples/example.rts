@@ -1,7 +1,7 @@
 // A real .rts file — open this in the Extension Development Host and hover the
 // bindings. Imperative observable use that plain TS would reject, inferred and
 // lifted to RxJS RenderObservables under the hood.
-import { Observable } from 'rxjs';
+import { Observable } from "rxjs";
 
 declare const y: Observable<number>;
 declare const cond: Observable<boolean>;

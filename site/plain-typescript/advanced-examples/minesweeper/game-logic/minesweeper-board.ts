@@ -62,7 +62,7 @@ export const clearNeighbors = (board: MinesweeperBoard, [x, y]: Vector): Mineswe
 export const revealMines = (board: MinesweeperBoard, exploded: boolean): MinesweeperBoard => {
   const newBoard = cloneBoard(board);
   newBoard.forEach((column, x) => column.forEach((cell, y) => {
-    if (cell.isMine) newBoard[x][y] = new MinesweeperCell(exploded ? 'explodedMine' : 'mine');
+    if (cell.isMine) newBoard[x][y] = new MinesweeperCell(exploded ? "explodedMine" : "mine");
   }));
   return newBoard;
 };

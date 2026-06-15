@@ -1,24 +1,24 @@
-import { Div, Input, State } from 'corrente';
+import { Div, Input, State } from "corrente";
 
-import './live-search-styles.css';
+import "./live-search-styles.css";
 
 const FRUITS = [
-  'apple', 'banana', 'blueberry', 'cherry', 'grape', 'mango', 'orange', 'peach', 'pear', 'pineapple',
+  "apple", "banana", "blueberry", "cherry", "grape", "mango", "orange", "peach", "pear", "pineapple",
 ];
 
 export const LiveSearch = () => {
-  const searchQuery = new State('');
+  const searchQuery = new State("");
   const debouncedQuery = searchQuery.debounce(150);
   const matchingFruits = FRUITS.filter(fruit => fruit.includes(debouncedQuery));
 
-  return Div.class('live-search')(
+  return Div.class("live-search")(
     Input
-      .type('text')
-      .placeholder('Search fruit…')
-      .class('live-search-input')
+      .type("text")
+      .placeholder("Search fruit…")
+      .class("live-search-input")
       .onInput(({ target }) => searchQuery.next(target.value)),
-    Div.class('live-search-results')(
-      matchingFruits.map(fruit => Div.class('live-search-chip')`${fruit}`),
+    Div.class("live-search-results")(
+      matchingFruits.map(fruit => Div.class("live-search-chip")`${fruit}`),
     ),
   );
 };

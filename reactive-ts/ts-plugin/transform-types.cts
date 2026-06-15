@@ -3,11 +3,11 @@
 // plus SEGMENTS (the source↔generated position map); standalone EDITS splice
 // generated text over source regions. Shared by every transform-* module, so they
 // live here (a types-only module — emits an essentially empty .cjs).
-'use strict';
+"use strict";
 
 // TypeScript is INJECTED at runtime (tsserver hands the plugin its own copy), so we
 // only borrow its types at compile time — `import type` is fully erased at emit.
-import type * as TS from 'typescript';
+import type * as TS from "typescript";
 /** The TypeScript module shape, as received via the injected `ts` parameter. */
 export type Ts = typeof TS;
 

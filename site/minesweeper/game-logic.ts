@@ -20,32 +20,32 @@ import { MinesweeperCellType, Vector, GameStage, CellAction } from "./types";
 
 export class MinesweeperCell {
   constructor(
-    private type: MinesweeperCellType = 'unflaggedEmpty',
+    private type: MinesweeperCellType = "unflaggedEmpty",
     public neighbors = 0,
   ) {}
 
   public get isMine(): boolean {
-    return isOneOf<MinesweeperCellType>(this.type, ['unflaggedMine', 'flaggedMine']);
+    return isOneOf<MinesweeperCellType>(this.type, ["unflaggedMine", "flaggedMine"]);
   }
 
   public get isFlagged(): boolean {
-    return isOneOf<MinesweeperCellType>(this.type, ['flaggedEmpty', 'flaggedMine']);
+    return isOneOf<MinesweeperCellType>(this.type, ["flaggedEmpty", "flaggedMine"]);
   }
 
   public get isCleared(): boolean {
-    return this.type === 'cleared';
+    return this.type === "cleared";
   }
 
   public get isUnflaggedEmpty(): boolean {
-    return this.type === 'unflaggedEmpty';
+    return this.type === "unflaggedEmpty";
   }
 
   public get isUnflaggedMine(): boolean {
-    return this.type === 'unflaggedMine';
+    return this.type === "unflaggedMine";
   }
 
   public get isUndiscovered(): boolean {
-    return isOneOf<MinesweeperCellType>(this.type, ['flaggedEmpty', 'unflaggedEmpty', 'flaggedMine', 'unflaggedMine']);
+    return isOneOf<MinesweeperCellType>(this.type, ["flaggedEmpty", "unflaggedEmpty", "flaggedMine", "unflaggedMine"]);
   }
 
   public get hasNeighbors(): boolean {
@@ -69,7 +69,7 @@ export class MinesweeperCell {
   }
 
   public clear() {
-    return new MinesweeperCell('cleared', this.neighbors);
+    return new MinesweeperCell("cleared", this.neighbors);
   }
 
   public toggleFlagged(): MinesweeperCell {
@@ -140,7 +140,7 @@ export const clearNeighbors = (board: MinesweeperBoard, [x, y]: Vector): Mineswe
 export const revealMines = (board: MinesweeperBoard, exploded: boolean): MinesweeperBoard => {
   const newBoard = cloneBoard(board);
   newBoard.forEach((column, x) => column.forEach((cell, y) => {
-    if (cell.isMine) newBoard[x][y] = new MinesweeperCell(exploded ? 'explodedMine' : 'mine');
+    if (cell.isMine) newBoard[x][y] = new MinesweeperCell(exploded ? "explodedMine" : "mine");
   }));
   return newBoard;
 };
@@ -170,7 +170,7 @@ export class MinesweeperGame {
     public startTime: number | undefined,
     public gameStage: GameStage,
   ) {
-    if (gameStage === 'win') this.endTime = Date.now();
+    if (gameStage === "win") this.endTime = Date.now();
   }
 
   // Elapsed seconds between start and end (0 until both exist). Kept here, in pure
@@ -187,20 +187,20 @@ export class MinesweeperGame {
   // generates the board around its cell. Other actions are ignored once the game
   // has ended.
   public dispatch(action: CellAction): MinesweeperGame {
-    if (action.type === 'restart') return getInitialGame();
+    if (action.type === "restart") return getInitialGame();
     const { type, cell } = action;
-    if (type === 'start') return this.startGame(cell);
-    if (isOneOf<GameStage>(this.gameStage, ['win', 'gameOver'])) return this;
-    if (type === 'discover') return this.clearCells(cell);
+    if (type === "start") return this.startGame(cell);
+    if (isOneOf<GameStage>(this.gameStage, ["win", "gameOver"])) return this;
+    if (type === "discover") return this.clearCells(cell);
     return this.toggleFlagged(cell);
   }
 
   private startGame(startingCell: Vector) {
     const board = getEmptyBoard();
     const mines = placeRandomMines(MINE_COUNT, startingCell);
-    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell('unflaggedMine'));
+    mines.forEach(([x, y]) => board[x][y] = new MinesweeperCell("unflaggedMine"));
     board.forEach((column, x) => column.forEach((_, y) => setCellNeighbors(board, [x, y])));
-    return new MinesweeperGame(board, Date.now(), 'playing').clearCells(startingCell);
+    return new MinesweeperGame(board, Date.now(), "playing").clearCells(startingCell);
   }
 
   private clearCells([x, y]: Vector) {
@@ -240,26 +240,26 @@ export class MinesweeperGame {
   }
 
   private updateBoard(newBoard: MinesweeperBoard) {
-    return new MinesweeperGame(newBoard, this.startTime, 'playing');
+    return new MinesweeperGame(newBoard, this.startTime, "playing");
   }
 
   private gameOver() {
-    return new MinesweeperGame(revealMines(this.board, true), undefined, 'gameOver');
+    return new MinesweeperGame(revealMines(this.board, true), undefined, "gameOver");
   }
 
   private win(newBoard: MinesweeperBoard) {
-    return new MinesweeperGame(revealMines(newBoard, false), this.startTime, 'win');
+    return new MinesweeperGame(revealMines(newBoard, false), this.startTime, "win");
   }
 }
 
-export const getInitialGame = (): MinesweeperGame => new MinesweeperGame(getEmptyBoard(), undefined, 'pregame');
+export const getInitialGame = (): MinesweeperGame => new MinesweeperGame(getEmptyBoard(), undefined, "pregame");
 
 // The fold step for the reactive loop: the first cell click (while still in
 // 'pregame') becomes the game-starting 'start'; everything else — including the
 // cell-free 'restart' — is dispatched as-is.
 export const reduceGame = (game: MinesweeperGame, action: CellAction): MinesweeperGame =>
   game.dispatch(
-    game.gameStage === 'pregame' && action.type !== 'restart'
-      ? { ...action, type: 'start' }
+    game.gameStage === "pregame" && action.type !== "restart"
+      ? { ...action, type: "start" }
       : action,
   );

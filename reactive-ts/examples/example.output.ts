@@ -2,7 +2,7 @@ import { render } from "../runtime";
 import { map, switchMap } from "rxjs/operators";
 // Conceptually a `.rts` file. Imperative use of observables.
 // `tsc` would normally reject these — the transform fixes them.
-import { Observable, combineLatest, of } from 'rxjs';
+import { Observable, combineLatest, of } from "rxjs";
 
 declare const y: Observable<number>;
 declare const cond: Observable<boolean>;
@@ -10,7 +10,7 @@ declare const fn: Observable<(n: number) => string>;
 const z = 1;
 const double = (n: number) => n * 2;
 
-// Binary op rooted in a single stream → one map (D5); multi-stream ops combineLatest.
+// Binary op on an observable → combineLatest + map.
 const sum = render(y.pipe(map(y => y + z)));
 
 // Plain function over an observable arg → map.

@@ -8,26 +8,26 @@
 // to learn which identifiers are observables. The `+`-on-Observable error doesn't
 // poison operand types, so leaf detection is reliable; derived bindings are
 // tracked ourselves (the propagation table).
-'use strict';
-const path = require('node:path');
+"use strict";
+const path = require("node:path");
 
 // TypeScript is INJECTED at runtime (tsserver hands the plugin its own copy), so we
 // only borrow its types at compile time — `import type` is fully erased at emit.
-import type * as TS from 'typescript';
+import type * as TS from "typescript";
 // The transform's data model lives in transform-types (a types-only module).
 import type {
   Ts, SrcSlice, Piece, Operand, AliasInfo, Edit,
   Stall, HigherOrder, ObservableMember, RootMapping, DeclMapping,
-} from './transform-types.cjs';
-import { operatorTables } from './transform-operators.cjs';
-import { getCompilerOptions, createProgramFromText } from './transform-program.cjs';
-import { assembleOutput, mapSourceToGenerated, segmentsToVolarMappings } from './transform-emit.cjs';
-import { createChecker } from './transform-checker.cjs';
+} from "./transform-types.cjs";
+import { operatorTables } from "./transform-operators.cjs";
+import { getCompilerOptions, createProgramFromText } from "./transform-program.cjs";
+import { assembleOutput, mapSourceToGenerated, segmentsToVolarMappings } from "./transform-emit.cjs";
+import { createChecker } from "./transform-checker.cjs";
 
 export function transformWithMappings(ts: Ts, sourceText: string, baseDir: string) {
   const { LIFTABLE, LIFTABLE_UNARY, LOGICAL } = operatorTables(ts);
 
-  const fileName = path.join(baseDir, '__rts_virtual__.ts');
+  const fileName = path.join(baseDir, "__rts_virtual__.ts");
   const options = getCompilerOptions(ts);
   const program = createProgramFromText(ts, fileName, sourceText, options, transformWithMappings);
   const checker = program.getTypeChecker();
@@ -72,7 +72,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
 
   // (2) Output-plan accumulators.
   const edits: Edit[] = [];
-  const needed = { rxjs: new Set<string>(), 'rxjs/operators': new Set<string>(), corrente: new Set<string>(), runtime: new Set<string>() };
+  const needed = { rxjs: new Set<string>(), "rxjs/operators": new Set<string>(), corrente: new Set<string>(), runtime: new Set<string>() };
   let usedRender = false;
   // Declaration-site hover for destructured fields: the binding pattern `{ color }`
   // is erased to the synthetic param, so its field tokens map to nothing. We record
@@ -172,18 +172,18 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // combineLatest / switchMap: leave observables as-is, wrap plain values in of().
   const asStream = (operand: Operand): Piece[] => {
     if (operand.observable) return operand.pieces;
-    needed.rxjs.add('of');
-    return ['of(', ...operand.pieces, ')'];
+    needed.rxjs.add("of");
+    return ["of(", ...operand.pieces, ")"];
   };
   // Combine `sources` (each a stream's pieces) and map their emitted values —
   // bound to `params` — through `body`. A single source needs no combineLatest:
   // it collapses to `source.pipe(map(param => body))` (the same single-root
   // shape D5 produces), which is tighter and imports one fewer operator.
   const combineMap = (sources: Piece[][], params: string[], body: Piece[]): Piece[] => {
-    needed['rxjs/operators'].add('map');
-    if (sources.length === 1) return [...sources[0], '.pipe(map(', params[0], ' => ', ...body, '))'];
-    needed.rxjs.add('combineLatest');
-    return ['combineLatest([', ...joinPieces(sources, ', '), ']).pipe(map(([', params.join(', '), ']) => ', ...body, '))'];
+    needed["rxjs/operators"].add("map");
+    if (sources.length === 1) return [...sources[0], ".pipe(map(", params[0], " => ", ...body, "))"];
+    needed.rxjs.add("combineLatest");
+    return ["combineLatest([", ...joinPieces(sources, ", "), "]).pipe(map(([", params.join(", "), "]) => ", ...body, "))"];
   };
   // Emit `node` verbatim (as source slices) but rewrite each alias VALUE reference
   // to `param.prop`. Used where a node is re-emitted inside a `map(param => …)` whose
@@ -217,7 +217,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       if (alias) {
         const { param, prop, cbId } = aliasInfo.get(id.text)!;
         // Source-slice the prop token (when not renamed) so the field keeps hover / nav.
-        pieces.push(param, '.', id.text === prop
+        pieces.push(param, ".", id.text === prop
           ? { srcStart: id.getStart(sf), srcEnd: id.getEnd(), aliasKey: `${cbId}:${id.text}` }
           : prop);
       } else {
@@ -242,7 +242,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     const roots = observableRoots(node);
     if (!roots || roots.size !== 1) return null;
     const x = [...roots][0];
-    needed['rxjs/operators'].add('map');
+    needed["rxjs/operators"].add("map");
     const key = `c:${collapseSeq++}`;
     const body = expandAliases(node, { name: x, key });
     // The outer `x` is the actual stream; tag its generated position so the root's
@@ -252,7 +252,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // `callable` mirrors the eager path: arithmetic/comparison/unary emit primitives
     // (false), ternary/logical leave it unknown (undefined). It marks the binding
     // non-callable so a later `binding(...)` surfaces as a boundary teaching message.
-    return { pieces: [{ gen: x, refKey: key }, '.pipe(map(', x, ' => ', ...body, '))'], observable: true, lifted: true, callable };
+    return { pieces: [{ gen: x, refKey: key }, ".pipe(map(", x, " => ", ...body, "))"], observable: true, lifted: true, callable };
   };
 
   // WICG-style operator methods we add to `Observable` (see src/corrente/observable-operators.ts).
@@ -272,7 +272,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // inference Program doesn't pull in corrente's side-effect-imported augmentation, so the checker
   // there can't be relied on to know these are stream methods.
   const OPERATOR_METHODS = new Set([
-    'scan', 'take', 'drop', 'takeUntil', 'catch', 'finally', 'debounce', 'throttle',
+    "scan", "take", "drop", "takeUntil", "catch", "finally", "debounce", "throttle",
   ]);
 
   function transformExpression(node: TS.Node): Operand {
@@ -280,19 +280,19 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // access it stands for: `color` → `item.pipe(map(item => item.color))`.
     if (ts.isIdentifier(node) && aliasInfo.has(node.text)) {
       const { param, prop, cbId } = aliasInfo.get(node.text)!;
-      needed['rxjs/operators'].add('map');
+      needed["rxjs/operators"].add("map");
       // Map the generated `.prop` token back to the source field identifier (same
       // text when not renamed) so hover / go-to-def work on the destructured name.
       // `aliasKey` lets the declaration site borrow this same generated token.
       const propPiece = node.text === prop
         ? { srcStart: node.getStart(sf), srcEnd: node.getEnd(), aliasKey: `${cbId}:${node.text}` }
         : prop;
-      return { pieces: [param, '.pipe(map(', param, ' => ', param, '.', propPiece, '))'], observable: true, lifted: true };
+      return { pieces: [param, ".pipe(map(", param, " => ", param, ".", propPiece, "))"], observable: true, lifted: true };
     }
     if (ts.isParenthesizedExpression(node)) {
       const inner = transformExpression(node.expression);
       if (inner.lifted) return { pieces: inner.pieces, observable: true, lifted: true, callable: inner.callable };
-      if (inner.rewritten) return { pieces: ['(', ...inner.pieces, ')'], observable: inner.observable, lifted: false, rewritten: true };
+      if (inner.rewritten) return { pieces: ["(", ...inner.pieces, ")"], observable: inner.observable, lifted: false, rewritten: true };
       return { pieces: [V(node)], observable: inner.observable, lifted: false };
     }
     // Ternary: when the condition is observable, switchMap so only the taken
@@ -310,9 +310,9 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       const whenTrue = transformExpression(node.whenTrue);
       const whenFalse = transformExpression(node.whenFalse);
       if (cond.observable) {
-        needed['rxjs/operators'].add('switchMap');
-        needed['rxjs/operators'].add('distinctUntilChanged');
-        const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
+        needed["rxjs/operators"].add("switchMap");
+        needed["rxjs/operators"].add("distinctUntilChanged");
+        const param = ts.isIdentifier(node.condition) ? node.condition.text : "_cond";
         // A branch that IS the condition identifier refers to the *current value* in
         // the switchMap body — the param shadows the outer stream — not the stream
         // itself. Re-emit it as `of(param)` (a valid ObservableInput), exactly as the
@@ -324,8 +324,8 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         // correctly while still switch-mapping to an external observable branch.
         const branch = (operand: Operand, branchNode: TS.Expression): Piece[] => {
           if (ts.isIdentifier(branchNode) && branchNode.text === param) {
-            needed.rxjs.add('of');
-            return ['of(', param, ')'];
+            needed.rxjs.add("of");
+            return ["of(", param, ")"];
           }
           return asStream(operand);
         };
@@ -337,8 +337,8 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         // switchMap gives laziness; the render() wrapper (added at the binding) provides
         // the shareReplay, so we don't add it here.
         const pieces = [
-          ...cond.pieces, '.pipe(distinctUntilChanged(), switchMap(', param, ' => ', param, ' ? ',
-          ...branch(whenTrue, node.whenTrue), ' : ', ...branch(whenFalse, node.whenFalse), '))',
+          ...cond.pieces, ".pipe(distinctUntilChanged(), switchMap(", param, " => ", param, " ? ",
+          ...branch(whenTrue, node.whenTrue), " : ", ...branch(whenFalse, node.whenFalse), "))",
         ];
         // `cond ? x : EMPTY` (the filter idiom) can produce no value: flag it so a
         // later combine over this binding can warn about stalling.
@@ -362,7 +362,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         const params: string[] = [];
         const subs: { inline?: Piece[]; param?: string }[] = spans.map(s => {
           if (!s.expr.observable) return { inline: s.expr.pieces };
-          const p = fresh(ts.isIdentifier(s.node) ? s.node.text : '_e');
+          const p = fresh(ts.isIdentifier(s.node) ? s.node.text : "_e");
           sources.push(s.expr.pieces);
           params.push(p);
           return { param: p };
@@ -408,7 +408,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
             ts.isArrowFunction(argNode) || ts.isFunctionExpression(argNode)
               ? [V(argNode)]
               : transformExpression(argNode).pieces);
-          const pieces = [...recv.pieces, '.', V(opEx.name), '(', ...joinPieces(argGroups, ', '), ')'];
+          const pieces = [...recv.pieces, ".", V(opEx.name), "(", ...joinPieces(argGroups, ", "), ")"];
           return { pieces, observable: true, lifted: true };
         }
       }
@@ -420,7 +420,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         const obj = transformExpression(ex.expression);
         if (obj.observable && memberTargetsValue(ex.expression, ex.name.text)) {
           const fresh = freshNamer();
-          const objParam = fresh(ts.isIdentifier(ex.expression) ? ex.expression.text : '_o');
+          const objParam = fresh(ts.isIdentifier(ex.expression) ? ex.expression.text : "_o");
           // Function-expression args are callbacks (arr.map/filter's fn): keep
           // them inline so they stay contextually typed; only stream args become
           // combineLatest sources.
@@ -433,7 +433,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
             params.push(p);
             return [p];
           });
-          const body = [objParam, '.', V(ex.name), '(', ...joinPieces(callArgs, ', '), ')'];
+          const body = [objParam, ".", V(ex.name), "(", ...joinPieces(callArgs, ", "), ")"];
           // Offer the stream's operators in completion at the method name too — covers a
           // value-method call (`count.toFixed(…)`) and the mid-edit `stream.(args)` parse
           // (e.g. `tick.` left in front of a leftover `(snake, i) => …`), which lands here
@@ -469,18 +469,18 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           if (!args.some(a => a.lifted || a.rewritten)) {
             return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
           }
-          const pieces = [...callee.pieces, '(', ...joinPieces(args.map(a => a.pieces), ', '), ')'];
+          const pieces = [...callee.pieces, "(", ...joinPieces(args.map(a => a.pieces), ", "), ")"];
           return { pieces, observable: isObservableExpr(node), lifted: false, rewritten: true };
         }
         const fresh = freshNamer();
         const argParam = (argNode: TS.Node, i: number) => fresh(ts.isIdentifier(argNode) ? argNode.text : `_a${i}`);
 
         if (calleeIsFnStream) {
-          const fnParam = fresh(ts.isIdentifier(node.expression) ? node.expression.text : '_fn');
+          const fnParam = fresh(ts.isIdentifier(node.expression) ? node.expression.text : "_fn");
           const argParams = node.arguments.map(argParam);
           const sources = [callee.pieces, ...args.map(asStream)];
           const params = [fnParam, ...argParams];
-          const pieces = combineMap(sources, params, [fnParam, '(', argParams.join(', '), ')']);
+          const pieces = combineMap(sources, params, [fnParam, "(", argParams.join(", "), ")"]);
           // Emits the result of the emitted function. Only reliable when the
           // callee is checker-visible as an observable (not a tracked binding,
           // whose pre-transform type the checker can't see) — else leave unknown.
@@ -501,7 +501,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           sources.push(asStream(args[i]));
           return [p];
         });
-        const pieces = combineMap(sources, params, [...callee.pieces, '(', ...joinPieces(callArgs, ', '), ')']);
+        const pieces = combineMap(sources, params, [...callee.pieces, "(", ...joinPieces(callArgs, ", "), ")"]);
         // Plain function over observable args: emits the function's return value.
         // The callee is a real (non-observable) function, so its type is reliable.
         const calleeReturn = returnTypeOf(checker.getTypeAtLocation(node.expression));
@@ -537,21 +537,21 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         root = root.expression;
       }
       if (root !== node.expression && isObservableExpr(root) && memberTargetsValue(root, firstName.text)) {
-        needed['rxjs/operators'].add('map');
+        needed["rxjs/operators"].add("map");
         const rootR = transformExpression(root);
-        const p = ts.isIdentifier(root) ? root.text : '_o';
+        const p = ts.isIdentifier(root) ? root.text : "_o";
         // The access path (`.trail.coordinates`) is emitted as a mapped source slice
         // so hover / go-to-def on each property still resolves.
         const path = { srcStart: root.getEnd(), srcEnd: node.getEnd() };
-        const pieces = [...rootR.pieces, '.pipe(map(', p, ' => ', p, path, '))'];
+        const pieces = [...rootR.pieces, ".pipe(map(", p, " => ", p, path, "))"];
         recordObservableMember(node);
         return { pieces, observable: true, lifted: true };
       }
       const obj = transformExpression(node.expression);
       if (obj.observable && memberTargetsValue(node.expression, node.name.text)) {
-        needed['rxjs/operators'].add('map');
-        const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
-        const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '.', V(node.name), '))'];
+        needed["rxjs/operators"].add("map");
+        const p = ts.isIdentifier(node.expression) ? node.expression.text : "_o";
+        const pieces = [...obj.pieces, ".pipe(map(", p, " => ", p, ".", V(node.name), "))"];
         recordObservableMember(node);
         return { pieces, observable: true, lifted: true };
       }
@@ -565,19 +565,19 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       const obj = transformExpression(node.expression);
       const index = transformExpression(node.argumentExpression);
       if (obj.observable) {
-        needed['rxjs/operators'].add('map');
-        const p = ts.isIdentifier(node.expression) ? node.expression.text : '_o';
+        needed["rxjs/operators"].add("map");
+        const p = ts.isIdentifier(node.expression) ? node.expression.text : "_o";
         if (index.observable) {
           // Two distinct streams (object + index) → always a genuine combineLatest,
           // never the single-source collapse, so it's emitted directly not via combineMap.
-          needed.rxjs.add('combineLatest');
+          needed.rxjs.add("combineLatest");
           const pieces = [
-            'combineLatest([', ...joinPieces([obj.pieces, asStream(index)], ', '),
-            ']).pipe(map(([', p, ', _i]) => ', p, '[_i]))',
+            "combineLatest([", ...joinPieces([obj.pieces, asStream(index)], ", "),
+            "]).pipe(map(([", p, ", _i]) => ", p, "[_i]))",
           ];
           return { pieces, observable: true, lifted: true };
         }
-        const pieces = [...obj.pieces, '.pipe(map(', p, ' => ', p, '[', ...index.pieces, ']))'];
+        const pieces = [...obj.pieces, ".pipe(map(", p, " => ", p, "[", ...index.pieces, "]))"];
         return { pieces, observable: true, lifted: true };
       }
       // Static object, observable index (e.g. `CELL_COLOR_MAP[cell]`): drive off the
@@ -585,7 +585,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       // is re-referenced inside the map, which is free for the common case (a constant
       // lookup table named by identifier).
       if (index.observable) {
-        const i = ts.isIdentifier(node.argumentExpression) ? node.argumentExpression.text : '_i';
+        const i = ts.isIdentifier(node.argumentExpression) ? node.argumentExpression.text : "_i";
         // If a looked-up VALUE can itself be an observable — a table typed
         // `Record<K, TypeOrObservable<T>>` mixing plain values and streams — a plain
         // `map` yields Observable<Observable<T>>, a higher-order stream that never
@@ -610,13 +610,13 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         const unprovable = valueTypes.length === 0 ||
           valueTypes.some(t => (t.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) !== 0);
         if (unprovable || valueTypes.some(t => isObservableType(t))) {
-          needed['rxjs/operators'].add('switchMap');
-          needed.runtime.add('coerceToObservable');
-          const pieces = [...index.pieces, '.pipe(switchMap(', i, ' => coerceToObservable(', ...obj.pieces, '[', i, '])))'];
+          needed["rxjs/operators"].add("switchMap");
+          needed.runtime.add("coerceToObservable");
+          const pieces = [...index.pieces, ".pipe(switchMap(", i, " => coerceToObservable(", ...obj.pieces, "[", i, "])))"];
           return { pieces, observable: true, lifted: true };
         }
-        needed['rxjs/operators'].add('map');
-        const pieces = [...index.pieces, '.pipe(map(', i, ' => ', ...obj.pieces, '[', i, ']))'];
+        needed["rxjs/operators"].add("map");
+        const pieces = [...index.pieces, ".pipe(map(", i, " => ", ...obj.pieces, "[", i, "]))"];
         return { pieces, observable: true, lifted: true };
       }
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
@@ -632,17 +632,17 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       const left = transformExpression(node.left);
       const right = transformExpression(node.right);
       if (left.observable) {
-        needed['rxjs/operators'].add('switchMap');
-        needed.rxjs.add('of');
+        needed["rxjs/operators"].add("switchMap");
+        needed.rxjs.add("of");
         const kind = LOGICAL[node.operatorToken.kind];
-        const p = ts.isIdentifier(node.left) ? node.left.text : '_l';
-        const keep = ['of(', p, ')']; // re-emit the left value
+        const p = ts.isIdentifier(node.left) ? node.left.text : "_l";
+        const keep = ["of(", p, ")"]; // re-emit the left value
         const other = asStream(right);
         // && selects the right when left is truthy; || when falsy; ?? when nullish.
-        const cond = kind === '??' ? [p, ' != null'] : [p];
-        const [whenTrue, whenFalse] = kind === '&&' ? [other, keep] : [keep, other];
+        const cond = kind === "??" ? [p, " != null"] : [p];
+        const [whenTrue, whenFalse] = kind === "&&" ? [other, keep] : [keep, other];
         const pieces = [
-          ...left.pieces, '.pipe(switchMap(', p, ' => ', ...cond, ' ? ', ...whenTrue, ' : ', ...whenFalse, '))',
+          ...left.pieces, ".pipe(switchMap(", p, " => ", ...cond, " ? ", ...whenTrue, " : ", ...whenFalse, "))",
         ];
         // Branches may emit functions, so callability is left unknown.
         return { pieces, observable: true, lifted: true };
@@ -659,10 +659,10 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       if (collapsed) return collapsed;
       const operand = transformExpression(node.operand);
       if (operand.observable) {
-        needed['rxjs/operators'].add('map');
-        const param = ts.isIdentifier(node.operand) ? node.operand.text : '_v';
+        needed["rxjs/operators"].add("map");
+        const param = ts.isIdentifier(node.operand) ? node.operand.text : "_v";
         const op = LIFTABLE_UNARY[node.operator];
-        const pieces = [...operand.pieces, '.pipe(map(', param, ' => ', op, param, '))'];
+        const pieces = [...operand.pieces, ".pipe(map(", param, " => ", op, param, "))"];
         return { pieces, observable: true, lifted: true, callable: false };
       }
       return { pieces: [V(node)], observable: false, lifted: false };
@@ -680,8 +680,8 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         // singleRootLift above already collapsed the single-root case, so reaching
         // here means two distinct operand streams → a genuine combineLatest, not
         // the single-source combineMap path.
-        needed.rxjs.add('combineLatest');
-        needed['rxjs/operators'].add('map');
+        needed.rxjs.add("combineLatest");
+        needed["rxjs/operators"].add("map");
         noteStall(node.left);
         noteStall(node.right);
         const used = new Set();
@@ -693,11 +693,11 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           return name;
         };
         const params = [paramOf(node.left, 0), paramOf(node.right, 1)];
-        const sources = joinPieces([left, right].map(asStream), ', ');
+        const sources = joinPieces([left, right].map(asStream), ", ");
         const op = LIFTABLE[node.operatorToken.kind];
         const pieces = [
-          'combineLatest([', ...sources, ']).pipe(map(([', params.join(', '), ']) => ',
-          params[0], ' ', op, ' ', params[1], '))',
+          "combineLatest([", ...sources, "]).pipe(map(([", params.join(", "), "]) => ",
+          params[0], " ", op, " ", params[1], "))",
         ];
         // All these operators emit a primitive — never callable.
         return { pieces, observable: true, lifted: true, callable: false };
@@ -717,7 +717,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // (D4) or the flatMap flatten operator, chosen so it collides with neither an outer
   // observable binding nor any identifier in `scope` (the callback's destructured
   // fields, index param, locals, free references).
-  const freshItemName = (scope: TS.Node, base = 'item') => {
+  const freshItemName = (scope: TS.Node, base = "item") => {
     const used = new Set(observableBindings);
     const collect = (n: TS.Node) => { if (ts.isIdentifier(n)) used.add(n.text); ts.forEachChild(n, collect); };
     collect(scope);
@@ -768,8 +768,8 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     const ex = node.expression as TS.PropertyAccessExpression;  // obj.map / obj.flatMap
     const obj = ex.expression;                                  // obj
     const cb = node.arguments[0] as TS.ArrowFunction | TS.FunctionExpression;
-    const isFlat = ex.name.text === 'flatMap';
-    needed.corrente.add('mapToComponents');
+    const isFlat = ex.name.text === "flatMap";
+    needed.corrente.add("mapToComponents");
     // Lift the receiver if it's itself an imperative expression (e.g. a filter).
     const objR = transformExpression(obj);
     if (objR.lifted) edits.push({ start: obj.getStart(sf), end: obj.getEnd(), pieces: objR.pieces });
@@ -780,14 +780,14 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // leaf of a nested array: `.flatMap(` → `.pipe(map(a => a.flat()), mapToComponents(`.
     // (`.flat()` is a no-op on an already-flat array, so this is safe regardless.)
     if (isFlat) {
-      needed['rxjs/operators'].add('map');
-      const f = freshItemName(node, 'arr');
+      needed["rxjs/operators"].add("map");
+      const f = freshItemName(node, "arr");
       edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: [`.pipe(map(${f} => ${f}.flat()), `] });
     } else {
-      edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: ['.pipe('] });
+      edits.push({ start: obj.getEnd(), end: ex.name.getStart(), pieces: [".pipe("] });
     }
-    edits.push({ start: ex.name.getStart(), end: ex.name.getEnd(), remap: 'mapToComponents' });
-    edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ['))'] });
+    edits.push({ start: ex.name.getStart(), end: ex.name.getEnd(), remap: "mapToComponents" });
+    edits.push({ start: node.getEnd() - 1, end: node.getEnd(), pieces: ["))"] });
     // Lift the callback body with its params treated as observables, scoped so the
     // marking doesn't leak past this callback.
     const addedBindings: string[] = [];
@@ -820,7 +820,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // arrow/function callback.
   const isPlainArrayMapCall = (node: TS.Node): node is TS.CallExpression => {
     if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return false;
-    if (node.expression.name.text !== 'map') return false;
+    if (node.expression.name.text !== "map") return false;
     const cb = node.arguments[0];
     if (!cb || !(ts.isArrowFunction(cb) || ts.isFunctionExpression(cb))) return false;
     if (isObservableExpr(node.expression.expression)) return false; // stream map → mapToComponents
@@ -847,7 +847,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       const r = transformExpression(cb.body);
       if (r.lifted) {
         usedRender = true;
-        edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: ['render(', ...r.pieces, ')'] });
+        edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: ["render(", ...r.pieces, ")"] });
         handled = true;
       } else if (r.rewritten) {
         edits.push({ start: cb.body.getStart(sf), end: cb.body.getEnd(), pieces: r.pieces });
@@ -927,7 +927,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // produce per-element components, handled by mapToComponents (observable receiver) or
   // the C8 per-element lift (plain array). The downstream `.map` over a lifted result is
   // then an ordinary stream-`.map` → mapToComponents.
-  const ARRAY_VALUE_METHODS = new Set(['filter', 'find', 'findIndex', 'findLast', 'findLastIndex', 'some', 'every']);
+  const ARRAY_VALUE_METHODS = new Set(["filter", "find", "findIndex", "findLast", "findLastIndex", "some", "every"]);
   const liftArrayCallbackCall = (node: TS.CallExpression): Operand | null => {
     if (!ts.isPropertyAccessExpression(node.expression)) return null;
     if (!ARRAY_VALUE_METHODS.has(node.expression.name.text)) return null;
@@ -991,7 +991,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           !el.dotDotDotToken && !el.initializer && ts.isIdentifier(el.name)
           && (!el.propertyName || ts.isIdentifier(el.propertyName)));
         if (initR.observable && fieldsQualify) {
-          needed['rxjs/operators'].add('map');
+          needed["rxjs/operators"].add("map");
           usedRender = true;
           const isId = ts.isIdentifier(node.initializer);
           // The map param and the in-field source reference. For an identifier source
@@ -1002,7 +1002,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           const fields = node.name.elements.map(el => {
             const prop = (el.propertyName || el.name).getText(sf);
             observableBindings.add((el.name as TS.Identifier).text);
-            return [V(el.name), ' = render(', ref, `.pipe(map(${param} => ${param}.${prop})))`];
+            return [V(el.name), " = render(", ref, `.pipe(map(${param} => ${param}.${prop})))`];
           });
           // For a non-identifier source, prepend the hoisted binding and reserve its
           // name (so a sibling destructure picks a distinct synthetic, not a redeclare).
@@ -1010,12 +1010,12 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           if (!isId) {
             observableBindings.add(param);
             const srcPieces = initR.lifted || initR.rewritten ? initR.pieces : [V(node.initializer)];
-            groups = [[param, ' = render(', ...srcPieces, ')'], ...fields];
+            groups = [[param, " = render(", ...srcPieces, ")"], ...fields];
           }
           edits.push({
             start: node.name.getStart(sf),
             end: node.initializer.getEnd(),
-            pieces: joinPieces(groups, ', '),
+            pieces: joinPieces(groups, ", "),
           });
           return;
         }
@@ -1032,7 +1032,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         edits.push({
           start: node.initializer.getStart(sf),
           end: node.initializer.getEnd(),
-          pieces: ['render(', ...r.pieces, ')'],
+          pieces: ["render(", ...r.pieces, ")"],
         });
         return; // don't descend into an already-rewritten initializer
       }
@@ -1061,7 +1061,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           edits.push({
             start: span.expression.getStart(sf),
             end: span.expression.getEnd(),
-            pieces: ['render(', ...r.pieces, ')'],
+            pieces: ["render(", ...r.pieces, ")"],
           });
         } else if (r.rewritten) {
           edits.push({
@@ -1096,7 +1096,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         const r = transformExpression(arg);
         if (r.lifted) {
           usedRender = true;
-          edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: ['render(', ...r.pieces, ')'] });
+          edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: ["render(", ...r.pieces, ")"] });
         } else if (r.rewritten) {
           edits.push({ start: arg.getStart(sf), end: arg.getEnd(), pieces: r.pieces });
         } else {
@@ -1118,7 +1118,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
             edits.push({
               start: prop.initializer.getStart(sf),
               end: prop.initializer.getEnd(),
-              pieces: ['render(', ...r.pieces, ')'],
+              pieces: ["render(", ...r.pieces, ")"],
             });
           } else if (r.rewritten) {
             edits.push({ start: prop.initializer.getStart(sf), end: prop.initializer.getEnd(), pieces: r.pieces });
