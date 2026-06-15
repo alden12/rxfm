@@ -311,6 +311,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       const whenFalse = transformExpression(node.whenFalse);
       if (cond.observable) {
         needed['rxjs/operators'].add('switchMap');
+        needed['rxjs/operators'].add('distinctUntilChanged');
         const param = ts.isIdentifier(node.condition) ? node.condition.text : '_cond';
         // A branch that IS the condition identifier refers to the *current value* in
         // the switchMap body — the param shadows the outer stream — not the stream
@@ -328,10 +329,15 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
           }
           return asStream(operand);
         };
-        // switchMap for laziness; the render() wrapper (added at the binding)
-        // provides the shareReplay, so we don't add it here.
+        // distinctUntilChanged so the taken branch only re-subscribes when the
+        // condition's value actually changes: a condition that re-emits an equal value
+        // (a boolean staying false while its underlying source changes) shouldn't restart
+        // the chosen branch (e.g. a timer). It compares by value (===), which for a
+        // boolean condition (the common case) is exactly "did the chosen branch change".
+        // switchMap gives laziness; the render() wrapper (added at the binding) provides
+        // the shareReplay, so we don't add it here.
         const pieces = [
-          ...cond.pieces, '.pipe(switchMap(', param, ' => ', param, ' ? ',
+          ...cond.pieces, '.pipe(distinctUntilChanged(), switchMap(', param, ' => ', param, ' ? ',
           ...branch(whenTrue, node.whenTrue), ' : ', ...branch(whenFalse, node.whenFalse), '))',
         ];
         // `cond ? x : EMPTY` (the filter idiom) can produce no value: flag it so a
