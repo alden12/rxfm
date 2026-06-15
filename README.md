@@ -1,15 +1,15 @@
-# Corrente
-
 [![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
 [![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
 [![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
-**A component is just an `Observable<HTMLElement>`. That's the whole framework.**
+# Corrente
 
 <p align="center">
-  <img src="branding/corrente-logo.svg" alt="Corrente" width="500" height="500">
+  <img src="branding/corrente-logo-icon.svg" alt="Corrente" width="100" height="100">
 </p>
+
+**A component is just an `Observable<HTMLElement>`. That's the whole framework.**
 
 A user interface is a pile of values that change over time. Corrente takes that literally: an element
 is reactive because it _is_ a stream. There's no virtual DOM, nothing to diff, no re-render cycle - a
@@ -45,13 +45,17 @@ const doubled = count.pipe(map((c) => c * 2)); // the plain-RxJS equivalent it c
 
 No new runtime model, nothing hidden — just less ceremony.
 
+Components are functions for a reason: a component's `State` is declared _inside_ it, so each call -
+`Counter()` - is an independent instance with its own state. Write components as functions and
+instantiate them where you mount them; a single built component value (state declared at module scope,
+or `Counter()` called once and reused) shares that state across every place it appears.
+
 It works over time, too. Here a clock drives a hue with ordinary maths, dropped straight into a
 style, so the gradient animates forever with no animation loop, no `requestAnimationFrame`, and no
 state:
 
 ```ts demo=breathing-gradient
-import { Div } from "corrente";
-import { timer } from "rxjs";
+import { Div, timer } from "corrente";
 
 const tick = timer(0, 50); // a clock, ticking every 50ms
 const hue = (tick * 2) % 360; // a number stream, derived with ordinary maths
@@ -64,6 +68,10 @@ export const BreathingGradient = Div.style({
 `hue` is a stream because `tick` is; the moment it lands in the style string the element is bound to
 it and repaints on every tick. There's no render cycle to schedule the animation, because there isn't
 one anywhere in Corrente.
+
+The clock is Corrente's own: `timer(0, 50)` ticks immediately and then every 50ms, while `interval(50)`
+waits one period before its first tick - the reactive-input forms of their RxJS namesakes. Pass a
+stream for the period and the rate changes on the fly; pass `null` to stop the clock.
 
 ## Fluent operators, straight from the proposal
 
