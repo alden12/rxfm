@@ -1,4 +1,4 @@
-import { destructure, Div, conditional, and, styles, classes, events, access } from "rxfm";
+import { destructure, Div, conditional, and, styles, classes, events, access } from "corrente";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { indexToVector, NEIGHBORS_COLOR_MAP } from "../constants";

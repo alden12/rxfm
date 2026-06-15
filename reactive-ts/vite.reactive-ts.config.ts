@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { reactiveTs } from './vite-plugin-reactive-ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
-// here is reactive-ts/; the repo root (with src/lib) is one level up.
+// here is reactive-ts/; the repo root (with src) is one level up.
 const repoRoot = resolve(here, '..');
 
 // Run the Reactive TS demo:  yarn dev:reactive-ts  (builds the transform first, then serves).
@@ -15,7 +15,7 @@ export default defineConfig({
   plugins: [reactiveTs()],
   resolve: {
     // Same alias the main demo uses, so the lib runs from source.
-    alias: { rxfm: resolve(repoRoot, 'src/lib/rxfm/index.ts') },
+    alias: { corrente: resolve(repoRoot, 'src/corrente/index.ts') },
   },
   server: { port: 3100 },
   build: { outDir: 'dist-reactive-ts', emptyOutDir: true },

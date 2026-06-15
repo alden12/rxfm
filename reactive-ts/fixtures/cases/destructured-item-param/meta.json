@@ -1,5 +1,5 @@
 {
-  "description": "Destructure an observable item param of a component .map in place. Fields become aliases that lift to item.field; multi-field expressions share the item param → one map; a captured field/index in a handler is sourced from that item. Uses real rxfm types.",
+  "description": "Destructure an observable item param of a component .map in place. Fields become aliases that lift to item.field; multi-field expressions share the item param → one map; a captured field/index in a handler is sourced from that item. Uses real corrente types.",
   "diagnostics": [],
   "stalls": [],
   "higherOrder": [],

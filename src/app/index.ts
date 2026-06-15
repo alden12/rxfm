@@ -1,4 +1,4 @@
-import { addToView, attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'rxfm';
+import { addToView, attribute, ComponentChild, Div, H1, H3, classes, Span, A } from 'corrente';
 import {
   HelloWorld,
   ChildrenExample,
@@ -18,7 +18,7 @@ import { TodoList, SnakeGame, Minesweeper } from './advanced-examples';
 
 import './styles.css';
 
-document.title = 'RxFM Examples';
+document.title = 'Corrente Examples';
 
 const Example = (title: string, ...children: ComponentChild[]) => Div(
   H3(title).pipe(classes`example-title`),
@@ -54,7 +54,7 @@ const GithubLink = A`(GitHub)`.pipe(
 );
 
 const Title = Span(
-  H1`RxFM Examples`,
+  H1`Corrente Examples`,
   GithubLink,
 ).pipe(
   classes`app-title`,

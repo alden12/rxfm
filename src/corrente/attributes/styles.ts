@@ -20,7 +20,7 @@ import {
 } from "./attribute-operator-isolation";
 
 /**
- * The style names which may be applied to an RxFM element.
+ * The style names which may be applied to an Corrente element.
  */
 export type StyleKeys = Extract<
   keyof {
@@ -147,7 +147,7 @@ type StyleOperators = {
 export type StyleOperator = BasicStyleOperator & StyleOperators;
 
 /**
- * An observable operator to manage a style on an RxFM component.
+ * An observable operator to manage a style on an Corrente component.
  * Alternatively style operators for specific style types may be accessed directly as properties eg: `style.color('red')`.
  * @param name The style name.
  * @param value The style value or an observable emitting the value.
@@ -164,7 +164,7 @@ export type Styles = {
 };
 
 /**
- * An observable operator to update the styles on an RxFM component.
+ * An observable operator to update the styles on an Corrente component.
  * @param stylesOrObservableStyles A dictionary (or observable emitting a dictionary) of style names to values.
  * Values may be strings, null-like or observables emitting these.
  */

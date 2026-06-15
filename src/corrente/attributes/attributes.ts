@@ -10,12 +10,12 @@ import { StyleObject, Styles } from "./styles";
 import { SVGAttributes } from "./svg";
 
 /**
- * A map of the possible attribute types available on RxFM elements.
+ * A map of the possible attribute types available on Corrente elements.
  */
 export interface ElementAttributes extends HTMLAttributes, SVGAttributes {}
 
 /**
- * The attribute type names available on RxFM elements.
+ * The attribute type names available on Corrente elements.
  */
 export type AttributeKeys = keyof ElementAttributes;
 
@@ -118,7 +118,7 @@ type AttributeOperators = {
 export type AttributeOperator = BasicAttributeOperator & AttributeOperators;
 
 /**
- * An observable operator to manage an attribute on an RxFM component.
+ * An observable operator to manage an attribute on an Corrente component.
  * Alternatively attribute operators for specific attribute types may be accessed directly as properties eg: `attribute.id('app')`.
  * @param type The attribute type.
  * @param value The attribute value or an observable emitting the value.
@@ -142,7 +142,7 @@ export type Attributes =
   PartialRecord<string, TypeOrObservable<AttributeType>>;
 
 /**
- * An observable operator to update the attributes on an RxFM component.
+ * An observable operator to update the attributes on an Corrente component.
  * @param attributesOrObservableAttrs A dictionary (or observable emitting a dictionary) of attribute names to
  * attribute values. Attribute values may be strings, numbers, or booleans, or observables emitting these types.
  */

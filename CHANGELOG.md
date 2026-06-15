@@ -14,10 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`e => console.error(e)`) to swallow and complete, return a plain value (`() => "error"`, `() => null`)
   to emit it once, or return an `Observable` (`() => of(0)`) to switch to it. So retry-then-recover is a
   single call: `fallback(x, (e, n) => n < 3 ? RETRY : 0)`. It sits alongside `accumulate`/`interval` on
-  the `rxfm` runtime surface and, being operator-style (it takes the stream as a parameter), the Reactive
+  the `corrente` runtime surface and, being operator-style (it takes the stream as a parameter), the Reactive
   TS transform leaves the call untouched in `.rts`. A named helper rather than `try/catch` sugar:
   `try { obs }` reads as "if evaluating `obs` throws now," but an observable errors *later* on
   subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
+
+### Changed
+- **Renamed the framework `rxfm` → `corrente`.** The published package is now `corrente`
+  (`import { Div } from 'corrente'`); the source moved to `src/corrente/` and the redundant `src/lib/`
+  layer was dropped, so the package entry is now `src/index.ts`; the Vite alias / tsconfig path and the
+  library declaration tree (`dist/corrente/**`) follow suit; and the Reactive TS transform now emits its
+  component imports (`mapToComponents`, …) from `corrente`. The GitHub repo and github.io demo URLs are
+  intentionally left as `rxfm` for now (the repository itself isn't renamed yet).
 
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and

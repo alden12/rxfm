@@ -4,12 +4,12 @@ import { children, ComponentChild } from "../children/children";
 import { switchTap } from "../utils";
 
 /**
- * The possible DOM element types which can be used in RxFM. These are HTML and SVG elements.
+ * The possible DOM element types which can be used in Corrente. These are HTML and SVG elements.
  */
 export type ElementType = HTMLElement | SVGElement;
 
 /**
- * An observable emitting a DOM element. This is the fundamental type in RxFM.
+ * An observable emitting a DOM element. This is the fundamental type in Corrente.
  */
 export type Component<T extends ElementType = ElementType> = Observable<T>;
 
@@ -27,7 +27,7 @@ export type ComponentCreator<T extends ElementType = ElementType> = {
 };
 
 /**
- * An RxJS operator function which can be used for performing actions on RxFM components.
+ * An RxJS operator function which can be used for performing actions on Corrente components.
  * The operator may be used in the pipe method of a component and will not change the resulting component type.
  */
 export type ComponentOperator<T extends ElementType> = MonoTypeOperatorFunction<T>;

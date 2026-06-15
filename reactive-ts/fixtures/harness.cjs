@@ -8,8 +8,8 @@
 // and to resolve a hover at a SOURCE offset (mapped through the segments).
 //
 // The host mirrors the editor: it uses reactive-ts/tsconfig.json (same options as the
-// transform's getCompilerOptions, plus the `rxfm` path + module resolution), so
-// rxfm/rxjs/runtime imports resolve for real and the generated code type-checks
+// transform's getCompilerOptions, plus the `corrente` path + module resolution), so
+// corrente/rxjs/runtime imports resolve for real and the generated code type-checks
 // exactly as it would in the editor.
 'use strict';
 const ts = require('typescript');
@@ -32,7 +32,7 @@ const PROJECT_OPTIONS = (() => {
 })();
 
 // Build a LanguageService serving `code` as the generated file, reading everything
-// else (libs, rxjs, rxfm, runtime) from disk with real module resolution.
+// else (libs, rxjs, corrente, runtime) from disk with real module resolution.
 function makeLanguageService(code, genPath) {
   const virtual = new Map([[genPath, code]]);
   const host = {

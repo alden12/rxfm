@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { Div } from 'rxfm';
+import { Div } from 'corrente';
 declare const items: BehaviorSubject<{ id: number; name: string; done: boolean }[]>;
 const a = items.map(item => Div`${item.name} is ${item.done ? 'done' : 'todo'}`);
 const b = items.map(item => Div`${item.name}`, 'id');

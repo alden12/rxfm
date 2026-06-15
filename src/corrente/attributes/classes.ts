@@ -45,7 +45,7 @@ function canRemoveClass(
 }
 
 /**
- * An observable operator to manage the CSS classes on an RxFM component.
+ * An observable operator to manage the CSS classes on an Corrente component.
  * @param classNames A spread array of class names, or class names as a template strings array.
  * These may either be of type string, string observable or string array observable.
  * If the class name value is falsy (false, undefined, null , 0) The class will be removed.
