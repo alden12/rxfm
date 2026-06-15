@@ -47,17 +47,29 @@ import liveSearchStylesSrc from "./motion/live-search-styles.css?raw";
 
 const mouseFollowerSources: SourceFile[] = [
   { name: "mouse-follower.rts", source: mouseFollowerSrc },
-  { name: "mouse-follower-styles.css", source: mouseFollowerStylesSrc, lang: "css" },
+  {
+    name: "mouse-follower-styles.css",
+    source: mouseFollowerStylesSrc,
+    lang: "css",
+  },
 ];
 
 const bouncingLogoSources: SourceFile[] = [
   { name: "bouncing-logo.rts", source: bouncingLogoSrc },
-  { name: "bouncing-logo-styles.css", source: bouncingLogoStylesSrc, lang: "css" },
+  {
+    name: "bouncing-logo-styles.css",
+    source: bouncingLogoStylesSrc,
+    lang: "css",
+  },
 ];
 
 const bouncingSpeedSources: SourceFile[] = [
   { name: "bouncing-speed.rts", source: bouncingSpeedSrc },
-  { name: "bouncing-speed-styles.css", source: bouncingSpeedStylesSrc, lang: "css" },
+  {
+    name: "bouncing-speed-styles.css",
+    source: bouncingSpeedStylesSrc,
+    lang: "css",
+  },
 ];
 
 const stopwatchSources: SourceFile[] = [
@@ -67,7 +79,11 @@ const stopwatchSources: SourceFile[] = [
 
 const breathingGradientSources: SourceFile[] = [
   { name: "breathing-gradient.rts", source: breathingGradientSrc },
-  { name: "breathing-gradient-styles.css", source: breathingGradientStylesSrc, lang: "css" },
+  {
+    name: "breathing-gradient-styles.css",
+    source: breathingGradientStylesSrc,
+    lang: "css",
+  },
 ];
 
 const liveSearchSources: SourceFile[] = [
@@ -165,13 +181,25 @@ export const CONTENT = {
   "getting-started": DocPage(gettingStartedMd),
   guide: DocPage(guideMd),
   "plain-typescript": DocPage(plainTsMd),
-  todo: AppPage("Todo List", TodoList(), todoSources),
-  snake: AppPage("Snake", SnakeGame(), snakeSources),
-  minesweeper: AppPage("Minesweeper", Minesweeper(), minesweeperSources),
-  "mouse-follower": AppPage("Mouse Follower", MouseFollower(), mouseFollowerSources),
-  "bouncing-logo": AppPage("Bouncing Logo", BouncingLogo(), bouncingLogoSources),
-  "bouncing-speed": AppPage("Speed Slider", BouncingSpeed(), bouncingSpeedSources),
-  stopwatch: AppPage("Stopwatch", Stopwatch(), stopwatchSources),
-  "breathing-gradient": AppPage("Breathing Gradient", BreathingGradient, breathingGradientSources),
-  "live-search": AppPage("Live Search", LiveSearch(), liveSearchSources),
+  todo: AppPage("Todo List", TodoList, todoSources),
+  snake: AppPage("Snake", SnakeGame, snakeSources),
+  minesweeper: AppPage("Minesweeper", Minesweeper, minesweeperSources),
+  "mouse-follower": AppPage(
+    "Mouse Follower",
+    MouseFollower,
+    mouseFollowerSources,
+  ),
+  "bouncing-logo": AppPage("Bouncing Logo", BouncingLogo, bouncingLogoSources),
+  "bouncing-speed": AppPage(
+    "Speed Slider",
+    BouncingSpeed,
+    bouncingSpeedSources,
+  ),
+  stopwatch: AppPage("Stopwatch", Stopwatch, stopwatchSources),
+  "breathing-gradient": AppPage(
+    "Breathing Gradient",
+    BreathingGradient,
+    breathingGradientSources,
+  ),
+  "live-search": AppPage("Live Search", LiveSearch, liveSearchSources),
 } satisfies Record<string, Component>;

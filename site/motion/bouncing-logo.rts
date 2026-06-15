@@ -1,5 +1,4 @@
-import { Div } from 'corrente';
-import { timer } from 'rxjs';
+import { Div, interval } from 'corrente';
 
 import './bouncing-logo-styles.css';
 
@@ -10,7 +9,7 @@ const HEIGHT = 168;
 const bounce = (frame: number, size: number) => size - Math.abs((frame % (2 * size)) - size);
 
 export const BouncingLogo = () => {
-  const frame = timer(0, 16) * 4;
+  const frame = interval(16) * 4;
 
   return Div.class('bounce-screen')(
     Div.class('bounce-badge')

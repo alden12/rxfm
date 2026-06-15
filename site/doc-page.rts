@@ -115,15 +115,27 @@ export const DocPage = (markdown: string): Component => {
   return Div.class("mx-auto max-w-[var(--content-width)]")(children);
 };
 
-/** A page for a full app example: a heading, the live app, and its source (one or many files). */
+/**
+ * A page for a full app example: a heading, the live app, and its source (one or many files).
+ *
+ * `app` is a *factory* (`() => ComponentChild`), not a built component, on purpose: the
+ * content pane tears the page's streams down when you navigate away, so a built instance
+ * would keep its `state` subjects across visits while its derived streams reset - leaving,
+ * say, a running stopwatch that's lost its elapsed time. Passing the component function
+ * lets `children` rebuild a fresh instance on each visit, so leaving and returning resets
+ * the demo cleanly. (The type makes the old `AppPage("X", X(), …)` shape a compile error.)
+ */
 export const AppPage = (
   title: string,
-  app: ComponentChild,
+  app: () => Component,
   source: ExampleSource,
 ): Component =>
   Div.class("mx-auto max-w-[var(--content-width)]")(
     H1.class("mb-4 text-2xl font-bold")`${title}`,
     Div.class("overflow-hidden rounded-lg border border-border")(
+      // Pass the factory itself (not `app()`): `children` invokes a function child on each
+      // subscription, so navigating back to this page rebuilds a fresh instance rather than
+      // re-subscribing the one built at module load (which would keep its state across visits).
       Div.class("demo-result p-4 min-h-15")(app),
       sourceExpander(source, true),
     ),

@@ -1,10 +1,12 @@
 import { Div, Button } from 'corrente';
-import { board, gameStage, gameTime, highScore, dispatch } from './game';
+import { createGame } from './game';
 import { NEIGHBORS_COLOR_MAP, BOARD_HEIGHT, indexToVector } from './constants';
 
 import './minesweeper-styles.css';
 
 export const Minesweeper = () => {
+  const { board, gameStage, gameTime, highScore, dispatch } = createGame();
+
   const cells = board.flatMap(({ color, neighbors, symbol, isUndiscovered, isCleared, hasNeighbors }, index) =>
     Div
       .style({

@@ -1,12 +1,11 @@
-import { Div } from 'corrente';
-import { timer } from 'rxjs';
+import { Div, timer } from 'corrente';
 
 import './breathing-gradient-styles.css';
 
 const tick = timer(0, 50);
 const hue = (tick * 2) % 360;
 
-export const BreathingGradient = Div
+export const BreathingGradient = () => Div
   .class('breathing-gradient')
   .style({ background: `linear-gradient(135deg, hsl(${hue} 85% 55%), hsl(${hue + 60} 85% 60%))` })
   `Reactive by default`;
