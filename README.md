@@ -1,11 +1,11 @@
 # Corrente - A Web Framework Built on RxJS
 
 [![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
-[![NPM](https://img.shields.io/npm/v/corrente)](https://www.npmjs.com/package/corrente)
-[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/corrente?label=gzipped)](https://bundlephobia.com/result?p=corrente@latest)
-[![MIT license](https://img.shields.io/npm/l/corrente)](https://opensource.org/licenses/MIT)
+[![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
+[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
+[![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
-> ⚠️ **Alpha release.** This is the `3.0.0-alpha` line — an in-progress redesign (Vite build, no
+> ⚠️ **Alpha release.** This is the `3.0.0-alpha` line — an in-progress redesign of RxFM renamed to "Corrente" (Vite build, no
 > JSX, a new fluent component API). The API may change between alpha versions. For the current
 > **stable release** and its **JSX/TSX syntax**, see the
 > [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
@@ -32,11 +32,11 @@ I've tried to keep everything as minimal and clean as possible. The result reads
 You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `corrente` (along with its `rxjs` peer dependency) into an existing project using:
 
 ```sh
-npm install corrente rxjs@^7.0.0
+npm install rxfm rxjs@^7.0.0
 ```
 
 ```sh
-yarn add corrente rxjs@^7.0.0
+yarn add rxfm rxjs@^7.0.0
 ```
 If you already have `rxjs` installed, make sure it is using the same version as `corrente`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
 
