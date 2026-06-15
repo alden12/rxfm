@@ -22,9 +22,11 @@ import { BehaviorSubject } from "rxjs";
  *   blank until the first event (and nothing in the types warns you). Naming the
  *   common primitive `State` steers you onto the safe shape.
  *
- * It is a `BehaviorSubject` (subclass, no behavioural change), so every RxJS pattern
- * still applies and it interops with any RxJS code. The subclass - rather than a bare
- * `export { BehaviorSubject as State }` alias - exists so the name surfaces in stack
+ * It is a `BehaviorSubject` subclass, so every RxJS pattern still applies and it
+ * interops with any RxJS code. It adds two things on top: {@link State.update}, and a
+ * single behavioural tweak - re-setting it to its current value (`===`) is a no-op
+ * that doesn't notify (see {@link State.next}). The subclass - rather than a bare
+ * `export { BehaviorSubject as State }` alias - also lets the name surface in stack
  * traces / devtools / error logs as `State`.
  *
  * Note the writable/derived split: a `State<T>` is the writable source; anything you
@@ -55,6 +57,28 @@ export class State<T> extends BehaviorSubject<T> {
    */
   update(updater: (current: T) => T): void {
     this.next(updater(this.value));
+  }
+
+  /**
+   * Emit `value`, unless it's identical (`===`) to the current value - then it's a
+   * no-op. A State models a *value*, so re-setting it to what it already holds
+   * shouldn't notify anyone; subscribers (and the DOM bindings built on them) react
+   * only to genuine changes.
+   *
+   * This is the writable-side equivalent of piping the output through
+   * `distinctUntilChanged()`: because a `BehaviorSubject` multicasts to every
+   * subscriber and replays the latest to late ones, never *storing* a consecutive
+   * duplicate is the same as never *delivering* one. It also matches how derived
+   * values already behave - a lifted `count * 2` is a {@link RenderObservable}, which
+   * is reference-distinct too, so the pipeline dedupes by `===` end to end.
+   *
+   * The comparison is by reference, so mutating an object/array in place and pushing
+   * the same reference won't emit; update immutably (`list.update(l => [...l, x])`),
+   * as the examples do. For a stream that fires on every call regardless, reach for a
+   * plain RxJS `Subject`.
+   */
+  override next(value: T): void {
+    if (value !== this.value) super.next(value);
   }
 }
 
