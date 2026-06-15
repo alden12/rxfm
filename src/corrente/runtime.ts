@@ -8,14 +8,26 @@
 // A single indirection point also lets the underlying observable implementation
 // (RxJS today, possibly a native/RxJS-8 Observable later) change without touching
 // emitted code shape.
-import { EMPTY, Observable, combineLatest, isObservable, of, timer as rxTimer } from "rxjs";
+import {
+  EMPTY,
+  Observable,
+  animationFrames,
+  combineLatest,
+  isObservable,
+  of,
+  timer as rxTimer,
+} from "rxjs";
 import {
   catchError,
   distinctUntilChanged,
+  map,
   scan,
   shareReplay,
   startWith,
   switchMap,
+  takeWhile,
+  tap,
+  withLatestFrom,
 } from "rxjs/operators";
 import { coerceToObservable } from "./utils/utils";
 
@@ -177,6 +189,100 @@ export function timer(
     combineLatest([due$, coerceToObservable(period)]).pipe(
       distinctUntilChanged((a, b) => a[0] === b[0] && a[1] === b[1]),
       switchMap(([d, p]) => (d === null || p === null ? EMPTY : rxTimer(d, p))),
+    ),
+  );
+}
+
+/** Linear (no-op) easing - the default for {@link animate}. */
+const linear = (t: number) => t;
+
+/**
+ * A frame clock: emits the **elapsed milliseconds since subscription**, once per browser
+ * animation frame, and keeps going until you stop listening. It's the `requestAnimationFrame`
+ * sibling of {@link interval}/{@link timer} - a clock, but paced to the display (60Hz, 120Hz,
+ * whatever the screen runs at) and stamped with real elapsed time rather than a fixed period.
+ *
+ * This is the open-ended workhorse: drive a continuous, never-ending animation by mapping
+ * elapsed time to a value (`frames().map(ms => (ms * 0.06) % 360)` spins 60deg/sec forever).
+ * The browser pauses frames in background tabs, so an off-screen animation costs nothing, and
+ * because it's an ordinary stream it stops - cancelling the underlying `requestAnimationFrame` -
+ * when its subscriber goes away (i.e. when the component leaves the view), with no manual
+ * teardown. {@link animate} is this clock plus an easing curve and a stop time.
+ *
+ * @example
+ * const angle = frames().map((ms) => (ms * 0.06) % 360);  // continuous 60deg/sec spin
+ */
+export function frames(): RenderObservable<number> {
+  return render(animationFrames().pipe(map(({ elapsed }) => elapsed)));
+}
+
+/** Options for {@link animate}: how long the tween runs, its easing, and an optional fixed start. */
+export interface AnimateOptions {
+  /**
+   * Tween length in milliseconds. May be a stream (e.g. a `State`), in which case its latest
+   * value is sampled at the start of each tween - so a moving `target` can ease over a different
+   * duration each time (a longer jump taking longer, say). Changing it alone doesn't disturb a
+   * tween already in flight; the new value applies to the next target.
+   */
+  duration: number | Observable<number>;
+  /** Maps linear progress `0..1` to eased progress `0..1`. Defaults to linear. */
+  easing?: (t: number) => number;
+  /**
+   * The value to ease *from*. Omit it (the usual case) and the tween starts from wherever the
+   * value currently is - so a moving `target` retargets smoothly from its current position.
+   * Pin it for a one-shot tween with a known start (`animate(360, { from: 0, duration: 1000 })`).
+   */
+  from?: number;
+}
+
+/**
+ * A value that eases toward a **target** over a duration - the finite tween, and the shape you
+ * usually want for a value bound into the view. Give it a target (a number, or a stream of
+ * targets like a `State`) and it animates from its current position to the latest target,
+ * easing as it goes; set a new target mid-flight and it smoothly retargets. "The wheel eases
+ * toward `target`; clicking moves the target" - the way `useSpring`/`animate` read in React
+ * animation libraries: no clocks, no stop condition, no teardown to think about.
+ *
+ * Built on {@link frames}: a tween is just the frame clock mapped through `easing` between two
+ * endpoints, stopped once `duration` elapses (the final frame emits the exact target, then the
+ * stream completes - so it tears down with the graph, leak-free). It also hides the one piece
+ * imperative syntax can't express: switching to a fresh tween on each target change is a
+ * stream-of-streams switch, the same reason {@link interval}/{@link timer} are helpers.
+ *
+ * @example
+ * const target = new State(0);
+ * const angle = animate(target, { duration: 4000, easing: easeOutCubic }); // chases target
+ * const nudge = () => target.update((a) => a + 360);                       // each call eases a turn
+ * animate(360, { from: 0, duration: 1000 });                              // one-shot 0 -> 360
+ */
+export function animate(
+  target: number | Observable<number>,
+  { duration, easing = linear, from }: AnimateOptions,
+): RenderObservable<number> {
+  // The position we ease the next target FROM. Seeded by `from` when pinned, otherwise tracked
+  // from the last emitted value so a moving target continues from where it currently is. A
+  // closure (one per call, i.e. one per component instance), updated as the tween emits - an
+  // internal detail the caller never sees.
+  let current = from;
+  return render(
+    coerceToObservable(target).pipe(
+      distinctUntilChanged(),
+      // Sample the latest duration at each target change (`withLatestFrom`, not `combineLatest`):
+      // a duration change alone shouldn't restart an in-flight tween, only re-time the next one.
+      withLatestFrom(coerceToObservable(duration)),
+      switchMap(([to, durationMs]) => {
+        const start = current;
+        const tween =
+          start === undefined
+            ? of(to) // nothing to ease from yet: show the first target immediately
+            : frames().pipe(
+                map((elapsed) => Math.min(elapsed / durationMs, 1)),
+                // Inclusive: emit the final `t === 1` (the exact target), then complete.
+                takeWhile((t) => t < 1, true),
+                map((t) => start + (to - start) * easing(t)),
+              );
+        return tween.pipe(tap((value) => (current = value)));
+      }),
     ),
   );
 }
