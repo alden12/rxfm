@@ -36,7 +36,7 @@ State is just RxJS `BehaviorSubject`s declared inside component functions (so in
 
 ## Build & tooling
 
-This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `^20.19 || >=22.12`.
+This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `^22.12 || >=24`.
 
 - **Vite 8** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
@@ -96,4 +96,4 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 - The `corrente` import inside the lib resolves via tsconfig `paths` to `src/corrente/index`; in the demo it resolves via the Vite alias.
 - TS 5's DOM typings dropped some deprecated tags, so a few element creators were removed (`Dir`, `Font`, `Frame`, `Frameset`, `Marquee`, `Param`).
 - Code style: heavy JSDoc on exported functions, functional/observable-pipeline style. Match it when editing.
-- CHANGELOG.md follows Keep a Changelog; bump it on user-facing changes. CI ([.github/workflows/nodejs.yml](.github/workflows/nodejs.yml)) runs build + lint + test on Node 20/22, plus a separate Playwright e2e job, for push/PR to master.
+- CHANGELOG.md follows Keep a Changelog; bump it on user-facing changes. CI ([.github/workflows/nodejs.yml](.github/workflows/nodejs.yml)) runs build + lint + test on Node 22/24, plus a separate Playwright e2e job, for push/PR to master.

@@ -84,6 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **port 3001**.
 
 ### Changed
+- Raised the minimum Node version to `^22.12.0 || >=24.0.0` (was `^20.19.0 || >=22.12.0`). Node 20
+  reached end-of-life in April 2026; CI now runs on Node 22 (maintenance LTS) and 24 (active LTS).
 - The `reactiveTs()` Vite plugin now skips `?raw`/`?url`/`?inline` queries, so a `.rts` file's source can
   be imported as text (used by the doc-site to show each example's real source). Previously the plugin
   compiled even the raw-import variant, returning JS instead of the source.
