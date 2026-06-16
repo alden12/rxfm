@@ -12,8 +12,13 @@ export function reactiveTs(): Plugin {
     name: 'vite-plugin-reactive-ts',
     enforce: 'pre', // run before Vite's own TS handling
     transform(code: string, id: string) {
-      const file = id.split('?')[0]; // strip Vite's query suffix (?v=, ?import, …)
+      const [file, query = ''] = id.split('?'); // strip Vite's query suffix (?v=, ?import, …)
       if (!file.endsWith('.rts')) return null;
+      // `?raw`/`?url`/`?inline` imports are handled by Vite core (it returns the file
+      // as a string / URL); by then `code` is the JS wrapper, not `.rts` source, so
+      // skip them — this is what lets the demo import a `.rts` example's own source to
+      // display next to its live output.
+      if (/(^|&)(raw|url|inline)(&|$)/.test(query)) return null;
       const { code: tsCode } = transformWithMappings(ts, code, dirname(file));
       // Strip TS types → JS, preserving ESM imports for Vite to resolve.
       // (Sourcemap maps JS→generated-TS; mapping back to original .rts is a

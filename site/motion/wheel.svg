@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <style>
+    path { stroke: #0b0f1a; stroke-width: 1; }
+    text { font: 700 13px sans-serif; fill: #0b0f1a; text-anchor: middle; dominant-baseline: middle; }
+    circle { fill: #0b0f1a; }
+  </style>
+  <path fill="#ef4444" d="M 100 100 L 64.79 15.00 A 92 92 0 0 1 135.21 15.00 Z" />
+  <path fill="#f97316" d="M 100 100 L 135.21 15.00 A 92 92 0 0 1 185.00 64.79 Z" />
+  <path fill="#eab308" d="M 100 100 L 185.00 64.79 A 92 92 0 0 1 185.00 135.21 Z" />
+  <path fill="#22c55e" d="M 100 100 L 185.00 135.21 A 92 92 0 0 1 135.21 185.00 Z" />
+  <path fill="#06b6d4" d="M 100 100 L 135.21 185.00 A 92 92 0 0 1 64.79 185.00 Z" />
+  <path fill="#3b82f6" d="M 100 100 L 64.79 185.00 A 92 92 0 0 1 15.00 135.21 Z" />
+  <path fill="#8b5cf6" d="M 100 100 L 15.00 135.21 A 92 92 0 0 1 15.00 64.79 Z" />
+  <path fill="#ec4899" d="M 100 100 L 15.00 64.79 A 92 92 0 0 1 64.79 15.00 Z" />
+  <text x="100" y="38">100</text>
+  <text x="144" y="56">200</text>
+  <text x="162" y="100">300</text>
+  <text x="144" y="144">400</text>
+  <text x="100" y="162">500</text>
+  <text x="56" y="144">600</text>
+  <text x="38" y="100">700</text>
+  <text x="56" y="56">800</text>
+  <circle cx="100" cy="100" r="15" />
+</svg>

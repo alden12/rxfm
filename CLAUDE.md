@@ -11,9 +11,11 @@ An experimental web framework built on RxJS. The core idea: **a component is jus
 
 ## Layout
 
-- [src/corrente/](src/corrente/) — the framework itself (what gets published).
+- [src/corrente/](src/corrente/) — the framework itself (what gets published). `src/` now holds only `lib/`.
 - [src/index.ts](src/index.ts) — package entry, re-exports `src/corrente` (named exports only, no default).
-- [src/app/](src/app/) — example/demo app (NOT published; see `files: ["dist"]` in package.json). Basic examples mirror the README; advanced examples are a todo list, snake game, and minesweeper. Entry is [src/app/index.ts](src/app/index.ts), loaded by the root [index.html](index.html).
+- [site/](site/) — the doc-site / demo app (NOT published; see `files: ["dist"]` in package.json). As of the Reactive-TS-default switch the demo is authored in **Reactive TS** (`.rts`): basic examples mirror the guide; advanced examples are a todo list, snake game, and minesweeper. The demo is a **doc-site**: a sidebar-nav shell ([site/app.rts](site/app.rts)) switches a content pane between the rendered markdown docs (README + `docs/*`) and the full app examples, driven by a `BehaviorSubject<routeId>` and a `CONTENT[selected]` lookup ([site/content.ts](site/content.ts)). Markdown is rendered with `marked` + `highlight.js` ([site/markdown.ts](site/markdown.ts)); fences annotated `demo=<id>` (inert on GitHub) get the matching **live demo** spliced in beneath the code via [site/doc-page.rts](site/doc-page.rts) (it splits the rendered HTML at markers and interleaves real Corrente children, so demo streams tear down on route change — not a manual `addToView`; `.rts` because the multi-file source-tab viewer holds its active-tab index reactively — `selected === i` lifts to the styling/visibility toggles). The `demo=<id>` → component/source map is [site/demos.ts](site/demos.ts), pulling each example's real source via `?raw`. Styling is a **dark Tailwind v4 theme** (utilities + `@tailwindcss/typography` `prose`, github-dark hljs); colours and sizing are centralized as CSS-variable design tokens — `@theme` colour tokens generate `bg-surface`/`text-muted`/`text-primary`/`border-border`/… utilities, plus `--sidebar-width`/`--content-width` in `:root` — in [site/app-styles.css](site/app-styles.css), so the shell re-themes from one place; per-example CSS stays per-example. Entry is the thin [site/main.ts](site/main.ts) (`addToView(App)`), loaded by the root [index.html](index.html); [site/runtime.ts](site/runtime.ts) re-exports [reactive-ts/runtime.ts](reactive-ts/runtime.ts) so the tree (a sibling of `reactive-ts/`) resolves the runtime; [site/tsconfig.json](site/tsconfig.json) governs `.rts` editor types and [site/vite-env.d.ts](site/vite-env.d.ts) declares `*?raw`.
+- [site/plain-typescript/](site/plain-typescript/) — the previous plain-RxJS demo, demoted to a reference (not wired to a build). Mirrors the [plain-TypeScript docs](docs/plain-typescript.md).
+- [docs/](docs/) — `getting-started.md`, `guide.md` (Reactive TS walkthrough), `plain-typescript.md` (plain reference). The root [README.md](README.md) is a lean landing page linking into them. (Slated to move to the github.io site later.)
 
 ### Library internals (`src/corrente/`)
 
@@ -34,12 +36,30 @@ State is just RxJS `BehaviorSubject`s declared inside component functions (so in
 
 ## Build & tooling
 
-This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `^20.19 || >=22.12`.
+This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `^22.12 || >=24`.
 
 - **Vite 8** builds both the library and the demo (replaced webpack in v3.0.0). Two configs:
   [vite.lib.config.ts](vite.lib.config.ts) (library) and [vite.config.ts](vite.config.ts) (demo).
-- `yarn dev` — Vite dev server (port 3000) serving the demo from `src/app`. The demo's `corrente`
-  import is aliased to live lib source (`src/corrente/index.ts`).
+  The demo config loads the `reactiveTs()` Vite plugin ([reactive-ts/vite-plugin-reactive-ts.ts](reactive-ts/vite-plugin-reactive-ts.ts))
+  so it can compile the `.rts` examples, and adds `.rts` to `resolve.extensions` for bare
+  cross-file imports; it also loads `@tailwindcss/vite`. The reactiveTs plugin skips `?raw`/`?url`/`?inline`
+  queries so the doc-site can import a `.rts` example's own source as text. The plugin `require`s the **compiled** `reactive-ts/ts-plugin/transform.cjs`, so
+  `dev`/`build:app` run `build:reactive-ts` first (`predev`/`prebuild:app` hooks) to regenerate it from the
+  `.cts` sources (the `.cjs` are gitignored build artifacts — see [Library internals] / the Reactive TS
+  TypeScript build below).
+  - **`dev`/`build:app` also run `yarn build` (the library) first**, via the same `predev`/`prebuild:app`
+    hooks. This is load-bearing, not just tidiness: the Reactive TS transform's **type inference resolves
+    a bare `corrente` import to the published `dist/`** (the package `exports` map, via plain node
+    resolution — it deliberately uses no tsconfig `paths` so it works the same in the bundled editor
+    extension). So a runtime export that's newer in `src/corrente/runtime.ts` than in `dist/` is invisible
+    to the transform: a new helper's stream parameter is read as a plain value and silently lifted into a
+    stream-of-streams (`Observable<Observable<…>>`) instead of passed through. Keeping `dist` fresh before
+    every `.rts` compile avoids that. (Resolving the transform to `src` instead is **not** a fix — it would
+    activate the `declare module "rxjs"` augmentation in `observable-operators.ts`, which breaks the
+    `obsArray.map(cb)` → array-map lifting. The editor resolves to `src` and so already has this latent
+    issue; after changing a runtime export's *signature*, run `yarn build` once so the editor picks it up.)
+- `yarn dev` — Vite dev server (port 3001) serving the Reactive TS demo from `site/` (entry
+  `site/main.ts`). The demo's `corrente` import is aliased to live lib source (`src/corrente/index.ts`).
 - `yarn build` — builds the **library** to `dist/` → `index.mjs` (ESM), `index.cjs` (CJS), and the
   declaration tree (`index.d.ts` + `corrente/**.d.ts`) via `vite-plugin-dts`. `rxjs` is externalised
   (`external: [/^rxjs/]`), not bundled. This is what npm publishes (`files: ["dist"]`).
@@ -76,4 +96,4 @@ This repo uses **Yarn (Classic, v1)** — run `yarn`, not `npm`. Requires Node `
 - The `corrente` import inside the lib resolves via tsconfig `paths` to `src/corrente/index`; in the demo it resolves via the Vite alias.
 - TS 5's DOM typings dropped some deprecated tags, so a few element creators were removed (`Dir`, `Font`, `Frame`, `Frameset`, `Marquee`, `Param`).
 - Code style: heavy JSDoc on exported functions, functional/observable-pipeline style. Match it when editing.
-- CHANGELOG.md follows Keep a Changelog; bump it on user-facing changes. CI ([.github/workflows/nodejs.yml](.github/workflows/nodejs.yml)) runs build + lint + test on Node 20/22, plus a separate Playwright e2e job, for push/PR to master.
+- CHANGELOG.md follows Keep a Changelog; bump it on user-facing changes. CI ([.github/workflows/nodejs.yml](.github/workflows/nodejs.yml)) runs build + lint + test on Node 22/24, plus a separate Playwright e2e job, for push/PR to master.

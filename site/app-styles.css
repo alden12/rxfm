@@ -1,0 +1,112 @@
+/* Doc-site styling. Tailwind v4 drives the shell chrome (utilities live in app.rts /
+   doc-page.ts) and the `@tailwindcss/typography` `prose` class styles the rendered
+   markdown. Only two things stay as hand-written CSS: the dark full-height layout reset,
+   and the highlight.js code-block frame — code blocks carry `not-prose` so `prose` leaves
+   them alone and highlight.js (github-dark theme, imported in markdown.ts) owns token colors.
+   The example components keep their own per-example stylesheets. */
+@import "tailwindcss";
+@plugin '@tailwindcss/typography';
+
+/* Tailwind v4 auto-detects sources, but `.rts` is non-standard — scan it (and `.ts`)
+   explicitly so utility classes written in the shell components are generated. */
+@source './**/*.{rts,ts}';
+
+/* Semantic design tokens — retheme the whole doc-site by editing these in one place.
+   Colour tokens live in `@theme` so Tailwind generates matching utilities
+   (`bg-surface`, `text-muted`, `border-border`, `text-primary`, …); sizing tokens are
+   plain custom properties consumed via arbitrary values (`w-[var(--sidebar-width)]`). */
+@theme {
+  --color-background: #030712; /* page background */
+  --color-surface: #021122; /* sidebar, panel headers */
+  --color-elevated: #1f2937; /* hover / active surfaces */
+  --color-border: #1f2937; /* hairline borders */
+  --color-foreground: #e5e7eb; /* primary text */
+  --color-muted: #9ca3af; /* secondary / label text */
+  --color-primary: #e3c2ff; /* brand accent — more saturated moon violet from the logo */
+  --color-primary-strong: #dcc6ef; /* active accent text — a lighter tint of the moon */
+  --color-danger-surface: #450a0a; /* error-panel background */
+  --color-danger: #fca5a5; /* error-panel text */
+  --color-code: #0d1117; /* code-block frame (matches github-dark) */
+
+  /* Base UI font — Google Sans Flex, self-hosted via Fontsource (imported in main.ts);
+     the variable build registers the family as "Google Sans Flex Variable". Body weight is
+     set extra-light below, while `font-medium`/`font-semibold`/`font-bold` utilities still
+     pick the heavier cuts. (Code blocks keep their own monospace stack.) */
+  --font-sans: "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --sidebar-width: 248px; /* sidebar column */
+  --content-width: 820px; /* doc / content max width */
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-weight: 200; /* Google Sans Flex ExtraLight as the base weight */
+}
+
+/* Highlighted code blocks (teaching snippets in the docs + the "view full source"
+   expander). `not-prose` in the markup opts these out of typography styling. */
+.code-block {
+  margin: 0;
+  padding: 16px;
+  background: var(--color-code);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.code-block code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Markdown badge rows. shields.io badges are linked images (`[![alt](img)](href)`);
+   `prose` styles every `img` as a block with vertical margin, which stacks them. GitHub
+   renders `img` inline, so keep *linked* images inline to match — bare content images
+   (e.g. the centered README logo) stay block. */
+.prose a img {
+  display: inline-block;
+  margin: 0 0.25rem 0 0;
+  vertical-align: middle;
+}
+
+/* Rendered doc titles. `prose` defaults H1 to extrabold; lighten it to Google Sans Flex Light
+   to match the airy body weight. */
+.prose h1 {
+  font-weight: 400;
+}
+
+/* `prose` wraps inline `<code>` with literal backtick characters via ::before/::after
+   (to echo markdown source). Drop them — our inline code is already visually distinct. */
+.prose code::before,
+.prose code::after {
+  content: none;
+}
+
+/* Inline code — a subtle highlight and border so snippets stand out in prose. Scoped to
+   inline only (block code lives in `pre.code-block`, which highlight.js owns). */
+.prose :not(pre) > code {
+  background: #ffffff24;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* Section rules — a hairline under h1/h2 to separate major sections (GitHub-style). */
+.prose h1,
+.prose h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--color-border);
+}

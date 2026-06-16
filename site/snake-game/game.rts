@@ -1,0 +1,23 @@
+import { State, timer } from 'corrente';
+import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
+import { TICK_MS } from './constants';
+import { Difficulty, Direction } from './types';
+
+// A factory, not module-level singletons: each call builds a fresh, independent game so that
+// remounting (e.g. leaving and returning to the example) starts over rather than resuming shared state.
+export const createGame = () => {
+  const difficulty = new State<Difficulty>('Easy');
+  const direction = new State<Direction>('right');
+
+  const tick = timer(0, TICK_MS);
+
+  const { trail, food, score } = tick.scan(
+    (snake, i) => getNewSnakeState(snake, direction.value, difficulty.value, i) ?? getInitialSnakeState(),
+    getInitialSnakeState(),
+  );
+
+  const board = getBoard(trail.coordinates, food);
+  const highScore = score.scan((highest, s) => Math.max(highest, s), 0);
+
+  return { board, score, highScore, difficulty, direction };
+};

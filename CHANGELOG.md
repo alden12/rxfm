@@ -14,7 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (no behavioural change, full RxJS interop); the class name is pinned so it surfaces as `State` in
   stack traces, devtools, and error logs. Adds one method, `update(current => next)`, sugar for
   `next(value-derived-from-current)` (`count.update(c => c + 1)`) so the common read-then-write no
-  longer repeats the variable three times.
+  longer repeats the variable three times. Its `next` also de-duplicates by reference (`===`):
+  re-emitting the value it already holds is a no-op, so a `State` wired to the DOM doesn't trigger
+  redundant updates when a write doesn't actually change anything (the same distinct-by-reference
+  behaviour the Reactive TS `render` boundary gives derived streams).
 - Fluent operator methods on `Observable`, mirroring the [WICG Observable proposal](https://github.com/WICG/observable):
   `map`, `filter`, `take`, `drop`, `takeUntil`, `catch`, `finally`, `flatMap`, plus `scan` (running
   fold) and `debounce`/`throttle`. `source.map(...).filter(...)` now reads as a chain alongside
@@ -22,6 +25,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   future native/RxJS method takes precedence). The proposal's terminal, Promise-returning operators
   (`reduce`, `toArray`, `some`, `every`, `find`, `forEach`) are intentionally omitted: they fire on
   completion, and Corrente streams never complete, so the Promise would never resolve.
+- Static arrays of children may now be passed directly to a component, without spreading:
+  `Div(items.map(Item))` (and nested arrays) work the same as `Div(...items.map(Item))`. Arrays may
+  be mixed with other children and used inside tagged templates (`` Div`${items.map(Item)}` ``).
+  Previously a non-template array threw, and an array interpolated into a template was rendered as
+  text. `ComponentChild` now includes `ComponentChild[]`. (For a list whose membership changes over
+  time, keep emitting an `ElementType[]` from an observable — see `mapToComponents`.)
+- The Reactive TS runtime now ships with the package and is exported from the root: `render`,
+  `RenderObservable`, `accumulate`, `interval`, `timer`, `frames`, `animate`, and `EMPTY` are
+  importable via `import { accumulate, interval } from 'corrente'`. These are useful with plain
+  corrente too: a shared/replaying derived value (`render`/`RenderObservable`), a running fold
+  (`accumulate`), reactive clocks (`interval`/`timer`/`frames`), and a tween (`animate`). The
+  Reactive TS transform still injects `render` from a local `runtime.ts`, which can now be a one-line
+  `export * from 'corrente'`.
+- `frames()` and `animate(target, { duration, easing?, from? })` animation helpers, driven by the
+  browser's animation frames. `frames()` is the `requestAnimationFrame` sibling of `interval`/`timer`:
+  it emits the elapsed milliseconds since subscription, once per display frame, and runs until you stop
+  listening - the open-ended workhorse for continuous motion (`frames().map(ms => (ms * 0.06) % 360)`
+  spins forever). `animate` is that clock plus an easing curve and a stop time: it eases a value to a
+  `target` (a number or a stream of targets, e.g. a `State`) over `duration`, from its current position
+  so a moving target retargets smoothly mid-flight (the `useSpring`/`animate` shape), then **completes**
+  on the final frame. Pin `from` for a one-shot `animate(360, { from: 0, duration: 1000 })`. Being
+  frame-driven (not a fixed `timer`) progress is read from real elapsed time, so the duration is correct
+  at any refresh rate; both pause in background tabs; and both cancel their `requestAnimationFrame` on
+  teardown with the rest of the graph - no leak, no stop condition to write. `animate` hides the
+  per-target stream-of-streams switch the same way `interval`/`timer` hide the reactive-period switch.
+- `interval(period)` and `timer(due, period?)` clock helpers, keeping RxJS's shapes but with
+  **liftable inputs**. `interval` fires after each `period` (the first tick is delayed); `timer`
+  fires after `due` then every `period`, so `timer(0, p)` is the immediate-start companion to
+  `interval(p)`'s delayed start, and `timer(due)` (no period) is a one-shot. Any argument may be a
+  `number` or an `Observable<number | null>`: when it's a stream the clock rebuilds at the new
+  timing whenever it changes (a difficulty-driven game speed Just Works), and resolving to `null`
+  turns the clock off (`EMPTY`), so the filter idiom `running ? rate : null` gates it. That
+  restart-on-change is a stream-of-streams switch, the one shape lifting fundamentally can't
+  express, so it lives here as a named helper rather than an inline `switchMap`.
 - `fallback(source, handler)` runtime helper (with the `RETRY` sentinel) — stream error handling that
   reads like a `try/catch` body, folding `catchError` *and* `retry` into one. When `source` errors,
   `handler` runs with `(error, attempt)` and its **return value** decides what happens, the way a `catch`
@@ -34,13 +71,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `try { obs }` reads as "if evaluating `obs` throws now," but an observable errors *later* on
   subscription, so `try/catch` would mislead — `fallback` keeps handling honestly at the stream level.
 
+- **The demo example app is now a live doc-site.** A sidebar-nav shell (authored in Reactive TS,
+  `site/app.rts`) renders the README and `docs/*` markdown with **live, runnable demos spliced in**:
+  a code fence annotated `` ```ts demo=<id> `` stays an ordinary code block on GitHub but, in the app,
+  mounts the matching example component beneath the snippet (code and result shown together), with a
+  "view full source" expander pulling the example's real `.rts` via Vite `?raw`. Built with `marked` +
+  `highlight.js` and styled with a **dark** Tailwind v4 theme (`@tailwindcss/typography` `prose` for the
+  rendered markdown, github-dark for code) whose colours and sizing are centralized as CSS-variable design
+  tokens (`@theme` + `:root` in `site/app-styles.css`) so the whole site can be re-themed in one place. The
+  example components and the docs they illustrate stay in sync because the running demo *is* the real
+  example. The demo folder is `site/` (it's a doc-site, not just examples). `yarn dev` now serves on
+  **port 3001**.
+
 ### Changed
+- Raised the minimum Node version to `^22.12.0 || >=24.0.0` (was `^20.19.0 || >=22.12.0`). Node 20
+  reached end-of-life in April 2026; CI now runs on Node 22 (maintenance LTS) and 24 (active LTS).
+- The `reactiveTs()` Vite plugin now skips `?raw`/`?url`/`?inline` queries, so a `.rts` file's source can
+  be imported as text (used by the doc-site to show each example's real source). Previously the plugin
+  compiled even the raw-import variant, returning JS instead of the source.
+- Docs and examples now mount the app root with `addToView(App)` rather than a raw
+  `App.subscribe(el => document.body.appendChild(el))`. `addToView` is the safe spelling of that
+  single root subscription — it swaps the element if the root component ever re-emits (which a bare
+  `appendChild` would duplicate) and returns a teardown function.
+- **Docs & examples restructured around Reactive TS as the default style.** The README is now a lean
+  landing page; the full docs live in `docs/` (`getting-started.md`, `guide.md` for the Reactive TS
+  walkthrough, `plain-typescript.md` for the plain-RxJS reference). The demo example app moved to a
+  top-level `site/` directory and is now authored in Reactive TS (`.rts`) — `yarn dev` /
+  `yarn build:app` compile it via the Reactive TS Vite plugin. The previous plain-TypeScript demo is
+  preserved as a reference at `site/plain-typescript/`. No library/runtime code changed.
 - **Renamed the framework `rxfm` → `corrente`.** The published package is now `corrente`
   (`import { Div } from 'corrente'`); the source moved to `src/corrente/` and the redundant `src/lib/`
   layer was dropped, so the package entry is now `src/index.ts`; the Vite alias / tsconfig path and the
   library declaration tree (`dist/corrente/**`) follow suit; and the Reactive TS transform now emits its
   component imports (`mapToComponents`, …) from `corrente`. The GitHub repo and github.io demo URLs are
   intentionally left as `rxfm` for now (the repository itself isn't renamed yet).
+
+### Fixed
+- Reactive TS now guards a lifted ternary's condition with `distinctUntilChanged` before the
+  `switchMap`, so `cond ? a : b` only switches branches when the condition actually flips rather
+  than re-subscribing on every upstream emission. This keeps a gated clock such as
+  `interval(running ? 100 : null)` from being torn down and rebuilt while `running` stays the same,
+  which previously dropped or restarted ticks.
 
 ### Removed
 - Removed the `flatten` utility (one-level array flatten). It predated `Array.prototype.flat` and
