@@ -92,13 +92,16 @@ test("minesweeper example renders its board", async ({ page }) => {
   await expect(page.locator(".minesweeper-board")).toBeVisible();
 });
 
-test("view full source expander reveals the real example source", async ({
+test("full-app example pages show the real source, auto-expanded", async ({
   page,
 }) => {
+  // Full-app example pages (AppPage) render the source expander already open — the source
+  // is the point on those pages — so the real example code is visible without a click.
   await nav(page, "Snake").click();
   const details = page.locator("details", { hasText: "View full source" });
-  await expect(details.locator(".code-block")).toBeHidden();
-  await details.getByText("View full source").click();
-  await expect(details.locator(".code-block")).toBeVisible();
-  await expect(details.locator(".code-block")).toContainText("SnakeGame");
+  await expect(details).toHaveAttribute("open", "");
+  // Snake is a multi-file example, so the expander shows several source tabs; the active
+  // one is visible and holds the real example code.
+  await expect(details.locator(".code-block").first()).toBeVisible();
+  await expect(details).toContainText("SnakeGame");
 });
