@@ -62,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
+    "@fontsource-variable/google-sans-flex": "^5.2.3",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.0",

@@ -406,6 +406,11 @@
     "@eslint/core" "^1.2.1"
     levn "^0.4.1"
 
+"@fontsource-variable/google-sans-flex@^5.2.3":
+  version "5.2.3"
+  resolved "https://registry.yarnpkg.com/@fontsource-variable/google-sans-flex/-/google-sans-flex-5.2.3.tgz#58056de40adde095dbd3ed85621fa380d41a2afd"
+  integrity sha512-g5z9WANJW56gZTWJvu7mIHOiHJaffkk/dhOKqEiK4Nxnsk8lnGnijvGt4vF4KD2KWzscXBOB9XR2sfvTPSi5hA==
+
 "@humanfs/core@^0.19.2":
   version "0.19.2"
   resolved "https://registry.yarnpkg.com/@humanfs/core/-/core-0.19.2.tgz#a8272ca03b2acf492670222b2320b6c421bfde60"

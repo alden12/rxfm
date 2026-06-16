@@ -28,10 +28,11 @@
   --color-danger: #fca5a5; /* error-panel text */
   --color-code: #0d1117; /* code-block frame (matches github-dark) */
 
-  /* Base UI font — Google+Sans+Flex (loaded in index.html); body weight is set extra-light
-     below, while `font-medium`/`font-semibold`/`font-bold` utilities still pick the
-     heavier cuts. (Code blocks keep their own monospace stack.) */
-  --font-sans: "Google Sans Flex", ui-sans-serif, system-ui, sans-serif;
+  /* Base UI font — Google Sans Flex, self-hosted via Fontsource (imported in main.ts);
+     the variable build registers the family as "Google Sans Flex Variable". Body weight is
+     set extra-light below, while `font-medium`/`font-semibold`/`font-bold` utilities still
+     pick the heavier cuts. (Code blocks keep their own monospace stack.) */
+  --font-sans: "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
