@@ -56,16 +56,21 @@ const demoMarker = (id: string): string => `<!--corrente-demo:${id}-->`;
 /** Matches {@link demoMarker} output; `g`-less so it works as a split delimiter capture. */
 export const DEMO_MARKER = /<!--corrente-demo:([\w-]+)-->/;
 
-const marked = new Marked({
-  renderer: {
-    code({ text, lang }) {
-      const [language = '', ...annotations] = (lang ?? '').trim().split(/\s+/);
-      const demo = annotations.join(' ').match(/demo=([\w-]+)/);
-      const pre = `<pre class="hljs code-block not-prose"><code>${highlight(text, language)}</code></pre>`;
-      return demo ? pre + demoMarker(demo[1]) : pre;
-    },
+// `dropDemoFences` omits the rendered code block for a `demo=<id>` fence, emitting only the
+// splice marker. The Overview uses it: there each spliced demo shows its real source expanded,
+// so the rendered fence would just duplicate it. Other pages keep the fence as visible code.
+const demoRenderer = (dropDemoFences: boolean) => ({
+  code({ text, lang }: { text: string; lang?: string }) {
+    const [language = '', ...annotations] = (lang ?? '').trim().split(/\s+/);
+    const demo = annotations.join(' ').match(/demo=([\w-]+)/);
+    const pre = `<pre class="hljs code-block not-prose"><code>${highlight(text, language)}</code></pre>`;
+    if (!demo) return pre;
+    return (dropDemoFences ? '' : pre) + demoMarker(demo[1]);
   },
 });
+
+const marked = new Marked({ renderer: demoRenderer(false) });
+const markedDroppingFences = new Marked({ renderer: demoRenderer(true) });
 
 /**
  * Wrap a raw HTML string as a one-shot Corrente component. `defer` so each subscription
@@ -79,9 +84,13 @@ export const rawHtml = (html: string, className?: string): Observable<HTMLElemen
     return of(element);
   });
 
-/** Render markdown to an HTML string (with {@link DEMO_MARKER}s for `demo=` fences). */
-export const renderMarkdownHtml = (markdown: string): string =>
-  marked.parse(markdown, { async: false }) as string;
+/**
+ * Render markdown to an HTML string (with {@link DEMO_MARKER}s for `demo=` fences).
+ * `dropDemoFences` omits each demo fence's rendered code block (the Overview, where the
+ * spliced demo already shows its source expanded); other pages keep the fence visible.
+ */
+export const renderMarkdownHtml = (markdown: string, dropDemoFences = false): string =>
+  (dropDemoFences ? markedDroppingFences : marked).parse(markdown, { async: false }) as string;
 
 /** Render highlighted source code (defaults to TypeScript, which covers `.rts`). */
 export const codeBlock = (source: string, lang = 'typescript'): Observable<HTMLElement> =>

@@ -29,7 +29,7 @@ import { MouseFollower } from "./motion/mouse-follower.rts";
 import { BouncingLogo } from "./motion/bouncing-logo.rts";
 import { BouncingSpeed } from "./motion/bouncing-speed/bouncing-speed.rts";
 import { Stopwatch } from "./motion/stopwatch.rts";
-import { BreathingGradient } from "./motion/breathing-gradient.rts";
+import { ReactiveGradient } from "./motion/reactive-gradient.rts";
 import { Spinner } from "./motion/spinner.rts";
 import { LiveSearch } from "./motion/live-search.rts";
 
@@ -41,8 +41,8 @@ import bouncingSpeedSrc from "./motion/bouncing-speed/bouncing-speed.rts?raw";
 import bouncingSpeedStylesSrc from "./motion/bouncing-speed/bouncing-speed-styles.css?raw";
 import stopwatchSrc from "./motion/stopwatch.rts?raw";
 import stopwatchStylesSrc from "./motion/stopwatch-styles.css?raw";
-import breathingGradientSrc from "./motion/breathing-gradient.rts?raw";
-import breathingGradientStylesSrc from "./motion/breathing-gradient-styles.css?raw";
+import reactiveGradientSrc from "./motion/reactive-gradient.rts?raw";
+import reactiveGradientStylesSrc from "./motion/reactive-gradient-styles.css?raw";
 import spinnerSrc from "./motion/spinner.rts?raw";
 import spinnerWheelSrc from "./motion/wheel.svg?raw";
 import spinnerStylesSrc from "./motion/spinner-styles.css?raw";
@@ -81,11 +81,11 @@ const stopwatchSources: SourceFile[] = [
   { name: "stopwatch-styles.css", source: stopwatchStylesSrc, lang: "css" },
 ];
 
-const breathingGradientSources: SourceFile[] = [
-  { name: "breathing-gradient.rts", source: breathingGradientSrc },
+const reactiveGradientSources: SourceFile[] = [
+  { name: "reactive-gradient.rts", source: reactiveGradientSrc },
   {
-    name: "breathing-gradient-styles.css",
-    source: breathingGradientStylesSrc,
+    name: "reactive-gradient-styles.css",
+    source: reactiveGradientStylesSrc,
     lang: "css",
   },
 ];
@@ -178,7 +178,7 @@ export const NAV: NavGroup[] = [
       { id: "bouncing-logo", title: "Bouncing Logo" },
       { id: "bouncing-speed", title: "Speed Slider" },
       { id: "stopwatch", title: "Stopwatch" },
-      { id: "breathing-gradient", title: "Breathing Gradient" },
+      { id: "reactive-gradient", title: "Reactive Gradient" },
       { id: "spinner", title: "Spin the Wheel" },
       { id: "live-search", title: "Live Search" },
     ],
@@ -188,7 +188,7 @@ export const NAV: NavGroup[] = [
 export const DEFAULT_ROUTE = "overview";
 
 export const CONTENT = {
-  overview: DocPage(overviewWithLogo),
+  overview: DocPage(overviewWithLogo, true),
   "getting-started": DocPage(gettingStartedMd),
   guide: DocPage(guideMd),
   "plain-typescript": DocPage(plainTsMd),
@@ -207,10 +207,10 @@ export const CONTENT = {
     bouncingSpeedSources,
   ),
   stopwatch: AppPage("Stopwatch", Stopwatch, stopwatchSources),
-  "breathing-gradient": AppPage(
-    "Breathing Gradient",
-    BreathingGradient,
-    breathingGradientSources,
+  "reactive-gradient": AppPage(
+    "Reactive Gradient",
+    ReactiveGradient,
+    reactiveGradientSources,
   ),
   spinner: AppPage("Spin the Wheel", Spinner, spinnerSources),
   "live-search": AppPage("Live Search", LiveSearch, liveSearchSources),

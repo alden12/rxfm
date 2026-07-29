@@ -82,7 +82,9 @@ const sourceExpander = (source: ExampleSource, open = false): ComponentChild =>
     sourceTabs(toFiles(source)),
   );
 
-const DemoPanel = (id: string): ComponentChild => {
+// `open` renders each demo's source expander expanded from the start — the Overview passes
+// it so its examples read like the README (code visible), while other doc pages stay collapsed.
+const DemoPanel = (id: string, open = false): ComponentChild => {
   const demo = DEMOS[id];
   if (!demo) {
     return rawHtml(
@@ -94,23 +96,25 @@ const DemoPanel = (id: string): ComponentChild => {
       "border-b border-border bg-surface px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-muted",
     )`Result`,
     Div.class("demo-result p-4 min-h-15")(demo.component),
-    demo.source ? sourceExpander(demo.source) : null,
+    demo.source ? sourceExpander(demo.source, open) : null,
   );
 };
 
 /**
  * Render a markdown string to a doc component, splicing the live demo for each
- * `demo=<id>` fence in just after its code block.
+ * `demo=<id>` fence in just after its code block. `demosOpen` expands each spliced
+ * demo's source by default (the Overview uses it; other pages keep sources collapsed).
  */
-export const DocPage = (markdown: string): Component => {
+export const DocPage = (markdown: string, demosOpen = false): Component => {
   // `split` with the single-capture marker regex yields [html, id, html, id, …]:
-  // even indices are HTML runs (complete block elements — markers sit after a <pre>),
-  // odd indices are demo ids.
-  const parts = renderMarkdownHtml(markdown).split(DEMO_MARKER);
+  // even indices are HTML runs (complete block elements — markers sit after a <pre>,
+  // or replace it entirely when `demosOpen` drops the now-redundant fence), odd indices
+  // are demo ids.
+  const parts = renderMarkdownHtml(markdown, demosOpen).split(DEMO_MARKER);
   const children = parts.map((part, i) =>
     i % 2 === 0
       ? rawHtml(part, "prose prose-invert max-w-none")
-      : DemoPanel(part),
+      : DemoPanel(part, demosOpen),
   );
   return Div.class("mx-auto max-w-[var(--content-width)]")(children);
 };

@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Previously a non-template array threw, and an array interpolated into a template was rendered as
   text. `ComponentChild` now includes `ComponentChild[]`. (For a list whose membership changes over
   time, keep emitting an `ElementType[]` from an observable — see `mapToComponents`.)
+- `style`/`styles` now accept CSS custom properties (`--foo`): `style({ '--hue': hue })` sets a CSS
+  variable via `setProperty`, so a reactive value can drive anything a variable feeds - e.g. a
+  registered `@property` that a `transition` then eases (a gradient string can't transition, but the
+  number behind it can). Previously a `--`-prefixed key was untyped and silently dropped (it was
+  assigned as a plain `element.style` property, which the DOM ignores).
 - The Reactive TS runtime now ships with the package and is exported from the root: `render`,
   `RenderObservable`, `accumulate`, `interval`, `timer`, `frames`, `animate`, and `EMPTY` are
   importable via `import { accumulate, interval } from 'corrente'`. These are useful with plain
@@ -99,6 +104,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   top-level `site/` directory and is now authored in Reactive TS (`.rts`) — `yarn dev` /
   `yarn build:app` compile it via the Reactive TS Vite plugin. The previous plain-TypeScript demo is
   preserved as a reference at `site/plain-typescript/`. No library/runtime code changed.
+- **Reworked the Overview (README) as the landing pitch.** It now builds up to a mouse-driven reactive
+  gradient (cursor position into a `State`, a derived `hue`, no animation loop) before the click
+  counter, the two example snippets match their real `site/` sources (so the spliced live demo and its
+  source agree), and the prose was softened to keep RxJS in the background (the engine, not the
+  vocabulary). The Overview's spliced demos now show their source expanded by default; other doc pages
+  keep it collapsed. The former `frames()`-driven Breathing Gradient is replaced by this mouse-driven
+  Reactive Gradient (Motion section + `motion/reactive-gradient.rts`).
 - **Renamed the framework `rxfm` → `corrente`.** The published package is now `corrente`
   (`import { Div } from 'corrente'`); the source moved to `src/corrente/` and the redundant `src/lib/`
   layer was dropped, so the package entry is now `src/index.ts`; the Vite alias / tsconfig path and the
