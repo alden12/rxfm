@@ -1,0 +1,59 @@
+{
+  "name": "@reactive-ts/core",
+  "version": "0.1.0",
+  "description": "Write reactive TypeScript (.rts) — imperative-looking observable code — and compile it to real, fully-typed RxJS. Ships the Reactive TS transform and a Vite plugin.",
+  "author": "Alden Laslett",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alden12/rxfm.git",
+    "directory": "reactive-ts/core"
+  },
+  "homepage": "https://github.com/alden12/rxfm/tree/master/reactive-ts",
+  "keywords": [
+    "rxjs",
+    "reactive",
+    "typescript",
+    "compiler",
+    "transform",
+    "observable",
+    "rts",
+    "vite",
+    "vite-plugin"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.mjs",
+      "require": "./dist/vite.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "prepublishOnly": "node build.mjs"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0",
+    "vite": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0"
+  }
+}

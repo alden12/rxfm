@@ -55,7 +55,9 @@
     "extension:install-deps": "cd reactive-ts/vscode-extension && npm install",
     "extension:build": "cd reactive-ts/vscode-extension && npm run package",
     "extension:build-and-install": "cd reactive-ts/vscode-extension && npm run reinstall",
-    "extension:bump-version": "cd reactive-ts/vscode-extension && npm run bump"
+    "extension:bump-version": "cd reactive-ts/vscode-extension && npm run bump",
+    "reactive-ts-core:install-deps": "cd reactive-ts/core && npm install",
+    "reactive-ts-core:build": "cd reactive-ts/core && npm run build"
   },
   "peerDependencies": {
     "rxjs": "^7.0.0"
