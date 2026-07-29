@@ -1,0 +1,26 @@
+.snake-game {
+  display: flex;
+}
+
+.snake-game-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  grid-gap: 2px;
+}
+
+.snake-cell {
+  height: 10px;
+  width: 10px;
+}
+
+.score-board {
+  padding-left: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.difficulty-button {
+  width: 90px;
+}

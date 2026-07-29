@@ -1,0 +1,10 @@
+import { Button, State } from 'corrente';
+
+export const ClickCounter = () => {
+  const clicks = new State(0);
+  const doubled = clicks * 2;
+
+  return Button
+    .onClick(() => clicks.update(count => count + 1))
+    `Clicks: ${clicks} (doubled: ${doubled})`;
+};

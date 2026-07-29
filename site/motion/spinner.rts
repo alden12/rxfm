@@ -1,0 +1,23 @@
+import { Div, Img, State, animate } from 'corrente';
+import wheelUrl from './wheel.svg';
+
+import './spinner-styles.css';
+
+const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
+
+export const Spinner = () => {
+  const target = new State(0); // the angle (in degrees) the wheel should come to rest at
+  const angle = animate(target, { duration: 4000, easing: easeOutCubic }); // eases toward target
+
+  // Each click sends the target a few turns further on; `angle` smoothly chases it.
+  const spin = () => target.update(a => a + (4 + Math.random() * 3) * 360 + Math.random() * 360);
+
+  return Div.class('spinner')(
+    Div.class('spinner-stage').onClick(spin)(
+      Img.class('spinner-wheel').src(wheelUrl).style({ transform: `rotate(${angle}deg)` }),
+      // A fixed pointer overlaid at the top - it stays put while the wheel turns beneath it.
+      Div.class('spinner-pointer')``,
+    ),
+    Div.class('spinner-hint')`Click the wheel to spin`,
+  );
+};

@@ -54,4 +54,14 @@ describe('styles', () => {
     expect(element.style.color).toBe('blue');
     expect(element.style.width).toBe('');
   });
+
+  it('sets, updates, and removes a CSS custom property via setProperty', () => {
+    const hue = new BehaviorSubject<string | null>('120');
+    const element = render(Div('').pipe(styles({ '--hue': hue })));
+    expect(element.style.getPropertyValue('--hue')).toBe('120');
+    hue.next('240');
+    expect(element.style.getPropertyValue('--hue')).toBe('240');
+    hue.next(null); // falsy → removed
+    expect(element.style.getPropertyValue('--hue')).toBe('');
+  });
 });

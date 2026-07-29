@@ -1,0 +1,19 @@
+.bounce-screen {
+  position: relative;
+  height: 14rem;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: #0f172a;
+}
+
+.bounce-badge {
+  position: absolute;
+  height: 3.5rem;
+  width: 3.5rem;
+  background-image: url(../../branding/corrente-logo-icon.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 6px 16px rgba(56, 189, 248, 0.55));
+}

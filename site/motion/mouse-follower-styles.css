@@ -1,0 +1,21 @@
+.follower-pad {
+  position: relative;
+  height: 14rem;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: #1e293b;
+  cursor: crosshair;
+}
+
+.follower-dot {
+  position: absolute;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin: -0.75rem 0 0 -0.75rem;
+  border-radius: 9999px;
+  background-color: #38bdf8;
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.5);
+  pointer-events: none;
+  transition: transform 0.15s ease-out;
+}

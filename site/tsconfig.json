@@ -1,0 +1,25 @@
+{
+  // Governs the doc-site sources, including `.rts` files in the editor. Mirrors
+  // reactive-ts/tsconfig.json: the root tsconfig excludes `site/`, which would
+  // otherwise leave `.rts` files in an inferred project with default options (no
+  // `paths`, unreliable extraFileExtensions wiring), so the Reactive TS tsserver
+  // plugin's virtual TypeScript never type-checked properly. This pins the same
+  // options the transform itself uses (see reactive-ts/ts-plugin/transform.cjs
+  // `getCompilerOptions`) plus the `corrente` path. The transform-emitted `render` import
+  // resolves to `site/runtime.ts`; hand-written helpers (`accumulate`/…) are
+  // imported from `corrente`, which the `paths` entry resolves to the library source.
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "corrente": ["../src/corrente/index"]
+    }
+  },
+  "include": ["**/*.rts", "**/*.ts"],
+  "exclude": ["node_modules"]
+}

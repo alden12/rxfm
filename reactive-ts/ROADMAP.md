@@ -98,8 +98,8 @@ Estimated ~half a day of packaging plumbing; no new framework logic.
 7. **Runtime-import distribution (needed before Reactive TS merges).** The transform auto-emits the
    `render` import via a walk-up to the nearest `runtime.ts`, but the helpers Reactive TS leaves for you to
    call by hand — `accumulate`, `interval`, `EMPTY` — are imported with **brittle relative paths**
-   (`from '../runtime'`). Relocating the examples to the top-level `examples/` exposed this: every
-   such path had to be hand-edited, and a `examples/runtime.ts` re-export shim was added so the tree
+   (`from '../runtime'`). Relocating the examples to the top-level `site/` exposed this: every
+   such path had to be hand-edited, and a `site/runtime.ts` re-export shim was added so the tree
    (a sibling of `reactive-ts/`) could resolve the canonical `reactive-ts/runtime.ts`. Decide a durable story —
    auto-inject these the way `render` is, resolve a stable bare specifier (e.g. `reactive-ts/runtime`), or
    fold the runtime into a published package — so users don't write fragile `../../runtime` paths.
@@ -367,7 +367,7 @@ observable). All of section C is shipped.
   `interval(periodFor(difficulty))` works (no need to lift at a separate binding first).
 - **C7 ✅** — element access over a static object with a stream index lifts; the snake game dropped
   its `cellColor` / `periodFor` lookup helpers and indexes the lookup tables directly.
-- **Reactive TS works outside corrente** (the reactive engine `examples/snake-game/game.rts` has ZERO corrente
+- **Reactive TS works outside corrente** (the reactive engine `site/snake-game/game.rts` has ZERO corrente
   imports — `accumulate` + `interval` + derived lifts — and type-checks on its own). Reactive TS is just
   RxJS + the tiny runtime; the pure game rules stay pure (no observables to lift). So the natural
   decomposition is: **reactive glue → Reactive TS; pure algorithms → plain functions.** For tightly-coupled
@@ -402,7 +402,7 @@ observable). All of section C is shipped.
 
 ## D. Pain points surfaced by the Minesweeper conversion
 
-Converting the Minesweeper example (`examples/minesweeper/`) was a deliberate stress test — a
+Converting the Minesweeper example (`site/minesweeper/`) was a deliberate stress test — a
 component-heavy app with per-cell event handlers and reactive timers. It type-checks end-to-end, but
 only after working around three real rough edges. Each is a place where the "treat streams as
 variables" illusion leaks. **Tackle order: D1, then D2, then D3.**
@@ -601,3 +601,121 @@ consumer handles the initial case) and a one-time migration of existing folds (s
   a dedicated symbol sentinel would be more rigorous but loses `??` ergonomics.
 - **Follow-up:** this is implemented on the docs/examples branch (runtime + snake/minesweeper). The
   same `accumulate` change + consumer migration must be applied on the Reactive TS implementation branch.
+
+## E. Pain points surfaced by the doc-site build
+
+Building the demo into a live **doc-site** (`docs/rts-corrente`) was another deliberate stress test —
+this time of Reactive TS as the *host of an app* rather than the examples themselves: a `.rts` shell
+(`site/app.rts`) plus several plain-`.ts` modules consuming `.rts` exports, rendering the markdown
+docs with live demos spliced in. It works well — the shell's `selected === id` active-link highlight
+and the `CONTENT[selected]` page-swap both lift cleanly, and the **C7 lookup-table flatten scales to
+the route map** (`CONTENT[selected]` → `switchMap(s => coerceToObservable(CONTENT[s]))`). A few rough
+edges surfaced.
+
+### E1. `?raw` imports of `.rts` returned compiled JS, not source — ✅ DONE
+
+The doc-site shows each example's real source via Vite `?raw`. But the `reactiveTs()` Vite plugin
+transformed *every* `.rts` id — including the `?raw`/`?url`/`?inline` variants Vite core handles — so
+`import src from './x.rts?raw'` returned compiled JS instead of the file's text. Fixed by guarding the
+plugin to skip those queries ([vite-plugin-reactive-ts.ts](vite-plugin-reactive-ts.ts)). Anyone
+inspecting/displaying `.rts` source would have hit this.
+
+### E2. No headless type-check for a `.rts`-consuming app — reinforces B1 (open)
+
+The doc-site's `.ts` modules (`content.ts`, `demos.ts`) import components from `.rts` files.
+`npx tsc -p site/tsconfig.json` errors on **every** `.rts` import (`Cannot find module './x.rts'`),
+so there is no CLI/CI step that type-checks the example app — types resolve *only* in-editor via the
+tsserver plugin. A type error in the glue (a wrong component shape passed to a demo, a bad export
+name) would ship silently. This is the consumer-app face of **B1**: the build-time type solution must
+also let plain `.ts` that *imports* `.rts` be checked headlessly, not just `.rts` itself.
+
+### E3. `.rts` as a top-level HTML / Vite entry is untested (open)
+
+The doc-site keeps a thin `main.ts` entry (`addToView(App)`) rather than pointing `index.html` at
+`app.rts`, because using `.rts` as a top-level Vite/HTML script entry is unverified (does the plugin
+transform run on the entry module itself?). Either confirm it works or document "`.ts` entry that
+imports `.rts`" as the supported pattern.
+
+### E4. Lifted callbacks shadow the source variable name — codegen nit (open)
+
+`selected === id && 'active'` emits `selected.pipe(map(selected => selected === id && 'active'))` — the
+`map` parameter reuses the source name, shadowing the outer stream. Harmless, but confusing when
+reading emitted output or stepping through it in a debugger. Consider a distinct generated param name.
+
+### E5. The fluent multiline style isn't lint-clean in `.ts` — DX friction (open; corrente, not strictly Reactive TS)
+
+The idiomatic `Foo.class(…)` ⏎ `` `text` `` chain trips ESLint `no-unexpected-multiline` in `.ts`
+files (it's fine in `.rts`, which isn't linted). Any corrente component written in plain `.ts` (glue,
+helpers — e.g. `doc-page.ts` here) must inline the tagged template or restructure. Worth either an
+ESLint tweak for the tagged-template-call pattern or documented guidance, since "drop into `.ts` for
+non-reactive glue" is a normal thing to do in a larger app.
+
+### E6. Rendered-markdown relative links don't navigate — doc-site follow-up (open)
+
+The in-app README/guide render the real markdown, so relative links (`docs/getting-started.md`, the
+roadmap link, etc.) are plain anchors that 404 in the SPA. Intercept link clicks in the doc-page
+composer and map known doc paths to routes (and external links to new tabs).
+
+## F. SSR, data prefetch & chunking (future — design direction)
+
+Forward-looking design for Corrente (the renamed runtime), not scoped to any current branch. Captured
+from a design discussion; **revisit when SSR / data-loading becomes a real requirement.** The summary:
+build a data registry first, do **data-prefetch** SSR rather than HTML-hydration matching, and chunk
+*feature components* while keeping the data core eager.
+
+### Why HTML-hydration SSR is especially hard here (defer it)
+
+"SSR" bundles four separate wins: (1) server-rendered markup → fast first paint, (2) SEO without JS,
+(3) no data waterfall → first data present immediately, (4) works with JS off. True HTML matching
+delivers (1)(2)(4) but fights Corrente's model on three fronts:
+
+- **No server DOM.** A component *is* `Observable<HTMLElement>` built via `document.createElement`;
+  running one server-side needs linkedom/jsdom.
+- **No natural settle point** — the real blocker. Element streams are live and don't *complete*, but
+  SSR needs a snapshot. You'd have to define "the component has settled" (all sync + flagged-async
+  data resolved, take that tick) — a new semantic the framework doesn't have.
+- **The core operators would need a hydration mode.** `children` / `attributes` / `styles` / `events`
+  all *create* and patch DOM; hydration means rewriting them to *adopt* existing server nodes on first
+  run. That's surgery on the render core for the win-set (LCP / no-JS) least likely to be a hard
+  requirement.
+
+Park unless SEO-without-JS becomes mandatory — and note the data-registry work below is a prerequisite
+for it anyway, so prefetch-first is on the path, not a detour.
+
+### F1. Data registry — the keystone (build first)
+
+Route all async data through a registry keyed by a stable request identity:
+`data(key, fetcher) => Observable<T>`, backed by a shareReplay (we already have `reuse`). This gives
+request identity (the same idea behind Relay query ids / React Query keys / Apollo's normalized cache /
+RSC flight data), and pays off **independent of SSR**: dedup, caching, the serialization seam, and the
+chunk-sharing seam. The registry is an **app-level singleton** (same discipline as
+`operator-isolation-service`), hoisted into the eager core — not living inside a lazily-loaded chunk
+that multiple features import (that would give two caches).
+
+### F2. Prefer data-prefetch SSR over HTML matching
+
+Deliver win (3) — no waterfall — which composes with the streams model instead of fighting it. The
+clean shape (correcting "construct without rendering": in RxJS a fetch only fires on *subscription*,
+and subscription is also what builds the DOM, so you can't cleanly separate them):
+
+> Run the **real** component against a throwaway linkedom DOM, wait for request quiescence (no pending
+> fetches in the registry), snapshot `{key: latestValue}`, **discard the markup**, embed the JSON.
+
+Accurate request capture for free, because it's the real code path — not a parallel model that can
+drift. Client: seed each key's subject from the embedded JSON (BehaviorSubject / `startWith`), then
+mount normally — seeded fetches resolve synchronously, no waterfall, no spinner flash. A
+`serverData` / `hydrate` pair would sit on the runtime surface alongside `accumulate` / `interval` /
+`fallback`. Honest about scope: markup is still client-rendered (no LCP / no-JS win).
+
+### F3. Chunk feature components, keep the data core eager
+
+Lazy services work with RxJS — `from(import('./feature')).pipe(switchMap(m => m.data(key)))`, and Vite
+splits on the dynamic-import boundary automatically. Two cautions:
+
+- **Lazy + prefetch pull opposite ways for the *data* layer.** A service behind a dynamic import means
+  the server must `await` the chunk before it can enumerate the request, and the client must load it
+  before replaying the seed. So chunk by **feature/route component** (the big stuff — components, heavy
+  deps) and keep the **data registry + keys eager** (small: fetch logic + identity). Don't lazy-load
+  the thing you need synchronously to know what to prefetch.
+- **Shared + lazy ⇒ singleton.** Two lazy features importing the same service must share one registry
+  instance — hoist it to the eager core (see F1), don't bury it in a chunk.

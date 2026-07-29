@@ -10,7 +10,7 @@ declare const fn: Observable<(n: number) => string>;
 const z = 1;
 const double = (n: number) => n * 2;
 
-// Binary op on an observable → combineLatest + map.
+// Binary op rooted in a single stream → one map (D5); multi-stream ops combineLatest.
 const sum = render(y.pipe(map(y => y + z)));
 
 // Plain function over an observable arg → map.

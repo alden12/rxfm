@@ -1,318 +1,154 @@
-# Corrente - A Web Framework Built on RxJS
-
 [![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
 [![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
 [![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
 [![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
 
-> ⚠️ **Alpha release.** This is the `3.0.0-alpha` line — an in-progress redesign of RxFM renamed to "Corrente" (Vite build, no
-> JSX, a new fluent component API). The API may change between alpha versions. For the current
-> **stable release** and its **JSX/TSX syntax**, see the
-> [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
+# Corrente
 
-Corrente is an experimental web framework born out of a wish for better [RxJS](https://github.com/ReactiveX/rxjs) integration, greater simplicity, and improved transparency in what a framework is doing under the hood.
+<p align="center">
+  <img src="branding/corrente-logo-icon.svg" alt="Corrente" width="100" height="100">
+</p>
 
-I'm a big fan of RxJS and Observables in general. They open up a lot of awesome possibilities in how to structure code, with reactivity and functional practices built in from the get-go. I created this framework because I'd always been curious about whether RxJS would be enough to power an entire application, with no middle man framework to get in the way. I'd love to hear any feedback as to whether this holds any interest for you and if you'd ever consider writing apps in this style!
+**A component is just an `Observable<HTMLElement>`. That's the whole framework.**
 
-Aside from native RxJS integration, Corrente has several advantages over existing frameworks like React. Firstly, we don't need to worry about managing a virtual DOM because elements can be added directly to their parents as observable streams. Second, we don't have to worry about any strange render logic, as components do not need to be re-rendered, they are reactive simply by virtue of being observables.
+A user interface is a pile of values that change over time. Corrente takes that literally: an element
+is reactive because it _is_ a stream. There's no virtual DOM, nothing to diff, no re-render cycle - a
+single mount at the root (`addToView`) sets the whole app in motion, and state changes hit the DOM
+immediately. No `useState`, no dependency arrays, no memoization, and none of the bugs that come with a
+render cycle, because there isn't one.
 
-I've tried to keep everything as minimal and clean as possible. The result reads a bit like a combination of React and RxJS, I've outlined some basic examples in the sections below so read on to have a look! It assumes some background knowledge about RxJS, but you can learn more about it on [learn RxJS](https://www.learnrxjs.io/) if you like.
+The catch with reactive streams has always been that they're intimidating to write. So the optional
+**Reactive TS** layer lets you write the plain expression and lifts it into the exact reactive stream
+for you, fully typed. Here's the whole idea in one line - take the cursor's position and derive a
+colour from it with ordinary maths:
 
-* Read the full example app code in the [GitHub repo](https://github.com/alden12/rxfm/tree/master/src/app) and check out the [live demo here](https://alden12.github.io/rxfm/).
-* Works best with [TypeScript](https://www.typescriptlang.org/).
-
-> **Note:** As of the `3.0.0` alpha line Corrente no longer ships JSX/TSX support — components are
-> written with the plain function API documented below. For JSX/TSX, use the stable
-> [v2.1.1 release](https://github.com/alden12/rxfm/blob/v2.1.1/README.md). JSX may return in a
-> redesigned form in a future release.
-
----
-
-## Installation
-You can clone the [starter app](https://github.com/alden12/rxfm-starter) to get started right away, or install `corrente` (along with its `rxjs` peer dependency) into an existing project using:
-
-```sh
-npm install rxfm rxjs@^7.0.0
+```ts
+const hue = (mouseMovementX / 4) % 360; // plain maths, but hue is live
 ```
 
-```sh
-yarn add rxfm rxjs@^7.0.0
-```
-If you already have `rxjs` installed, make sure it is using the same version as `corrente`. Currently this is `"rxjs": "^7.0.0"` (see [package.json](package.json) `peerDependencies`).
+Push the mouse position into `mouseMovementX`, drop `hue` into a style, and the gradient tracks your cursor:
 
----
+```ts demo=reactive-gradient
+import { Div, State } from "corrente";
 
-## Components
+export const ReactiveGradient = () => {
+  const mouseMovementX = new State(0);
+  const hue = mouseMovementX % 360; // a number stream, derived with ordinary maths
 
-Components in Corrente are simply `Observables` emitting `HTMLElements`. Component names are written in PascalCase with the first letter capitalized.
-
-### Hello World:
-
-Below we can see how to display a simple hello world. Basic component creators can be imported from `corrente`:
-
-```typescript
-import { Div } from 'corrente';
+  return Div.onMousemove((e) => mouseMovementX.next(e.offsetX)).style({
+    background: `linear-gradient(135deg, hsl(${hue} 85% 55%), hsl(${hue + 60} 85% 60%))`,
+  })`Move your mouse`;
+};
 ```
 
-These may take any number of children as arguments, including strings, observables and other components:
+Move your mouse across it: no CSS animation could follow the cursor like this. `hue` is live because
+`mouseMovementX` is, so the moment it lands in the style string the element is bound to it and repaints as you
+move. There's no render cycle scheduling it, because there isn't one anywhere in Corrente.
 
-```typescript
-const HelloWorld = Div('Hello, World!');
-```
+The same trick works over time. `frames()`, `timer(due, period)`, and `interval(period)` are reactive
+clocks - derive a value from one and it updates on its own, with no loop to write. Pass a stream for the
+rate to change it on the fly, or `null` to stop.
 
-The root component can be added to the DOM by subscribing to it and adding its element to the document:
+State works the same way. Here a click count drives a derived value, written as a plain expression that
+stays reactive:
 
-```typescript
-HelloWorld.subscribe(el => document.body.appendChild(el));
-```
-
-The root component should be the only subscribed component in our application, and indeed ideally the only use of `subscribe` at all! All being well, other observables should piggyback on the application subscription and are subscribed by virtue of being a part of the component stream. This way a single subscription at the app root can set the entire application in motion!
-
-### Component Children:
-
-We can pass lots of different kinds of things as component children:
-
-```typescript
-const ChildrenExample = Div(
-  'Children can be strings, ',
-  B('child components, '),
-  () => Span('functions returning components, '),
-  'or observables: ',
-  timer(0, 1000),
-  's elapsed.',
-);
-```
-
-We can also use the tagged template syntax:
-
-```typescript
-const TaggedTemplateExample = Div`We can use ${B`tagged templates!`}`;
-```
-
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
-
----
-
-## State & Events
-State can be held in `BehaviorSubjects` and used in a similar way to the `useState` hook in React. Element creators expose fluent methods for handling events — for every DOM event there's a matching `on<Event>` method (`onClick`, `onInput`, …):
-
-```typescript
-import { Button } from 'corrente';
-import { BehaviorSubject } from 'rxjs';
+```ts demo=counter
+import { Button, State, addToView } from "corrente";
 
 const ClickCounter = () => {
-  const clicks = new BehaviorSubject(0);
+  const clicks = new State(0);
+  const doubled = clicks * 2; // count * 2 stays reactive, no map and no pipe
 
-  return Button.onClick(() => clicks.next(clicks.value + 1))`Clicks: ${clicks}`;
+  return Button.onClick(() =>
+    clicks.update((c) => c + 1),
+  )`Clicks: ${clicks} (doubled: ${doubled})`;
 };
+
+addToView(ClickCounter()); // the one subscription your app needs - mounts to document.body
 ```
 
-These fluent methods are sugar for "component operators" applied via `.pipe`. A component operator is an operator function taking a component observable, processing its element in some way (here, adding an event listener), and returning the same component observable. The example above is equivalent to using the `event` operator directly:
+That `clicks * 2` is the whole pitch. Reactive TS lifts it to the exact RxJS that runs underneath:
 
-```typescript
-import { Button, event } from 'corrente';
-
-Button`Clicks: ${clicks}`.pipe(
-  event.click(() => clicks.next(clicks.value + 1)),
-);
+```ts
+const doubled = clicks * 2; // with Reactive TS
+const doubled = clicks.pipe(map((c) => c * 2)); // the RxJS it runs as
 ```
 
-The fluent methods can be chained, so several may be combined (`Button.onClick(handleClick).onMouseenter(handleHover)`), and a generic `on(type, handler)` form is available for dynamic event types.
+No new runtime model, nothing hidden, just less ceremony.
 
-When components store state like this, they should be declared as functions as above so that instances of the component don't interfere with each-other.
+Components are functions for a reason: a component's `State` is declared _inside_ it, so each call -
+`ClickCounter()` - is an independent instance with its own state. Write components as functions and
+instantiate them where you mount them; a single built component value (state declared at module scope,
+or `ClickCounter()` called once and reused) shares that state across every place it appears.
 
-Using Subjects to store state gives us an advantage over React in that we don't have to wait for render for the changes to take effect, they immediately propagate into the DOM.
+## Fluent operators, straight from the proposal
 
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/state-and-events.ts) | [Live Demo](https://alden12.github.io/rxfm/)
+`State` (used above) is a writable value: read it with `.value`, set it with `.next(...)`, or
+`.update((c) => c + 1)` when the next value comes from the current one. (Under the hood it's an RxJS
+`BehaviorSubject`.) Every stream also carries fluent operator methods, modelled on the
+[WICG Observable proposal](https://github.com/WICG/observable), so chaining reads the way the platform
+itself is heading:
+
+```ts
+import { State } from "corrente";
+
+const query = new State("");
+const settled = query.debounce(200); // wait for a 200ms pause, then emit the latest value
+```
+
+The set follows the proposal (`map`, `filter`, `take`, `drop`, `takeUntil`, `catch`, `finally`,
+`flatMap`), plus `scan` (a running fold) and `debounce` / `throttle`. They're real methods on the
+stream, so the same code is one polyfill away from running on a native `Observable` if the proposal
+ships, and in a `.rts` file they're offered in autocomplete and lift as genuine stream operators.
+
+## Why Corrente
+
+- **Streams _are_ the components.** No virtual DOM, no reconciliation, no render scheduling - state
+  changes hit the DOM immediately.
+- **It's just RxJS.** Everything composes with the operators and patterns you already know; `rxjs` is
+  the only dependency.
+- **Tiny and transparent.** A small operator library over `Observable` - easy to read, easy to reason
+  about what the framework is doing.
+- **Plain expressions, fully typed (Reactive TS).** Write `count * 2`, `a === b`, `cond ? x : y`; your editor
+  shows real inferred types live, with no `any` and no false errors.
+
+## Quick start
+
+```sh
+npm install corrente rxjs@^7
+```
+
+…then see **[Getting started](docs/getting-started.md)**. To run the example app locally:
+
+```sh
+git clone https://github.com/alden12/rxfm && cd rxfm
+yarn && yarn dev      # http://localhost:3000
+```
+
+Or browse the [**live demo**](https://alden12.github.io/rxfm/).
+
+## Documentation
+
+|                                                           |                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------ |
+| 🚀 [Getting started](docs/getting-started.md)             | Install, editor setup, and the Reactive TS build.            |
+| 📖 [Guide](docs/guide.md)                                 | The full walkthrough - components, state, attributes, lists. |
+| 🧩 [Examples](site/)                                      | The Reactive TS example suite that powers the live demo.     |
+| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | Corrente in plain RxJS, no build step.                       |
+| 🧪 [Reactive TS roadmap](reactive-ts/ROADMAP.md)          | Status of the experimental Reactive TS layer.                |
+
+> ⚠️ **Alpha.** This is the `3.0.0-alpha` line - an in-progress redesign (Vite build, no JSX, a new
+> fluent component API). The API may change between alpha versions. For the current **stable
+> release** and its **JSX/TSX syntax**, see the
+> [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
+>
+> 🧪 **Reactive TS is experimental.** The transform, Vite plugin, and editor extension are a spike that
+> currently lives in this repo (not yet on npm) - see the [roadmap](reactive-ts/ROADMAP.md). Plain Corrente
+> needs none of it.
+
+I'd love to hear whether this style holds any interest for you - feedback and ideas are very welcome.
+These docs will eventually move to the project site (github.io), which currently hosts the demo.
 
 ---
 
-## Attributes & Styling
-Element styles, CSS classes, and attributes can be set using fluent methods on element creators:
-
-```typescript
-import { Div, Input } from 'corrente';
-```
-
-```typescript
-const StylesExample = Div.style({
-  color: 'blue',
-  fontStyle: 'italic',
-})`We can add styles`;
-```
-
-```typescript
-const ClassExample = Div.class('example-class')`We can add CSS classes`;
-```
-
-Each known attribute has its own method, and they chain like the event methods:
-
-```typescript
-const AttributesExample = Input
-  .type('text')
-  .placeholder('We can set element attributes')();
-```
-
-Style, attribute and CSS class values may be strings, or they can be observables to set them dynamically. A generic `attr(name, value)` method covers attributes outside the typed set (`data-*`, `aria-*`, and other custom attributes).
-
-Like the event methods, `style`, `class`, and the attribute methods are sugar for the `styles`, `classes`, and `attribute` component operators, which can also be applied directly via `.pipe`. The operator forms additionally support a tagged template syntax and let us access individual style and attribute properties:
-
-```typescript
-const StyleExample = Div`We access styles as properties and use tagged templates`.pipe(
-  style.color`blue`,
-);
-```
-
-```typescript
-const TaggedTemplateClassExample = Div`We can use the tagged template syntax for classes`.pipe(
-  classes`example-class`,
-);
-```
-
-```typescript
-const AttributeExample = Div`We access attributes as properties and use tagged templates`.pipe(
-  attribute.id`attribute-example`,
-);
-```
-
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/attributes-and-styling.ts) | [Live Demo](https://alden12.github.io/rxfm/)
-
----
-
-## Conditionally Displaying Components
-We can conditionally add a component using the `switchMap` operator function from `RxJS`.
-
-For illustrative purposes, we can create an observable which emits true or false periodically every second:
-
-```typescript
-import { timer } from 'rxjs';
-import { map } from 'rxjs/operators';
-
-const flipFlop = timer(0, 1000).pipe(
-  map(i => i % 2 === 0),
-);
-```
-
-With `switchMap` we can map an observable to a component observable depending on a condition, or to an observable emitting one of either: `null | undefined | false` to remove it from the DOM.
-
-```typescript
-import { switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
-
-const ConditionalComponentsExample = Div(
-  flipFlop.pipe(
-    switchMap(visible => visible ? Div`Now you see me!` : of(null)),
-  ),
-);
-```
-
-This may also be written more simply using the `conditional` helper function from corrente:
-
-```typescript
-conditional(flipFlop, Div`Now you see me!`)
-```
-
-You may also be tempted to use `switchMap` to transform an array observable into an array of components (similar to using Array.map in React), but this will be rather inefficient as the components will be recreated each time the observable emits. The `mapToComponents` operator function should be used instead in this case as this will ensure that components are only recreated when necessary (see the [Dynamic Component Arrays](#dynamic-component-arrays) section).
-
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/conditional-components.ts) | [Live Demo](https://alden12.github.io/rxfm/)
-
----
-
-## Component Inputs & Outputs
-
-Providing inputs to a component is as simple as passing them in as function arguments. Outputs can be provided by passing in callback functions to handle events inside the component.
-
-```typescript
-interface OptionButtonProps {
-  option: string;
-  setOption: (option: string) => void;
-  active: Observable<boolean>;
-}
-
-const OptionButton = ({ option, setOption, active }: OptionButtonProps) =>
-  Button
-    .onClick(() => setOption(option))
-    .class('option-button', conditional(active, 'active'))(option);
-
-const options = ['Option 1', 'Option 2', 'Option 3'];
-
-const ComponentIOExample = () => {
-  const selectedOption = new BehaviorSubject<string>('Option 1');
-  const setOption = (option: string) => selectedOption.next(option);
-
-  const Options = options.map(option => {
-    const active = selectedOption.pipe(map(selectedOpt => selectedOpt === option));
-    return OptionButton({ option, setOption, active });
-  });
-
-  return Div(
-    ...Options,
-    Div`Current Value: ${selectedOption}`,
-  );
-};
-```
-
-Component children can be passed in using the `ComponentChild` type. A variable number of component children can be passed in using a spread array:
-
-```typescript
-const Card = (...children: ComponentChild[]) => Div.class('card')(...children);
-```
-
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/component-io.ts) | [Live Demo](https://alden12.github.io/rxfm/)
-
----
-
-## Dynamic Component Arrays
-We can generate dynamic component arrays from array observables using the `mapToComponents` operator function from `corrente`. This ensures that component arrays are efficiently rendered and are not regenerated each time the source data changes.
-
-We'll start with an observable emitting an array of items:
-
-```typescript
-interface TodoItem {
-  name: string;
-  done: boolean;
-}
-
-const items = new BehaviorSubject<TodoItem[]>([
-  { name: 'Item 1', done: true, },
-  { name: 'Item 2', done: false, },
-]);
-```
-
-We can then define a function to create a component from an individual item observable:
-
-```typescript
-const Item = (item: Observable<TodoItem>) => Div(
-  item.pipe(
-    map(({ name, done }) => `${name} is ${done ? '' : 'not'} done!`),
-  ),
-);
-```
-
-Using the `mapToComponents` operator function, we can map the item array into an array of `Item` components. The first argument is the component creation function. The second argument is either a function taking the item and returning its unique id (similar to the 'key' prop in React) or a property name on the item where its unique id can be found. If this argument is omitted then the item's index in the source array will be used as its id.
-
-```typescript
-const ItemComponents = items.pipe(
-  mapToComponents(Item, 'name'),
-);
-```
-
-The resulting component array observable can be passed directly as a component child:
-
-```typescript
-const ComponentArraysExample = Div(ItemComponents);
-```
-
-If our `items` subject were to then emit a new array, this would immediately be reflected by our `Item` components in the DOM. Any items with matching ids from the previous emission will reuse the existing DOM elements.
-
-[Code](https://github.com/alden12/rxfm/blob/master/src/app/basic-examples/dynamic-component-arrays.ts) | [Live Demo](https://alden12.github.io/rxfm/)
-
----
-
-## Advanced Examples
-
-You can check out a few more complex Corrente examples at the links below to see how it might be used in a larger app. [Live Demo](https://alden12.github.io/rxfm/)
-
-* [Todo List Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/todo-list)
-* [Snake Game Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/snake-game)
-* [Minesweeper Example](https://github.com/alden12/rxfm/tree/master/src/app/advanced-examples/minesweeper)
+Built on [RxJS](https://github.com/ReactiveX/rxjs). MIT licensed. Authored by Alden Laslett.

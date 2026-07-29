@@ -55,6 +55,17 @@ const setStyle = (
   value: string | null,
 ) => {
   const nextValue = value || null; // Coerce empty string / falsy to null.
+  // CSS custom properties (`--foo`) aren't exposed as named accessors on `element.style`, so a
+  // plain `element.style['--foo'] = …` is silently dropped; they must go through the property
+  // methods. This lets `.style({ '--hue': … })` feed a reactive value straight into a CSS variable.
+  if ((key as string).startsWith("--")) {
+    if ((element.style.getPropertyValue(key) || null) !== nextValue) {
+      // Only write when the value has actually changed.
+      if (nextValue === null) element.style.removeProperty(key);
+      else element.style.setProperty(key, nextValue);
+    }
+    return;
+  }
   if ((element.style[key] || null) !== nextValue) {
     // Only write when the value has actually changed.
     element.style[key] = nextValue as string; // Set style or remove by setting to null.
@@ -157,10 +168,14 @@ export const style = new Proxy(basicStyleOperator, {
 }) as StyleOperator;
 
 /**
- * A dictionary of styles or observable styles to be used in the 'styles' operator.
+ * A dictionary of styles or observable styles to be used in the 'styles' operator. As well as the
+ * standard CSS style keys, any CSS custom property (`--foo`) may be set, so a reactive value can be
+ * fed into a CSS variable: `style({ '--hue': hue })`.
  */
 export type Styles = {
   [K in StyleKeys]?: TypeOrObservable<StyleType>;
+} & {
+  [customProperty: `--${string}`]: TypeOrObservable<StyleType>;
 };
 
 /**

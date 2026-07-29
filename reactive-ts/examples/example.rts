@@ -9,7 +9,7 @@ declare const fn: Observable<(n: number) => string>;
 const z = 1;
 const double = (n: number) => n * 2;
 
-const sum = y + z;            // hover ⇒ RenderObservable<number>   (combineLatest + map)
+const sum = y + z;            // hover ⇒ RenderObservable<number>   (one map — single stream y)
 const called = double(y);     // hover ⇒ RenderObservable<number>   (plain fn over observable arg)
 const applied = fn(y);        // hover ⇒ RenderObservable<string>   (observable-of-function applied!)
 const picked = cond ? y : z;  // hover ⇒ RenderObservable<number>   (switchMap + shareReplay)
