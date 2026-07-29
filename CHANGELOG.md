@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha.2] - 2026-07-29
+
 ### Added
 - `State<T>`, Corrente's name for RxJS's `BehaviorSubject`, exported from the root
   (`import { State } from 'corrente'`). Clearer for newcomers, and because it requires an initial
