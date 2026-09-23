@@ -13,12 +13,12 @@ export default defineConfig({
     extensions: ['.rts', '.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       // Run the demo against the live library source rather than the built package.
-      corrente: resolve(__dirname, 'src/corrente/index.ts'),
+      affluente: resolve(__dirname, 'src/affluente/index.ts'),
     },
   },
   // Pre-bundle the demo's third-party deps up front so the dev server doesn't discover
   // them mid-load and trigger a re-optimize + full-page reload (the main cause of a slow
-  // cold load locally). `corrente` is deliberately left out — it's aliased to live source.
+  // cold load locally). `affluente` is deliberately left out — it's aliased to live source.
   optimizeDeps: {
     include: ['rxjs', 'marked', 'highlight.js/lib/core'],
   },

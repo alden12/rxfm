@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
-// Build config for the published `corrente` library.
+// Build config for the published `affluente` library.
 export default defineConfig({
   build: {
     outDir: 'dist',
@@ -19,8 +19,8 @@ export default defineConfig({
   },
   plugins: [
     dts({
-      // Emit the declaration tree (dist/index.d.ts + dist/corrente/**) mirroring src.
-      include: ['src/index.ts', 'src/corrente'],
+      // Emit the declaration tree (dist/index.d.ts + dist/affluente/**) mirroring src.
+      include: ['src/index.ts', 'src/affluente'],
     }),
   ],
 });

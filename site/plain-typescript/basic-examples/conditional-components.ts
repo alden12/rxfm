@@ -1,4 +1,4 @@
-import { conditional, Div } from 'corrente';
+import { conditional, Div } from 'affluente';
 import { of, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 

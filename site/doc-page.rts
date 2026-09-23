@@ -1,11 +1,11 @@
-// Composes a rendered markdown doc into an Corrente component, with live demos spliced in
+// Composes a rendered markdown doc into an Affluente component, with live demos spliced in
 // where the markdown carried a `demo=<id>` fence.
 //
-// Key design point: the live demos are real Corrente *children*, not elements poked into
+// Key design point: the live demos are real Affluente *children*, not elements poked into
 // innerHTML with a manual `addToView`. The rendered HTML is split at the demo markers
 // into runs of plain HTML, each wrapped as a `rawHtml` component, and the live
 // `DemoPanel`s are interleaved between them. Handing the whole sequence to `Div(...)`
-// lets Corrente's `children` operator own every subscription — so when the content pane
+// lets Affluente's `children` operator own every subscription — so when the content pane
 // swaps pages, the demos' streams (timers, etc.) are torn down with the page instead of
 // leaking. (A manual `addToView` into an innerHTML placeholder would not be.)
 //
@@ -20,7 +20,7 @@ import {
   H1,
   State,
   Summary,
-} from "corrente";
+} from "affluente";
 import { DEMOS } from "./demos";
 import {
   DEMO_MARKER,

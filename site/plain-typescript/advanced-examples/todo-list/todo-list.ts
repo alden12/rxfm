@@ -1,4 +1,4 @@
-import { attributes, classes, Div, event, mapToComponents, Input, using, destructure, conditional } from "corrente";
+import { attributes, classes, Div, event, mapToComponents, Input, using, destructure, conditional } from "affluente";
 import { BehaviorSubject, Observable } from "rxjs";
 
 import './todo-list-styles.css';
@@ -32,7 +32,7 @@ const ItemInput = (onChange: (value: string) => void) => Input().pipe(
 
 const initialItems: TodoItem[] = [
   { name: 'Buy bananas', done: true },
-  { name: 'Finish Corrente', done: false },
+  { name: 'Finish Affluente', done: false },
   { name: 'Start a new project', done: false },
 ];
 

@@ -1,4 +1,4 @@
-import { Div, State } from 'corrente';
+import { Div, State } from 'affluente';
 
 interface TodoItem {
   name: string;

@@ -8,7 +8,7 @@ import {
   classes,
   Span,
   A,
-} from "corrente";
+} from "affluente";
 import {
   HelloWorld,
   ChildrenExample,
@@ -28,7 +28,7 @@ import { TodoList, SnakeGame, Minesweeper } from "./advanced-examples";
 
 import "./styles.css";
 
-document.title = "Corrente Examples";
+document.title = "Affluente Examples";
 
 const Example = (title: string, ...children: ComponentChild[]) =>
   Div(H3(title).pipe(classes`example-title`), ...children).pipe(
@@ -59,7 +59,7 @@ const GithubLink = A`(GitHub)`.pipe(
   classes`github-link`,
 );
 
-const Title = Span(H1`Corrente`, GithubLink).pipe(classes`app-title`);
+const Title = Span(H1`Affluente`, GithubLink).pipe(classes`app-title`);
 
 const App = Div(Title, Examples).pipe(attribute.id`app`);
 

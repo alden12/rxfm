@@ -1,4 +1,4 @@
-import { Div, Input, State } from 'corrente';
+import { Div, Input, State } from 'affluente';
 
 import './todo-list-styles.css';
 
@@ -9,7 +9,7 @@ interface TodoItem {
 
 const initialItems: TodoItem[] = [
   { name: 'Buy bananas', done: true },
-  { name: 'Finish Corrente', done: false },
+  { name: 'Finish Affluente', done: false },
   { name: 'Start a new project', done: false },
 ];
 

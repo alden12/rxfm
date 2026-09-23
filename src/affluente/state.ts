@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
 
 /**
- * A writable reactive value - Corrente's name for RxJS's `BehaviorSubject`.
+ * A writable reactive value - Affluente's name for RxJS's `BehaviorSubject`.
  *
  * `State` is where component state lives: `const count = new State(0)`, read the
  * current value synchronously with `count.value`, and push a new one with
@@ -14,7 +14,7 @@ import { BehaviorSubject } from "rxjs";
  *
  * - **Clarity.** "BehaviorSubject" is RxJS FRP jargon; `State` says what it is to a
  *   newcomer and keeps the whole counter example in one vocabulary (one import from
- *   `corrente`, no reach into `rxjs`).
+ *   `affluente`, no reach into `rxjs`).
  * - **It requires an initial value, which is the point.** A `State` always has a
  *   current value, so it emits immediately on subscription - a fold (`scan` /
  *   {@link accumulate}) or a derived view built on it shows something on load. A

@@ -1,4 +1,4 @@
-import { Button } from "corrente";
+import { Button } from "affluente";
 import { BehaviorSubject } from "rxjs";
 
 export const ClickCounter = () => {

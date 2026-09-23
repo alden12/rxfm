@@ -1,4 +1,4 @@
-import { Div, Button, Input, State } from 'corrente';
+import { Div, Button, Input, State } from 'affluente';
 import { timer } from 'rxjs';
 
 import './bouncing-speed-styles.css';

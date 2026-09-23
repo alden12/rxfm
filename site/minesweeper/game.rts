@@ -1,7 +1,7 @@
 import { EMPTY, Subject, timer } from 'rxjs';
 import { getInitialGame, reduceGame } from './game-logic';
 import { CellAction, GameStage } from './types';
-import { accumulate, ComponentChild, TypeOrObservable } from 'corrente';
+import { accumulate, ComponentChild, TypeOrObservable } from 'affluente';
 
 // A factory, not module-level singletons: each call builds a fresh, independent game so that
 // remounting (e.g. leaving and returning to the example) starts over rather than resuming shared state.

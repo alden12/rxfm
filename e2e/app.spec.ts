@@ -13,9 +13,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("renders the doc-site shell with sidebar nav", async ({ page }) => {
-  await expect(page).toHaveTitle("Corrente - Reactive TS");
+  await expect(page).toHaveTitle("Affluente - Reactive TS");
   await expect(
-    page.locator("aside").getByText("Corrente").first(),
+    page.locator("aside").getByText("Affluente").first(),
   ).toBeVisible();
   await expect(nav(page, "Guide")).toBeVisible();
   await expect(nav(page, "Snake")).toBeVisible();
@@ -50,7 +50,7 @@ test("todo list example renders and adds an item (keyed-list reactivity)", async
 }) => {
   await nav(page, "Todo List").click();
   const live = page.locator(".demo-result"); // exclude the source-code expander
-  await expect(live.getByText("Finish Corrente")).toBeVisible();
+  await expect(live.getByText("Finish Affluente")).toBeVisible();
 
   const items = page.locator(".todo-item");
   const initialCount = await items.count();
@@ -69,13 +69,13 @@ test("todo item toggles done on click (event → conditional class + checkbox bi
   page,
 }) => {
   await nav(page, "Todo List").click();
-  const item = page.locator(".todo-item", { hasText: "Finish Corrente" });
+  const item = page.locator(".todo-item", { hasText: "Finish Affluente" });
   const checkbox = item.locator('input[type="checkbox"]');
 
   await expect(item).not.toHaveClass(/\bdone\b/);
   await expect(checkbox).not.toBeChecked();
 
-  await page.locator(".demo-result").getByText("Finish Corrente").click();
+  await page.locator(".demo-result").getByText("Finish Affluente").click();
 
   await expect(item).toHaveClass(/\bdone\b/);
   await expect(checkbox).toBeChecked();

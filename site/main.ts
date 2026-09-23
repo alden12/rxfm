@@ -7,9 +7,9 @@
 // render-blocking Google Fonts <link>. Only the latin subset woff2 is fetched at runtime
 // (the browser matches @font-face unicode-ranges to the rendered text).
 import "@fontsource-variable/google-sans-flex";
-import { addToView } from "corrente";
+import { addToView } from "affluente";
 import { App } from "./app.rts";
 
-document.title = "Corrente - Reactive TS";
+document.title = "Affluente - Reactive TS";
 
 addToView(App);

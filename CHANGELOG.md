@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-alpha.3] - 2026-09-23
+
+### Changed
+- **Renamed the framework `corrente` → `affluente`** (Italian for a tributary: a smaller stream flowing
+  into a larger one). The package is now `affluente` (`import { Div } from 'affluente'`), the source
+  lives in `src/affluente/`, and the Reactive TS transform emits its component imports from
+  `affluente`. `corrente@3.0.0-alpha.2` was the only release under the old name.
+
 ## [3.0.0-alpha.2] - 2026-07-29
 
 ### Added

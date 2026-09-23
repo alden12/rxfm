@@ -1,4 +1,4 @@
-import { Div, State } from 'corrente';
+import { Div, State } from 'affluente';
 
 import './mouse-follower-styles.css';
 

@@ -1,4 +1,4 @@
-import { Div, Button } from 'corrente';
+import { Div, Button } from 'affluente';
 import { createGame } from './game';
 import { NEIGHBORS_COLOR_MAP, BOARD_HEIGHT, indexToVector } from './constants';
 

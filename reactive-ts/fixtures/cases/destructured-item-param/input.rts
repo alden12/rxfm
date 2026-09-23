@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Div } from 'corrente';
+import { Div } from 'affluente';
 declare const cells: Observable<{ color: string; symbol?: string; neighbors: number; cleared: boolean }[]>;
 declare const COLORS: Record<number, string>;
 declare function dispatch(index: number): void;

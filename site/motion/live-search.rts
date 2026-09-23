@@ -1,4 +1,4 @@
-import { Div, Input, State } from 'corrente';
+import { Div, Input, State } from 'affluente';
 
 import './live-search-styles.css';
 

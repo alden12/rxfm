@@ -11,7 +11,7 @@
         "forceConsistentCasingInFileNames": true,
         "baseUrl": ".",
         "paths": {
-            "corrente": ["src/corrente/index"]
+            "affluente": ["src/affluente/index"]
         }
     },
     "exclude": [
