@@ -1,6 +1,6 @@
 {
   "name": "affluente",
-  "version": "3.0.0-alpha.2",
+  "version": "3.0.0-alpha.3",
   "author": "Alden Laslett",
   "description": "A Web Framework Built on RxJS",
   "license": "MIT",
