@@ -72,7 +72,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
 
   // (2) Output-plan accumulators.
   const edits: Edit[] = [];
-  const needed = { rxjs: new Set<string>(), 'rxjs/operators': new Set<string>(), corrente: new Set<string>(), runtime: new Set<string>() };
+  const needed = { rxjs: new Set<string>(), 'rxjs/operators': new Set<string>(), affluente: new Set<string>(), runtime: new Set<string>() };
   let usedRender = false;
   // Declaration-site hover for destructured fields: the binding pattern `{ color }`
   // is erased to the synthetic param, so its field tokens map to nothing. We record
@@ -255,7 +255,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     return { pieces: [{ gen: x, refKey: key }, '.pipe(map(', x, ' => ', ...body, '))'], observable: true, lifted: true, callable };
   };
 
-  // WICG-style operator methods we add to `Observable` (see src/corrente/observable-operators.ts).
+  // WICG-style operator methods we add to `Observable` (see src/affluente/observable-operators.ts).
   // On an observable receiver these are stream OPERATORS - `stream.scan(fn, seed)`,
   // `stream.takeUntil(stop)`, `stream.debounce(ms)` - not value-methods to lift over each emission,
   // so the call passes through verbatim (the method is real on Observable) and its result is itself
@@ -269,7 +269,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   // not `.filter`. The WICG `.map`/`.filter`/`.flatMap` methods still exist for hand-written .ts.
   //
   // The set is hardcoded rather than inferred from the augmented `Observable` type: the throwaway
-  // inference Program doesn't pull in corrente's side-effect-imported augmentation, so the checker
+  // inference Program doesn't pull in affluente's side-effect-imported augmentation, so the checker
   // there can't be relied on to know these are stream methods.
   const OPERATOR_METHODS = new Set([
     'scan', 'take', 'drop', 'takeUntil', 'catch', 'finally', 'debounce', 'throttle',
@@ -383,7 +383,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     // and apply the emitted function to the emitted args.
     if (ts.isCallExpression(node)) {
       // A component call (Div(...), Span(...), …) is a structure, not a value to
-      // lift: its observable arguments are reactive children Corrente renders, and any
+      // lift: its observable arguments are reactive children Affluente renders, and any
       // nested component-map is handled by `visit`. Leave it verbatim.
       if (isElementValueType(observableValueType(checker.getTypeAtLocation(node)))) {
         return { pieces: [V(node)], observable: true, lifted: false };
@@ -522,7 +522,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
       return { pieces: [V(node)], observable: isObservableExpr(node), lifted: false };
     }
 
-    // Property access on a stream → map out the field (the Corrente "extract a field
+    // Property access on a stream → map out the field (the Affluente "extract a field
     // from an object observable" pattern), unless the member is a stream-API one.
     if (ts.isPropertyAccessExpression(node)) {
       // Collapse a chain of property accesses rooted in a single stream into ONE map
@@ -769,7 +769,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
     const obj = ex.expression;                                  // obj
     const cb = node.arguments[0] as TS.ArrowFunction | TS.FunctionExpression;
     const isFlat = ex.name.text === 'flatMap';
-    needed.corrente.add('mapToComponents');
+    needed.affluente.add('mapToComponents');
     // Lift the receiver if it's itself an imperative expression (e.g. a filter).
     const objR = transformExpression(obj);
     if (objR.lifted) edits.push({ start: obj.getStart(sf), end: obj.getEnd(), pieces: objR.pieces });
@@ -865,7 +865,7 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
   //   () => f(index)            →  index.pipe(map(index => () => f(index)))
   //   () => f(index, current)   →  combineLatest([index, current]).pipe(
   //                                  map(([index, current]) => () => f(index, current)))
-  // corrente's event operators already accept an Observable<handler> (EventHandler<T,E>).
+  // affluente's event operators already accept an Observable<handler> (EventHandler<T,E>).
   const within = (node: TS.Node, ancestor: TS.Node) => node.getStart(sf) >= ancestor.getStart(sf) && node.getEnd() <= ancestor.getEnd();
   const collectHandlerCaptures = (fnNode: TS.ArrowFunction | TS.FunctionExpression) => {
     // A captured stream is lifted only if the handler reads it as a *value*. If it's
@@ -1047,11 +1047,11 @@ export function transformWithMappings(ts: Ts, sourceText: string, baseDir: strin
         return;
       }
     }
-    // Tagged template (Corrente's children syntax, e.g. Div`hi ${user.name}`): each
-    // ${…} interpolation is a child, and Corrente renders observables as reactive
+    // Tagged template (Affluente's children syntax, e.g. Div`hi ${user.name}`): each
+    // ${…} interpolation is a child, and Affluente renders observables as reactive
     // children — so lift each imperative interpolation *individually* (rather
     // than combining into one string like the untagged template literal case),
-    // leaving the template structure intact for Corrente to handle.
+    // leaving the template structure intact for Affluente to handle.
     if (ts.isTaggedTemplateExpression(node) && ts.isTemplateExpression(node.template)) {
       visit(node.tag);
       for (const span of node.template.templateSpans) {

@@ -15,7 +15,7 @@ export default defineConfig({
   plugins: [reactiveTs()],
   resolve: {
     // Same alias the main demo uses, so the lib runs from source.
-    alias: { corrente: resolve(repoRoot, 'src/corrente/index.ts') },
+    alias: { affluente: resolve(repoRoot, 'src/affluente/index.ts') },
   },
   server: { port: 3100 },
   build: { outDir: 'dist-reactive-ts', emptyOutDir: true },

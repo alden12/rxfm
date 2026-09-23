@@ -1,4 +1,4 @@
-import { Div, event, mapToComponents, Button, destructure, classes, style, access } from "corrente";
+import { Div, event, mapToComponents, Button, destructure, classes, style, access } from "affluente";
 import { Observable, BehaviorSubject } from "rxjs";
 import { map, scan } from "rxjs/operators";
 import { CELL_COLOR_MAP, BOARD_HEIGHT } from "./constants";

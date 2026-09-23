@@ -1,4 +1,4 @@
-import { Div, Input } from 'corrente';
+import { Div, Input } from 'affluente';
 
 import './example-styles.css';
 import { timer } from 'rxjs';

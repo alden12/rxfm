@@ -25,11 +25,11 @@ The reason streams feel hard isn't the model. It's two accidents of how we've us
 1. **The syntax.** You can't write `count * 2` over a stream; you write the `combineLatest` incantation above.
 2. **The architecture.** Every mainstream framework bolts reactivity *onto* a render cycle. So you're forever translating between "my reactive values" and "the framework's re-render," wiring the two together by hand.
 
-Fix both and there's nothing left to be intimidated by. That's the whole bet behind two small experiments: **Corrente** (the framework) and **Reactive TS** (the language layer).
+Fix both and there's nothing left to be intimidated by. That's the whole bet behind two small experiments: **Affluente** (the framework) and **Reactive TS** (the language layer).
 
 ## Layer one: the framework *is* the stream
 
-Corrente has one core idea: **a component is just an `Observable<HTMLElement>`.** An element is reactive because it *is* a stream - there's no virtual DOM, no diffing, no reconciliation, no render scheduling. A single mount at the root sets the whole app in motion, and state changes hit the DOM immediately.
+Affluente has one core idea: **a component is just an `Observable<HTMLElement>`.** An element is reactive because it *is* a stream - there's no virtual DOM, no diffing, no reconciliation, no render scheduling. A single mount at the root sets the whole app in motion, and state changes hit the DOM immediately.
 
 ```ts
 const Counter = () => {
@@ -45,7 +45,7 @@ addToView(Counter()); // the only subscription your app needs
 
 Notice what's *not* here. No `useState`. No dependency array. No `useCallback` to stop a child re-rendering. No memoization. There's no re-render cycle, so the entire category of bugs that comes with one - stale closures, wasted renders, "why did this run twice" - simply can't occur. The value flows to exactly the piece of DOM that's bound to it, and nothing else moves.
 
-This is the thing other approaches can't quite reach. A render-based framework can get *very* fast at re-running your component and diffing the result - but it's still re-running and diffing. Corrente never has to, because the update path is the stream itself.
+This is the thing other approaches can't quite reach. A render-based framework can get *very* fast at re-running your component and diffing the result - but it's still re-running and diffing. Affluente never has to, because the update path is the stream itself.
 
 ## Layer two: streams without the intimidation
 
@@ -76,4 +76,4 @@ const Banner = Div
 
 Reactive streams were never the wrong answer. They were the intimidating one, and we built a decade of tooling to avoid them rather than to fix them. Signals are that avoidance, made comfortable.
 
-The alternative is to make streams comfortable instead - approachable syntax *and* a framework that's reactive to its core, so there's no glue and no ceremony left to flinch at. That's Corrente and Reactive TS. The power was always there. We just had to stop being scared of it.
+The alternative is to make streams comfortable instead - approachable syntax *and* a framework that's reactive to its core, so there's no glue and no ceremony left to flinch at. That's Affluente and Reactive TS. The power was always there. We just had to stop being scared of it.

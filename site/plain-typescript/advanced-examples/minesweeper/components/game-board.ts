@@ -1,4 +1,4 @@
-import { Div, mapToComponents, classes, event, style } from "corrente";
+import { Div, mapToComponents, classes, event, style } from "affluente";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { BOARD_HEIGHT } from "../constants";

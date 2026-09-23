@@ -1,7 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
 import { Observable } from 'rxjs';
-import { Div, mapToComponents } from 'corrente';
+import { Div, mapToComponents } from 'affluente';
 
 interface Cell {
   color: string;

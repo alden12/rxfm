@@ -1,7 +1,7 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
 import { Observable } from 'rxjs';
-import { Div, Input, mapToComponents } from 'corrente';
+import { Div, Input, mapToComponents } from 'affluente';
 
 interface TodoItem {
   name: string;

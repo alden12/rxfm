@@ -1,4 +1,4 @@
-import { Button, Div, State } from 'corrente';
+import { Button, Div, State } from 'affluente';
 import { Observable } from 'rxjs';
 
 const Card = Div.class('card');

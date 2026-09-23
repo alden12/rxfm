@@ -1,4 +1,4 @@
-import { Div, frames } from 'corrente';
+import { Div, frames } from 'affluente';
 
 import './bouncing-logo-styles.css';
 

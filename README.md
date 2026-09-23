@@ -1,17 +1,19 @@
 [![Node.js CI](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml/badge.svg?branch=master)](https://github.com/alden12/rxfm/actions/workflows/nodejs.yml)
-[![NPM](https://img.shields.io/npm/v/rxfm)](https://www.npmjs.com/package/rxfm)
-[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/rxfm?label=gzipped)](https://bundlephobia.com/result?p=rxfm@latest)
-[![MIT license](https://img.shields.io/npm/l/rxfm)](https://opensource.org/licenses/MIT)
+[![NPM](https://img.shields.io/npm/v/affluente)](https://www.npmjs.com/package/affluente)
+[![Bundlephobia](https://img.shields.io/bundlephobia/minzip/affluente?label=gzipped)](https://bundlephobia.com/result?p=affluente@latest)
+[![MIT license](https://img.shields.io/npm/l/affluente)](https://opensource.org/licenses/MIT)
 
-# Corrente
+# Affluente
 
 <p align="center">
-  <img src="branding/corrente-logo-icon.svg" alt="Corrente" width="100" height="100">
+  <img src="branding/affluente-logo-icon.svg" alt="Affluente" width="100" height="100">
 </p>
+
+<p align="center"><em>affluente</em> (Italian): a tributary, a small stream flowing into a bigger one.</p>
 
 **A component is just an `Observable<HTMLElement>`. That's the whole framework.**
 
-A user interface is a pile of values that change over time. Corrente takes that literally: an element
+A user interface is a pile of values that change over time. Affluente takes that literally: an element
 is reactive because it _is_ a stream. There's no virtual DOM, nothing to diff, no re-render cycle - a
 single mount at the root (`addToView`) sets the whole app in motion, and state changes hit the DOM
 immediately. No `useState`, no dependency arrays, no memoization, and none of the bugs that come with a
@@ -29,7 +31,7 @@ const hue = (mouseMovementX / 4) % 360; // plain maths, but hue is live
 Push the mouse position into `mouseMovementX`, drop `hue` into a style, and the gradient tracks your cursor:
 
 ```ts demo=reactive-gradient
-import { Div, State } from "corrente";
+import { Div, State } from "affluente";
 
 export const ReactiveGradient = () => {
   const mouseMovementX = new State(0);
@@ -43,7 +45,7 @@ export const ReactiveGradient = () => {
 
 Move your mouse across it: no CSS animation could follow the cursor like this. `hue` is live because
 `mouseMovementX` is, so the moment it lands in the style string the element is bound to it and repaints as you
-move. There's no render cycle scheduling it, because there isn't one anywhere in Corrente.
+move. There's no render cycle scheduling it, because there isn't one anywhere in Affluente.
 
 The same trick works over time. `frames()`, `timer(due, period)`, and `interval(period)` are reactive
 clocks - derive a value from one and it updates on its own, with no loop to write. Pass a stream for the
@@ -53,7 +55,7 @@ State works the same way. Here a click count drives a derived value, written as 
 stays reactive:
 
 ```ts demo=counter
-import { Button, State, addToView } from "corrente";
+import { Button, State, addToView } from "affluente";
 
 const ClickCounter = () => {
   const clicks = new State(0);
@@ -90,7 +92,7 @@ or `ClickCounter()` called once and reused) shares that state across every place
 itself is heading:
 
 ```ts
-import { State } from "corrente";
+import { State } from "affluente";
 
 const query = new State("");
 const settled = query.debounce(200); // wait for a 200ms pause, then emit the latest value
@@ -101,7 +103,7 @@ The set follows the proposal (`map`, `filter`, `take`, `drop`, `takeUntil`, `cat
 stream, so the same code is one polyfill away from running on a native `Observable` if the proposal
 ships, and in a `.rts` file they're offered in autocomplete and lift as genuine stream operators.
 
-## Why Corrente
+## Why Affluente
 
 - **Streams _are_ the components.** No virtual DOM, no reconciliation, no render scheduling - state
   changes hit the DOM immediately.
@@ -115,7 +117,7 @@ ships, and in a `.rts` file they're offered in autocomplete and lift as genuine 
 ## Quick start
 
 ```sh
-npm install corrente rxjs@^7
+npm install affluente rxjs@^7
 ```
 
 …then see **[Getting started](docs/getting-started.md)**. To run the example app locally:
@@ -134,7 +136,7 @@ Or browse the [**live demo**](https://alden12.github.io/rxfm/).
 | 🚀 [Getting started](docs/getting-started.md)             | Install, editor setup, and the Reactive TS build.            |
 | 📖 [Guide](docs/guide.md)                                 | The full walkthrough - components, state, attributes, lists. |
 | 🧩 [Examples](site/)                                      | The Reactive TS example suite that powers the live demo.     |
-| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | Corrente in plain RxJS, no build step.                       |
+| 📘 [Plain-TypeScript reference](docs/plain-typescript.md) | Affluente in plain RxJS, no build step.                       |
 | 🧪 [Reactive TS roadmap](reactive-ts/ROADMAP.md)          | Status of the experimental Reactive TS layer.                |
 
 > ⚠️ **Alpha.** This is the `3.0.0-alpha` line - an in-progress redesign (Vite build, no JSX, a new
@@ -143,7 +145,7 @@ Or browse the [**live demo**](https://alden12.github.io/rxfm/).
 > [v2.1.1 README](https://github.com/alden12/rxfm/blob/v2.1.1/README.md).
 >
 > 🧪 **Reactive TS is experimental.** The transform, Vite plugin, and editor extension are a spike that
-> currently lives in this repo (not yet on npm) - see the [roadmap](reactive-ts/ROADMAP.md). Plain Corrente
+> currently lives in this repo (not yet on npm) - see the [roadmap](reactive-ts/ROADMAP.md). Plain Affluente
 > needs none of it.
 
 I'd love to hear whether this style holds any interest for you - feedback and ideas are very welcome.

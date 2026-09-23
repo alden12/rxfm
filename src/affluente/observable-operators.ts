@@ -1,10 +1,10 @@
 // Fluent operator methods on `Observable`, mirroring the WICG Observable proposal
-// (https://github.com/WICG/observable) so a Corrente stream reads the way the platform
+// (https://github.com/WICG/observable) so an Affluente stream reads the way the platform
 // is heading: `source.map(...).filter(...).takeUntil(stop)` rather than
 // `source.pipe(map(...), filter(...), takeUntil(stop))`.
 //
 // Importing this module augments `Observable.prototype` once (a deliberate global
-// patch - every Corrente stream, component, and `State` then carries the methods).
+// patch - every Affluente stream, component, and `State` then carries the methods).
 // Each definition is guarded so a future native/RxJS `Observable` that already
 // provides the method wins; the patch is non-enumerable like a real prototype method.
 //
@@ -18,7 +18,7 @@
 //   boundary, and keeps these faithful to the proposal.
 // - We deliberately **omit** the proposal's terminal, Promise-returning operators
 //   (`reduce`, `toArray`, `forEach`, `some`, `every`, `find`). They fire on `complete()`,
-//   and Corrente streams (components, `State`) never complete - the Promise would never
+//   and Affluente streams (components, `State`) never complete - the Promise would never
 //   resolve. Leaving `reduce` off also keeps it from being mistaken for a running fold
 //   (use `scan` / `accumulate` for that).
 // - We add `scan` (running fold; appendix material in the proposal, proposal-aligned shape)

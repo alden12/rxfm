@@ -1,4 +1,4 @@
-import { Button, classes, ComponentChild, conditional, Div, event } from "corrente";
+import { Button, classes, ComponentChild, conditional, Div, event } from "affluente";
 import { BehaviorSubject, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 

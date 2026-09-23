@@ -1,4 +1,4 @@
-import { Div, Button, State, interval } from 'corrente';
+import { Div, Button, State, interval } from 'affluente';
 
 import './stopwatch-styles.css';
 

@@ -1,4 +1,4 @@
-import { Div, Img, State, animate } from 'corrente';
+import { Div, Img, State, animate } from 'affluente';
 import wheelUrl from './wheel.svg';
 
 import './spinner-styles.css';

@@ -1,4 +1,4 @@
-import { Div, classes, Input, attributes, style, attribute } from 'corrente';
+import { Div, classes, Input, attributes, style, attribute } from 'affluente';
 import { timer } from 'rxjs';
 import { map } from 'rxjs/operators';
 

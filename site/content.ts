@@ -5,19 +5,19 @@
 // CONTENT is keyed by route id and typed `TypeOrObservable<HTMLElement>` so app.rts can
 // switch on it with a plain lookup — `CONTENT[selected]` — which Reactive TS lifts to a
 // `switchMap` over the selected-route stream (the lookup-table flattening).
-import { Component } from "corrente";
+import { Component } from "affluente";
 import { AppPage, DocPage, SourceFile } from "./doc-page.rts";
 
 import overviewMd from "../README.md?raw";
 import gettingStartedMd from "../docs/getting-started.md?raw";
 import guideMd from "../docs/guide.md?raw";
 import plainTsMd from "../docs/plain-typescript.md?raw";
-import logoSvg from "../branding/corrente-logo.svg?raw";
+import logoSvg from "../branding/affluente-logo.svg?raw";
 
 // GitHub/npm resolve the README's relative logo path against the repo; the bundled doc-site
 // has no such file at that URL, so inline the same SVG as a data URI for the Overview page.
 const overviewWithLogo = overviewMd.replace(
-  "branding/corrente-logo.svg",
+  "branding/affluente-logo.svg",
   `data:image/svg+xml,${encodeURIComponent(logoSvg)}`,
 );
 

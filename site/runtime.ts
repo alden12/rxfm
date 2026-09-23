@@ -1,7 +1,7 @@
 // Reactive TS runtime for the doc-site. The transform emits `import { render } from
 // "./<rel>/runtime"`, resolved to this file by walking up from each `.rts` to the
 // nearest `runtime.ts` (see ts-plugin/transform.cjs). Hand-written helpers
-// (`accumulate` / `interval` / …) are imported from `corrente` directly now that the
+// (`accumulate` / `interval` / …) are imported from `affluente` directly now that the
 // runtime sits on the package's public surface — this shim exists only for the
 // transform-emitted `render`.
 //

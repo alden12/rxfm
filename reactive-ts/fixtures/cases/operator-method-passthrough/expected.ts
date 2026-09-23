@@ -1,6 +1,6 @@
 import { render } from "./runtime";
 import { map } from "rxjs/operators";
-import { Div } from 'corrente';
+import { Div } from 'affluente';
 import { Observable } from 'rxjs';
 
 declare const nums: Observable<number>;

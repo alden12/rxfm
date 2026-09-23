@@ -1,4 +1,4 @@
-import { State, timer } from 'corrente';
+import { State, timer } from 'affluente';
 import { getInitialSnakeState, getNewSnakeState, getBoard } from './game-logic';
 import { TICK_MS } from './constants';
 import { Difficulty, Direction } from './types';
